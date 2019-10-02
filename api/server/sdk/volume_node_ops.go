@@ -22,7 +22,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/pkg/util"
+	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -32,7 +32,7 @@ func (s *VolumeServer) Attach(
 	ctx context.Context,
 	req *api.SdkVolumeAttachRequest,
 ) (*api.SdkVolumeAttachResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -40,20 +40,16 @@ func (s *VolumeServer) Attach(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	// Check if already attached
-	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
-	// Idempotency
-	if v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED &&
-		v.GetAttachedState() != api.AttachState_ATTACH_STATE_INTERNAL {
-		return &api.SdkVolumeAttachResponse{DevicePath: v.GetDevicePath()}, nil
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
+		return nil, err
 	}
 
 	// Check options
-	options := make(map[string]string)
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	if req.GetOptions() != nil {
 		if len(req.GetOptions().GetSecretContext()) != 0 {
 			options[mountattachoptions.OptionsSecretContext] = req.GetOptions().GetSecretContext()
@@ -66,8 +62,10 @@ func (s *VolumeServer) Attach(
 		}
 	}
 
-	devPath, err := s.driver().Attach(req.GetVolumeId(), options)
-	if err != nil {
+	devPath, err := s.driver(ctx).Attach(req.GetVolumeId(), options)
+	if err == volume.ErrVolAttachedOnRemoteNode {
+		return nil, status.Error(codes.AlreadyExists, err.Error())
+	} else if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed  to attach volume: %v",
@@ -82,7 +80,7 @@ func (s *VolumeServer) Detach(
 	ctx context.Context,
 	req *api.SdkVolumeDetachRequest,
 ) (*api.SdkVolumeDetachResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -90,27 +88,25 @@ func (s *VolumeServer) Detach(
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
 	}
 
-	// Check if already attached
-	v, err := util.VolumeFromName(s.driver(), req.GetVolumeId())
-	if err != nil {
-		return nil, status.Errorf(codes.NotFound, "Volume %s was not found", req.GetVolumeId())
-	}
-
-	// Idempotency
-	if v.GetState() == api.VolumeState_VOLUME_STATE_DETACHED ||
-		(v.GetState() == api.VolumeState_VOLUME_STATE_ATTACHED && v.GetAttachedState() == api.AttachState_ATTACH_STATE_INTERNAL) {
-		return &api.SdkVolumeDetachResponse{}, nil
+	// Get access rights
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
+	if err != nil && !IsErrorNotFound(err) {
+		return nil, err
 	}
 
 	// Check options
-	options := make(map[string]string)
-	options[mountattachoptions.OptionsRedirectDetach] = "true"
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsForceDetach] = fmt.Sprint(req.GetOptions().GetForce())
 		options[mountattachoptions.OptionsUnmountBeforeDetach] = fmt.Sprint(req.GetOptions().GetUnmountBeforeDetach())
+		options[mountattachoptions.OptionsRedirectDetach] = fmt.Sprint(req.GetOptions().GetRedirect())
 	}
-	err = s.driver().Detach(req.GetVolumeId(), options)
-	if err != nil {
+
+	err = s.driver(ctx).Detach(req.GetVolumeId(), options)
+	if err != nil && !IsErrorNotFound(err) {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to detach volume %s: %v",
@@ -126,7 +122,8 @@ func (s *VolumeServer) Mount(
 	ctx context.Context,
 	req *api.SdkVolumeMountRequest,
 ) (*api.SdkVolumeMountResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -137,7 +134,13 @@ func (s *VolumeServer) Mount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	err := s.driver().Mount(req.GetVolumeId(), req.GetMountPath(), nil)
+	// Get access rights
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
+	if err != nil {
+		return nil, err
+	}
+
+	err = s.driver(ctx).Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -153,7 +156,7 @@ func (s *VolumeServer) Unmount(
 	ctx context.Context,
 	req *api.SdkVolumeUnmountRequest,
 ) (*api.SdkVolumeUnmountResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -165,18 +168,26 @@ func (s *VolumeServer) Unmount(
 		return nil, status.Error(codes.InvalidArgument, "Invalid Mount Path")
 	}
 
-	options := make(map[string]string)
+	options := req.GetDriverOptions()
+	if options == nil {
+		options = make(map[string]string)
+	}
 	if req.GetOptions() != nil {
 		options[mountattachoptions.OptionsDeleteAfterUnmount] = fmt.Sprint(req.GetOptions().GetDeleteMountPath())
 
-		// Only set if
 		if req.GetOptions().GetDeleteMountPath() {
 			options[mountattachoptions.OptionsWaitBeforeDelete] = fmt.Sprint(!req.GetOptions().GetNoDelayBeforeDeletingMountPath())
 		}
 	}
 
-	err := s.driver().Unmount(req.GetVolumeId(), req.GetMountPath(), options)
-	if err != nil {
+	// Get access rights
+	err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write)
+	if err != nil && !IsErrorNotFound(err) {
+		return nil, err
+	}
+
+	// Unmount volume
+	if err = s.driver(ctx).Unmount(req.GetVolumeId(), req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",

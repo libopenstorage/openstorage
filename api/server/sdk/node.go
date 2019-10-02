@@ -28,7 +28,7 @@ import (
 
 // NodeServer is an implementation of the gRPC OpenStorageNodeServer interface
 type NodeServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *NodeServer) cluster() cluster.Cluster {
@@ -55,6 +55,29 @@ func (s *NodeServer) Enumerate(
 
 	return &api.SdkNodeEnumerateResponse{
 		NodeIds: nodeIds,
+	}, nil
+}
+
+// EnumerateWithFilters returns all the nodes in the cluster
+func (s *NodeServer) EnumerateWithFilters(
+	ctx context.Context,
+	req *api.SdkNodeEnumerateWithFiltersRequest,
+) (*api.SdkNodeEnumerateWithFiltersResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	c, err := s.cluster().Enumerate()
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	nodes := make([]*api.StorageNode, len(c.Nodes))
+	for i, node := range c.Nodes {
+		nodes[i] = node.ToStorageNode()
+	}
+
+	return &api.SdkNodeEnumerateWithFiltersResponse{
+		Nodes: nodes,
 	}, nil
 }
 

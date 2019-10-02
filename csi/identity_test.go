@@ -19,7 +19,7 @@ package csi
 import (
 	"testing"
 
-	csi "github.com/container-storage-interface/spec/lib/go/csi/v0"
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 )
@@ -43,10 +43,37 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	// Verify
 	name := r.GetName()
 	version := r.GetVendorVersion()
-	assert.Equal(t, name, csiDriverNamePrefix+"mock")
+	assert.Equal(t, name, "mock.openstorage.org")
 	assert.Equal(t, version, csiDriverVersion)
 
 	manifest := r.GetManifest()
 	assert.Len(t, manifest, 1)
 	assert.Equal(t, manifest["driver"], "mock")
+}
+
+func TestNewCSIServerGetPluginInfoWithOverrideName(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:    mockDriverName,
+		Net:           "tcp",
+		Address:       "127.0.0.1:0",
+		SdkUds:        "/tmp/notnecessary",
+		CsiDriverName: "override",
+	})
+	defer s.Stop()
+
+	// Setup mock
+	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
+
+	// Setup client
+	c := csi.NewIdentityClient(s.Conn())
+
+	// Get info
+	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
+	assert.NoError(t, err)
+
+	// Verify
+	name := r.GetName()
+	assert.Equal(t, name, "override")
 }

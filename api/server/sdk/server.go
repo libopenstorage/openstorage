@@ -19,24 +19,61 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"mime"
-	"net/http"
+	"io"
+	"os"
 	"sync"
 
-	"github.com/gobuffalo/packr"
-	"github.com/grpc-ecosystem/go-grpc-middleware"
-	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/role"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
+
+const (
+	// Default audig log location
+	defaultAuditLog = "/var/log/openstorage-audit.log"
+	// Default access log location
+	defaultAccessLog = "/var/log/openstorage-access.log"
+	// ContextDriverKey is the driver key passed in context's metadata
+	ContextDriverKey = "driver"
+	// DefaultDriverName is the default driver to be used
+	DefaultDriverName = "default"
+)
+
+// TLSConfig points to the cert files needed for HTTPS
+type TLSConfig struct {
+	// CertFile is the path to the cert file
+	CertFile string
+	// KeyFile is the path to the key file
+	KeyFile string
+}
+
+// SecurityConfig provides configuration for SDK auth
+type SecurityConfig struct {
+	// Role implementation
+	Role role.RoleManager
+	// Tls configuration
+	Tls *TLSConfig
+	// Authenticators per issuer. You can register multple authenticators
+	// based on the "iss" string in the string. For example:
+	// map[string]auth.Authenticator {
+	//     "https://accounts.google.com": googleOidc,
+	//     "openstorage-sdk-auth: selfSigned,
+	// }
+	Authenticators map[string]auth.Authenticator
+}
 
 // ServerConfig provides the configuration to the SDK server
 type ServerConfig struct {
@@ -49,24 +86,89 @@ type ServerConfig struct {
 	// RestAdress is the port number. Example: 9110
 	// For the gRPC REST Gateway.
 	RestPort string
+	// Unix domain socket for local communication. This socket
+	// will be used by the REST Gateway to communicate with the gRPC server.
+	// Only set for testing. Having a '%s' can be supported to use the
+	// name of the driver as the driver name.
+	Socket string
+	// (optional) Location for audit log.
+	// If not provided, it will go to /var/log/openstorage-audit.log
+	AuditOutput io.Writer
+	// (optional) Location of access log.
+	// This is useful when authorization is not running.
+	// If not provided, it will go to /var/log/openstorage-access.log
+	AccessOutput io.Writer
 	// (optional) The OpenStorage driver to use
 	DriverName string
 	// (optional) Cluster interface
 	Cluster cluster.Cluster
 	// AlertsFilterDeleter
 	AlertsFilterDeleter alerts.FilterDeleter
+	// StoragePolicy Manager
+	StoragePolicy policy.PolicyManager
+	// StoragePoolServer is the interface to manage storage pools in the cluster
+	StoragePoolServer api.OpenStoragePoolServer
+	// Security configuration
+	Security *SecurityConfig
+	// ServerExtensions allows you to extend the SDK gRPC server
+	// with callback functions that are sequentially executed
+	// at the end of Server.Start()
+	//
+	// To add your own service to the SDK gRPC server,
+	// just append a function callback that registers it:
+	//
+	// s.config.ServerExtensions = append(s.config.ServerExtensions,
+	// 		func(gs *grpc.Server) {
+	//			api.RegisterCustomService(gs, customHandler)
+	//		})
+	GrpcServerExtensions []func(grpcServer *grpc.Server)
+
+	// RestServerExtensions allows for extensions to be added
+	// to the SDK Rest Gateway server.
+	//
+	// To add your own service to the SDK REST Server, simply add your handlers
+	// to the RestSererExtensions slice. These handlers will be registered on the
+	// REST Gateway http server.
+	RestServerExtensions []func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
 }
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
+	config      ServerConfig
+	netServer   *sdkGrpcServer
+	udsServer   *sdkGrpcServer
+	restGateway *sdkRestGateway
+
+	accessLog *os.File
+	auditLog  *os.File
+}
+
+type serverAccessor interface {
+	alert() alerts.FilterDeleter
+	cluster() cluster.Cluster
+	driver(ctx context.Context) volume.VolumeDriver
+}
+
+type logger struct {
+	log *logrus.Entry
+}
+
+type sdkGrpcServer struct {
 	*grpcserver.GrpcServer
 
 	restPort string
 	lock     sync.RWMutex
+	name     string
+	config   ServerConfig
+
+	// Loggers
+	log             *logrus.Entry
+	auditLogOutput  io.Writer
+	accessLogOutput io.Writer
 
 	// Interface implementations
 	clusterHandler cluster.Cluster
-	driverHandler  volume.VolumeDriver
+	driverHandlers map[string]volume.VolumeDriver
 	alertHandler   alerts.FilterDeleter
 
 	// gRPC Handlers
@@ -79,17 +181,151 @@ type Server struct {
 	cloudBackupServer    *CloudBackupServer
 	credentialServer     *CredentialServer
 	identityServer       *IdentityServer
+	clusterDomainsServer *ClusterDomainsServer
+	roleServer           role.RoleManager
 	alertsServer         api.OpenStorageAlertsServer
+	policyServer         policy.PolicyManager
+	storagePoolServer    api.OpenStoragePoolServer
 }
 
 // Interface check
-var _ grpcserver.Server = &Server{}
+var _ grpcserver.Server = &sdkGrpcServer{}
+
+// New creates a new SDK server
+func New(config *ServerConfig) (*Server, error) {
+
+	if config == nil {
+		return nil, fmt.Errorf("Must provide configuration")
+	}
+
+	// If no security set, initialize the object as empty
+	if config.Security == nil {
+		config.Security = &SecurityConfig{}
+	}
+
+	// Check if the socket is provided to enable the REST gateway to communicate
+	// to the unix domain socket
+	if len(config.Socket) == 0 {
+		return nil, fmt.Errorf("Must provide unix domain socket for SDK")
+	}
+	if len(config.RestPort) == 0 {
+		return nil, fmt.Errorf("Must provide REST Gateway port for the SDK")
+	}
+
+	// Set default log locations
+	var (
+		accessLog, auditLog *os.File
+		err                 error
+	)
+	if config.AuditOutput == nil {
+		auditLog, err = openLog(defaultAuditLog)
+		if err != nil {
+			return nil, err
+		}
+		config.AuditOutput = auditLog
+	}
+	if config.AccessOutput == nil {
+		accessLog, err := openLog(defaultAccessLog)
+		if err != nil {
+			return nil, err
+		}
+		config.AccessOutput = accessLog
+	}
+
+	// Create a gRPC server on the network
+	netServer, err := newSdkGrpcServer(config)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create a gRPC server on a unix domain socket
+	udsConfig := *config
+	udsConfig.Net = "unix"
+	udsConfig.Address = config.Socket
+	udsServer, err := newSdkGrpcServer(&udsConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	// Create REST Gateway and connect it to the unix domain socket server
+	restGateway, err := newSdkRestGateway(config, udsServer)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Server{
+		config:      *config,
+		netServer:   netServer,
+		udsServer:   udsServer,
+		restGateway: restGateway,
+		auditLog:    auditLog,
+		accessLog:   accessLog,
+	}, nil
+}
+
+// Start all servers
+func (s *Server) Start() error {
+	if err := s.netServer.Start(); err != nil {
+		return err
+	} else if err := s.udsServer.Start(); err != nil {
+		return err
+	} else if err := s.restGateway.Start(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *Server) Stop() {
+	s.netServer.Stop()
+	s.udsServer.Stop()
+	s.restGateway.Stop()
+
+	if s.accessLog != nil {
+		s.accessLog.Close()
+	}
+	if s.auditLog != nil {
+		s.auditLog.Close()
+	}
+}
+
+func (s *Server) Address() string {
+	return s.netServer.Address()
+}
+
+func (s *Server) UdsAddress() string {
+	return s.udsServer.Address()
+}
+
+// UseCluster will setup a new cluster object for the gRPC handlers
+func (s *Server) UseCluster(c cluster.Cluster) {
+	s.netServer.useCluster(c)
+	s.udsServer.useCluster(c)
+}
+
+// UseVolumeDrivers will setup a new driver object for the gRPC handlers
+func (s *Server) UseVolumeDrivers(d map[string]volume.VolumeDriver) {
+	s.netServer.useVolumeDrivers(d)
+	s.udsServer.useVolumeDrivers(d)
+}
+
+// UseAlert will setup a new alert object for the gRPC handlers
+func (s *Server) UseAlert(a alerts.FilterDeleter) {
+	s.netServer.useAlert(a)
+	s.udsServer.useAlert(a)
+}
 
 // New creates a new SDK gRPC server
-func New(config *ServerConfig) (*Server, error) {
+func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	if nil == config {
 		return nil, fmt.Errorf("Configuration must be provided")
 	}
+
+	// Create a log object for this server
+	name := "SDK-" + config.Net
+	log := logrus.WithFields(logrus.Fields{
+		"name": name,
+	})
 
 	// Save the driver for future calls
 	var (
@@ -103,22 +339,45 @@ func New(config *ServerConfig) (*Server, error) {
 		}
 	}
 
+	// Setup authentication
+	for issuer, _ := range config.Security.Authenticators {
+		log.Infof("Authentication enabled for issuer: %s", issuer)
+
+		// Check the necessary security config options are set
+		if config.Security.Role == nil {
+			return nil, fmt.Errorf("Must supply role manager when authentication enabled")
+		}
+	}
+
+	if config.StoragePolicy == nil {
+		return nil, fmt.Errorf("Must supply storage policy server")
+	}
+
 	// Create gRPC server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "SDK",
+		Name:    name,
 		Net:     config.Net,
 		Address: config.Address,
 	})
 	if err != nil {
-		return nil, fmt.Errorf("Unable to setup server: %v", err)
+		return nil, fmt.Errorf("Unable to setup %s server: %v", name, err)
 	}
 
-	s := &Server{
-		GrpcServer:     gServer,
-		restPort:       config.RestPort,
-		clusterHandler: config.Cluster,
-		driverHandler:  d,
-		alertHandler:   config.AlertsFilterDeleter,
+	s := &sdkGrpcServer{
+		GrpcServer:      gServer,
+		accessLogOutput: config.AccessOutput,
+		auditLogOutput:  config.AuditOutput,
+		config:          *config,
+		name:            name,
+		log:             log,
+		clusterHandler:  config.Cluster,
+		driverHandlers: map[string]volume.VolumeDriver{
+			config.DriverName: d,
+			DefaultDriverName: d,
+		},
+		alertHandler:      config.AlertsFilterDeleter,
+		policyServer:      config.StoragePolicy,
+		storagePoolServer: config.StoragePoolServer,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -151,20 +410,50 @@ func New(config *ServerConfig) (*Server, error) {
 	s.clusterPairServer = &ClusterPairServer{
 		server: s,
 	}
-
+	s.clusterDomainsServer = &ClusterDomainsServer{
+		server: s,
+	}
+	s.roleServer = config.Security.Role
+	s.policyServer = config.StoragePolicy
+	s.storagePoolServer = config.StoragePoolServer
 	return s, nil
 }
 
 // Start is used to start the server.
 // It will return an error if the server is already running.
-func (s *Server) Start() error {
+func (s *sdkGrpcServer) Start() error {
 
+	// Setup https if certs have been provided
 	opts := make([]grpc.ServerOption, 0)
-	opts = append(opts, grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			s.rwlockIntercepter,
-			grpc_recovery.UnaryServerInterceptor(),
-		)))
+	if s.config.Net != "unix" && s.config.Security.Tls != nil {
+		creds, err := credentials.NewServerTLSFromFile(
+			s.config.Security.Tls.CertFile,
+			s.config.Security.Tls.KeyFile)
+		if err != nil {
+			return fmt.Errorf("Failed to create credentials from cert files: %v", err)
+		}
+		opts = append(opts, grpc.Creds(creds))
+		s.log.Info("SDK TLS enabled")
+	} else {
+		s.log.Info("SDK TLS disabled")
+	}
+
+	// Setup authentication and authorization using interceptors if auth is enabled
+	if len(s.config.Security.Authenticators) != 0 {
+		opts = append(opts, grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				s.rwlockIntercepter,
+				grpc_auth.UnaryServerInterceptor(s.auth),
+				s.authorizationServerInterceptor,
+				s.loggerServerInterceptor,
+			)))
+	} else {
+		opts = append(opts, grpc.UnaryInterceptor(
+			grpc_middleware.ChainUnaryServer(
+				s.rwlockIntercepter,
+				s.loggerServerInterceptor,
+			)))
+	}
 
 	// Start the gRPC Server
 	err := s.GrpcServer.StartWithServer(func() *grpc.Server {
@@ -182,36 +471,48 @@ func (s *Server) Start() error {
 		api.RegisterOpenStorageMountAttachServer(grpcServer, s.volumeServer)
 		api.RegisterOpenStorageAlertsServer(grpcServer, s.alertsServer)
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
+		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
+		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
+		if s.storagePoolServer != nil {
+			api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
+		}
+
+		if s.config.Security.Role != nil {
+			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
+		}
+
+		s.registerServerExtensions(grpcServer)
+
 		return grpcServer
 	})
 	if err != nil {
 		return err
 	}
 
-	if len(s.restPort) != 0 {
-		return s.startRestServer()
-	}
 	return nil
 }
 
-// UseCluster will setup a new cluster object for the gRPC handlers
-func (s *Server) UseCluster(c cluster.Cluster) {
+func (s *sdkGrpcServer) registerServerExtensions(grpcServer *grpc.Server) {
+	for _, ext := range s.config.GrpcServerExtensions {
+		ext(grpcServer)
+	}
+}
+
+func (s *sdkGrpcServer) useCluster(c cluster.Cluster) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
 	s.clusterHandler = c
 }
 
-// UseVolumeDriver will setup a new driver object for the gRPC handlers
-func (s *Server) UseVolumeDriver(d volume.VolumeDriver) {
+func (s *sdkGrpcServer) useVolumeDrivers(d map[string]volume.VolumeDriver) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.driverHandler = d
+	s.driverHandlers = d
 }
 
-// UseAlert will setup a new alert object for the gRPC handlers
-func (s *Server) UseAlert(a alerts.FilterDeleter) {
+func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -219,192 +520,19 @@ func (s *Server) UseAlert(a alerts.FilterDeleter) {
 }
 
 // Accessors
-func (s *Server) driver() volume.VolumeDriver {
-	return s.driverHandler
+func (s *sdkGrpcServer) driver(ctx context.Context) volume.VolumeDriver {
+	driverName := grpcserver.GetMetadataValueFromKey(ctx, ContextDriverKey)
+	if handler, ok := s.driverHandlers[driverName]; ok {
+		return handler
+	} else {
+		return s.driverHandlers[DefaultDriverName]
+	}
 }
 
-func (s *Server) cluster() cluster.Cluster {
+func (s *sdkGrpcServer) cluster() cluster.Cluster {
 	return s.clusterHandler
 }
 
-func (s *Server) alert() alerts.FilterDeleter {
+func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
 	return s.alertHandler
-}
-
-// startRestServer starts the HTTP/REST gRPC gateway.
-func (s *Server) startRestServer() error {
-
-	mux, err := s.restServerSetupHandlers()
-	if err != nil {
-		return err
-	}
-
-	ready := make(chan bool)
-	go func() {
-		ready <- true
-		err := http.ListenAndServe(":"+s.restPort, mux)
-		if err != nil {
-			logrus.Fatalf("Unable to start SDK REST gRPC Gateway: %s\n",
-				err.Error())
-		}
-	}()
-	<-ready
-	logrus.Infof("SDK gRPC REST Gateway started on port :%s", s.restPort)
-
-	return nil
-}
-
-// restServerSetupHandlers sets up the handlers to the swagger ui and
-// to the gRPC REST Gateway.
-func (s *Server) restServerSetupHandlers() (*http.ServeMux, error) {
-
-	// Create an HTTP server router
-	mux := http.NewServeMux()
-
-	// Swagger files using packr
-	swaggerUIBox := packr.NewBox("./swagger-ui")
-	swaggerJSONBox := packr.NewBox("./api")
-	mime.AddExtensionType(".svg", "image/svg+xml")
-
-	// Handler to return swagger.json
-	mux.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
-		w.Write(swaggerJSONBox.Bytes("api.swagger.json"))
-	})
-
-	// Handler to access the swagger ui. The UI pulls the swagger
-	// json file from /swagger.json
-	// The link below MUST have th last '/'. It is really important.
-	prefix := "/swagger-ui/"
-	mux.Handle(prefix,
-		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
-
-	// Create a router just for HTTP REST gRPC Server Gateway
-	gmux := runtime.NewServeMux(
-		runtime.WithMarshalerOption(
-			runtime.MIMEWildcard,
-			&runtime.JSONPb{OrigName: true, EmitDefaults: true}))
-	err := api.RegisterOpenStorageClusterHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageNodeHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageVolumeHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageObjectstoreHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageCredentialsHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageSchedulePolicyHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageCloudBackupHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageIdentityHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageMountAttachHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageAlertsHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-	err = api.RegisterOpenStorageClusterPairHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	err = api.RegisterOpenStorageMigrateHandlerFromEndpoint(
-		context.Background(),
-		gmux,
-		s.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
-	if err != nil {
-		return nil, err
-	}
-
-	// Pass all other unhandled paths to the gRPC gateway
-	mux.Handle("/", gmux)
-
-	return mux, nil
-}
-
-// This interceptor provides a way to lock out any calls while we adjust the server
-func (s *Server) rwlockIntercepter(
-	ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (interface{}, error) {
-	s.lock.RLock()
-	defer s.lock.RUnlock()
-
-	return handler(ctx, req)
 }

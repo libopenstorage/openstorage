@@ -1,0 +1,4 @@
+name: Test
+email: 123@abc.com
+roles: ["system.admin"]
+groups: ["*"]

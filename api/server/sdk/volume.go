@@ -17,21 +17,48 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
+
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/volume"
+
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // VolumeServer is an implementation of the gRPC OpenStorageVolume interface
 type VolumeServer struct {
 	specHandler spec.SpecHandler
-	server      *Server
+	server      serverAccessor
 }
 
 func (s *VolumeServer) cluster() cluster.Cluster {
 	return s.server.cluster()
 }
 
-func (s *VolumeServer) driver() volume.VolumeDriver {
-	return s.server.driver()
+func (s *VolumeServer) driver(ctx context.Context) volume.VolumeDriver {
+	return s.server.driver(ctx)
+}
+
+// checkAccessForVolumeId checks if the given volumeId has the required accessType
+// If the volume is not found, the function should return the err for that. Callers would
+// depend on that err. See IsErrorNotFound(err) in api/server/sdk/errors.go
+func (s *VolumeServer) checkAccessForVolumeId(
+	ctx context.Context,
+	volumeId string,
+	accessType api.Ownership_AccessType,
+) error {
+	// Inspect will check access for us
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeId,
+	})
+	if err != nil {
+		return err
+	}
+	if !resp.GetVolume().IsPermitted(ctx, accessType) {
+		return status.Errorf(codes.PermissionDenied, "Access denied to volume %v", resp.GetVolume().GetId())
+	}
+	return nil
 }

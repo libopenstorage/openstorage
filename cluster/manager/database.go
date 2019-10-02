@@ -17,7 +17,9 @@ const (
 	ClusterDBKey = "cluster/database"
 )
 
-func snapAndReadClusterInfo() (*cluster.ClusterInitState, error) {
+type updateCallbackFn func(db *cluster.ClusterInfo) (bool, error)
+
+func snapAndReadClusterInfo(snapshotPrefixes []string) (*cluster.ClusterInitState, error) {
 	kv := kvdb.Instance()
 
 	// To work-around a kvdb issue with watches, try snapshot in a loop
@@ -39,7 +41,7 @@ func snapAndReadClusterInfo() (*cluster.ClusterInitState, error) {
 			continue
 		}
 		// Create the snapshot
-		snap, version, err = kv.Snapshot("")
+		snap, version, err = kv.Snapshot(snapshotPrefixes, true)
 		if err != nil {
 			logrus.Errorf("Snapshot failed for cluster db: %v", err)
 			collector.Stop()
@@ -122,4 +124,30 @@ func writeClusterInfo(db *cluster.ClusterInfo) (*kvdb.KVPair, error) {
 		return nil, err
 	}
 	return kvp, nil
+}
+
+func updateLockedDB(fn, lockID string, cb updateCallbackFn) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, lockID)
+	if err != nil {
+		logrus.Warnf("Unable to obtain cluster lock for %v op: %v", fn, err)
+		return err
+	}
+	defer kvdb.Unlock(kvlock)
+
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return err
+	}
+
+	update, err := cb(&db)
+	if err != nil {
+		return err
+	}
+	if !update {
+		return nil
+	}
+
+	_, err = writeClusterInfo(&db)
+	return err
 }

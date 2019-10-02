@@ -25,13 +25,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/url"
 	"os"
 	"runtime"
 	"strconv"
 	"strings"
-
-	"github.com/sirupsen/logrus"
 
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
@@ -44,15 +43,20 @@ import (
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/csi"
-	"github.com/libopenstorage/openstorage/graph/drivers"
+	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
+	"github.com/libopenstorage/openstorage/pkg/role"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -92,6 +96,11 @@ func main() {
 			Value: "",
 		},
 		cli.StringFlag{
+			Name:  "mgmtport,m",
+			Usage: "Management Port for REST server. Example: 9001",
+			Value: "9001",
+		},
+		cli.StringFlag{
 			Name:  "sdkport",
 			Usage: "gRPC port for SDK. Example: 9100",
 			Value: "9100",
@@ -110,6 +119,63 @@ func main() {
 			Name:  "clusterid",
 			Usage: "Cluster id",
 			Value: "openstorage.cluster",
+		},
+		cli.StringFlag{
+			Name:  "tls-cert-file",
+			Usage: "TLS Cert file path",
+		},
+		cli.StringFlag{
+			Name:  "tls-key-file",
+			Usage: "TLS Key file path",
+		},
+		cli.StringFlag{
+			Name: "username-claim",
+			Usage: "Claim key from the token to use as the unique id of the ." +
+				"user. Values can be only 'sub', 'email', or 'name'",
+			Value: "sub",
+		},
+		cli.StringFlag{
+			Name:  "oidc-issuer",
+			Usage: "OIDC Issuer,e.g. https://accounts.google.com",
+		},
+		cli.StringFlag{
+			Name:  "oidc-client-id",
+			Usage: "OIDC Client ID provided by issuer",
+		},
+		cli.StringFlag{
+			Name:  "oidc-custom-claim-namespace",
+			Usage: "OIDC namespace for custom claims if needed",
+		},
+		cli.BoolFlag{
+			Name:  "oidc-skip-client-id-check",
+			Usage: "OIDC skip verification of client id in the token",
+		},
+		cli.StringFlag{
+			Name:  "jwt-issuer",
+			Usage: "JSON Web Token issuer",
+			Value: "openstorage.io",
+		},
+		cli.StringFlag{
+			Name:  "jwt-shared-secret",
+			Usage: "JSON Web Token shared secret",
+		},
+		cli.StringFlag{
+			Name:  "jwt-rsa-pubkey-file",
+			Usage: "JSON Web Token RSA Public file path",
+		},
+		cli.StringFlag{
+			Name:  "jwt-ecds-pubkey-file",
+			Usage: "JSON Web Token ECDS Public file path",
+		},
+		cli.StringFlag{
+			Name:  "jwt-system-shared-secret",
+			Usage: "JSON Web Token system shared secret used by clusters to create tokens for internal cluster communication",
+			Value: "non-secure-secret",
+		},
+		cli.StringFlag{
+			Name:  "clusterdomain",
+			Usage: "Cluster Domain Name",
+			Value: "",
 		},
 	}
 	app.Action = wrapAction(start)
@@ -289,6 +355,11 @@ func start(c *cli.Context) error {
 			if err != nil {
 				return fmt.Errorf("Invalid OSD Config File. Invalid Mgmt Port number for Driver : %s", d)
 			}
+		} else if c.String("mgmtport") != "" {
+			mgmtPort, err = strconv.ParseUint(c.String("mgmtport"), 10, 16)
+			if err != nil {
+				return fmt.Errorf("Invalid Mgmt Port number for Driver : %s", d)
+			}
 		} else {
 			mgmtPort = 0
 		}
@@ -302,15 +373,25 @@ func start(c *cli.Context) error {
 			pluginPort = 0
 		}
 
-		if err := server.StartPluginAPI(
-			d,
-			volume.DriverAPIBase,
+		sdksocket := fmt.Sprintf("/var/lib/osd/driver/%s-sdk.sock", d)
+
+		if err := server.StartVolumePluginAPI(
+			d, sdksocket,
 			volume.PluginAPIBase,
-			uint16(mgmtPort),
 			uint16(pluginPort),
 		); err != nil {
-			return fmt.Errorf("Unable to start volume plugin: %v", err)
+			return fmt.Errorf("Unable to start plugin api server: %v", err)
 		}
+
+		if _, _, err := server.StartVolumeMgmtAPI(
+			d, sdksocket,
+			volume.DriverAPIBase,
+			uint16(mgmtPort),
+			false,
+		); err != nil {
+			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
+		}
+
 		if d != "" && cfg.Osd.ClusterConfig.DefaultDriver == d {
 			isDefaultSet = true
 		}
@@ -330,19 +411,82 @@ func start(c *cli.Context) error {
 			Address:    csisock,
 			DriverName: d,
 			Cluster:    cm,
+			SdkUds:     sdksocket,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to start CSI server for driver %s: %v", d, err)
 		}
 		csiServer.Start()
 
+		// Create a role manager
+		rm, err := role.NewSdkRoleManager(kv)
+		if err != nil {
+			return fmt.Errorf("Failed to create a role manager")
+		}
+
+		// Get authenticators
+		authenticators := make(map[string]auth.Authenticator)
+		selfSigned, err := selfSignedAuth(c)
+		if err != nil {
+			logrus.Fatalf("Failed to create self signed config: %v", err)
+		} else if selfSigned != nil {
+			authenticators[c.String("jwt-issuer")] = selfSigned
+		}
+
+		oidcAuth, err := oidcAuth(c)
+		if err != nil {
+			logrus.Fatalf("Failed to create self signed config: %v", err)
+		} else if oidcAuth != nil {
+			authenticators[c.String("oidc-issuer")] = oidcAuth
+		}
+
+		tlsConfig, err := setupSdkTls(c)
+		if err != nil {
+			logrus.Fatalf("Failed to access TLS file information: %v", err)
+		}
+
+		// Auth is enabled, setup system token manager for inter-cluster communication
+		if len(authenticators) > 0 {
+			if c.String("jwt-system-shared-secret") == "" {
+				return fmt.Errorf("Must provide a jwt-system-shared-secret if auth with oidc or shared-secret is enabled")
+			}
+
+			if len(cfg.Osd.ClusterConfig.SystemSharedSecret) == 0 {
+				cfg.Osd.ClusterConfig.SystemSharedSecret = c.String("jwt-system-shared-secret")
+			}
+
+			// Initialize system token manager if an authenticator is setup
+			stm, err := systemtoken.NewManager(&systemtoken.Config{
+				ClusterId:    cfg.Osd.ClusterConfig.ClusterId,
+				NodeId:       cfg.Osd.ClusterConfig.NodeId,
+				SharedSecret: cfg.Osd.ClusterConfig.SystemSharedSecret,
+			})
+			if err != nil {
+				return fmt.Errorf("Failed to create system token manager: %v\n", err)
+			}
+			auth.InitSystemTokenManager(stm)
+		}
+
+		sp, err := policy.Init(kv)
+		if err != nil {
+			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
+		}
+
 		// Start SDK Server for this driver
+		os.Remove(sdksocket)
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
-			Net:        "tcp",
-			Address:    ":" + c.String("sdkport"),
-			RestPort:   c.String("sdkrestport"),
-			DriverName: d,
-			Cluster:    cm,
+			Net:           "tcp",
+			Address:       ":" + c.String("sdkport"),
+			RestPort:      c.String("sdkrestport"),
+			Socket:        sdksocket,
+			DriverName:    d,
+			Cluster:       cm,
+			StoragePolicy: sp,
+			Security: &sdk.SecurityConfig{
+				Role:           rm,
+				Tls:            tlsConfig,
+				Authenticators: authenticators,
+			},
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)
@@ -372,12 +516,14 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
 		if err := cm.StartWithConfiguration(
-			0,
 			false,
 			"9002",
+			[]string{},
+			c.String("clusterdomain"),
 			&cluster.ClusterServerConfiguration{
 				ConfigSchedManager:       schedpolicy.NewFakeScheduler(),
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
+				ConfigSystemTokenManager: auth.SystemTokenManagerInst(),
 			},
 		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
@@ -403,4 +549,85 @@ func wrapAction(f func(*cli.Context) error) func(*cli.Context) {
 			os.Exit(1)
 		}
 	}
+}
+
+func selfSignedAuth(c *cli.Context) (*auth.JwtAuthenticator, error) {
+	var err error
+
+	rsaFile := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_RSA_PUBKEY"),
+		c.String("jwt-rsa-pubkey-file"))
+	ecdsFile := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_ECDS_PUBKEY"),
+		c.String("jwt-ecds-pubkey-file"))
+	sharedsecret := getConfigVar(os.Getenv("OPENSTORAGE_AUTH_SHAREDSECRET"),
+		c.String("jwt-shared-secret"))
+
+	if len(rsaFile) == 0 &&
+		len(ecdsFile) == 0 &&
+		len(sharedsecret) == 0 {
+		return nil, nil
+	}
+
+	authConfig := &auth.JwtAuthConfig{
+		SharedSecret:  []byte(sharedsecret),
+		UsernameClaim: auth.UsernameClaimType(c.String("username-claim")),
+	}
+
+	// Read RSA file
+	if len(rsaFile) != 0 {
+		authConfig.RsaPublicPem, err = ioutil.ReadFile(rsaFile)
+		if err != nil {
+			logrus.Errorf("Failed to read %s", rsaFile)
+		}
+	}
+
+	// Read Ecds file
+	if len(ecdsFile) != 0 {
+		authConfig.ECDSPublicPem, err = ioutil.ReadFile(ecdsFile)
+		if err != nil {
+			logrus.Errorf("Failed to read %s", ecdsFile)
+		}
+	}
+
+	return auth.NewJwtAuth(authConfig)
+}
+
+func oidcAuth(c *cli.Context) (*auth.OIDCAuthenticator, error) {
+
+	if len(c.String("oidc-issuer")) == 0 ||
+		len(c.String("oidc-client-id")) == 0 {
+		return nil, nil
+	}
+
+	return auth.NewOIDC(&auth.OIDCAuthConfig{
+		Issuer:            c.String("oidc-issuer"),
+		ClientID:          c.String("oidc-client-id"),
+		Namespace:         c.String("oidc-custom-claim-namespace"),
+		SkipClientIDCheck: c.Bool("oidc-skip-client-id-check"),
+		UsernameClaim:     auth.UsernameClaimType(c.String("username-claim")),
+	})
+}
+
+func setupSdkTls(c *cli.Context) (*sdk.TLSConfig, error) {
+
+	certFile := getConfigVar(os.Getenv("OPENSTORAGE_CERTFILE"),
+		c.String("tls-cert-file"))
+	keyFile := getConfigVar(os.Getenv("OPENSTORAGE_KEYFILE"),
+		c.String("tls-key-file"))
+
+	if len(certFile) != 0 && len(keyFile) != 0 {
+		logrus.Infof("TLS %s and %s", certFile, keyFile)
+		return &sdk.TLSConfig{
+			CertFile: certFile,
+			KeyFile:  keyFile,
+		}, nil
+	}
+
+	return nil, nil
+}
+
+func getConfigVar(envVar, cliVar string) string {
+	if len(envVar) != 0 {
+		return envVar
+	}
+	return cliVar
 }

@@ -24,10 +24,55 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func setupExpectedCredentialsPassing(s *testServer, credid string) {
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+	}
+	creds := map[string]interface{}{
+		credid: enumAzure,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+}
+
+func setupExpectedCredentialsNotPassing(s *testServer) {
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(nil, nil)
+}
+
+func setupExpectedCredentialsNotPassingMoreThanOne(s *testServer) {
+	enumAzure1 := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account-1",
+		api.OptCredAzureAccountKey:  "test-azure-account-1",
+	}
+	enumAzure2 := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account-2",
+		api.OptCredAzureAccountKey:  "test-azure-account-2",
+	}
+	creds := map[string]interface{}{
+		"uuid-1": enumAzure1,
+		"uuid-2": enumAzure2,
+	}
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(creds, nil)
+}
 
 func TestSdkCloudBackupCreate(t *testing.T) {
 
@@ -51,6 +96,15 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(2)
+	s.MockDriver().
+		EXPECT().
 		CloudBackupCreate(&api.CloudBackupCreateRequest{
 			VolumeID:       id,
 			CredentialUUID: uuid,
@@ -59,7 +113,8 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 			Labels:         labels,
 		}).
 		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
-		Times(1)
+		Times(2)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -67,6 +122,13 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	// Get info
 	_, err := c.Create(context.Background(), req)
 	assert.NoError(t, err)
+
+	setupExpectedCredentialsPassing(s, uuid)
+	// default credentials
+	req.CredentialId = ""
+	_, err = c.Create(context.Background(), req)
+	assert.NoError(t, err)
+
 }
 
 func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
@@ -88,13 +150,23 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "volume id")
 
-	// Missing credential uuid
-	req.VolumeId = "id"
+	// cred id missing
+	req.VolumeId = "myvol"
+	setupExpectedCredentialsNotPassing(s)
+
 	_, err = c.Create(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
+
+	// more than 1 default creds
+	setupExpectedCredentialsNotPassingMoreThanOne(s)
+	_, err = c.Create(context.Background(), req)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "credential name or uuid to use")
 }
 
 func TestSdkCloudRestoreCreate(t *testing.T) {
@@ -126,6 +198,7 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 			Name:            taskId,
 		}, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -134,6 +207,44 @@ func TestSdkCloudRestoreCreate(t *testing.T) {
 	r, err := c.Restore(context.Background(), req)
 	assert.Equal(t, r.GetRestoreVolumeId(), id)
 	assert.NoError(t, err)
+}
+
+func TestSdkCloudRestoreCreateErrorCheck(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	backupid := "backupid"
+	taskId := "restore-task"
+	uuid := "uuid"
+	req := &api.SdkCloudBackupRestoreRequest{
+		BackupId:     backupid,
+		CredentialId: uuid,
+		TaskId:       taskId,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupRestore(&api.CloudBackupRestoreRequest{
+			ID:             backupid,
+			CredentialUUID: uuid,
+			Name:           taskId,
+		}).
+		Return(nil, volume.ErrExist).
+		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.Restore(context.Background(), req)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.AlreadyExists)
+	assert.Contains(t, serverError.Message(), "Restore task with this name already exists")
 }
 
 func TestSdkCloudBackupRestoreBadArguments(t *testing.T) {
@@ -155,12 +266,13 @@ func TestSdkCloudBackupRestoreBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "backup id")
 
 	// Missing credential uuid
+	setupExpectedCredentialsNotPassing(s)
 	req.BackupId = "id"
 	_, err = c.Restore(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudDeleteCreate(t *testing.T) {
@@ -186,6 +298,7 @@ func TestSdkCloudDeleteCreate(t *testing.T) {
 		}).
 		Return(nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -215,11 +328,12 @@ func TestSdkCloudBackupDeleteBadArguments(t *testing.T) {
 
 	// Missing credential uuid
 	req.BackupId = "id"
+	setupExpectedCredentialsNotPassing(s)
 	_, err = c.Delete(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudDeleteAllCreate(t *testing.T) {
@@ -246,6 +360,7 @@ func TestSdkCloudDeleteAllCreate(t *testing.T) {
 		}).
 		Return(nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -274,12 +389,13 @@ func TestSdkCloudBackupDeleteAllBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "volume id")
 
 	// Missing credential uuid
+	setupExpectedCredentialsNotPassing(s)
 	req.SrcVolumeId = "id"
 	_, err = c.DeleteAll(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
@@ -331,6 +447,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 		}).
 		Return(list, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -368,11 +485,75 @@ func TestSdkCloudBackupEnumerateWithFiltersBadArguments(t *testing.T) {
 
 	// Missing credential uuid
 	req.SrcVolumeId = "id"
+	setupExpectedCredentialsNotPassing(s)
 	_, err := c.EnumerateWithFilters(context.Background(), req)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
+}
+
+func TestSdkCloudBackupEnumerateWithFiltersSingle(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "uuid"
+	backupId := "one"
+	req := &api.SdkCloudBackupEnumerateWithFiltersRequest{
+		CloudBackupId: backupId,
+		CredentialId:  uuid,
+	}
+	list := &api.CloudBackupEnumerateResponse{
+		Backups: []api.CloudBackupInfo{
+			{
+				ID:            backupId,
+				SrcVolumeID:   "one:vol",
+				SrcVolumeName: "one:volname",
+				Timestamp:     time.Now(),
+				Metadata: map[string]string{
+					"hello": "world",
+				},
+				Status: "Done",
+			},
+		},
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupEnumerate(&api.CloudBackupEnumerateRequest{
+			CloudBackupGenericRequest: api.CloudBackupGenericRequest{
+				CloudBackupID:  backupId,
+				CredentialUUID: uuid,
+			},
+		}).
+		Return(list, nil).
+		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetBackups())
+	assert.Len(t, r.GetBackups(), 1)
+
+	for i, v := range list.Backups {
+		assert.Equal(t, r.Backups[i].GetId(), v.ID)
+		assert.Equal(t, r.Backups[i].GetSrcVolumeId(), v.SrcVolumeID)
+		assert.Equal(t, r.Backups[i].GetSrcVolumeName(), v.SrcVolumeName)
+		assert.Equal(t,
+			r.Backups[i].GetStatus(),
+			api.StringToSdkCloudBackupStatusType(v.Status))
+		assert.True(t, reflect.DeepEqual(r.Backups[i].GetMetadata(), v.Metadata))
+		ts, err := ptypes.TimestampProto(v.Timestamp)
+		assert.NoError(t, err)
+		assert.Equal(t, r.Backups[i].Timestamp, ts)
+	}
 }
 
 func TestSdkCloudBackupStatus(t *testing.T) {
@@ -394,6 +575,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				BytesDone:      123456,
 				BytesTotal:     123456,
 				EtaSeconds:     0,
+				SrcVolumeID:    id,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "mynode",
@@ -406,6 +588,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				BytesDone:      97324,
 				BytesTotal:     123456,
 				EtaSeconds:     37,
+				SrcVolumeID:    id,
 				StartTime:      time.Now(),
 				CompletedTime:  time.Now(),
 				NodeID:         "myothernode",
@@ -415,6 +598,15 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	}
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(3)
 	s.MockDriver().
 		EXPECT().
 		CloudBackupStatus(&api.CloudBackupStatusRequest{
@@ -484,6 +676,7 @@ func TestSdkCloudBackupCatalog(t *testing.T) {
 		}).
 		Return(catalog, nil).
 		Times(1)
+	setupExpectedCredentialsPassing(s, creds)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -520,11 +713,12 @@ func TestSdkCloudBackupCatalogBadArguments(t *testing.T) {
 
 	// Missing credential uuid
 	req.BackupId = "id"
+	setupExpectedCredentialsNotPassing(s)
 	_, err = c.Catalog(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
 }
 
 func TestSdkCloudBackupHistory(t *testing.T) {
@@ -553,6 +747,15 @@ func TestSdkCloudBackupHistory(t *testing.T) {
 	}
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		CloudBackupHistory(&api.CloudBackupHistoryRequest{
@@ -610,28 +813,65 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 		internalrs string
 		sdkrs      api.SdkCloudBackupRequestedState
 	}{
-		{
-			api.CloudBackupRequestedStatePause,
-			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause,
-		},
-		{
-			api.CloudBackupRequestedStateResume,
-			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume,
-		},
+		/*
+			{
+				api.CloudBackupRequestedStatePause,
+				api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause,
+			},
+			{
+				api.CloudBackupRequestedStateResume,
+				api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume,
+			},
+		*/
 		{
 			api.CloudBackupRequestedStateStop,
 			api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop,
 		},
 	}
 	id := "myvol"
+	taskId := "myid"
+	statuses := &api.CloudBackupStatusResponse{
+		Statuses: map[string]api.CloudBackupStatus{
+			"hello": api.CloudBackupStatus{
+				ID:             taskId,
+				OpType:         api.CloudBackupOp,
+				Status:         api.CloudBackupStatusPaused,
+				BytesDone:      123456,
+				BytesTotal:     123456,
+				EtaSeconds:     0,
+				SrcVolumeID:    id,
+				StartTime:      time.Now(),
+				CompletedTime:  time.Now(),
+				NodeID:         "mynode",
+				CredentialUUID: "uuid",
+			},
+		},
+	}
+
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
 
 	for _, test := range tests {
 		// Create response
 		s.MockDriver().
 			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+				},
+			}, nil).
+			Times(1)
+		s.MockDriver().
+			EXPECT().
+			CloudBackupStatus(&api.CloudBackupStatusRequest{
+				ID: taskId,
+			}).
+			Return(statuses, nil).
+			Times(1)
+		s.MockDriver().
+			EXPECT().
 			CloudBackupStateChange(&api.CloudBackupStateChangeRequest{
-				Name:           id,
+				Name:           taskId,
 				RequestedState: test.internalrs,
 			}).
 			Return(nil).
@@ -639,7 +879,7 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 
 		// Get info
 		_, err := c.StateChange(context.Background(), &api.SdkCloudBackupStateChangeRequest{
-			TaskId:         id,
+			TaskId:         taskId,
 			RequestedState: test.sdkrs,
 		})
 		assert.NoError(t, err)
@@ -690,7 +930,7 @@ func TestSdkCloudBackupSchedDeleteBadArguments(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "Must provide schedule uuid")
 }
 
 func TestSdkCloudBackupSchedCreate(t *testing.T) {
@@ -698,6 +938,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
+	id := "test-id"
 	testSched := []*api.SdkSchedulePolicyInterval{
 		&api.SdkSchedulePolicyInterval{
 			Retain: 1,
@@ -711,7 +952,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	}
 	req := &api.SdkCloudBackupSchedCreateRequest{
 		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
-			SrcVolumeId:  "test-id",
+			SrcVolumeId:  id,
 			CredentialId: "uuid",
 			Schedules:    testSched,
 		},
@@ -725,9 +966,19 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		CloudBackupSchedCreate(&mockReq).
-		Return(&api.CloudBackupSchedCreateResponse{}, nil).
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
 		Times(1)
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedCreate(&mockReq).
+		Return(&api.CloudBackupSchedCreateResponse{UUID: "uuid"}, nil).
+		Times(1)
+	setupExpectedCredentialsPassing(s, "uuid")
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
@@ -758,12 +1009,86 @@ func TestSdkCloudBackupSchedCreateBadArguments(t *testing.T) {
 
 	// Missing credential uuid
 	req.VolumeId = "id"
+	setupExpectedCredentialsNotPassing(s)
 	req.TaskId = "backup-task"
 	_, err = c.Create(context.Background(), req)
 	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "credential uuid")
+	assert.Contains(t, serverError.Message(), "No configured credentials found")
+}
+
+func TestSdkCloudBackupSchedUpdate(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	id := "test-id"
+	testSched := []*api.SdkSchedulePolicyInterval{
+		&api.SdkSchedulePolicyInterval{
+			Retain: 1,
+			PeriodType: &api.SdkSchedulePolicyInterval_Daily{
+				Daily: &api.SdkSchedulePolicyIntervalDaily{
+					Hour:   0,
+					Minute: 30,
+				},
+			},
+		},
+	}
+	updateReq := &api.SdkCloudBackupSchedUpdateRequest{
+		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
+			SrcVolumeId:  id,
+			CredentialId: "uuid",
+			Schedules:    testSched,
+		},
+		SchedUuid: "uuid-1",
+	}
+
+	mockUpdateReq := api.CloudBackupSchedUpdateRequest{}
+	mockUpdateReq.SrcVolumeID = updateReq.GetCloudSchedInfo().GetSrcVolumeId()
+	mockUpdateReq.CredentialUUID = updateReq.GetCloudSchedInfo().GetCredentialId()
+	mockUpdateReq.Schedule = "- freq: daily\n  minute: 30\n  retain: 1\n"
+	mockUpdateReq.SchedUUID = updateReq.GetSchedUuid()
+	// Create response
+
+	schedList := &api.CloudBackupSchedEnumerateResponse{
+		Schedules: map[string]api.CloudBackupScheduleInfo{
+			"uuid-1": api.CloudBackupScheduleInfo{
+				SrcVolumeID:    "test-id",
+				CredentialUUID: "uuid",
+				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+			},
+		},
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedEnumerate().
+		Return(schedList, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
+		Inspect([]string{id}).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: id,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSchedUpdate(&mockUpdateReq).
+		Return(nil).
+		Times(1)
+	setupExpectedCredentialsPassing(s, "uuid")
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Update info
+	_, err := c.SchedUpdate(context.Background(), updateReq)
+	assert.NoError(t, err)
 }
 
 func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
@@ -778,13 +1103,13 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 			"test-uuid-1": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n",
 				MaxBackups:     4,
 			},
 			"test-uuid-2": api.CloudBackupScheduleInfo{
 				SrcVolumeID:    "myid2",
 				CredentialUUID: "test-uuid-1",
-				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
+				Schedule:       "- freq: daily\n  minute: 30\n",
 				MaxBackups:     3,
 			},
 		},

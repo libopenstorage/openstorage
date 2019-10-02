@@ -3,8 +3,8 @@ services:
   - docker
 language: go
 go:
-  - 1.9.7
-  - 1.10.4
+  - 1.11.x
+  - 1.12.x
 install:
   - go get github.com/mattn/goveralls
   - go get -u github.com/vbatts/git-validation
@@ -17,6 +17,7 @@ script:
   - make sdk-check-version
   - make install
   - make vet
+  - bash hack/docker-integration-test.sh
   - make docker-test
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
@@ -27,5 +28,5 @@ notifications:
     recipients:
       - aditya@portworx.com
       - eng@portworx.com
-    on_success: always
+    on_success: change
     on_failure: always

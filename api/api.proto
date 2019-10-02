@@ -1,4 +1,4 @@
-// Please use the following editor setup for this file:
+/// Please use the following editor setup for this file:
 // Tab size=2; Tabs as spaces; Clean up trailing whitepsace
 //
 // In vim add: au FileType proto setl sw=2 ts=2 expandtab list
@@ -109,6 +109,7 @@ enum IoProfile {
   IO_PROFILE_DB = 2;
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
+  IO_PROFILE_SYNC_SHARED = 5;
 }
 
 // VolumeState represents the state of a volume.
@@ -158,11 +159,6 @@ enum StorageMedium {
   STORAGE_MEDIUM_NVME = 2;
 }
 
-enum ClusterNotify {
- // Node is down
- CLUSTER_NOTIFY_DOWN = 0;
-}
-
 enum AttachState {
     // Attached and available externally
     ATTACH_STATE_EXTERNAL = 0;
@@ -179,10 +175,16 @@ enum OperationFlags {
   OP_FLAGS_DETACH_FORCE = 2;
 }
 
-
+enum HardwareType {
+  // When we do not know the machine type alsp the default
+  UnknownMachine = 0;
+  // when we are running on virtual machine
+  VirtualMachine = 1;
+  // when we are running on physical hardware
+  BareMetalMachine = 2;
+}
 
 // StorageResource groups properties of a storage device.
-// swagger:model
 message StorageResource {
   // Id is the LUN identifier.
   string id = 1;
@@ -230,21 +232,49 @@ message StoragePool {
   uint64 Used = 8;
   // Labels is a list of user defined name-value pairs
   map<string, string> labels = 9;
+  // UUID is the unique identifier for a storage pool
+  string uuid = 10;
+  // LastOperation is the most recent operation being performed on a storage pool
+  StoragePoolOperation last_operation = 11;
 }
+
+// StoragePoolOperation defines an operation being performed on a storage pool
+message StoragePoolOperation {
+  // Type is the type of the operation
+  SdkStoragePool.OperationType type = 1;
+  // Msg is a user friendly message for the operation
+  string msg = 2;
+  // Params for the parameters for the operation
+  map<string, string> params = 3;
+  // Status is the status of the operation
+  SdkStoragePool.OperationStatus status = 4;
+}
+
 
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
-// swagger:model
 message VolumeLocator {
   // User friendly identifier
   string name = 1;
   // A set of name-value pairs that acts as search filters
   map<string, string> volume_labels = 2;
+  // Filter with ownership
+  Ownership ownership = 3;
+  // Filter by group
+  Group group = 4;
+  // Volume Ids to match
+  repeated string volume_ids = 5;
+}
+
+// Options used for volume inspection
+message VolumeInspectOptions {
+  // Deep inspection is used to collect more information about
+  // the volume. Setting this value may delay the request.
+  bool deep = 1;
 }
 
 // Source is a structure that can be given to a volume
 // to seed the volume with data.
-// swagger:model
 message Source {
   // A volume id, if specified will create a clone of the parent.
   string parent = 1;
@@ -255,7 +285,6 @@ message Source {
 
 // Group represents VolumeGroup / namespace
 // All volumes in the same group share this object.
-// swagger:model
 message Group {
   // Id common identifier across volumes that have the same group.
   string id = 1;
@@ -270,7 +299,6 @@ message IoStrategy {
 }
 
 // VolumeSpec has the properties needed to create a volume.
-// swagger:model
 message VolumeSpec {
   // Ephemeral storage
   bool ephemeral = 1;
@@ -290,13 +318,13 @@ message VolumeSpec {
   bool dedupe = 8;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 9;
-  // VolumeLabels configuration labels
+  // (deprecated, do not use) VolumeLabels configuration labels
   map<string, string> volume_labels = 10;
   // Shared is true if this volume can be concurrently accessed by multiple users.
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
-  // Aggregatiokn level Specifies the number of parts the volume can be aggregated from.
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
   uint32 aggregation_level = 13;
   // Encrypted is true if this volume will be cryptographically secured.
   bool encrypted = 14;
@@ -332,6 +360,10 @@ message VolumeSpec {
   IoStrategy io_strategy = 30;
   // PlacementStrategy specifies a spec to indicate where to place the volume.
   VolumePlacementStrategy placement_strategy = 31;
+  // StoragePolicy if applied/specified while creating volume
+  string storage_policy = 32;
+  // Owner
+  Ownership ownership = 33;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -348,8 +380,6 @@ message VolumeSpecUpdate {
   oneof dedupe_opt { bool dedupe = 8; }
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   oneof snapshot_interval_opt { uint32 snapshot_interval = 9; }
-  // VolumeLabels configuration labels
-  map<string, string> volume_labels = 10;
   // Shared is true if this volume can be remotely accessed.
   oneof shared_opt { bool shared = 11; }
   // ReplicaSet is the desired set of nodes for the volume data.
@@ -370,24 +400,150 @@ message VolumeSpecUpdate {
   oneof sharedv4_opt { bool sharedv4 = 24; }
   // QueueDepth defines the desired block device queue depth
   oneof queue_depth_opt { uint32 queue_depth = 25; }
+  // Ownership volume information to update. If the value of `owner` in the
+  // `ownership` message is an empty string then the value of `owner` in
+  // the `VolumeSpec.Ownership.owner` will not be updated.
+  Ownership ownership = 26;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 27; }
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 28;
+}
+
+// VolumeSpecPolicy provides a method to set volume storage policy
+message VolumeSpecPolicy {
+  // This defines an operator for the policy comparisons
+  enum PolicyOp {
+    // Policy will make sure the value must be equal
+    Equal = 0;
+    // Policy will make sure the requested value must be greater than or equal
+    Minimum = 1;
+    // Policy will make sure the requested value must be less than or equal
+    Maximum = 2;
+  }
+
+  // Size specifies the thin provisioned volume size in bytes.
+  // Use `size_operator` to show if this value is the min, max, or set.
+  oneof size_opt { uint64 size = 1; }
+  // HaLevel specifies the number of copies of data.
+  // Use `ha_level_operator` to show if this value is the min, max, or set.
+  oneof ha_level_opt { int64 ha_level = 2; }
+  // Cos specifies the relative class of service.
+  oneof cos_opt { CosType cos = 3; }
+  // IoProfile provides a hint about application using this volume.
+  oneof io_profile_opt { IoProfile io_profile = 4; }
+  // Dedupe specifies if the volume data is to be de-duplicated.
+  oneof dedupe_opt { bool dedupe = 5; }
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  oneof snapshot_interval_opt { uint32 snapshot_interval = 6; }
+  // VolumeLabels configuration labels
+  map<string, string> volume_labels = 7;
+  // Shared is true if this volume can be remotely accessed.
+  oneof shared_opt { bool shared = 8; }
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 9;
+  // Passphrase for an encrypted volume
+  oneof passphrase_opt { string passphrase = 10; }
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  oneof snapshot_schedule_opt { string snapshot_schedule = 11; }
+  // Scale allows autocreation of volumes.
+  oneof scale_opt { uint32 scale = 12; }
+  // Sticky volumes cannot be deleted until the flag is removed.
+  oneof sticky_opt { bool sticky = 13; }
+  // Group identifies a consistency group
+  oneof group_opt { Group group = 14; }
+  // Journal is true if data for the volume goes into the journal.
+  oneof journal_opt { bool journal = 15; }
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  oneof sharedv4_opt { bool sharedv4 = 16; }
+  // QueueDepth defines the desired block device queue depth
+  oneof queue_depth_opt { uint32 queue_depth = 17; }
+  // Encrypted is true if this volume will be cryptographically secured.
+  oneof encrypted_opt { bool encrypted = 18; }
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  oneof aggregation_level_opt { uint32 aggregation_level = 19; }
+  // Operator to check size
+  PolicyOp size_operator = 50;
+  // Operator to check ha_level
+  PolicyOp ha_level_operator = 51;
+  // Operator to check scale
+  PolicyOp scale_operator = 52;
+  // Operator to check snapshot_interval
+  PolicyOp snapshot_interval_operator = 53;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  oneof nodiscard_opt { bool nodiscard = 54; }
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 55;
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
 // coded - for clustered storage arrays
-// swagger:model
 message ReplicaSet {
   repeated string nodes = 1;
 }
 
 // RuntimeStateMap is a list of name value mapping of driver specific runtime
 // information.
-// swagger:model
 message RuntimeStateMap {
   map<string, string> runtime_state = 1;
 }
 
+// Ownership information for resource.
+// Administrators are users who belong to the group `*`, meaning, every group.
+message Ownership {
+
+  // Access types can be set by owner to have different levels of access to
+  // a resource.
+  //
+  // It is up to the resource to interpret what the types mean and are
+  // used for.
+  enum AccessType {
+    // Read access only and cannot affect the resource.
+    Read = 0;
+    // Write access and can affect the resource.
+    // This type automatically provides Read access also.
+    Write = 1;
+    // Administrator access.
+    // This type automatically provides Read and Write access also.
+    Admin = 2;
+  }
+
+  message AccessControl {
+    // Group access to resource which must match the group set in the
+    // authorization token.
+    // Can be set by the owner or the system administrator only.
+    // Possible values are:
+    // 1. no groups: Means no groups are given access.
+    // 2. `["*"]`: All groups are allowed.
+    // 3. `["group1", "group2"]`: Only certain groups are allowed. In this example only
+    // _group1_ and _group2_ are allowed.
+    map <string, AccessType> groups = 1;
+    // Collaborator access to resource gives access to other user.
+    // Must be the username (unique id) set in the authorization token.
+    // The owner or the administrator can set this value. Possible values are:
+    // 1. no collaborators: Means no users are given access.
+    // 2. `["*"]`: All users are allowed.
+    // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
+    // _username1_ and _username2_ are allowed.
+    map <string, AccessType> collaborators = 2;
+  }
+
+  // Username of owner.
+  //
+  // The storage system uses the username taken from the security authorization
+  // token and is saved on this field. Only users with system administration
+  // can edit this value.
+  string owner = 1;
+  // Permissions to share resource which can be set by the owner.
+  //
+  // NOTE: To create an "admin" user which has access to any resource set the group value
+  // in the token of the user to `*`.
+  AccessControl acls = 2;
+}
+
 // Volume represents an abstract storage volume.
-// swagger:model
 message Volume {
   // Self referential volume ID.
   string id = 1;
@@ -403,19 +559,19 @@ message Volume {
   google.protobuf.Timestamp ctime = 6;
   // User specified VolumeSpec
   VolumeSpec spec = 7;
-  // Usage is bytes consumed by vtheis volume.
+  // Usage is bytes consumed by this volume.
   uint64 usage = 8;
   // LastScan is the time when an integrity check was run.
   google.protobuf.Timestamp last_scan = 9;
   // Format specifies the filesytem for this volume.
   FSType format = 10;
-  // Status is the availability status of this volume.
+  // VolumeStatus is the availability status of this volume.
   VolumeStatus status = 11;
-  // State is the current runtime state of this volume.
+  // VolumeState is the current runtime state of this volume.
   VolumeState state = 12;
   // AttachedOn is the node instance identifier for clustered systems.
   string attached_on = 13;
-  // AttachedState shows whether the device is attached for internal or external use.
+  // AttachState shows whether the device is attached for internal or external use.
   AttachState attached_state = 14;
   // DevicePath is the device exported by block device implementations.
   string device_path = 15;
@@ -436,6 +592,10 @@ message Volume {
   repeated VolumeConsumer volume_consumers = 22;
   // FsResizeRequired if an FS resize is required on the volume.
   bool fs_resize_required = 23;
+  // AttachTime time this device was last attached externally.
+  google.protobuf.Timestamp attach_time = 24;
+  // DetachTime time this device was detached.
+  google.protobuf.Timestamp detach_time= 25;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -474,6 +634,27 @@ message CapacityUsageInfo {
   int64 shared_bytes = 2;
   // TotalBytes used by this volume
   int64 total_bytes = 3;
+}
+
+// A SdkStoragePolicy represents minimum set of volume specs to be
+// follow while creating volumes.
+// If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be
+// used before creating volume to validate volume specs or ensure minimum volume creation
+// rules followed
+message SdkStoragePolicy {
+  // Name of storage policy.
+  string name = 1;
+  // VolumeSpecs to apply while creating volume.
+  VolumeSpecPolicy policy = 2;
+  // Force if set to true volume specs will be overwritten, otherwise
+  // volume creation will fail if the volume specifications are not inline with storage policy
+  bool force = 3;
+  // If set a volume can be updated without storage Policy
+  // restriction, otherwise volume update will be followed as per storage policy
+  // specification
+  bool allow_update = 4;
+  // Owner info of storage policy
+  Ownership ownership = 5;
 }
 
 // Alert is a structure that represents an alert object
@@ -663,20 +844,12 @@ service OpenStorageAlerts {
     }
 }
 
-// Define a schedule policy request
-message SdkSchedulePolicyCreateRequest {
-    // Schedule Policy
-    SdkSchedulePolicy schedule_policy = 1;
-}
-
 // Alerts is an array of Alert objects
-// swagger:model
 message Alerts {
   repeated Alert alert = 1;
 }
 
 // ObjectstoreInfo is a structure that has current objectstore info
-// swagger:model
 message ObjectstoreInfo {
     // UUID of objectstore
     string uuid = 1;
@@ -704,7 +877,6 @@ message ObjectstoreInfo {
 
 // VolumeCreateRequest is a structure that has the locator, source and spec
 // to create a volume
-// swagger:model
 message VolumeCreateRequest {
   // User specified volume name and labels
   VolumeLocator locator = 1;
@@ -715,7 +887,6 @@ message VolumeCreateRequest {
 }
 
 // VolumeResponse is a structure that wraps an error.
-// swagger:response volumeResponse
 message VolumeResponse {
   // Error message
   //
@@ -725,7 +896,6 @@ message VolumeResponse {
 }
 
 // VolumeCreateResponse
-// swagger:response volumeCreateResponse
 message VolumeCreateResponse {
   // ID of the newly created volume
   //
@@ -740,7 +910,6 @@ message VolumeCreateResponse {
 }
 
 // VolumeStateAction specifies desired actions.
-// swagger:model
 message VolumeStateAction {
   // Attach or Detach volume
   VolumeActionParam attach = 1;
@@ -753,7 +922,6 @@ message VolumeStateAction {
 }
 
 // VolumeSet specifies a request to update a volume.
-// swagger:model
 message VolumeSetRequest {
   // User specified volume name and labels
   VolumeLocator locator = 1;
@@ -767,22 +935,14 @@ message VolumeSetRequest {
 }
 
 // VolumeSetResponse
-// swagger:response volumeSetResponse
 message VolumeSetResponse {
   // Volume
-  //
-  // in: body
-  // Required: true
   Volume volume = 1;
   //VolumeResponse
-  //
-  // in: body
-  // Required: true
   VolumeResponse volume_response = 2;
 }
 
 // SnapCreateRequest specifies a request to create a snapshot of given volume.
-// swagger:parameters snapVolume
 message SnapCreateRequest {
   // volume id
   string id = 1;
@@ -793,7 +953,6 @@ message SnapCreateRequest {
 }
 
 // SnapCreateRequest specifies a response that get's returned when creating a snapshot.
-// swagger:response snapCreateResponse
 message SnapCreateResponse {
   // VolumeCreateResponse
   //
@@ -803,7 +962,6 @@ message SnapCreateResponse {
 }
 
 // VolumeInfo
-// swagger:model
 message VolumeInfo {
   string volume_id = 1;
   string path = 2;
@@ -813,7 +971,6 @@ message VolumeInfo {
 // VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer
 // would be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the
 // Volume
-// swagger: model
 message VolumeConsumer {
   // Name is the name of the volume consumer
   string name = 1;
@@ -838,14 +995,12 @@ message VolumeConsumer {
 // specified by the ID and Parent.  // Parent may be an empty string, in which
 // case there is no parent.
 // Where the Path is the filesystem path within the layered filesystem
-// swagger:model
 message GraphDriverChanges {
   string path = 1;
   GraphDriverChangeType kind = 2;
 }
 
 // ClusterResponse specifies a response that gets returned when requesting the cluster
-// swagger:response clusterResponse
 message ClusterResponse {
   // Error code
   //
@@ -854,27 +1009,24 @@ message ClusterResponse {
 }
 
 // Active Request
-// swagger:model
 message ActiveRequest {
   map<int64, string> ReqestKV = 1;
 }
 
 // Active Requests
-// swagger:model
 message ActiveRequests {
   int64 RequestCount = 1;
   repeated ActiveRequest ActiveRequest = 2;
 }
 
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
-// swagger:model
 message GroupSnapCreateRequest {
   string id = 1;
   map<string, string> Labels = 2;
+  repeated string volume_ids = 3;
 }
 
 // GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.
-// swagger:response groupSnapCreateResponse
 message GroupSnapCreateResponse {
   // Created snapshots
   //
@@ -919,6 +1071,8 @@ message StorageNode {
   // SchedulerNodeName is name of the node in scheduler context. It can be
   // empty if unable to get the name from the scheduler.
   string scheduler_node_name = 17;
+  // HardwareType is the type of the hardware the node has
+  HardwareType HWType = 18;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -931,6 +1085,67 @@ message StorageCluster {
   string name = 3;
 }
 
+// OpenStorageRole service provides methods to manage user roles
+//
+// ### Custom roles
+// The OpenStorage SDK server is equipped to handle customized authorization
+// roles. Using this model it allows administrators to customize the permission
+// rules of a role to be used by a user.
+//
+// Creating a custom role, or an SdkRole, is done by setting up a set of allowed _rules_,
+// or SdkRules, directives which are sequentially scanned until a match is found. Rules
+// are created using the names of OpenStorage SDK services and APIs as follows:
+//
+// The message SdkRules has the following properties:
+//
+// * Services: Is the gRPC service name in `OpenStorage<service name>` in lowercase
+// * Apis: Is the API name in the service in lowercase
+//
+// Please see SdkRule for more information on the format.
+service OpenStorageRole {
+
+  // Create a role for users in the system
+  rpc Create(SdkRoleCreateRequest)
+    returns (SdkRoleCreateResponse){
+      option(google.api.http) = {
+        post: "/v1/roles"
+        body: "*"
+      };
+    }
+
+  // List all roles
+  rpc Enumerate(SdkRoleEnumerateRequest)
+    returns (SdkRoleEnumerateResponse){
+      option(google.api.http) = {
+        get: "/v1/roles"
+      };
+    }
+
+  // Get information about a role
+  rpc Inspect(SdkRoleInspectRequest)
+    returns (SdkRoleInspectResponse){
+      option(google.api.http) = {
+        get: "/v1/roles/inspect/{name}"
+      };
+    }
+
+  // Delete an existing role
+  rpc Delete(SdkRoleDeleteRequest)
+    returns (SdkRoleDeleteResponse){
+      option(google.api.http) = {
+        delete: "/v1/roles/{name}"
+      };
+    }
+
+  // Update an existing role
+  rpc Update(SdkRoleUpdateRequest)
+    returns (SdkRoleUpdateResponse){
+      option(google.api.http) = {
+        put: "/v1/roles"
+        body: "*"
+      };
+    }
+}
 // OpenStorageIdentity service provides methods to obtain information
 // about the cluster
 service OpenStorageIdentity {
@@ -1033,6 +1248,67 @@ service OpenStorageClusterPair{
     }
 }
 
+// OpenStorageClusterDomains is a service used to manage cluster domains in an openstorage cluster.
+// A single openstorage cluster can stretch across multiple cluster domains. In other words it can
+// span across multiple Container Orchestrator clusters. Each node in the cluster is assigned a
+// a cluster domain to start with. A cluster domain and in turn the nodes which are a part of it
+// are assigned a status indicating whether the cluster domain is actively participating in the
+// cluster or whether it is inactive.
+service OpenStorageClusterDomains {
+  // Enumerate returns names of all the cluster domains in the cluster
+  rpc Enumerate(SdkClusterDomainsEnumerateRequest)
+    returns (SdkClusterDomainsEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/clusterdomains"
+      };
+    }
+
+  // Inspect returns information about a cluster domain and a
+  // status indicating whether the cluster domain is active
+  rpc Inspect(SdkClusterDomainInspectRequest)
+    returns (SdkClusterDomainInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/clusterdomains/inspect/{cluster_domain_name}"
+      };
+    }
+
+
+  // Activates a cluster domain in the cluster.
+  // All the nodes which are part of an active cluster domain
+  // will participate in cluster quorum calculation
+  rpc Activate(SdkClusterDomainActivateRequest)
+    returns (SdkClusterDomainActivateResponse) {
+      option(google.api.http) = {
+        post: "/v1/clusterdomains/activate/{cluster_domain_name}"
+      };
+    }
+
+  // Deactivates a cluster domain in the cluster.
+  // All the nodes which are part of a deactivated cluster domain.
+  // will not participate in cluster quorum calculation
+  rpc Deactivate(SdkClusterDomainDeactivateRequest)
+    returns (SdkClusterDomainDeactivateResponse) {
+      option(google.api.http) = {
+        post: "/v1/clusterdomains/deactivate/{cluster_domain_name}"
+      };
+    }
+
+}
+
+
+// OpenStoragePool is a service used to manage storage pools in the cluster
+service OpenStoragePool {
+  // Resize resizes the specified storage pool based on the request parameters
+  rpc Resize(SdkStoragePoolResizeRequest)
+    returns (SdkStoragePoolResizeResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepools/resize/{uuid}"
+      };
+    }
+
+}
+
+
 // OpenStorageNode is a service used to manage nodes in the cluster
 service OpenStorageNode {
   // Inspect returns information about the specified node
@@ -1059,12 +1335,22 @@ service OpenStorageNode {
         get: "/v1/nodes"
       };
     }
+
+  // EnumerateWithFilters returns all the nodes in the current cluster
+  rpc EnumerateWithFilters(SdkNodeEnumerateWithFiltersRequest)
+    returns (SdkNodeEnumerateWithFiltersResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/filters"
+      };
+    }
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
 service OpenStorageVolume {
 
   // Create creates a volume according to the specification provided
+  //
+  // Requires access AccessType.Read when cloning from a parent volume.
   //
   // ##### Example
   // {% codetabs name="Golang", type="go" -%}
@@ -1088,6 +1374,8 @@ service OpenStorageVolume {
     }
 
   // Clone creates a new writable volume cloned from an existing volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Clone(SdkVolumeCloneRequest)
     returns (SdkVolumeCloneResponse) {
       option(google.api.http) = {
@@ -1097,6 +1385,8 @@ service OpenStorageVolume {
     }
 
   // Delete deletes the provided volume
+  //
+  // Requires access AccessType.Admin of volume
   rpc Delete(SdkVolumeDeleteRequest)
     returns (SdkVolumeDeleteResponse) {
       option(google.api.http) = {
@@ -1105,6 +1395,8 @@ service OpenStorageVolume {
     }
 
   // Inspect returns information about a volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Inspect(SdkVolumeInspectRequest)
     returns (SdkVolumeInspectResponse) {
       option(google.api.http) = {
@@ -1112,8 +1404,26 @@ service OpenStorageVolume {
       };
     }
 
+  // Returns information for a list of volumes that match a filter.
+  // This call is a helper function like calling
+  // `OpenStorageVolume.EnumerateWithFilters` then having it
+  // return the contents of each of those volumes
+  // `OpenStorageVolume.Inspect()`. Take care in using this call
+  // when requesting large number of volumes because it will
+  // block until it has all the information requested before
+  // returning.
+  rpc InspectWithFilters(SdkVolumeInspectWithFiltersRequest)
+    returns (SdkVolumeInspectWithFiltersResponse) {
+      option(google.api.http) = {
+        post: "/v1/volumes/inspectwithfilters"
+        body: "*"
+      };
+    }
+
   // Update provides a method for manipulating the specification and attributes of a volume.
   // Set can be used to resize a volume, update labels, change replica count, and much more.
+  //
+  // Requires access AccessType.Write of volume
   rpc Update(SdkVolumeUpdateRequest)
     returns (SdkVolumeUpdateResponse) {
       option(google.api.http) = {
@@ -1123,6 +1433,8 @@ service OpenStorageVolume {
     }
 
   // Stats returns the statistics for the requested volume
+  //
+  // Requires access AccessType.Read of volume
   rpc Stats(SdkVolumeStatsRequest)
     returns (SdkVolumeStatsResponse) {
       option(google.api.http) = {
@@ -1131,6 +1443,8 @@ service OpenStorageVolume {
     }
 
   // CapacityUsage returns volume/snapshot's capacity usage details
+  //
+  // Requires access AccessType.Read of volume
   //
   // ##### Error codes:
   //
@@ -1164,6 +1478,8 @@ service OpenStorageVolume {
   // SnapshotCreate creates a snapshot of a volume. This creates an immutable (read-only),
   // point-in-time snapshot of a volume. To create a new writable volume from
   // a snapshot, please use OpenStorageVolume.Clone().
+  //
+  // Requires access AccessType.Read of volume
   rpc SnapshotCreate(SdkVolumeSnapshotCreateRequest)
     returns (SdkVolumeSnapshotCreateResponse) {
       option(google.api.http) = {
@@ -1173,6 +1489,8 @@ service OpenStorageVolume {
     }
 
   // SnapshotRestore restores a volume to a specified snapshot
+  //
+  // Requires access AccessType.Write of volume
   rpc SnapshotRestore(SdkVolumeSnapshotRestoreRequest)
     returns (SdkVolumeSnapshotRestoreResponse) {
       option(google.api.http) = {
@@ -1185,7 +1503,7 @@ service OpenStorageVolume {
   rpc SnapshotEnumerate(SdkVolumeSnapshotEnumerateRequest)
     returns (SdkVolumeSnapshotEnumerateResponse) {
       option(google.api.http) = {
-        get: "/v1/volumes/snapshots/{volume_id}"
+        get: "/v1/volumes/snapshots"
       };
     }
 
@@ -1197,7 +1515,7 @@ service OpenStorageVolume {
   rpc SnapshotEnumerateWithFilters(SdkVolumeSnapshotEnumerateWithFiltersRequest)
     returns (SdkVolumeSnapshotEnumerateWithFiltersResponse) {
       option(google.api.http) = {
-        post: "/v1/volumes/snapshots/{volume_id}/filters"
+        post: "/v1/volumes/snapshots/filters/{volume_id}"
         body: "*"
       };
     }
@@ -1205,6 +1523,8 @@ service OpenStorageVolume {
   // Sets the snapshot schedules. This information is saved in the VolumeSpec.snapshot_schedule
   // as `policy=<name>,...`. This function will overwrite any policy values
   // in the volume. To delete the policies in the volume send no policies.
+  //
+  // Requires access AccessType.Write of volume
   rpc SnapshotScheduleUpdate(SdkVolumeSnapshotScheduleUpdateRequest)
     returns (SdkVolumeSnapshotScheduleUpdateResponse) {
       option(google.api.http) = {
@@ -1222,6 +1542,8 @@ service OpenStorageVolume {
 service OpenStorageMountAttach {
 
   // Attach attaches device to the host that the client is communicating with.
+  //
+  // Requires access AccessType.Write of volume
   rpc Attach(SdkVolumeAttachRequest)
     returns (SdkVolumeAttachResponse) {
       option(google.api.http) = {
@@ -1231,6 +1553,8 @@ service OpenStorageMountAttach {
     }
 
   // Detaches a the volume from the host
+  //
+  // Requires access AccessType.Write of volume
   rpc Detach(SdkVolumeDetachRequest)
     returns (SdkVolumeDetachResponse) {
       option(google.api.http) = {
@@ -1240,6 +1564,8 @@ service OpenStorageMountAttach {
     }
 
   // Mount mounts an attached volume in the host that the client is communicating with
+  //
+  // Requires access AccessType.Write of volume
   rpc Mount(SdkVolumeMountRequest)
     returns(SdkVolumeMountResponse) {
       option(google.api.http) = {
@@ -1249,6 +1575,8 @@ service OpenStorageMountAttach {
     }
 
   // Unmount unmounts a mounted volume in the host that the client is communicating with
+  //
+  // Requires access AccessType.Write of volume
   rpc Unmount(SdkVolumeUnmountRequest)
       returns(SdkVolumeUnmountResponse) {
       option(google.api.http) = {
@@ -1465,10 +1793,25 @@ service OpenStorageCloudBackup {
   // Creates a backup request for a specified volume. Use
   // OpenStorageCloudBackup.Status() to get the current status of the
   // backup request.
+  //
+  // Requires access AccessType.Read of volume
   rpc Create(SdkCloudBackupCreateRequest)
     returns (SdkCloudBackupCreateResponse) {
       option(google.api.http) = {
         post: "/v1/cloudbackups"
+        body: "*"
+      };
+    }
+
+  // Creates a group backup request for a specified group. Use
+  // OpenStorageCloudBackup.Status() to get the current status of the
+  // backup request.
+  //
+  // This will only backup volumes which the user has read_access to.
+  rpc GroupCreate(SdkCloudBackupGroupCreateRequest)
+    returns (SdkCloudBackupGroupCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/cloudbackups/group"
         body: "*"
       };
     }
@@ -1555,6 +1898,15 @@ service OpenStorageCloudBackup {
       };
     }
 
+  // Update existing cloud backup schedule
+  rpc SchedUpdate(SdkCloudBackupSchedUpdateRequest)
+    returns (SdkCloudBackupSchedUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/cloudbackups/schedules"
+        body: "*"
+      };
+    }
+
   // Delete cloud backup schedule
   rpc SchedDelete(SdkCloudBackupSchedDeleteRequest)
     returns (SdkCloudBackupSchedDeleteResponse) {
@@ -1570,6 +1922,171 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
+}
+
+// OpenStoragePolicy service provides methods to manager storage policies.
+//
+// Policies can be used to validate/ensure a set of volume configurations to be followed
+// while creating volumes.
+service OpenStoragePolicy {
+
+  // Creates a storage policy
+  rpc Create(SdkOpenStoragePolicyCreateRequest)
+    returns (SdkOpenStoragePolicyCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Enumerate returns a list of storage policies
+  rpc Enumerate(SdkOpenStoragePolicyEnumerateRequest)
+    returns (SdkOpenStoragePolicyEnumerateResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies"
+      };
+    }
+
+  // Inspect returns information about a specified storage policy
+  rpc Inspect(SdkOpenStoragePolicyInspectRequest)
+    returns (SdkOpenStoragePolicyInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/inspect/{name}"
+      };
+    }
+
+  // Updates specified storage policy
+  rpc Update(SdkOpenStoragePolicyUpdateRequest)
+    returns (SdkOpenStoragePolicyUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepolicies"
+        body: "*"
+      };
+    }
+
+  // Deletes specified storage policy
+  rpc Delete(SdkOpenStoragePolicyDeleteRequest)
+    returns (SdkOpenStoragePolicyDeleteResponse) {
+      option(google.api.http) = {
+        delete: "/v1/storagepolicies/{name}"
+      };
+    }
+
+  // Set specified storage policy as default policy
+  rpc SetDefault(SdkOpenStoragePolicySetDefaultRequest)
+    returns (SdkOpenStoragePolicySetDefaultResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies/default/{name}"
+        body: "*"
+      };
+    }
+
+  // DefaultInspect return default storage policy if any, otherwise
+  // empty response
+  rpc DefaultInspect(SdkOpenStoragePolicyDefaultInspectRequest)
+    returns (SdkOpenStoragePolicyDefaultInspectResponse) {
+      option(google.api.http) = {
+        get: "/v1/storagepolicies/default"
+      };
+    }
+
+  // Release specified storage policy constraint for volume
+  // creation
+  rpc Release(SdkOpenStoragePolicyReleaseRequest)
+    returns (SdkOpenStoragePolicyReleaseResponse) {
+      option(google.api.http) = {
+        post: "/v1/storagepolicies/release"
+        body: "*"
+      };
+    }
+}
+
+// Define a request to create storage policy
+message SdkOpenStoragePolicyCreateRequest {
+  // storage policy to create
+  SdkStoragePolicy storage_policy = 1;
+}
+
+// Empty response
+message SdkOpenStoragePolicyCreateResponse {
+}
+
+// Empty request
+message SdkOpenStoragePolicyEnumerateRequest {
+}
+
+// Define a storage policy enumerate response
+message SdkOpenStoragePolicyEnumerateResponse {
+  // List of storage policies
+  repeated SdkStoragePolicy storage_policies =1;
+}
+
+// Define a request to inspect storage policy
+message SdkOpenStoragePolicyInspectRequest {
+  // name of storage policy to retrive
+  string name =1;
+}
+
+// Define a storage policy inspect response
+message SdkOpenStoragePolicyInspectResponse {
+  // storage policy information requested by name
+  SdkStoragePolicy storage_policy =1;
+}
+
+// Define a request to delete storage policy
+message SdkOpenStoragePolicyDeleteRequest {
+  // name of storage policy to delete
+  string name = 1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicyDeleteResponse {
+}
+
+// Define a request to update storage policy
+message SdkOpenStoragePolicyUpdateRequest {
+  // storage policy to update
+  SdkStoragePolicy storage_policy =1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicyUpdateResponse {
+}
+
+// Define a request to set default storage policy
+message SdkOpenStoragePolicySetDefaultRequest {
+  // name of policy to set as default storage policy
+  // for volume creation
+  // This policy will be used to validate/update volume configuration
+  string name = 1;
+}
+
+// Empty Response
+message SdkOpenStoragePolicySetDefaultResponse {
+}
+
+// Empty Request
+message SdkOpenStoragePolicyReleaseRequest {
+}
+
+// Empty Response
+message SdkOpenStoragePolicyReleaseResponse {
+}
+
+// Empty Request
+message SdkOpenStoragePolicyDefaultInspectRequest {
+}
+
+// Define default storage policy response
+message SdkOpenStoragePolicyDefaultInspectResponse {
+  // storage policy information which is set as default
+  SdkStoragePolicy storage_policy = 1;
+}
+
+// Define a schedule policy request
+message SdkSchedulePolicyCreateRequest {
+    // Schedule Policy
+    SdkSchedulePolicy schedule_policy = 1;
 }
 
 // Empty response
@@ -1703,6 +2220,9 @@ message SdkCredentialCreateRequest {
   string bucket = 2;
   // (optional) Key used to encrypt the data
   string encryption_key = 3;
+  // Ownership of the credential. Collaborators and groups may be
+  // added here with their appropriate ACLS.
+  Ownership ownership = 4;
 
   // Start at field number 200 to allow for expansion
   oneof credential_type {
@@ -1733,6 +2253,8 @@ message SdkAwsCredentialRequest {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
+  // (optional) Disable path-style access
+  bool disable_path_style = 6;
 }
 
 // Defines credentials for Azure
@@ -1761,6 +2283,8 @@ message SdkAwsCredentialResponse {
   string region = 4;
   // (optional) Disable SSL connection
   bool disable_ssl = 5;
+  // (optional) Disable path-style access
+  bool disable_path_style = 6;
 }
 
 // Defines the response for Azure credentials
@@ -1801,6 +2325,8 @@ message SdkCredentialInspectResponse {
   string name = 2;
   // (optional) Name of bucket
   string bucket = 3;
+  // Ownership of the credential
+  Ownership ownership = 4;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -1833,16 +2359,47 @@ message SdkCredentialValidateRequest {
 message SdkCredentialValidateResponse {
 }
 
+// Options to attach device
+message SdkVolumeAttachOptions {
+  // Indicates the name of the secret stored in a secret store
+  // In case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.
+  // In case of Kubernetes secret, it is the name of the secret object itself
+  string secret_name = 1;
+  // In case of Kubernetes, this will be the key stored in the Kubernetes secret
+  string secret_key = 2;
+  // It indicates the additional context which could be used to retrieve the secret.
+  // In case of Kubernetes, this is the namespace in which the secret is created.
+  string secret_context = 3;
+}
+
 // Defines a request to mount a volume to the node receiving this request
 message SdkVolumeMountRequest {
   // Id of the volume
   string volume_id = 1;
   // Mount path for mounting the volume.
   string mount_path = 2;
+  // Options to attach device
+  SdkVolumeAttachOptions options = 3;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 4;
 }
 
 // Empty response
 message SdkVolumeMountResponse {
+}
+
+// Options to unmount device
+message SdkVolumeUnmountOptions {
+  // Delete the mount path on the node after unmounting
+  bool delete_mount_path = 1;
+  // Do not wait for a delay before deleting path.
+  // Normally a storage driver may delay before deleting the mount path,
+  // which may be necessary to reduce the risk of race conditions. This
+  // choice will remove that delay. This value is only usable when
+  // `delete_mount_path` is set.
+  bool no_delay_before_deleting_mount_path = 2;
 }
 
 // Defines a request to unmount a volume on the node receiving this request
@@ -1852,18 +2409,11 @@ message SdkVolumeUnmountRequest {
   // MountPath for device
   string mount_path = 2;
   // Options to unmount device
-  message Options {
-    // Delete the mount path on the node after unmounting
-    bool delete_mount_path = 1;
-    // Do not wait for a delay before deleting path.
-    // Normally a storage driver may delay before deleting the mount path,
-    // which may be necessary to reduce the risk of race conditions. This
-    // choice will remove that delay. This value is only usable when
-    // `delete_mount_path` is set.
-    bool no_delay_before_deleting_mount_path = 2;
-  }
-  // Options to unmount device
-  Options options = 3;
+  SdkVolumeUnmountOptions options = 3;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 4;
 }
 
 // Empty response
@@ -1875,19 +2425,11 @@ message SdkVolumeAttachRequest {
   // Id of volume
   string volume_id = 1;
   // Options to attach device
-  message Options {
-    // Indicates the name of the secret stored in a secret store
-    // In case of Hashicorp's Vault, it will be the key from the key-value pair stored in its kv backend.
-    // In case of Kubernetes secret, it is the name of the secret object itself
-    string secret_name = 1;
-    // In case of Kubernetes, this will be the key stored in the Kubernetes secret
-    string secret_key = 2;
-    // It indicates the additional context which could be used to retrieve the secret.
-    // In case of Kubernetes, this is the namespace in which the secret is created.
-    string secret_context = 3;
-  }
-  // Options to attach device
-  Options options = 2;
+  SdkVolumeAttachOptions options = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 3;
 }
 
 // Defines a response from the node which received the request to attach
@@ -1896,18 +2438,25 @@ message SdkVolumeAttachResponse {
   string device_path = 1;
 }
 
+message SdkVolumeDetachOptions {
+  // Forcefully detach device from the kernel
+  bool force = 1;
+  // Unmount the volume before detaching
+  bool unmount_before_detach = 2;
+  //  redirect the request to the attached node
+  bool redirect = 3;
+}
+
 // Defines a request to detach a volume
 message SdkVolumeDetachRequest {
   // Id of the volume
   string volume_id = 1;
   // Options to detach device
-  message Options {
-    // Forcefully detach device from the kernel
-    bool force = 1;
-    // Unmount the volume before detaching
-    bool unmount_before_detach = 2;
-  }
-  Options options = 2;
+  SdkVolumeDetachOptions options = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> driver_options = 3;
 }
 
 // Empty response
@@ -1921,6 +2470,8 @@ message SdkVolumeCreateRequest {
   string name = 1;
   // Volume specification
   VolumeSpec spec = 2;
+  // Labels to apply to the volume
+  map<string, string> labels = 3;
 }
 
 // Defines a response to the creation of a volume
@@ -1957,31 +2508,59 @@ message SdkVolumeDeleteResponse {
 message SdkVolumeInspectRequest {
   // Id of volume to inspect
   string volume_id = 1;
+  // Options during inspection
+  VolumeInspectOptions options = 2;
 }
 
 // Defines the response when inspecting a volume
 message SdkVolumeInspectResponse {
   // Information about the volume
   Volume volume = 1;
+  // Name of volume
+  string name = 2;
+  // Volume labels
+  map<string, string> labels = 3;
+}
+
+// Defines the request to inspect volumes using a filter
+message SdkVolumeInspectWithFiltersRequest {
+  // (optional) Name to search
+  string name = 2;
+  // (optional) Labels to search
+  map<string, string> labels = 3;
+  // (optional) Ownership to match
+  Ownership ownership = 4;
+  // (optional) Group to match
+  Group group = 5;
+  // Options during inspection
+  VolumeInspectOptions options = 6;
+}
+
+// Defines the response when inspecting volumes using a filter
+message SdkVolumeInspectWithFiltersResponse {
+  // List of `SdkVolumeInspectResponse` objects describing the volumes
+  repeated SdkVolumeInspectResponse volumes = 1;
 }
 
 // This request is used to adjust or set new values in the volume
 message SdkVolumeUpdateRequest {
   // Id of the volume to update
   string volume_id = 1;
-  // Change locator values. Some of these values may not be able to be changed.
+  // Change label values. Some of these values may not be able to be changed.
   // New labels will be added to the current volume labels. To delete a label, set the
   // value of the label to an empty string.
-  VolumeLocator locator = 2;
+  map<string, string> labels = 3;
   // VolumeSpecUpdate provides a method to request that certain values
   // in the VolumeSpec are changed. This is necessary as a separate variable
   // because values like int and bool in the VolumeSpec cannot be determined
   // if they are being requested to change in gRPC proto3. Some of these
   // values may not be able to be changed.
-  // Here are a few examples of actions that can be accomplished using the VolumeSpec.
-  // To resize the volume: Set a new value in spec.size.
-  // To change number of replicas: Adjust spec.ha_level.
-  // To change the I/O Profile: Adjust spec.io_profile.
+  //
+  // Here are a few examples of actions that can be accomplished using the VolumeSpec:
+  //
+  // * To resize the volume: Set a new value in spec.size_opt.size.
+  // * To change number of replicas: Adjust spec.ha_level_opt.ha_level.
+  // * To change the I/O Profile: Adjust spec.io_profile_opt.io_profile.
   VolumeSpecUpdate spec = 4;
 }
 
@@ -2029,9 +2608,14 @@ message SdkVolumeEnumerateResponse {
 
 // Defines a request to list volumes
 message SdkVolumeEnumerateWithFiltersRequest {
-  // Volumes to match to this locator.
-  // If not provided, all volumes will be returned.
-  VolumeLocator locator = 1;
+  // (optional) Name to search
+  string name = 2;
+  // (optional) Labels to search
+  map<string, string> labels = 3;
+  // (optional) Ownership to match
+  Ownership ownership = 4;
+  // (optional) Group to match
+  Group group = 5;
 }
 
 // Defines the response when listing volumes
@@ -2106,6 +2690,52 @@ message SdkVolumeSnapshotScheduleUpdateRequest {
 message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
+
+// Empty request
+message SdkClusterDomainsEnumerateRequest {
+}
+
+// Defines a response when enumerating cluster domains
+message SdkClusterDomainsEnumerateResponse {
+    // List of names of all the cluster domains in a cluster
+    repeated string cluster_domain_names = 1;
+}
+
+// Defines a request to inspect a cluster domain
+message SdkClusterDomainInspectRequest {
+    // Name of the cluster domain to inspect
+    string cluster_domain_name = 1;
+}
+
+// Defines a response to inspecting a cluster domain
+message SdkClusterDomainInspectResponse {
+    // Name of the cluster domain
+    string cluster_domain_name = 1;
+    // IsActive indicates whether this cluster domain is active
+    bool is_active = 2;
+}
+
+
+// Defines a request to activate a cluster domain
+message SdkClusterDomainActivateRequest {
+    // Name of the cluster domain to activate
+    string cluster_domain_name = 1;
+}
+
+// Empty response
+message SdkClusterDomainActivateResponse {
+}
+
+// Defines a request to deactivate a cluster domain
+message SdkClusterDomainDeactivateRequest {
+    // Name of the cluster domain to deactivate
+    string cluster_domain_name = 1;
+}
+
+// Empty response
+message SdkClusterDomainDeactivateResponse {
+}
+
 // Empty request
 message SdkClusterInspectCurrentRequest {
 }
@@ -2120,6 +2750,58 @@ message SdkClusterInspectCurrentResponse {
 message SdkNodeInspectRequest {
   // Id of node to inspect
   string node_id = 1;
+}
+
+// Defines a request when inspect a storage pool
+message SdkStoragePoolResizeRequest {
+  // UUID of the storage pool to inspect
+  string uuid = 1;
+  // ResizeFactor is the option to indiciate if you would like to resize the pool
+  // by a fixed size or by a percentage of current size
+  oneof resize_factor {
+    // Size is the new desired size of the storage pool
+    uint64 size = 200;
+    // Size is the new desired size of the storage pool
+    uint64 percentage = 201;
+  }
+  // OperationType is the operation that's used to resize the storage pool (optional)
+  SdkStoragePool.ResizeOperationType operation_type = 3;
+}
+
+
+
+message SdkStoragePool {
+  // OperationStatus captures the various statuses of a storage pool operation
+  enum OperationStatus {
+    // Operation pending
+    OPERATION_PENDING = 0;
+    // Operation is in progress
+    OPERATION_IN_PROGRESS = 1;
+    // Operation is successful
+    OPERATION_SUCCESSFUL = 2;
+    // Operation failed
+    OPERATION_FAILED = 3;
+  }
+
+  // OperationType defines the various operations that are performed on a storage pool
+  enum OperationType {
+    // Resize operation
+    OPERATION_RESIZE = 0;
+  }
+
+  // Defines the operation types available to resize a storage pool
+  enum ResizeOperationType {
+    // Automatically pick the optimum resize operation type
+   RESIZE_TYPE_AUTO = 0;
+   // Add a new drive to resize the pool
+   RESIZE_TYPE_ADD_DISK = 1;
+   // Resize existing drives to resize the pool
+   RESIZE_TYPE_RESIZE_DISK = 2;
+  }
+}
+
+// Defines a response when resizing a storage pool
+message SdkStoragePoolResizeResponse {
 }
 
 // Defines a response when inspecting a node
@@ -2142,10 +2824,21 @@ message SdkNodeInspectCurrentResponse {
 message SdkNodeEnumerateRequest {
 }
 
-// Defines a response with a list of nodes
+// Defines a response with a list of node ids
 message SdkNodeEnumerateResponse {
   // List of all the node ids in the cluster
   repeated string node_ids = 1;
+}
+
+// Defines a request to list nodes with given filter. Currently there are
+// no filters and all the nodes will be returned.
+message SdkNodeEnumerateWithFiltersRequest {
+}
+
+// Defines a response with a list of nodes
+message SdkNodeEnumerateWithFiltersResponse {
+  // List of all the nodes in the cluster
+  repeated StorageNode nodes = 1;
 }
 
 // Defines a request to get information about an object store endpoint
@@ -2209,6 +2902,11 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
+  // FullBackupFrequency indicates number of incremental backup after whcih
+  // a fullbackup must be created. This is to override the default value for
+  // manual/user triggerred backups and not applicable for scheduled backups
+  // Value of 0 retains the default behavior.
+  uint32 full_backup_frequency = 6;
 }
 
 // Empty response
@@ -2216,6 +2914,33 @@ message SdkCloudBackupCreateResponse {
   // TaskId of the task performing the backup
   string task_id = 1;
 }
+
+// Defines a request to create a group backup of a group to the cloud
+message SdkCloudBackupGroupCreateRequest {
+  // GroupID of the volume for which cloudbackup is requested
+  string group_id = 1;
+    // VolumeIds are a list of volume IDs to use for the backup request.
+  // If multiple of GroupID, Labels or VolumeIDs are specified, volumes matching
+  // all of them are backed uup
+  repeated string volume_ids = 2;
+  // Credential id refers to the cloud credentials needed to backup
+  string credential_id = 3;
+  // Full indicates if full backup is desired even though incremental is possible
+  bool full = 4;
+    // Labels are list of key value pairs to tag the cloud backup. These labels
+  // are stored in the metadata associated with the backup.
+  map<string, string> labels = 5;
+}
+
+// Empty response
+message SdkCloudBackupGroupCreateResponse {
+  // ID for this group of backups
+  string group_cloud_backup_id = 1;
+
+  // TaskIds of the tasks performing the group backup
+  repeated string task_ids = 2;
+}
+
 
 // Defines a request to restore a volume from an existing backup stored by
 // a cloud provider
@@ -2294,6 +3019,18 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   string credential_id = 3;
   // (optional) All indicates if the request should show cloud backups for all clusters or the current cluster.
   bool all = 4;
+  // (optional) enumerates backups that have status specified by this type
+  SdkCloudBackupStatusType status_filter = 5;
+  // (optional) Enumerates backups that have tags of this type
+  map<string,string> metadata_filter = 6;
+  // (optional) if caller wished to limit number of backups returned by enumerate
+  uint64 max_backups = 7;
+  // Returned in the enumerate response if not all of the backups could be returned in the
+  // response.
+  string continuation_token = 8;
+  // If one wants to enumerate known backup, set this field to the backup ID
+  // naming format :clusteruuidORbicketname/srcVolId-snapId(-incr)
+  string cloud_backup_id = 9;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -2316,6 +3053,9 @@ message SdkCloudBackupInfo {
 // Defines a response which lists all the backups stored by a cloud provider
 message SdkCloudBackupEnumerateWithFiltersResponse {
   repeated SdkCloudBackupInfo backups = 1;
+  // if this is not an empty string, callers must pass this to get next list of
+  // backups
+  string continuation_token = 2;
 }
 
 // CloudBackup operations types
@@ -2346,6 +3086,11 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeActive = 6;
   // Failed
   SdkCloudBackupStatusTypeFailed = 7;
+  // Queued
+  SdkCloudBackupStatusTypeQueued = 8;
+  // Invalid, used by enumerate, includes failed,
+  // stopped and aborted
+ SdkCloudBackupStatusTypeInvalid = 9;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
@@ -2375,6 +3120,8 @@ message SdkCloudBackupStatus {
   uint64 bytes_total = 11;
   // ETASeconds is the number of seconds for cloud backup completion
   int64 eta_seconds = 12;
+  // string group_id volume's group id if this was group cloud backup
+  string group_id = 13;
 }
 
 // Defines a request to retreive the status of a backup or restore for a
@@ -2474,11 +3221,15 @@ message SdkCloudBackupScheduleInfo{
   string credential_id = 2;
   // Schedules are the frequencies of the backup
   repeated SdkSchedulePolicyInterval schedules = 3;
-  // MaxBackups are the maximum number of backups retained
-  // in cloud.Older backups are deleted
+  // MaxBackups indicates when to force full backup to cloud. If RetentionDays
+  // is not specified or is 0 (older scheme), this is also the maximum number
+  // of scheduled backups retained in the cloud. Older backups are deleted
   uint64 max_backups = 4;
   // Full indicates if scheduled backups should always be full and never incremental.
   bool full = 5;
+  // Number of days that Scheduled CloudBackups will be kept after which they
+  // are deleted
+ uint32 retention_days = 6;
 }
 
 // Defines a request to create a schedule for volume backups to a
@@ -2493,6 +3244,18 @@ message SdkCloudBackupSchedCreateRequest{
 message SdkCloudBackupSchedCreateResponse{
    // Id of newly created backup schedule
    string backup_schedule_id = 1;
+}
+
+// Defines a request to update a schedule for volume backups to a
+// cloud provider
+message SdkCloudBackupSchedUpdateRequest{
+  // Cloud Backup Schedule info
+  SdkCloudBackupScheduleInfo cloud_sched_info = 1;
+  string sched_uuid = 2;
+}
+
+// Empty response
+message SdkCloudBackupSchedUpdateResponse {
 }
 
 // Defines a request to delete a backup schedule
@@ -2514,6 +3277,112 @@ message SdkCloudBackupSchedEnumerateRequest{
 message SdkCloudBackupSchedEnumerateResponse{
   // Returns list of backup schedules
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
+}
+
+//
+// SdkRule is the message used to construct custom roles in the OpenStorage SDK.
+//
+// ### Format
+// The following shows the supported format for SdkRule:
+//
+// * Services: Is the gRPC service name in `OpenStorage<service name>` in lowercase
+// * Apis: Is the API name in the service in lowercase
+//
+// Values can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.
+//
+// ### Examples
+//
+// * Allow any call:
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["*"]
+//     Apis: ["*"]
+// ```
+//
+// * Allow only cluster operations:
+//
+// ```yaml
+// SdkRule:
+//   - services: ["cluster"]
+//     apis: ["*"]
+// ```
+//
+// * Allow inspection of any object and listings of only volumes
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*enumerate*"]
+//   - Services: ["*"]
+//     Apis: ["inspect*"]
+// ```
+//
+message SdkRule {
+  // The gRPC service name in `OpenStorage<service name>` in lowercase
+  repeated string services = 1;
+  // The API name in the service in lowercase
+  repeated string apis = 2;
+}
+
+message SdkRole {
+  string name = 1;
+  repeated SdkRule rules = 2;
+}
+
+// Defines a request for creating a role
+message SdkRoleCreateRequest {
+  // Role
+  SdkRole role = 1;
+}
+
+// Response contains informaiton about the creation of the role
+message SdkRoleCreateResponse {
+  // Role created
+  SdkRole role = 1;
+}
+
+// Empty request
+message SdkRoleEnumerateRequest {
+}
+
+// Respose to enumerate all roles
+message SdkRoleEnumerateResponse {
+  // List of role names
+  repeated string names = 1;
+}
+
+// Defines a request to inspect a role
+message SdkRoleInspectRequest {
+  // Name of role
+  string name = 1;
+}
+
+// Response to inspection request
+message SdkRoleInspectResponse {
+  // Role requested
+  SdkRole role = 1;
+}
+
+// Defines a request to delete a role
+message SdkRoleDeleteRequest {
+  string name = 1;
+}
+
+// Empty response
+message SdkRoleDeleteResponse {
+}
+
+// Defines a request to update an existing role
+message SdkRoleUpdateRequest {
+  // New role update
+  SdkRole role = 1;
+}
+
+// Response contains information about the updated role
+message SdkRoleUpdateResponse {
+  // Role updated
+  SdkRole role = 1;
 }
 
 // Empty request
@@ -2562,6 +3431,14 @@ message SdkServiceCapability {
       ALERTS = 8;
       // Mount/Attach Support
       MOUNT_ATTACH = 9;
+      // Role service
+      ROLE = 10;
+      // Cluster Pair service
+      CLUSTER_PAIR = 11;
+      // Migrate service
+      MIGRATE = 12;
+      // StoragePolicy Service
+      STORAGE_POLICY = 13;
     }
 
     // Type of service supported
@@ -2594,7 +3471,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 32;
+    Minor = 63;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -2766,8 +3643,19 @@ message CloudMigrateInfoList {
     repeated CloudMigrateInfo list = 1;
 }
 
-// Empty Request
+// Request for cloud migration operation status
 message SdkCloudMigrateStatusRequest {
+    // Request contains the task id and cluster id for which status should be
+    // returned
+    CloudMigrateStatusRequest request = 1;
+}
+
+// Request for cloud migration operation status
+message CloudMigrateStatusRequest {
+    // Task id for which to return status
+    string task_id = 1;
+    // ID of the cluster for which to return migration statuses
+    string cluster_id = 2;
 }
 
 // Response with a status of the cloud migration operations
@@ -2782,6 +3670,15 @@ message SdkCloudMigrateStatusResponse {
   CloudMigrateStatusResponse result = 1;
 }
 
+message ClusterPairMode {
+    enum Mode {
+        // Default pairing mode
+        Default = 0;
+        // Paired for DisasterRecovery
+        DisasterRecovery = 1;
+    }
+}
+
 // Used to send a request to create a cluster pair
 message ClusterPairCreateRequest {
   // IP of the remote cluster
@@ -2792,6 +3689,8 @@ message ClusterPairCreateRequest {
   string remote_cluster_token = 3;
   // Set the new pair as the default
   bool set_default = 4;
+  // The mode to use for the cluster pair
+  ClusterPairMode.Mode mode = 5;
 }
 
 // Response for a pair request
@@ -2819,6 +3718,8 @@ message ClusterPairProcessRequest {
     string source_cluster_id = 1;
     // Token used to authenticate with the remote cluster
     string remote_cluster_token = 2;
+    // The mode to use for the cluster pair
+    ClusterPairMode.Mode mode = 3;
 }
 
 // Response after a pairing has been processed
@@ -2890,6 +3791,8 @@ message ClusterPairInfo {
     // Key/value pair of options associated with the cluster
     // Opaque to openstorage and interpreted by the drivers
     map<string, string> options = 7;
+    // Mode for the cluster pair
+    ClusterPairMode.Mode mode = 8;
 }
 
 // Defines a cluster pair inspect request
@@ -2971,52 +3874,62 @@ message LocateResponse {
 }
 
 // VolumePlacementStrategy defines a strategy for placing volumes in the cluster which will be a series of rules
+// All the rules specified will be applied for volume placement.
+// Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
+// In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
 message VolumePlacementStrategy {
-  // Rules defines a list of rules as part of the placement spec. All the rules specified will
-  // be applied for volume placement.
-  // Rules that have enforcement as "required" are strictly enforced while "preferred" are best effort.
-  // In situations, where 2 or more rules conflict, the weight of the rules will dictate which wins.
-  repeated VolumePlacementRule rules = 1;
+  // ReplicaAffinity defines affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_affinity = 1;
+  // ReplicaAntiAffinity defines anti-affinity rules between replicas within a volume
+  repeated ReplicaPlacementSpec replica_anti_affinity = 2;
+  // VolumeAffinity defines affinity rules between volumes
+  repeated VolumePlacementSpec volume_affinity = 3;
+  // VolumeAntiAffinity defines anti-affinity rules between volumes
+  repeated VolumePlacementSpec volume_anti_affinity = 4;
 }
 
-// VolumePlacementRule defines a single placement rule
-message VolumePlacementRule {
-  // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
-  // rule would affect all replicas
-  // (optional)
-  int32 affected_replicas = 1;
+message ReplicaPlacementSpec {
   // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
   // higher weight wins over a rule with lower weight.
   // (optional)
-  int64 weight = 2;
-
-  // Defines the types of enforcement on the given rules
-  enum EnforcementType {
-    // This specifies that the rule is required and must be strictly enforced
-    required = 0;
-    // This specifies that the rule is preferred and can be best effort
-    preferred = 1;
-  }
+  int64 weight = 1;
 
   // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
   // (optional)
-  EnforcementType enforcement = 3;
+  EnforcementType enforcement = 2;
 
-  // This specifies the type an affinity rule can take
-  enum AffinityRuleType {
-    // Affinity means the rule specifies an affinity to objects that match the below label selector requirements
-    affinity = 0;
-    // AntiAffinity means the rule specifies an anti-affinity to objects that match the below label selector requirements
-    antiAffinity = 1;
-  }
+ // AffectedReplicas defines the number of volume replicas affected by this rule. If not provided,
+  // rule would affect all replicas
+  // (optional)
+  int32 affected_replicas = 3;
 
-  // Type is the type of the affinity rule
-  AffinityRuleType type = 4;
+// TopologyKey key for the matching all segments of the cluster topology with the same key
+// e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+// the same value for this key (i.e in the same zone)
+  string topology_key = 4;
 
   // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
   repeated LabelSelectorRequirement match_expressions = 5;
 }
 
+message VolumePlacementSpec {
+  // Weight defines the weight of the rule which allows to break the tie with other matching rules. A rule with
+  // higher weight wins over a rule with lower weight.
+  // (optional)
+  int64 weight = 1;
+
+  // Enforcement specifies the rule enforcement policy. Can take values: required or preferred.
+  // (optional)
+  EnforcementType enforcement = 2;
+
+  // TopologyKey key for the matching all segments of the cluster topology with the same key
+  // e.g If the key is failure-domain.beta.kubernetes.io/zone, this should match all nodes with
+  // the same value for this key (i.e in the same zone)
+  string topology_key = 3;
+
+  // MatchExpressions is a list of label selector requirements. The requirements are ANDed.
+  repeated LabelSelectorRequirement match_expressions = 4;
+}
 
 // LabelSelectorRequirement is a selector that contains values, a key, and an operator that
 // relates the key and values.
@@ -3049,4 +3962,12 @@ message LabelSelectorRequirement {
   // the values array must be empty. This array is replaced during a strategic
   // merge patch.
   repeated string values = 3;
+}
+
+// Defines the types of enforcement on the given rules
+enum EnforcementType {
+  // This specifies that the rule is required and must be strictly enforced
+  required = 0;
+  // This specifies that the rule is preferred and can be best effort
+  preferred = 1;
 }

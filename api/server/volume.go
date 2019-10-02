@@ -1,24 +1,46 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/errors"
+	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/urfave/negroni"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
-const schedDriverPostFix = "-sched"
+const (
+	schedDriverPostFix = "-sched"
+
+	// We set it to 128Mi to support large number of volumes. Before, the client
+	// was using 4Mi and it would not allow the support of over 5k volumes.
+	// We increased to a very large value to support over 100k volumes.
+	maxMsgSize = 128 * 1024 * 1024
+)
 
 type volAPI struct {
 	restBase
+
+	sdkUds   string
+	conn     *grpc.ClientConn
+	dummyMux *runtime.ServeMux
+	mu       sync.Mutex
 }
 
 func responseStatus(err error) string {
@@ -28,12 +50,54 @@ func responseStatus(err error) string {
 	return err.Error()
 }
 
-func newVolumeAPI(name string) restServer {
-	return &volAPI{restBase{version: volume.APIVersion, name: name}}
+func newVolumeAPI(name, sdkUds string) restServer {
+	return &volAPI{
+		restBase: restBase{version: volume.APIVersion, name: name},
+		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
+	}
 }
 
 func (vd *volAPI) String() string {
 	return vd.name
+}
+
+func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
+	vd.mu.Lock()
+	defer vd.mu.Unlock()
+	if vd.conn == nil {
+		var err error
+		vd.conn, err = grpcserver.Connect(
+			vd.sdkUds,
+			[]grpc.DialOption{
+				grpc.WithInsecure(),
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)),
+			})
+		if err != nil {
+			return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
+		}
+	}
+	return vd.conn, nil
+}
+
+func (vd *volAPI) annotateContext(r *http.Request) (context.Context, error) {
+	// This creates a context and populates the authentication token
+	// using the same function as the SDK REST Gateway
+	ctx, err := runtime.AnnotateContext(context.Background(), vd.dummyMux, r)
+	if err != nil {
+		return ctx, err
+	}
+	// If a header exists in the request fetch the requested driver name if provided
+	// and pass it in the grpc context as a metadata key value
+	userAgent := r.Header.Get("User-Agent")
+	if len(userAgent) > 0 {
+		// Check if the request is coming from a container orchestrator
+		clientName := strings.Split(userAgent, "/")
+		if len(clientName) > 0 {
+			return grpcserver.AddMetadataToContext(ctx, sdk.ContextDriverKey, clientName[0]), nil
+		}
+	}
+	return ctx, nil
 }
 
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
@@ -118,58 +182,50 @@ func (vd *volAPI) updateReplicaSpecNodeIPstoIds(rspecRef *api.ReplicaSet) error 
 	return nil
 }
 
-// swagger:operation POST /osd-volumes volume createVolume
-//
 // Creates a single volume with given spec.
-//
-// ---
-// produces:
-// - application/json
-// parameters:
-// - name: spec
-//   in: body
-//   description: spec to create volume with
-//   required: true
-//   schema:
-//         "$ref": "#/definitions/VolumeCreateRequest"
-// responses:
-//   '200':
-//     description: volume create response
-//     schema:
-//         "$ref": "#/definitions/VolumeCreateResponse"
-//   default:
-//     description: unexpected error
-//     schema:
-//       "$ref": "#/definitions/VolumeCreateResponse"
-
 func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
 	method := "create"
 
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
+		fmt.Println("returning error here")
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	if dcReq.Spec != nil {
-		if err = vd.updateReplicaSpecNodeIPstoIds(dcReq.Spec.ReplicaSet); err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-			return
-		}
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	spec := dcReq.GetSpec()
+	if spec.VolumeLabels == nil {
+		spec.VolumeLabels = make(map[string]string)
+	}
+	for k, v := range dcReq.Locator.GetVolumeLabels() {
+		spec.VolumeLabels[k] = v
 	}
 
-	id, err := d.Create(dcReq.Locator, dcReq.Source, dcReq.Spec)
-	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
-	dcRes.Id = id
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	id, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+		Name:   dcReq.Locator.GetName(),
+		Labels: dcReq.Locator.GetVolumeLabels(),
+		Spec:   dcReq.GetSpec(),
+	})
 
-	vd.logRequest(method, id).Infoln("")
+	dcRes.VolumeResponse = &api.VolumeResponse{Error: responseStatus(err)}
+	if err == nil {
+		dcRes.Id = id.GetVolumeId()
+	}
 
 	json.NewEncoder(w).Encode(&dcRes)
 }
@@ -179,13 +235,11 @@ func processErrorForVolSetResponse(action *api.VolumeStateAction, err error, res
 		return
 	}
 
-	if action != nil && (action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF ||
-		action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_OFF) {
-		switch err.(type) {
-		case *errors.ErrNotFound:
+	if action != nil && (action.IsUnMount() || action.IsDetach()) {
+		if sdk.IsErrorNotFound(err) {
 			resp.VolumeResponse = &api.VolumeResponse{}
 			resp.Volume = &api.Volume{}
-		default:
+		} else {
 			resp.VolumeResponse = &api.VolumeResponse{
 				Error: err.Error(),
 			}
@@ -245,74 +299,267 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	setActions := ""
 	if req.Action != nil {
 		setActions = fmt.Sprintf("Mount=%v Attach=%v", req.Action.Mount, req.Action.Attach)
 	}
 
 	vd.logRequest(method, string(volumeID)).Infoln(setActions)
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
 
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
+	detachOptions := &api.SdkVolumeDetachOptions{}
+	attachOptions := &api.SdkVolumeAttachOptions{}
+	if req.Options["SECRET_NAME"] != "" {
+		attachOptions.SecretName = req.Options["SECRET_NAME"]
+	}
+	if req.Options["SECRET_KEY"] != "" {
+		attachOptions.SecretKey = req.Options["SECRET_KEY"]
+	}
+	if req.Options["SECRET_CONTEXT"] != "" {
+		attachOptions.SecretContext = req.Options["SECRET_CONTEXT"]
+	}
+	if req.Options[options.OptionsForceDetach] == "true" {
+		detachOptions.Force = true
+	}
+	if req.Options[options.OptionsUnmountBeforeDetach] == "true" {
+		detachOptions.UnmountBeforeDetach = true
+	}
+	if req.Options[options.OptionsRedirectDetach] == "true" {
+		detachOptions.Redirect = true
+	}
+
+	unmountOptions := &api.SdkVolumeUnmountOptions{}
+	if req.Options["DELETE_AFTER_UNMOUNT"] == "true" {
+		unmountOptions.DeleteMountPath = true
+	}
+	if req.Options["WAIT_BEFORE_DELETE"] == "true" {
+		unmountOptions.NoDelayBeforeDeletingMountPath = false
+	} else {
+		unmountOptions.NoDelayBeforeDeletingMountPath = true
 	}
 
 	if req.Locator != nil || req.Spec != nil {
-		if req.Spec != nil {
-			if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
+		// Only update spec if spec and locator are not nil.
+		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+			VolumeId: volumeID,
+		})
+		if err != nil {
+			if !sdk.IsErrorNotFound(err) {
+				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			vd.logRequest(method, string(volumeID)).Infoln("Ignoring unmount/detach action on deleted volume.")
+		} else {
+			updateReq := &api.SdkVolumeUpdateRequest{VolumeId: volumeID}
+			if req.Locator != nil && len(req.Locator.VolumeLabels) > 0 {
+				updateReq.Labels = req.Locator.VolumeLabels
+			}
+			if req.Spec != nil {
+				if err = vd.updateReplicaSpecNodeIPstoIds(req.Spec.ReplicaSet); err != nil {
+					vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
+			}
+
+			if _, err := volumes.Update(ctx, updateReq); err != nil {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
 		}
-		err = d.Set(volumeID, req.Locator, req.Spec)
 	}
 
-	for err == nil && req.Action != nil {
-		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, req.Options)
-			} else {
-				err = d.Detach(volumeID, req.Options)
-			}
-			if err != nil {
-				break
-			}
+	if req.Action != nil {
+		if req.Action.IsAttach() {
+			_, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
+				VolumeId:      volumeID,
+				Options:       attachOptions,
+				DriverOptions: req.GetOptions(),
+			})
+		} else if req.Action.IsDetach() {
+			_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
+				VolumeId:      volumeID,
+				Options:       detachOptions,
+				DriverOptions: req.GetOptions(),
+			})
 		}
 
-		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
+		if err == nil {
+			if req.Action.IsMount() {
 				if req.Action.MountPath == "" {
 					err = fmt.Errorf("Invalid mount path")
-					break
+				} else {
+					_, err = mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
+						VolumeId:      volumeID,
+						MountPath:     req.Action.MountPath,
+						DriverOptions: req.GetOptions(),
+					})
 				}
-				err = d.Mount(volumeID, req.Action.MountPath, req.Options)
-			} else {
-				err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
-			}
-			if err != nil {
-				break
+			} else if req.Action.IsUnMount() {
+				_, err = mountAttachClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
+					VolumeId:      volumeID,
+					MountPath:     req.Action.MountPath,
+					Options:       unmountOptions,
+					DriverOptions: req.GetOptions(),
+				})
 			}
 		}
-		break
 	}
 
-	if err != nil {
-		processErrorForVolSetResponse(req.Action, err, &resp)
+	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeID,
+		Options: &api.VolumeInspectOptions{
+			Deep: true,
+		},
+	})
+	if err2 != nil {
+		resp.Volume = &api.Volume{}
+		if req.Action.IsAttach() {
+			resp.VolumeResponse = &api.VolumeResponse{
+				Error: responseStatus(err2),
+			}
+		}
 	} else {
-		v, err := d.Inspect([]string{volumeID})
-		if err != nil {
-			processErrorForVolSetResponse(req.Action, err, &resp)
-		} else if v == nil || len(v) != 1 {
-			processErrorForVolSetResponse(req.Action, &errors.ErrNotFound{Type: "Volume", ID: volumeID}, &resp)
-		} else {
-			v0 := v[0]
-			resp.Volume = v0
+		resp.Volume = resVol.GetVolume()
+	}
+	// Do not clear inspect err for attach
+	if err != nil {
+		resp.VolumeResponse = &api.VolumeResponse{
+			Error: responseStatus(err),
 		}
 	}
-
 	json.NewEncoder(w).Encode(resp)
 
+}
+
+func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
+	newSpec := &api.VolumeSpecUpdate{}
+	if spec == nil {
+		return newSpec
+	}
+
+	newSpec.ReplicaSet = spec.ReplicaSet
+	if spec.Shared != vol.Spec.Shared {
+		newSpec.SharedOpt = &api.VolumeSpecUpdate_Shared{
+			Shared: spec.Shared,
+		}
+	}
+
+	if spec.Sharedv4 != vol.Spec.Sharedv4 {
+		newSpec.Sharedv4Opt = &api.VolumeSpecUpdate_Sharedv4{
+			Sharedv4: spec.Sharedv4,
+		}
+	}
+
+	if spec.Passphrase != vol.Spec.Passphrase {
+		newSpec.PassphraseOpt = &api.VolumeSpecUpdate_Passphrase{
+			Passphrase: spec.Passphrase,
+		}
+	}
+
+	if spec.Cos != vol.Spec.Cos && spec.Cos != 0 {
+		newSpec.CosOpt = &api.VolumeSpecUpdate_Cos{
+			Cos: spec.Cos,
+		}
+	}
+
+	if spec.Journal != vol.Spec.Journal {
+		newSpec.JournalOpt = &api.VolumeSpecUpdate_Journal{
+			Journal: spec.Journal,
+		}
+	}
+
+	if spec.Nodiscard != vol.Spec.Nodiscard {
+		newSpec.NodiscardOpt = &api.VolumeSpecUpdate_Nodiscard{
+			Nodiscard: spec.Nodiscard,
+		}
+	}
+
+	newSpec.IoStrategy = spec.IoStrategy
+
+	if spec.Sticky != vol.Spec.Sticky {
+		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
+			Sticky: spec.Sticky,
+		}
+	}
+
+	if spec.Scale != vol.Spec.Scale {
+		newSpec.ScaleOpt = &api.VolumeSpecUpdate_Scale{
+			Scale: spec.Scale,
+		}
+	}
+
+	if spec.Size != vol.Spec.Size {
+		newSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
+			Size: spec.Size,
+		}
+	}
+
+	if spec.IoProfile != vol.Spec.IoProfile {
+		newSpec.IoProfileOpt = &api.VolumeSpecUpdate_IoProfile{
+			IoProfile: spec.IoProfile,
+		}
+	}
+
+	if spec.Dedupe != vol.Spec.Dedupe {
+		newSpec.DedupeOpt = &api.VolumeSpecUpdate_Dedupe{
+			Dedupe: spec.Dedupe,
+		}
+	}
+
+	if spec.Sticky != vol.Spec.Sticky {
+		newSpec.StickyOpt = &api.VolumeSpecUpdate_Sticky{
+			Sticky: spec.Sticky,
+		}
+	}
+
+	if spec.Group != vol.Spec.Group && spec.Group != nil {
+		newSpec.GroupOpt = &api.VolumeSpecUpdate_Group{
+			Group: spec.Group,
+		}
+	}
+
+	if spec.QueueDepth != vol.Spec.QueueDepth {
+		newSpec.QueueDepthOpt = &api.VolumeSpecUpdate_QueueDepth{
+			QueueDepth: spec.QueueDepth,
+		}
+	}
+
+	if spec.SnapshotSchedule != vol.Spec.SnapshotSchedule {
+		newSpec.SnapshotScheduleOpt = &api.VolumeSpecUpdate_SnapshotSchedule{
+			SnapshotSchedule: spec.SnapshotSchedule,
+		}
+	}
+
+	if spec.SnapshotInterval != vol.Spec.SnapshotInterval && spec.SnapshotInterval != math.MaxUint32 {
+		newSpec.SnapshotIntervalOpt = &api.VolumeSpecUpdate_SnapshotInterval{
+			SnapshotInterval: spec.SnapshotInterval,
+		}
+	}
+
+	if spec.HaLevel != vol.Spec.HaLevel && spec.HaLevel != 0 {
+		newSpec.HaLevelOpt = &api.VolumeSpecUpdate_HaLevel{
+			HaLevel: spec.HaLevel,
+		}
+	}
+	return newSpec
 }
 
 // swagger:operation GET /osd-volumes/{id} volume inspectVolume
@@ -338,11 +585,6 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	var volumeID string
 
 	method := "inspect"
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
@@ -350,13 +592,39 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	dk, err := d.Inspect([]string{volumeID})
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	json.NewEncoder(w).Encode(dk)
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	dk, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: volumeID,
+		Options: &api.VolumeInspectOptions{
+			Deep: true,
+		},
+	})
+	dkVolumes := []*api.Volume{}
+	if err != nil {
+		// SDK returns a NotFound error for an invalid volume
+		// Previously the REST server returned an empty array if a volume was not found
+		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusNotFound)
+			return
+		}
+	} else {
+		dkVolumes = append(dkVolumes, dk.GetVolume())
+	}
+
+	json.NewEncoder(w).Encode(dkVolumes)
 }
 
 // swagger:operation DELETE /osd-volumes/{id} volume deleteVolume
@@ -394,15 +662,24 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 
 	vd.logRequest(method, volumeID).Infoln("")
 
-	d, err := vd.getVolDriver(r)
+	volumeResponse := &api.VolumeResponse{}
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
-
-	if err := d.Delete(volumeID); err != nil {
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{VolumeId: volumeID})
+	if err != nil {
 		volumeResponse.Error = err.Error()
 	}
 	json.NewEncoder(w).Encode(volumeResponse)
@@ -458,16 +735,27 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 
 	method := "enumerate"
 
-	d, err := vd.getVolDriver(r)
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
 	if err != nil {
-		notFound(w, r)
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
 	params := r.URL.Query()
 	v := params[string(api.OptName)]
 	if v != nil {
 		locator.Name = v[0]
 	}
+
 	v = params[string(api.OptLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &locator.VolumeLabels); err != nil {
@@ -475,31 +763,58 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
 	}
+
 	v = params[string(api.OptConfigLabel)]
 	if v != nil {
 		if err = json.Unmarshal([]byte(v[0]), &configLabels); err != nil {
 			e := fmt.Errorf("Failed to parse parse configLabels: %s", err.Error())
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
+		// Add config labels to locator object.
+		for l, _ := range configLabels {
+			locator.VolumeLabels[l] = configLabels[l]
+		}
 	}
+
 	v = params[string(api.OptVolumeID)]
 	if v != nil {
-		ids := make([]string, len(v))
-		for i, s := range v {
-			ids[i] = string(s)
+		vols = make([]*api.Volume, 0, len(v))
+		for _, s := range v {
+			// They asked for inspect of specific volumes. We must honor with deep inspects
+			resp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+				VolumeId: string(s),
+				Options: &api.VolumeInspectOptions{
+					Deep: true,
+				},
+			})
+			if err == nil {
+				if resp.GetVolume() != nil {
+					vols = append(vols, resp.GetVolume())
+				}
+			} else if sdk.IsErrorNotFound(err) {
+				continue
+			} else {
+				e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
+				vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+				return
+			}
 		}
-		vols, err = d.Inspect(ids)
-		if err != nil {
-			e := fmt.Errorf("Failed to inspect volumeID: %s", err.Error())
-			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
-			return
-		}
-	} else {
-		vols, err = d.Enumerate(&locator, configLabels)
-		if err != nil {
-			vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		json.NewEncoder(w).Encode(vols)
+		return
+	}
+
+	// Enumerate and Inspect
+	resp, err := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
+		Name:   locator.Name,
+		Labels: locator.VolumeLabels,
+	})
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	vols = make([]*api.Volume, len(resp.GetVolumes()))
+	for i, vol := range resp.GetVolumes() {
+		vols[i] = vol.GetVolume()
 	}
 	json.NewEncoder(w).Encode(vols)
 }
@@ -541,20 +856,43 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 
 	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
-	id, err := d.Snapshot(snapReq.Id, snapReq.Readonly, snapReq.Locator, snapReq.NoRetry)
-	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{
-		Id: id,
-		VolumeResponse: &api.VolumeResponse{
-			Error: responseStatus(err),
-		},
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	snapRes.VolumeCreateResponse = &api.VolumeCreateResponse{}
+
+	if snapReq.Readonly {
+		res, err := volumes.SnapshotCreate(ctx, &api.SdkVolumeSnapshotCreateRequest{VolumeId: snapReq.Id, Name: snapReq.Locator.Name, Labels: snapReq.Locator.VolumeLabels})
+		if err != nil {
+			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
+		} else {
+			snapRes.VolumeCreateResponse.Id = res.GetSnapshotId()
+		}
+	} else {
+		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name})
+		if err != nil {
+			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
+				Error: err.Error(),
+			}
+		} else {
+			snapRes.VolumeCreateResponse.Id = res.GetVolumeId()
+		}
 	}
 	json.NewEncoder(w).Encode(&snapRes)
 }
@@ -592,12 +930,6 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
-
 	params := r.URL.Query()
 	v := params[api.OptSnapID]
 	if v != nil {
@@ -608,8 +940,24 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	volumeResponse := &api.VolumeResponse{}
-	if err := d.Restore(volumeID, snapID); err != nil {
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	_, err = volumes.SnapshotRestore(ctx, &api.SdkVolumeSnapshotRestoreRequest{VolumeId: volumeID, SnapshotId: snapID})
+	if err != nil {
 		volumeResponse.Error = responseStatus(err)
 	}
 	json.NewEncoder(w).Encode(volumeResponse)
@@ -663,11 +1011,6 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 	var ids []string
 
 	method := "snapEnumerate"
-	d, err := vd.getVolDriver(r)
-	if err != nil {
-		notFound(w, r)
-		return
-	}
 	params := r.URL.Query()
 	v := params[string(api.OptLabel)]
 	if v != nil {
@@ -685,13 +1028,46 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	snaps, err := d.SnapEnumerate(ids, labels)
+	request := &api.SdkVolumeSnapshotEnumerateWithFiltersRequest{}
+	if len(ids) > 0 {
+		request.VolumeId = ids[0]
+	}
+	if len(labels) > 0 {
+		request.Labels = labels
+	}
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.SnapshotEnumerateWithFilters(ctx, request)
 	if err != nil {
 		e := fmt.Errorf("Failed to enumerate snaps: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
+	snaps := make([]*api.Volume, 0)
+	for _, s := range resp.GetVolumeSnapshotIds() {
+		vol, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{VolumeId: s})
+		if err == nil {
+			snaps = append(snaps, vol.GetVolume())
+		} else if sdk.IsErrorNotFound(err) {
+			continue
+		} else {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			return
+		}
+	}
 	json.NewEncoder(w).Encode(snaps)
 }
 
@@ -751,6 +1127,57 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
+/*
+ * Removed until we understand why this function if failing calling the SDK
+ *
+func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+
+	var method = "stats"
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	params := r.URL.Query()
+	// By default always report /proc/diskstats style stats.
+	cumulative := true
+	if opt, ok := params[string(api.OptCumulative)]; ok {
+		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
+			e := fmt.Errorf("Failed to parse %s option: %s",
+				api.OptCumulative, err.Error())
+			http.Error(w, e.Error(), http.StatusBadRequest)
+			return
+		} else {
+			cumulative = boolValue
+		}
+	}
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.Stats(ctx, &api.SdkVolumeStatsRequest{VolumeId: volumeID, NotCumulative: !cumulative})
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(resp.GetStats())
+}
+*/
+
 // swagger:operation GET /osd-volumes/usedsize/{id} volume usedSizeVolume
 //
 // Get Used size of volume with specified id.
@@ -793,6 +1220,44 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	}
 	json.NewEncoder(w).Encode(used)
 }
+
+/*
+ * Removed until we understand why this function if failing calling the SDK
+ *
+func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
+	var volumeID string
+	var err error
+	var method = "usedsize"
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get context with auth token
+	ctx, err := vd.annotateContext(r)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Get gRPC connection
+	conn, err := vd.getConn()
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.CapacityUsage(ctx, &api.SdkVolumeCapacityUsageRequest{VolumeId: volumeID})
+
+	if err != nil {
+		e := fmt.Errorf("Failed to get used size: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(resp.GetCapacityUsageInfo().TotalBytes)
+}
+*/
 
 // swagger:operation POST /osd-volumes/requests/{id} volume requestsVolume
 //
@@ -850,8 +1315,13 @@ func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	capacityInfo, err := d.CapacityUsage(volumeID)
-	if err != nil {
-		e := fmt.Errorf("Failed to get CapacityUsage: %s", err.Error())
+	if err != nil || capacityInfo.Error != nil {
+		var e error
+		if err != nil {
+			e = fmt.Errorf("Failed to get CapacityUsage: %s", err.Error())
+		} else {
+			e = fmt.Errorf("Failed to get CapacityUsage: %s", capacityInfo.Error.Error())
+		}
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -1006,7 +1476,7 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels)
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -1134,14 +1604,29 @@ func migratePath(route, version string) string {
 	return volVersion(route, version)
 }
 
-func (vd *volAPI) Routes() []*Route {
+func (vd *volAPI) versionRoute() *Route {
+	return &Route{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions}
+
+}
+func (vd *volAPI) volumeCreateRoute() *Route {
+	return &Route{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create}
+}
+
+func (vd *volAPI) volumeDeleteRoute() *Route {
+	return &Route{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete}
+}
+
+func (vd *volAPI) volumeSetRoute() *Route {
+	return &Route{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet}
+}
+
+func (vd *volAPI) volumeInspectRoute() *Route {
+	return &Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect}
+}
+
+func (vd *volAPI) otherVolumeRoutes() []*Route {
 	return []*Route{
-		{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions},
-		{verb: "POST", path: volPath("", volume.APIVersion), fn: vd.create},
-		{verb: "PUT", path: volPath("/{id}", volume.APIVersion), fn: vd.volumeSet},
 		{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
-		{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect},
-		{verb: "DELETE", path: volPath("/{id}", volume.APIVersion), fn: vd.delete},
 		{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
@@ -1153,14 +1638,11 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
-		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
-		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
-		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
-		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
-		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
-		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
-		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
-		{verb: "PUT", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
+	}
+}
+
+func (vd *volAPI) backupRoutes() []*Route {
+	return []*Route{
 		{verb: "POST", path: backupPath("", volume.APIVersion), fn: vd.cloudBackupCreate},
 		{verb: "POST", path: backupPath("/group", volume.APIVersion), fn: vd.cloudBackupGroupCreate},
 		{verb: "POST", path: backupPath("/restore", volume.APIVersion), fn: vd.cloudBackupRestore},
@@ -1172,11 +1654,183 @@ func (vd *volAPI) Routes() []*Route {
 		{verb: "GET", path: backupPath("/history", volume.APIVersion), fn: vd.cloudBackupHistory},
 		{verb: "PUT", path: backupPath("/statechange", volume.APIVersion), fn: vd.cloudBackupStateChange},
 		{verb: "POST", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedCreate},
+		{verb: "PUT", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedUpdate},
 		{verb: "POST", path: backupPath("/schedgroup", volume.APIVersion), fn: vd.cloudBackupGroupSchedCreate},
+		{verb: "PUT", path: backupPath("/schedgroup", volume.APIVersion), fn: vd.cloudBackupGroupSchedUpdate},
 		{verb: "DELETE", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedDelete},
 		{verb: "GET", path: backupPath("/sched", volume.APIVersion), fn: vd.cloudBackupSchedEnumerate},
+	}
+}
+
+func (vd *volAPI) credsRoutes() []*Route {
+	return []*Route{
+		{verb: "GET", path: credsPath("", volume.APIVersion), fn: vd.credsEnumerate},
+		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
+		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
+		{verb: "PUT", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
+	}
+}
+
+func (vd *volAPI) migrateRoutes() []*Route {
+	return []*Route{
 		{verb: "POST", path: migratePath(api.OsdMigrateStartPath, volume.APIVersion), fn: vd.cloudMigrateStart},
 		{verb: "POST", path: migratePath(api.OsdMigrateCancelPath, volume.APIVersion), fn: vd.cloudMigrateCancel},
 		{verb: "GET", path: migratePath(api.OsdMigrateStatusPath, volume.APIVersion), fn: vd.cloudMigrateStatus},
 	}
+}
+
+func (vd *volAPI) snapRoutes() []*Route {
+	return []*Route{
+		{verb: "POST", path: snapPath("", volume.APIVersion), fn: vd.snap},
+		{verb: "GET", path: snapPath("", volume.APIVersion), fn: vd.snapEnumerate},
+		{verb: "POST", path: snapPath("/restore/{id}", volume.APIVersion), fn: vd.restore},
+		{verb: "POST", path: snapPath("/snapshotgroup", volume.APIVersion), fn: vd.snapGroup},
+	}
+}
+
+func (vd *volAPI) Routes() []*Route {
+	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	return routes
+}
+
+func (vd *volAPI) SetupRoutesWithAuth(
+	router *mux.Router,
+) (*mux.Router, error) {
+	// We setup auth middlewares for all the APIs that get invoked
+	// from a Container Orchestrator.
+	// - CREATE
+	// - ATTACH/MOUNT
+	// - DETACH/UNMOUNT
+	// - DELETE
+	// For all other routes it is expected that the REST client uses an auth token
+
+	authM := NewAuthMiddleware()
+
+	// Setup middleware for Create
+	nCreate := negroni.New()
+	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	createRoute := vd.volumeCreateRoute()
+	nCreate.UseHandlerFunc(createRoute.fn)
+	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
+
+	// Setup middleware for Delete
+	nDelete := negroni.New()
+	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	deleteRoute := vd.volumeDeleteRoute()
+	nDelete.UseHandlerFunc(deleteRoute.fn)
+	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
+
+	// Setup middleware for Set
+	nSet := negroni.New()
+	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	setRoute := vd.volumeSetRoute()
+	nSet.UseHandlerFunc(setRoute.fn)
+	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
+
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nSet.UseHandlerFunc(inspectRoute.fn)
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	routes := []*Route{vd.versionRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	for _, v := range routes {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
+	}
+	return router, nil
+}
+
+// GetVolumeAPIRoutes returns all the volume routes.
+// A driver could use this function if it does not want openstorage
+// to setup the REST server but it sets up its own and wants to add
+// volume routes
+func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
+	volMgmtApi := newVolumeAPI(name, sdkUds)
+	return volMgmtApi.Routes()
+}
+
+// ServerRegisterRoute is a callback function used by drivers to run their
+// preRouteChecks before the actual volume route gets invoked
+// This is added for legacy support before negroni middleware was added
+type ServerRegisterRoute func(
+	routeFunc func(w http.ResponseWriter, r *http.Request),
+	preRouteCheck func(w http.ResponseWriter, r *http.Request) bool,
+) func(w http.ResponseWriter, r *http.Request)
+
+// GetVolumeAPIRoutesWithAuth returns a router with all the volume routes
+// added to the router along with the auth middleware
+// - preRouteCheckFn is a handler that gets executed before the actual volume handler
+// is invoked. It is added for legacy support where negroni middleware was not used
+func GetVolumeAPIRoutesWithAuth(
+	name, sdkUds string,
+	router *mux.Router,
+	serverRegisterRoute ServerRegisterRoute,
+	preRouteCheckFn func(http.ResponseWriter, *http.Request) bool,
+) (*mux.Router, error) {
+	vd := &volAPI{
+		restBase: restBase{version: volume.APIVersion, name: name},
+		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
+	}
+
+	authM := NewAuthMiddleware()
+
+	// We setup auth middlewares for all the APIs that get invoked
+	// from a Container Orchestrator.
+	// - CREATE
+	// - ATTACH/MOUNT
+	// - DETACH/UNMOUNT
+	// - DELETE
+	// For all other routes it is expected that the REST client uses an auth token
+
+	// Setup middleware for Create
+	nCreate := negroni.New()
+	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	createRoute := vd.volumeCreateRoute()
+	nCreate.UseHandlerFunc(serverRegisterRoute(createRoute.fn, preRouteCheckFn))
+	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
+
+	// Setup middleware for Delete
+	nDelete := negroni.New()
+	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	deleteRoute := vd.volumeDeleteRoute()
+	nDelete.UseHandlerFunc(serverRegisterRoute(deleteRoute.fn, preRouteCheckFn))
+	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
+
+	// Setup middleware for Set
+	nSet := negroni.New()
+	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	setRoute := vd.volumeSetRoute()
+	nSet.UseHandlerFunc(serverRegisterRoute(setRoute.fn, preRouteCheckFn))
+	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
+
+	// Setup middleware for Inspect
+	nInspect := negroni.New()
+	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	inspectRoute := vd.volumeInspectRoute()
+	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
+	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	routes := []*Route{vd.versionRoute()}
+	routes = append(routes, vd.otherVolumeRoutes()...)
+	routes = append(routes, vd.snapRoutes()...)
+	routes = append(routes, vd.backupRoutes()...)
+	routes = append(routes, vd.credsRoutes()...)
+	routes = append(routes, vd.migrateRoutes()...)
+	for _, v := range routes {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(serverRegisterRoute(v.fn, preRouteCheckFn))
+	}
+	return router, nil
+
 }

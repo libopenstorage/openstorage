@@ -27,7 +27,7 @@ import (
 
 // ClusterServer is an implementation of the gRPC OpenStorageClusterServer interface
 type ClusterServer struct {
-	server *Server
+	server serverAccessor
 }
 
 func (s *ClusterServer) cluster() cluster.Cluster {

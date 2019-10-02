@@ -259,6 +259,7 @@ Loop:
 			minSeverityFilter,
 			flagCheckFilter,
 			matchAlertTypeFilter,
+			resourceIDFilter,
 			matchResourceIDFilter:
 			allFiltersIndexBased = false
 			break Loop

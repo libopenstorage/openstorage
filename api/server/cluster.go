@@ -10,6 +10,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
+	client "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 )
@@ -649,6 +650,10 @@ func clusterPath(route, version string) string {
 	return clusterVersion("cluster"+route, version)
 }
 
+func clusterPairPath(route, version string) string {
+	return clusterPath(client.PairPath+route, version)
+}
+
 func handleResourceType(resource string) (api.ResourceType, error) {
 	resource = strings.ToLower(resource)
 	switch resource {
@@ -796,6 +801,31 @@ func (c *clusterApi) refreshPair(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode("Successfully refreshed cluster pair")
+}
+
+func (c *clusterApi) validatePair(w http.ResponseWriter, r *http.Request) {
+	method := "validatePair"
+
+	vars := mux.Vars(r)
+	id, ok := vars["id"]
+	if !ok {
+		c.sendError(c.name, method, w, "id required for validate pair request", http.StatusBadRequest)
+		return
+	}
+
+	inst, err := clustermanager.Inst()
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	err = inst.ValidatePair(id)
+	if err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	json.NewEncoder(w).Encode("Successfully validated cluster pair")
 }
 
 func (c *clusterApi) deletePair(w http.ResponseWriter, r *http.Request) {

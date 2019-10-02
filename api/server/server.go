@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"os"
 	"path"
-
-	"github.com/sirupsen/logrus"
+	"regexp"
 
 	"github.com/gorilla/mux"
+	"github.com/sirupsen/logrus"
 )
 
 // Route is a specification and  handler for a REST endpoint.
@@ -17,6 +17,22 @@ type Route struct {
 	verb string
 	path string
 	fn   func(http.ResponseWriter, *http.Request)
+}
+
+// AnonRegex defines a regex replace for a string
+type AnonRegex struct {
+	anonymizeRegx *regexp.Regexp
+	replaceString string
+}
+
+// anonIDRegxes[] used to hide ID content when logging.
+var anonIDRegxes = []AnonRegex{
+	{
+		// Anonymize the token=... and replace with token=***..*
+		// JWT Regex below pulled from - https://www.regextester.com/105777
+		anonymizeRegx: regexp.MustCompile(`token=[A-Za-z0-9-_=]+\.[A-Za-z0-9-_=]+\.?[A-Za-z0-9-_.+/=]*`),
+		replaceString: `token=********`,
+	},
 }
 
 func (r *Route) GetVerb() string {
@@ -35,76 +51,58 @@ func (r *Route) GetFn() func(http.ResponseWriter, *http.Request) {
 // the Linux container engine.
 func StartGraphAPI(name string, restBase string) error {
 	graphPlugin := newGraphPlugin(name)
-	if err := startServer(name, restBase, 0, graphPlugin.Routes()); err != nil {
+	if _, _, err := startServer(name, restBase, 0, graphPlugin); err != nil {
 		return err
 	}
 
-	return nil
-}
-
-// StartPluginAPI starts a REST server to receive volume API commands from the
-// Linux container engine and volume management commands from the CLI/UX.
-func StartPluginAPI(
-	name string,
-	mgmtBase string,
-	pluginBase string,
-	mgmtPort uint16,
-	pluginPort uint16,
-) error {
-	if err := StartVolumeMgmtAPI(
-		name,
-		mgmtBase,
-		mgmtPort,
-	); err != nil {
-		return err
-	}
-	if err := StartVolumePluginAPI(
-		name,
-		pluginBase,
-		pluginPort,
-	); err != nil {
-		return err
-	}
 	return nil
 }
 
 // StartVolumeMgmtAPI starts a REST server to receive volume management API commands
 func StartVolumeMgmtAPI(
-	name string,
+	name, sdkUds string,
 	mgmtBase string,
 	mgmtPort uint16,
-) error {
-	volMgmtApi := newVolumeAPI(name)
-	if err := startServer(
-		name,
-		mgmtBase,
-		mgmtPort,
-		volMgmtApi.Routes(),
-	); err != nil {
-		return err
-	}
-	return nil
-}
+	auth bool,
+) (*http.Server, *http.Server, error) {
+	var (
+		unixServer, portServer *http.Server
+		err                    error
+	)
+	volMgmtApi := newVolumeAPI(name, sdkUds)
 
-func GetVolumeAPIRoutes(name string) []*Route {
-	volMgmtApi := newVolumeAPI(name)
-	return volMgmtApi.Routes()
+	if auth {
+		unixServer, portServer, err = startServerWithAuth(
+			name,
+			mgmtBase,
+			mgmtPort,
+			volMgmtApi,
+		)
+	} else {
+		unixServer, portServer, err = startServer(
+			name,
+			mgmtBase,
+			mgmtPort,
+			volMgmtApi,
+		)
+
+	}
+	return unixServer, portServer, err
 }
 
 // StartVolumePluginAPI starts a REST server to receive volume API commands
 // from the linux container  engine
 func StartVolumePluginAPI(
-	name string,
+	name, sdkUds string,
 	pluginBase string,
 	pluginPort uint16,
 ) error {
-
-	volPluginApi := newVolumePlugin(name)
-	if err := startServer(
+	volPluginApi := newVolumePlugin(name, sdkUds)
+	if _, _, err := startServer(
 		name,
 		pluginBase,
 		pluginPort,
-		volPluginApi.Routes(),
+		volPluginApi,
 	); err != nil {
 		return err
 	}
@@ -117,7 +115,7 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 	clusterApi := newClusterAPI()
 
 	// start server as before
-	if err := startServer("osd", clusterApiBase, clusterPort, clusterApi.Routes()); err != nil {
+	if _, _, err := startServer("osd", clusterApiBase, clusterPort, clusterApi); err != nil {
 		return err
 	}
 
@@ -129,16 +127,35 @@ func GetClusterAPIRoutes() []*Route {
 	return clusterApi.Routes()
 }
 
-func startServer(name string, sockBase string, port uint16, routes []*Route) error {
+func startServerWithAuth(
+	name, sockBase string,
+	port uint16,
+	rs restServer,
+) (*http.Server, *http.Server, error) {
+	var err error
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+	router, err = rs.SetupRoutesWithAuth(router)
+	if err != nil {
+		return nil, nil, err
+	}
+	return startServerCommon(name, sockBase, port, rs, router)
+}
+
+func startServer(name string, sockBase string, port uint16, rs restServer) (*http.Server, *http.Server, error) {
+	router := mux.NewRouter()
+	router.NotFoundHandler = http.HandlerFunc(notFound)
+	for _, v := range rs.Routes() {
+		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
+	}
+	return startServerCommon(name, sockBase, port, rs, router)
+}
+
+func startServerCommon(name string, sockBase string, port uint16, rs restServer, router *mux.Router) (*http.Server, *http.Server, error) {
 	var (
 		listener net.Listener
 		err      error
 	)
-	router := mux.NewRouter()
-	router.NotFoundHandler = http.HandlerFunc(notFound)
-	for _, v := range routes {
-		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
-	}
 	socket := path.Join(sockBase, name+".sock")
 	os.Remove(socket)
 	os.MkdirAll(path.Dir(socket), 0755)
@@ -147,18 +164,23 @@ func startServer(name string, sockBase string, port uint16, routes []*Route) err
 	listener, err = net.Listen("unix", socket)
 	if err != nil {
 		logrus.Warnln("Cannot listen on UNIX socket: ", err)
-		return err
+		return nil, nil, err
 	}
-	go http.Serve(listener, router)
+	unixServer := &http.Server{Handler: router}
+	go unixServer.Serve(listener)
+
 	if port != 0 {
 		logrus.Printf("Starting REST service on port : %v", port)
-		go http.ListenAndServe(fmt.Sprintf(":%d", port), router)
+		portServer := &http.Server{Addr: fmt.Sprintf(":%d", port), Handler: router}
+		go portServer.ListenAndServe()
+		return unixServer, portServer, nil
 	}
-	return nil
+	return unixServer, nil, nil
 }
 
 type restServer interface {
 	Routes() []*Route
+	SetupRoutesWithAuth(router *mux.Router) (*mux.Router, error)
 	String() string
 	logRequest(request string, id string) *logrus.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
@@ -170,11 +192,23 @@ type restBase struct {
 	name    string
 }
 
+func regxAnonString(inputStr string, anonRegxes []AnonRegex) string {
+	anonString := inputStr
+	if len(anonString) > 0 {
+		for _, anonRegx := range anonRegxes {
+			anonString = anonRegx.anonymizeRegx.ReplaceAllString(
+				anonString,
+				anonRegx.replaceString)
+		}
+	}
+	return anonString
+}
+
 func (rest *restBase) logRequest(request string, id string) *logrus.Entry {
 	return logrus.WithFields(map[string]interface{}{
 		"Driver":  rest.name,
 		"Request": request,
-		"ID":      id,
+		"ID":      regxAnonString(id, anonIDRegxes),
 	})
 }
 func (rest *restBase) sendError(request string, id string, w http.ResponseWriter, msg string, code int) {

@@ -261,7 +261,7 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return nil
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 
 	// We can return something here.
 	return nil, volume.ErrNotSupported
@@ -273,6 +273,22 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 
 func (d *driver) Detach(volumeID string, options map[string]string) error {
 	return nil
+}
+
+func (d *driver) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
+	return &api.CloudMigrateStartResponse{TaskId: request.TaskId}, nil
+}
+
+func (d *driver) CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error {
+	return nil
+}
+
+func (d *driver) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
+	cml := make(map[string]*api.CloudMigrateInfoList, 0)
+	cml["result"] = &api.CloudMigrateInfoList{}
+	return &api.CloudMigrateStatusResponse{
+		Info: cml,
+	}, nil
 }
 
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
@@ -323,12 +339,27 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 		v.Spec.SnapshotInterval = spec.SnapshotInterval
 		v.Spec.IoProfile = spec.IoProfile
 		v.Spec.SnapshotSchedule = spec.SnapshotSchedule
+		v.Spec.Ownership = spec.Ownership
 	}
 
 	return d.UpdateVol(v)
 }
 
 func (d *driver) Shutdown() {}
+
+func (d *driver) UsedSize(volumeID string) (uint64, error) {
+	vols, err := d.Inspect([]string{volumeID})
+	if err == kvdb.ErrNotFound {
+		return 0, fmt.Errorf("Volume not found")
+	} else if err != nil {
+		return 0, err
+	} else if len(vols) == 0 {
+		return 0, fmt.Errorf("Volume not found")
+	}
+
+	return uint64(12345), nil
+}
+
 func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 
 	vols, err := d.Inspect([]string{volumeID})
@@ -714,7 +745,7 @@ func (d *driver) CloudBackupStatus(input *api.CloudBackupStatusRequest) (*api.Cl
 		}
 		splitKey := strings.Split(v.Key, "/")
 		id := splitKey[len(splitKey)-1]
-		if input.Name != "" && id == input.Name {
+		if input.ID != "" && id == input.ID {
 			statuses[id] = elem.Status
 			break
 		}
@@ -800,7 +831,7 @@ func (d *driver) CloudBackupStateChange(input *api.CloudBackupStateChangeRequest
 	}
 
 	resp, err := d.CloudBackupStatus(&api.CloudBackupStatusRequest{
-		Name: input.Name,
+		ID: input.Name,
 	})
 	if err != nil {
 		return err

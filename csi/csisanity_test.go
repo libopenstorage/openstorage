@@ -17,43 +17,90 @@ limitations under the License.
 package csi
 
 import (
+	"io/ioutil"
+	"os"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/volume/drivers"
-
-	"github.com/kubernetes-csi/csi-test/pkg/sanity"
-	"github.com/sirupsen/logrus"
-
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+
+	"github.com/kubernetes-csi/csi-test/pkg/sanity"
+	"github.com/kubernetes-csi/csi-test/utils"
 )
 
 func TestCSISanity(t *testing.T) {
-	t.Skip("Flaky")
+	tester := &testServer{}
+	tester.setPorts()
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
-	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
-	}
-	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
-	}
 	clustermanager.Init(config.ClusterConfig{
 		ClusterId: "fakecluster",
 		NodeId:    "fakeNode",
 	})
 	cm, err := clustermanager.Inst()
 	go func() {
-		cm.Start(0, false, "9002")
+		cm.Start(false, "9002", "")
 	}()
 	defer cm.Shutdown()
-	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
-		t.Fatalf("Unable to start volume driver fake: %v", err)
+
+	// Setup sdk server
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	assert.NoError(t, err)
+	stp, err := storagepolicy.Init(kv)
+	if err != nil {
+		stp, _ = storagepolicy.Inst()
 	}
+	assert.NotNil(t, stp)
+	rm, err := role.NewSdkRoleManager(kv)
+	assert.NoError(t, err)
+
+	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+		SharedSecret:  []byte(testSharedSecret),
+		UsernameClaim: auth.UsernameClaimTypeName,
+	})
+
+	_ = rm
+	_ = selfsignedJwt
+
+	// setup sdk server
+	sdk, err := sdk.New(&sdk.ServerConfig{
+		DriverName:        "fake",
+		Net:               "tcp",
+		Address:           ":" + tester.port,
+		RestPort:          tester.gwport,
+		Cluster:           cm,
+		Socket:            tester.uds,
+		StoragePolicy:     stp,
+		StoragePoolServer: tester.s,
+		AccessOutput:      ioutil.Discard,
+		AuditOutput:       ioutil.Discard,
+		// Auth disabled for now.
+		// We're only sanity testing Client -> CSI -> SDK (No Auth)
+		/*Security: &sdk.SecurityConfig{
+			Role: rm,
+			Authenticators: map[string]auth.Authenticator{
+				"openstorage.io": selfsignedJwt,
+			},
+		},*/
+	})
+	assert.Nil(t, err)
+
+	err = sdk.Start()
+	assert.Nil(t, err)
+	defer sdk.Stop()
 
 	// Start CSI Server
 	server, err := NewOsdCsiServer(&OsdCsiServerConfig{
@@ -61,6 +108,7 @@ func TestCSISanity(t *testing.T) {
 		Net:        "tcp",
 		Address:    "127.0.0.1:0",
 		Cluster:    cm,
+		SdkUds:     tester.uds,
 	})
 	if err != nil {
 		t.Fatalf("Unable to start csi server: %v", err)
@@ -86,8 +134,13 @@ func TestCSISanity(t *testing.T) {
 	}
 
 	// Start CSI Sanity test
+	targetPath := "/tmp/mnt/csi"
 	sanity.Test(t, &sanity.Config{
 		Address:    server.Address(),
-		TargetPath: "/mnt",
+		TargetPath: targetPath,
+		CreateTargetDir: func(p string) (string, error) {
+			os.MkdirAll(p+"/target", os.FileMode(0755))
+			return p, nil
+		},
 	})
 }

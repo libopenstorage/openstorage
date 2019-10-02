@@ -69,6 +69,7 @@ func TestSdkNodeEnumerate(t *testing.T) {
 				MemTotal: 112,
 				MemUsed:  41,
 				MemFree:  93,
+				HWType:   api.HardwareType_UnknownMachine,
 			},
 		},
 	}
@@ -106,6 +107,93 @@ func TestSdkNodeEnumerateFail(t *testing.T) {
 	assert.Equal(t, serverError.Message(), mockerr.Error())
 }
 
+func TestSdkNodeEnumerateWithFiltersNoNodes(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	cluster := api.Cluster{
+		Id:     "someid",
+		NodeId: "somenodeid",
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+	}
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.NoError(t, err)
+	assert.Nil(t, r.GetNodes())
+}
+
+func TestSdkNodeEnumerateWithFilters(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	cluster := api.Cluster{
+		Id:     "someid",
+		NodeId: "somenodeid",
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+		Nodes: []api.Node{
+			api.Node{
+				Id:                "nodeid",
+				SchedulerNodeName: "schedulernodename",
+				Cpu:               1.414,
+				MemTotal:          112,
+				MemUsed:           41,
+				MemFree:           93,
+				HWType:            api.HardwareType_UnknownMachine,
+			},
+		},
+	}
+
+	expectedNode := &api.StorageNode{
+		Id:                "nodeid",
+		SchedulerNodeName: "schedulernodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		HWType:            api.HardwareType_UnknownMachine,
+	}
+
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	r, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.NoError(t, err)
+	assert.Len(t, r.GetNodes(), 1)
+	assert.Equal(t, expectedNode, r.GetNodes()[0])
+}
+
+func TestSdkNodeEnumerateWithFiltersFail(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	mockerr := fmt.Errorf("MOCK")
+	s.MockCluster().EXPECT().Enumerate().Return(api.Cluster{}, mockerr).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	_, err := c.EnumerateWithFilters(context.Background(), &api.SdkNodeEnumerateWithFiltersRequest{})
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Message(), mockerr.Error())
+}
+
 func TestSdkNodeInspect(t *testing.T) {
 
 	// Create server and client connection
@@ -125,10 +213,16 @@ func TestSdkNodeInspect(t *testing.T) {
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
 			"disk1": api.StorageResource{
-				Id:     "12345",
+				Id:     "disk1",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
 				Online: true,
+			},
+			"disk2": api.StorageResource{
+				Id:     "disk2",
+				Path:   "anothermount",
+				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
+				Online: false,
 			},
 		},
 		Timestamp: time.Now(),
@@ -136,6 +230,7 @@ func TestSdkNodeInspect(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
+		HWType: api.HardwareType_VirtualMachine,
 	}
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
 
@@ -159,10 +254,12 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
+	assert.Equal(t, rn.GetHWType(), node.HWType)
 
 	// Check Disk
-	assert.Len(t, rn.GetDisks(), 1)
+	assert.Len(t, rn.GetDisks(), 2)
 	assert.Equal(t, *rn.GetDisks()["disk1"], node.Disks["disk1"])
+	assert.Equal(t, *rn.GetDisks()["disk2"], node.Disks["disk2"])
 
 	// Check Labels
 	assert.Len(t, rn.GetNodeLabels(), 1)
@@ -241,6 +338,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
+		HWType: api.HardwareType_BareMetalMachine,
 	}
 
 	cluster := api.Cluster{
@@ -271,6 +369,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Equal(t, rn.GetMemUsed(), node.MemUsed)
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
+	assert.Equal(t, rn.GetHWType(), node.HWType)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)

@@ -65,6 +65,17 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
 			Name: snapName,
 		}, false).
@@ -136,6 +147,17 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
 		Restore(volid, snapid).
 		Return(nil).
 		Times(1)
@@ -148,44 +170,19 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 	assert.NoError(t, err)
 }
 
-func TestSdkVolumeSnapshotEnumerateBadArguments(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	req := &api.SdkVolumeSnapshotEnumerateRequest{}
-
-	// Setup client
-	c := api.NewOpenStorageVolumeClient(s.Conn())
-
-	// Get info
-	r, err := c.SnapshotEnumerate(context.Background(), req)
-	assert.Error(t, err)
-	assert.Nil(t, r)
-
-	serverError, ok := status.FromError(err)
-	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-	assert.Contains(t, serverError.Message(), "volume id")
-}
-
 func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
 
-	volid := "volid"
 	snapid := "snapid"
-	req := &api.SdkVolumeSnapshotEnumerateRequest{
-		VolumeId: volid,
-	}
+	req := &api.SdkVolumeSnapshotEnumerateRequest{}
 
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		SnapEnumerate([]string{volid}, nil).
+		SnapEnumerate(nil, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: snapid,
@@ -198,6 +195,40 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 
 	// Get info
 	r, err := c.SnapshotEnumerate(context.Background(), req)
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetVolumeSnapshotIds())
+	assert.Len(t, r.GetVolumeSnapshotIds(), 1)
+	assert.Equal(t, r.GetVolumeSnapshotIds()[0], snapid)
+
+	volid := "volid"
+	req = &api.SdkVolumeSnapshotEnumerateRequest{
+		VolumeId: volid,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
+	s.MockDriver().
+		EXPECT().
+		SnapEnumerate([]string{volid}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: snapid,
+			},
+		}, nil).
+		Times(1)
+
+	// Get info
+	r, err = c.SnapshotEnumerate(context.Background(), req)
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetVolumeSnapshotIds())
 	assert.Len(t, r.GetVolumeSnapshotIds(), 1)
@@ -221,6 +252,17 @@ func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
 	}
 
 	// Create response
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id: volid,
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		SnapEnumerate([]string{volid}, labels).
@@ -256,7 +298,9 @@ func TestSdkVolumeSnapshotScheduleUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockCluster().
@@ -293,7 +337,9 @@ func TestSdkVolumeSnapshotScheduleUpdateDelete(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{volid}).
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{volid},
+		}, nil).
 		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{
 			SnapshotSchedule: "policy=mypolicy",
 		}}}, nil).

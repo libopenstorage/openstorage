@@ -18,10 +18,12 @@ package sdk
 
 import (
 	"context"
+	"io/ioutil"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
+	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
@@ -33,27 +35,35 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	s, err := New(nil)
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "configuration")
 
 	s, err = New(&ServerConfig{})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
 
 	s, err = New(&ServerConfig{
 		Net: "test",
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
+
+	sp, err := policy.Inst()
+	assert.NoError(t, err)
+	assert.NotNil(t, sp)
 
 	s, err = New(&ServerConfig{
-		Net:        "test",
-		Address:    "blah",
-		DriverName: "name",
+		Net:           "test",
+		Socket:        "blah",
+		RestPort:      "2344",
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
+		StoragePolicy: sp,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to get driver")
+	assert.Contains(t, err.Error(), "Address must be")
 
 	// Add driver to registry
 	mc := gomock.NewController(t)
@@ -64,13 +74,16 @@ func TestNewSdkServerBadParameters(t *testing.T) {
 	})
 	defer volumedrivers.Remove("mock")
 	s, err = New(&ServerConfig{
-		Net:        "test",
-		Address:    "blah",
-		DriverName: "mock",
+		Net:          "test",
+		Address:      "blah",
+		DriverName:   "mock",
+		RestPort:     "2345",
+		AccessOutput: ioutil.Discard,
+		AuditOutput:  ioutil.Discard,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Unable to setup server")
+	assert.Contains(t, err.Error(), "Must provide unix domain")
 }
 
 func TestSdkClusterInspectCurrent(t *testing.T) {

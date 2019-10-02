@@ -1,5 +1,4 @@
 /*
-Package sdk is the gRPC implementation of the SDK gRPC server
 Copyright 2018 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +20,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -40,7 +40,17 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 		},
 	}
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	s.MockDriver().EXPECT().
+		Inspect(gomock.Any()).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -50,7 +60,7 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 			ClusterId: "Source",
 			TargetId:  "Target",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
 	r, err := c.Start(context.Background(), req)
@@ -69,8 +79,29 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 			},
 		},
 	}
+	labels := make(map[string]string, 0)
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name:         "Target",
+			VolumeLabels: labels,
+			Group: &api.Group{
+				Id: "Target",
+			},
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(&api.VolumeLocator{
+			Group: &api.Group{
+				Id: "Target",
+			},
+		}, nil).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -80,7 +111,7 @@ func TestVolumeMigrate_StartVolumeGroupSuccess(t *testing.T) {
 			ClusterId: "Source",
 			TargetId:  "Target",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
@@ -99,6 +130,18 @@ func TestVolumeMigrate_StartAllVolumeFailure(t *testing.T) {
 			AllVolumes: &api.SdkCloudMigrateStartRequest_MigrateAllVolumes{},
 		},
 	}
+
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, nil).
+		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
@@ -132,6 +175,26 @@ func TestVolumeMigrate_StartVolumeGroupFailure(t *testing.T) {
 		},
 	}
 
+	labels := make(map[string]string, 0)
+	labels["group"] = "Target"
+
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name:         "Target",
+			VolumeLabels: labels,
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(&api.VolumeLocator{
+			Group: &api.Group{
+				Id: "Target",
+			},
+		}, nil).
+		Return([]*api.Volume{resp}, nil)
+
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateVolumeGroup,
@@ -164,6 +227,18 @@ func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
 		},
 	}
 
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Inspect volumes to get their ownership
+	s.MockDriver().EXPECT().
+		Inspect(gomock.Any()).
+		Return([]*api.Volume{resp}, nil)
+
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
 			Operation: api.CloudMigrate_MigrateVolume,
@@ -193,7 +268,19 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 		},
 	}
 
-	resp := &api.CloudMigrateStartResponse{
+	resp := &api.Volume{
+		Id: "Target",
+		Locator: &api.VolumeLocator{
+			Name: "Target",
+		},
+	}
+
+	// Enumerate all volumes that have desired group
+	s.MockDriver().EXPECT().
+		Enumerate(nil, nil).
+		Return([]*api.Volume{resp}, nil)
+
+	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
 	}
 
@@ -202,7 +289,7 @@ func TestVolumeMigrate_StartAllVolumeSuccess(t *testing.T) {
 			Operation: api.CloudMigrate_MigrateCluster,
 			ClusterId: "Source",
 		}).
-		Return(resp, nil)
+		Return(resp2, nil)
 
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())
@@ -215,14 +302,23 @@ func TestVolumeMigrate_CancelSuccess(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
+	taskId := "1"
 	req := &api.SdkCloudMigrateCancelRequest{
 		Request: &api.CloudMigrateCancelRequest{
-			TaskId: "1"},
+			TaskId: taskId,
+		},
 	}
+
+	resp := &api.CloudMigrateStatusResponse{}
+	s.MockDriver().EXPECT().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{
+			TaskId: taskId,
+		}).
+		Return(resp, nil)
 
 	s.MockDriver().EXPECT().
 		CloudMigrateCancel(&api.CloudMigrateCancelRequest{
-			TaskId: "1",
+			TaskId: taskId,
 		}).
 		Return(nil)
 	// Setup client
@@ -272,10 +368,13 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 	// Create server and cl	ient connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkCloudMigrateStatusRequest{}
+	req := &api.SdkCloudMigrateStatusRequest{
+		Request: &api.CloudMigrateStatusRequest{},
+	}
+	vId := "VID"
 	info := &api.CloudMigrateInfo{
 		ClusterId:       "Source",
-		LocalVolumeId:   "VID",
+		LocalVolumeId:   vId,
 		LocalVolumeName: "VNAME",
 		RemoteVolumeId:  "RID",
 		CloudbackupId:   "CBKUPID",
@@ -293,9 +392,9 @@ func TestVolumeMigrate_StatusSucess(t *testing.T) {
 		Info: infoList,
 	}
 	s.MockDriver().EXPECT().
-		CloudMigrateStatus().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).
 		Return(resp, nil)
-	// Setup client
+
 	c := api.NewOpenStorageMigrateClient(s.Conn())
 	r, err := c.Status(context.Background(), req)
 	assert.NoError(t, err)
@@ -307,9 +406,11 @@ func TestVolumeMigrate_StatusFailure(t *testing.T) {
 	// Create server and cl	ient connection
 	s := newTestServer(t)
 	defer s.Stop()
-	req := &api.SdkCloudMigrateStatusRequest{}
+	req := &api.SdkCloudMigrateStatusRequest{
+		Request: &api.CloudMigrateStatusRequest{},
+	}
 	s.MockDriver().EXPECT().
-		CloudMigrateStatus().
+		CloudMigrateStatus(&api.CloudMigrateStatusRequest{}).
 		Return(nil, status.Errorf(codes.Internal, "Cannot get status of migration"))
 	// Setup client
 	c := api.NewOpenStorageMigrateClient(s.Conn())

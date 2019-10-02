@@ -31,7 +31,7 @@ func (s *VolumeServer) SnapshotCreate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotCreateRequest,
 ) (*api.SdkVolumeSnapshotCreateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -41,8 +41,13 @@ func (s *VolumeServer) SnapshotCreate(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name")
 	}
 
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
+		return nil, err
+	}
+
 	readonly := true
-	snapshotID, err := s.driver().Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
+	snapshotID, err := s.driver(ctx).Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
 	}, false)
@@ -66,7 +71,7 @@ func (s *VolumeServer) SnapshotRestore(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotRestoreRequest,
 ) (*api.SdkVolumeSnapshotRestoreResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -76,7 +81,12 @@ func (s *VolumeServer) SnapshotRestore(
 		return nil, status.Error(codes.InvalidArgument, "Must supply snapshot id")
 	}
 
-	err := s.driver().Restore(req.GetVolumeId(), req.GetSnapshotId())
+	// Get access rights
+	if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Write); err != nil {
+		return nil, err
+	}
+
+	err := s.driver(ctx).Restore(req.GetVolumeId(), req.GetSnapshotId())
 	if err != nil {
 		if err == kvdb.ErrNotFound {
 			return nil, status.Errorf(
@@ -100,13 +110,10 @@ func (s *VolumeServer) SnapshotEnumerate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotEnumerateRequest,
 ) (*api.SdkVolumeSnapshotEnumerateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
-	}
 	resp, err := s.SnapshotEnumerateWithFilters(
 		ctx,
 		&api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
@@ -129,11 +136,22 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotEnumerateWithFiltersRequest,
 ) (*api.SdkVolumeSnapshotEnumerateWithFiltersResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	snapshots, err := s.driver().SnapEnumerate([]string{req.GetVolumeId()}, req.GetLabels())
+	// Get access rights
+	var volReq []string
+	if len(req.GetVolumeId()) != 0 {
+		if err := s.checkAccessForVolumeId(ctx, req.GetVolumeId(), api.Ownership_Read); err != nil {
+			return nil, err
+		}
+		volReq = []string{req.GetVolumeId()}
+	} else {
+		volReq = nil
+	}
+
+	snapshots, err := s.driver(ctx).SnapEnumerate(volReq, req.GetLabels())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -142,9 +160,12 @@ func (s *VolumeServer) SnapshotEnumerateWithFilters(
 			err.Error())
 	}
 
-	ids := make([]string, len(snapshots))
-	for i, snapshot := range snapshots {
-		ids[i] = snapshot.GetId()
+	ids := make([]string, 0)
+	for _, snapshot := range snapshots {
+		// Check access
+		if snapshot.IsPermitted(ctx, api.Ownership_Read) {
+			ids = append(ids, snapshot.GetId())
+		}
 	}
 
 	return &api.SdkVolumeSnapshotEnumerateWithFiltersResponse{
@@ -158,12 +179,29 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 	ctx context.Context,
 	req *api.SdkVolumeSnapshotScheduleUpdateRequest,
 ) (*api.SdkVolumeSnapshotScheduleUpdateResponse, error) {
-	if s.cluster() == nil || s.driver() == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply volume id")
+	}
+
+	// Get volume specification
+	// This checks for access also
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	// Check if caller has access to affect volume
+	if !resp.GetVolume().IsPermitted(ctx, api.Ownership_Write) {
+		return nil, status.Errorf(
+			codes.PermissionDenied,
+			"Cannot change the snapshot schedule for volume %s",
+			req.GetVolumeId())
 	}
 
 	// Determine if they exist
@@ -175,14 +213,6 @@ func (s *VolumeServer) SnapshotScheduleUpdate(
 				"Error accessing schedule policy %s: %v",
 				name, err)
 		}
-	}
-
-	// Get volume specification
-	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: req.GetVolumeId(),
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	// Apply names to snapshot schedule in the Volume specification

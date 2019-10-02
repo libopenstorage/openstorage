@@ -45,7 +45,7 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 
 	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
-		Options: &api.SdkVolumeAttachRequest_Options{
+		Options: &api.SdkVolumeAttachOptions{
 			SecretName:    "name",
 			SecretContext: "context",
 			SecretKey:     "key",
@@ -55,11 +55,12 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_DETACHED,
+					Id: id,
 				},
 			}, nil).
 			Times(1),
@@ -69,45 +70,6 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 			Attach(id, options).
 			Return(devpath, nil),
 	)
-
-	// Setup client
-	c := api.NewOpenStorageMountAttachClient(s.Conn())
-
-	// Attach Volume
-	res, err := c.Attach(context.Background(), req)
-	assert.NoError(t, err)
-	assert.Equal(t, res.GetDevicePath(), devpath)
-}
-
-func TestSdkVolumeAttachSuccessIdempotent(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	id := "myid"
-	devpath := "/my/path"
-	req := &api.SdkVolumeAttachRequest{
-		VolumeId: id,
-		Options: &api.SdkVolumeAttachRequest_Options{
-			SecretName:    "name",
-			SecretContext: "context",
-			SecretKey:     "key",
-		},
-	}
-
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id:            id,
-				State:         api.VolumeState_VOLUME_STATE_ATTACHED,
-				AttachedState: api.AttachState_ATTACH_STATE_EXTERNAL,
-				DevicePath:    devpath,
-			},
-		}, nil).
-		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageMountAttachClient(s.Conn())
@@ -133,7 +95,7 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 
 	req := &api.SdkVolumeAttachRequest{
 		VolumeId: id,
-		Options: &api.SdkVolumeAttachRequest_Options{
+		Options: &api.SdkVolumeAttachOptions{
 			SecretName:    "name",
 			SecretContext: "context",
 			SecretKey:     "key",
@@ -142,11 +104,12 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_DETACHED,
+					Id: id,
 				},
 			}, nil).
 			Times(1),
@@ -207,19 +170,21 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 	}
 	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
-		Options: &api.SdkVolumeDetachRequest_Options{
+		Options: &api.SdkVolumeDetachOptions{
 			Force:               false,
 			UnmountBeforeDetach: true,
+			Redirect:            true,
 		},
 	}
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_ATTACHED,
+					Id: id,
 				},
 			}, nil).
 			Times(1),
@@ -229,40 +194,6 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 			Detach(id, options).
 			Return(nil),
 	)
-
-	// Setup client
-	c := api.NewOpenStorageMountAttachClient(s.Conn())
-
-	// Get info
-	_, err := c.Detach(context.Background(), req)
-	assert.NoError(t, err)
-}
-
-func TestSdkVolumeDetachSuccessIdempotency(t *testing.T) {
-
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	id := "dummy-volume-id"
-	req := &api.SdkVolumeDetachRequest{
-		VolumeId: id,
-		Options: &api.SdkVolumeDetachRequest_Options{
-			Force:               false,
-			UnmountBeforeDetach: true,
-		},
-	}
-
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id:    id,
-				State: api.VolumeState_VOLUME_STATE_DETACHED,
-			},
-		}, nil).
-		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageMountAttachClient(s.Conn())
@@ -286,19 +217,21 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 	}
 	req := &api.SdkVolumeDetachRequest{
 		VolumeId: id,
-		Options: &api.SdkVolumeDetachRequest_Options{
+		Options: &api.SdkVolumeDetachOptions{
 			Force:               true,
 			UnmountBeforeDetach: false,
+			Redirect:            true,
 		},
 	}
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
-					Id:    id,
-					State: api.VolumeState_VOLUME_STATE_ATTACHED,
+					Id: id,
 				},
 			}, nil).
 			Times(1),
@@ -358,8 +291,28 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	}
 	s.MockDriver().
 		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
+
+	s.MockDriver().
+		EXPECT().
 		Mount(id, mountPath, nil).
-		Return(nil)
+		Return(nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageMountAttachClient(s.Conn())
@@ -368,6 +321,56 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 	_, err := c.Mount(context.Background(), req)
 	assert.NoError(t, err)
 }
+
+func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "dummy-volume-id"
+	mountPath := "/dev/real/path"
+
+	req := &api.SdkVolumeMountRequest{
+		VolumeId:  id,
+		MountPath: mountPath,
+		DriverOptions: map[string]string{
+			"hello": "world",
+		},
+	}
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
+
+	s.MockDriver().
+		EXPECT().
+		Mount(id, mountPath, map[string]string{"hello": "world"}).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageMountAttachClient(s.Conn())
+
+	// Get info
+	_, err := c.Mount(context.Background(), req)
+	assert.NoError(t, err)
+}
+
 func TestSdkVolumeMountFailed(t *testing.T) {
 
 	// Create server and client connection
@@ -381,6 +384,24 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 		VolumeId:  id,
 		MountPath: mountPath,
 	}
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Mount(id, mountPath, nil).
@@ -442,12 +463,30 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	req := &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options: &api.SdkVolumeUnmountRequest_Options{
+		Options: &api.SdkVolumeUnmountOptions{
 			DeleteMountPath:                true,
 			NoDelayBeforeDeletingMountPath: false,
 		},
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -467,11 +506,29 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	req = &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options: &api.SdkVolumeUnmountRequest_Options{
+		Options: &api.SdkVolumeUnmountOptions{
 			DeleteMountPath: true,
 		},
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -487,12 +544,30 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	req = &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options: &api.SdkVolumeUnmountRequest_Options{
+		Options: &api.SdkVolumeUnmountOptions{
 			DeleteMountPath:                true,
 			NoDelayBeforeDeletingMountPath: true,
 		},
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -507,11 +582,29 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	req = &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options: &api.SdkVolumeUnmountRequest_Options{
+		Options: &api.SdkVolumeUnmountOptions{
 			DeleteMountPath: false,
 		},
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -527,9 +620,27 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 	req = &api.SdkVolumeUnmountRequest{
 		VolumeId:  id,
 		MountPath: mountPath,
-		Options:   &api.SdkVolumeUnmountRequest_Options{},
+		Options:   &api.SdkVolumeUnmountOptions{},
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -545,6 +656,24 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		MountPath: mountPath,
 	}
 
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).
@@ -568,6 +697,24 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 		VolumeId:  id,
 		MountPath: mountPath,
 	}
+	s.MockDriver().
+		EXPECT().
+		Enumerate(&api.VolumeLocator{
+			VolumeIds: []string{id},
+		}, nil).
+		Return([]*api.Volume{
+			&api.Volume{
+				Id:    id,
+				State: api.VolumeState_VOLUME_STATE_DETACHED,
+				Locator: &api.VolumeLocator{
+					Name: "dummy-volume-name",
+				},
+				Spec: &api.VolumeSpec{
+					Scale: uint32(0),
+				},
+			},
+		}, nil).
+		Times(1)
 	s.MockDriver().
 		EXPECT().
 		Unmount(id, mountPath, options).

@@ -27,8 +27,23 @@ func newDefaultStoreEnumerator(driver string, kvdb kvdb.Kvdb) *defaultStoreEnume
 	}
 }
 
+func (e *defaultStoreEnumerator) toID(value string) string {
+	// Check if the value is the name
+	volumes, err := e.Enumerate(&api.VolumeLocator{Name: value}, nil)
+	if err != nil {
+		return value
+	}
+
+	if len(volumes) == 1 {
+		return volumes[0].GetId()
+	}
+
+	return value
+}
+
 // Lock volume specified by volumeID.
 func (e *defaultStoreEnumerator) Lock(volumeID string) (interface{}, error) {
+	volumeID = e.toID(volumeID)
 	return e.kvdb.Lock(e.lockKey(volumeID))
 }
 
@@ -50,6 +65,7 @@ func (e *defaultStoreEnumerator) CreateVol(vol *api.Volume) error {
 // GetVol from volumeID.
 func (e *defaultStoreEnumerator) GetVol(volumeID string) (*api.Volume, error) {
 	var v api.Volume
+	volumeID = e.toID(volumeID)
 	_, err := e.kvdb.GetVal(e.volKey(volumeID), &v)
 	return &v, err
 }
@@ -62,6 +78,7 @@ func (e *defaultStoreEnumerator) UpdateVol(vol *api.Volume) error {
 
 // DeleteVol. Returns error if volume does not exist.
 func (e *defaultStoreEnumerator) DeleteVol(volumeID string) error {
+	volumeID = e.toID(volumeID)
 	_, err := e.kvdb.Delete(e.volKey(volumeID))
 	return err
 }
@@ -87,6 +104,10 @@ func (e *defaultStoreEnumerator) Enumerate(
 	locator *api.VolumeLocator,
 	labels map[string]string,
 ) ([]*api.Volume, error) {
+
+	for i, id := range locator.GetVolumeIds() {
+		locator.GetVolumeIds()[i] = e.toID(id)
+	}
 
 	kvp, err := e.kvdb.Enumerate(e.volKeyPrefix())
 	if err != nil {
@@ -156,8 +177,12 @@ func hasSubset(set map[string]string, subset map[string]string) bool {
 	if set == nil {
 		return false
 	}
-	for k := range subset {
-		if _, ok := set[k]; !ok {
+	for k, subv := range subset {
+		if v, ok := set[k]; ok {
+			if v != subv {
+				return false
+			}
+		} else {
 			return false
 		}
 	}
@@ -182,13 +207,30 @@ func match(
 	volumeLabels map[string]string,
 ) bool {
 	if locator == nil {
-		return hasSubset(v.Spec.VolumeLabels, volumeLabels)
+		return hasSubset(v.Locator.VolumeLabels, volumeLabels)
+	}
+
+	if len(locator.GetVolumeIds()) != 0 && !contains(v.GetId(), locator.GetVolumeIds()) {
+		return false
+	}
+
+	if locator.GetGroup() != nil {
+		if v.GetSpec().GetGroup() == nil || !v.GetSpec().GetGroup().IsMatch(locator.GetGroup()) {
+			return false
+		}
+	}
+
+	if locator.GetOwnership() != nil {
+		// They asked to match an ownership. Now check if the volume has it
+		// and if it matches.
+		// Keep these separate if statements to make it readable.
+		if v.GetSpec().GetOwnership() == nil ||
+			!v.GetSpec().GetOwnership().IsMatch(locator.GetOwnership()) {
+			return false
+		}
 	}
 	if locator.Name != "" && v.Locator.Name != locator.Name {
 		return false
 	}
-	if !hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels) {
-		return false
-	}
-	return hasSubset(v.Spec.VolumeLabels, volumeLabels)
+	return hasSubset(v.Locator.VolumeLabels, locator.VolumeLabels)
 }

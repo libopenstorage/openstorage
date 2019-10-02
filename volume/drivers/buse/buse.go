@@ -336,7 +336,7 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return copyFile(BuseMountPath+snapID, BuseMountPath+volumeID)
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 
 	return nil, volume.ErrNotSupported
 }
@@ -380,7 +380,6 @@ func (cl *clusterListener) Init(
 func (cl *clusterListener) Join(
 	self *api.Node,
 	initState *cluster.ClusterInitState,
-	handleNotifications cluster.ClusterNotify,
 ) error {
 	return nil
 }

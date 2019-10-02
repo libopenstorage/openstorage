@@ -18,10 +18,16 @@ limitations under the License.
 package sdk
 
 import (
+	"context"
+	"fmt"
+	"os"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/sched"
+	"github.com/libopenstorage/openstorage/volume"
+
+	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"gopkg.in/yaml.v2"
@@ -81,10 +87,6 @@ func timeWeekdayToSdkWeekly(t time.Weekday) api.SdkTimeWeekday {
 func sdkSchedToRetainInternalSpec(
 	req *api.SdkSchedulePolicyInterval,
 ) (*sched.RetainIntervalSpec, error) {
-
-	if req.GetRetain() < 1 {
-		return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
-	}
 
 	// Translate sdk schedule to yaml RetainIntervalSpec string.
 	var spec sched.IntervalSpec
@@ -228,4 +230,87 @@ func retainInternalSpecYamlByteToSdkSched(
 		}
 	}
 	return scheds, nil
+}
+
+func openLog(logfile string) (*os.File, error) {
+	file, err := os.OpenFile(logfile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to open logfile %s: %v", logfile, err)
+	}
+	return file, nil
+}
+
+func checkAccessFromDriverForVolumeIds(
+	ctx context.Context,
+	d volume.VolumeDriver,
+	volumeIds []string,
+	accessType api.Ownership_AccessType,
+) error {
+	vols, err := d.Inspect(volumeIds)
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return status.Errorf(
+			codes.NotFound,
+			"Volume ids %s not found",
+			volumeIds)
+	} else if err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Failed to find volumes %s: %v",
+			volumeIds, err)
+	}
+
+	for _, vol := range vols {
+		if !vol.IsPermitted(ctx, accessType) {
+			return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.Id)
+		}
+	}
+
+	return nil
+}
+
+func checkAccessFromDriverForLocator(
+	ctx context.Context,
+	d volume.VolumeDriver,
+	locator *api.VolumeLocator,
+	accessType api.Ownership_AccessType,
+) error {
+	vols, err := d.Enumerate(locator, nil)
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return status.Errorf(
+			codes.NotFound,
+			"No volumes found for locator")
+	} else if err != nil {
+		return status.Errorf(
+			codes.Internal,
+			"Failed to find volumes from locator: %v", err)
+	}
+
+	for _, vol := range vols {
+		if !vol.IsPermitted(ctx, accessType) {
+			return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.Id)
+		}
+	}
+
+	return nil
+}
+
+func enumerateVolumeIdsAsMap(d volume.VolumeDriver, locator *api.VolumeLocator) (map[string]bool, error) {
+	vols, err := d.Enumerate(locator, nil)
+	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"No volumes found")
+	} else if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to find volumes from locator: %v", err)
+	}
+
+	volMap := make(map[string]bool)
+	for _, vol := range vols {
+		volMap[vol.Id] = true
+	}
+
+	return volMap, nil
+
 }

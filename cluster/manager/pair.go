@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	clusterclient "github.com/libopenstorage/openstorage/api/client/cluster"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/pkg/errors"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 )
@@ -28,10 +31,10 @@ func (c *ClusterManager) CreatePair(
 
 	// Pair with remote server
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
-
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
+		Mode:               request.Mode,
 	}
 
 	endpoint := "http://" + remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
@@ -45,12 +48,13 @@ func (c *ClusterManager) CreatePair(
 	resp, err := remoteCluster.ProcessPairRequest(processRequest)
 	if err != nil {
 		logrus.Warnf("Unable to pair with %v: %v", remoteIp, err)
-		return nil, err
+		return nil, fmt.Errorf("Error from remote cluster: %v", err)
 	}
 
 	// Alert all listeners that we are pairing with a cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err = e.Value.(cluster.ClusterListener).CreatePair(
+			request,
 			resp,
 		)
 		if err != nil {
@@ -69,6 +73,7 @@ func (c *ClusterManager) CreatePair(
 		CurrentEndpoints: resp.RemoteClusterEndpoints,
 		Token:            request.RemoteClusterToken,
 		Options:          resp.Options,
+		Mode:             request.Mode,
 	}
 
 	err = pairCreate(pairInfo, request.SetDefault)
@@ -195,12 +200,20 @@ func (c *ClusterManager) GetPair(
 	if id == "" {
 		id, err = getDefaultPairId()
 		if err != nil {
-			return nil, err
+			if err == kvdb.ErrNotFound {
+				return nil, fmt.Errorf("No default cluster pair found.")
+			} else {
+				return nil, err
+			}
 		}
 	}
 	pair, err := pairGet(id)
 	if err != nil {
-		return nil, err
+		if err == kvdb.ErrNotFound {
+			return nil, fmt.Errorf("Cluster pair for id %v not found", id)
+		} else {
+			return nil, err
+		}
 	}
 	return &api.ClusterPairGetResponse{
 		PairInfo: pair,
@@ -221,6 +234,69 @@ func (c *ClusterManager) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, e
 	return response, nil
 }
 
+func (c *ClusterManager) ValidatePair(
+	id string,
+) error {
+	pairResp, err := c.GetPair(id)
+	if err != nil {
+		return err
+	} else if pairResp.PairInfo == nil {
+		return fmt.Errorf("Cluster pair for id %v not found", id)
+	}
+
+	var lastErr error
+	endpoints := pairResp.PairInfo.CurrentEndpoints
+	endpoints = append(endpoints, pairResp.PairInfo.Endpoint)
+	for _, endpoint := range endpoints {
+		clnt, err := clusterclient.NewClusterClient(
+			endpoint,
+			cluster.APIVersion,
+		)
+		if err != nil {
+			msg := fmt.Sprintf("Unable to create cluster client for %v: %v", endpoint, err)
+			logrus.Warn(msg)
+			lastErr = fmt.Errorf(msg)
+			continue
+		}
+
+		resp, err := clusterclient.ClusterManager(clnt).Enumerate()
+		if err != nil {
+			msg := fmt.Sprintf("Unable to get cluster status from %v: %v", endpoint, err)
+			logrus.Warn(msg)
+			lastErr = fmt.Errorf(msg)
+			continue
+		}
+		if resp.Status == api.Status_STATUS_OK {
+			lastErr = nil
+			break
+		}
+		msg := fmt.Sprintf("Invalid remote cluster status: %v", resp.Status)
+		logrus.Warn(msg)
+		lastErr = fmt.Errorf(msg)
+	}
+
+	if lastErr != nil {
+		return lastErr
+	}
+
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).ValidatePair(
+			pairResp.PairInfo,
+		)
+		if err != nil {
+			logrus.Errorf("Unable to validate %v on a cluster validate event: %v",
+				e.Value.(cluster.ClusterListener).String(),
+				err,
+			)
+			return fmt.Errorf("Failed to validate cluster pair. %v", err)
+		}
+	}
+
+	logrus.Infof("Successfully validated pairing with cluster ID: %v",
+		pairResp.PairInfo.Id)
+	return nil
+}
+
 func (c *ClusterManager) GetPairToken(
 	reset bool,
 ) (*api.ClusterPairTokenGetResponse, error) {
@@ -239,10 +315,11 @@ func (c *ClusterManager) GetPairToken(
 
 	// Generate a token if we don't have one or a reset has been requested
 	if db.PairToken == "" || reset {
-		b := make([]byte, 64)
-		rand.Read(b)
-		db.PairToken = fmt.Sprintf("%x", b)
-
+		token, err := c.generatePairToken()
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to generate token")
+		}
+		db.PairToken = fmt.Sprintf("%s", token)
 		_, err = writeClusterInfo(&db)
 		if err != nil {
 			return nil, err
@@ -252,6 +329,29 @@ func (c *ClusterManager) GetPairToken(
 	return &api.ClusterPairTokenGetResponse{
 		Token: db.PairToken,
 	}, nil
+}
+
+func (c *ClusterManager) generatePairToken() (string, error) {
+	var token string
+	var err error
+
+	if auth.Enabled() {
+		token, err = c.systemTokenManager.GetToken(
+			&auth.Options{
+				Expiration: time.Now().Add(5 * auth.Year).Unix(),
+			},
+		)
+		if err != nil {
+			return "", err
+		}
+
+	} else {
+		randToken := make([]byte, 64)
+		rand.Read(randToken)
+		token = fmt.Sprintf("%x", randToken)
+	}
+
+	return token, nil
 }
 
 func pairList() (map[string]*api.ClusterPairInfo, error) {

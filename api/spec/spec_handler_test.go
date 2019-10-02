@@ -84,6 +84,16 @@ func TestQueueDepth(t *testing.T) {
 	testSpecOptString(t, api.SpecQueueDepth, "10")
 }
 
+func TestNodiscard(t *testing.T) {
+	testSpecOptString(t, api.SpecNodiscard, "true")
+
+	spec := testSpecFromString(t, api.SpecNodiscard, "true")
+	require.True(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
+
+	spec = testSpecFromString(t, api.SpecNodiscard, "false")
+	require.False(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
+}
+
 func TestEarlyAck(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
@@ -196,4 +206,80 @@ func TestForceUnsupportedFsType(t *testing.T) {
 	// Test that it is false when not present
 	spec = testSpecFromString(t, api.SpecRack, "ignore")
 	require.False(t, spec.ForceUnsupportedFsType)
+}
+
+func TestCopyingLabelsFromSpecToLocator(t *testing.T) {
+	s := NewSpecHandler()
+	opts := map[string]string{
+		"hello": "world",
+	}
+	spec := &api.VolumeSpec{
+		VolumeLabels: map[string]string{
+			"goodbye": "fornow",
+		},
+	}
+	_, locator, _, err := s.UpdateSpecFromOpts(opts, spec, nil, nil)
+	require.NoError(t, err)
+	require.Contains(t, locator.VolumeLabels, "hello")
+	require.Contains(t, locator.VolumeLabels, "goodbye")
+}
+
+func TestGetTokenFromString(t *testing.T) {
+	s := NewSpecHandler()
+
+	token := "abcd.xyz.123"
+
+	tokenParsed, ok := s.GetTokenFromString(fmt.Sprintf("token=%s", token))
+	require.Equal(t, token, tokenParsed)
+	require.Equal(t, ok, true)
+
+	tokenParsed, ok = s.GetTokenFromString(fmt.Sprintf("toabcbn=%s", token))
+	require.Equal(t, "", tokenParsed)
+	require.Equal(t, ok, false)
+
+}
+
+func TestGetTokenSecretContextFromString(t *testing.T) {
+	s := NewSpecHandler()
+
+	tt := []struct {
+		InputName       string
+		ExpectedRequest api.TokenSecretContext
+		Successful      bool
+	}{
+		{
+			"name=abcd,token_secret=/px/secrets/alpha/token1," +
+				"token_secret_namespace=ns2,abcd=sd,token_secret_public_data=y," +
+				"token_secret_custom_data=n",
+			api.TokenSecretContext{
+				SecretName:      "px/secrets/alpha/token1",
+				SecretNamespace: "ns2",
+			},
+			true,
+		}, {
+			"name=abcd,token_secret=abcd/secrets/alpha//token1/",
+			api.TokenSecretContext{
+				SecretName:      "abcd/secrets/alpha//token1",
+				SecretNamespace: "",
+			},
+			true,
+		}, {
+			"name=abcd,token_secret=simplekey",
+			api.TokenSecretContext{
+				SecretName:      "simplekey",
+				SecretNamespace: "",
+			},
+			true,
+		},
+	}
+
+	for _, tc := range tt {
+		secretParsed, ok := s.GetTokenSecretContextFromString(tc.InputName)
+		require.Equal(t, tc.Successful, ok)
+		require.Equal(t, tc.ExpectedRequest, *secretParsed)
+	}
+
+	_, ok := s.GetTokenSecretContextFromString(fmt.Sprintf("toabcbn_secret=abcd"))
+	require.Equal(t, false, ok)
+
 }

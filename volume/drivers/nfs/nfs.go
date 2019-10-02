@@ -266,7 +266,7 @@ func (d *driver) Create(
 	}
 	if source != nil {
 		if len(source.Seed) != 0 {
-			seed, err := seed.New(source.Seed, spec.VolumeLabels)
+			seed, err := seed.New(source.Seed, locator.VolumeLabels)
 			if err != nil {
 				logrus.Warnf("Failed to initailize seed from %q : %v",
 					source.Seed, err)
@@ -456,7 +456,7 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return nil
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error) {
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
 
 	return nil, volume.ErrNotSupported
 }

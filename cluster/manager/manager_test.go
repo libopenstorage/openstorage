@@ -17,24 +17,43 @@ package manager
 
 import (
 	"testing"
+	"time"
 
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-
+	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+)
 
-	"github.com/libopenstorage/openstorage/config"
+const (
+	testClusterId   = "test-cluster-id"
+	testClusterUuid = "test-cluster-uuid"
+)
+
+var (
+	kv kvdb.Kvdb
 )
 
 func init() {
-	kv, err := kvdb.New(mem.Name, "manager_test", []string{}, nil, logrus.Panicf)
+	var err error
+	kv, err = kvdb.New(mem.Name, "manager_test/"+testClusterId, []string{}, nil, logrus.Panicf)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
+}
+
+func cleanup() {
+	inst.Shutdown()
+	time.Sleep(100 * time.Millisecond)
+	kvdb.Instance().Delete(ClusterDBKey)
+	inst = nil
 }
 
 func TestClusterManagerUuid(t *testing.T) {
@@ -51,4 +70,46 @@ func TestClusterManagerUuid(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, uuid, inst.Uuid())
+	cleanup()
+}
+
+func TestUpdateSchedulerNodeName(t *testing.T) {
+
+	nodeID := "node-alpha"
+	Init(config.ClusterConfig{
+		ClusterId:         testClusterId,
+		ClusterUuid:       testClusterUuid,
+		NodeId:            nodeID,
+		SchedulerNodeName: "old-sched-name",
+	})
+	manager, err := systemtoken.NewManager(&systemtoken.Config{
+		ClusterId:    testClusterId,
+		NodeId:       nodeID,
+		SharedSecret: "mysecret",
+	})
+	assert.NoError(t, err)
+	auth.InitSystemTokenManager(manager)
+
+	err = inst.StartWithConfiguration(false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
+		ConfigSystemTokenManager: manager,
+	})
+	assert.NoError(t, err)
+
+	node, err := inst.Inspect(nodeID)
+	assert.NoError(t, err)
+	assert.Equal(t, "old-sched-name", node.SchedulerNodeName)
+	assert.Equal(t, node.GossipPort, "1001", "Expected gossip port to be updated in cluster database")
+
+	err = inst.UpdateSchedulerNodeName("new-sched-name")
+	assert.NoError(t, err)
+
+	node, err = inst.Inspect(nodeID)
+	assert.NoError(t, err)
+	assert.Equal(t, "new-sched-name", node.SchedulerNodeName)
+
+	tokenResp, err := inst.GetPairToken(false)
+	assert.NoError(t, err)
+	assert.True(t, auth.IsJwtToken(tokenResp.Token))
+
+	cleanup()
 }

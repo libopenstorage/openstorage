@@ -108,8 +108,11 @@ type SnapshotDriver interface {
 	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error)
 	// Restore restores volume to specified snapshot.
 	Restore(volumeID string, snapshotID string) error
-	// GroupSnapshot takes a snapshot of specified volumegroup.
-	SnapshotGroup(groupID string, labels map[string]string) (*api.GroupSnapCreateResponse, error)
+	// SnapshotGroup takes a snapshot of a group of volumes that can be specified with either of the following
+	//	1. group ID
+	//	2. labels
+	//	3. volumeIDs
+	SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error)
 }
 
 // StatsDriver interface provides stats features
@@ -144,7 +147,7 @@ type CloudBackupDriver interface {
 	// CloudBackupCreate uploads snapshot of a volume to the cloud
 	CloudBackupCreate(input *api.CloudBackupCreateRequest) (*api.CloudBackupCreateResponse, error)
 	// CloudBackupGroupCreate creates and then uploads volumegroup snapshots
-	CloudBackupGroupCreate(input *api.CloudBackupGroupCreateRequest) error
+	CloudBackupGroupCreate(input *api.CloudBackupGroupCreateRequest) (*api.CloudBackupGroupCreateResponse, error)
 	// CloudBackupRestore downloads a cloud backup and restores it to a volume
 	CloudBackupRestore(input *api.CloudBackupRestoreRequest) (*api.CloudBackupRestoreResponse, error)
 	// CloudBackupEnumerate enumerates the backups for a given cluster/credential/volumeID
@@ -165,6 +168,10 @@ type CloudBackupDriver interface {
 	CloudBackupSchedCreate(input *api.CloudBackupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
 	// CloudBackupGroupSchedCreate creates a schedule to backup a volumegroup to cloud
 	CloudBackupGroupSchedCreate(input *api.CloudBackupGroupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)
+	// CloudBackupSchedCreate creates a schedule to backup volume to cloud
+	CloudBackupSchedUpdate(input *api.CloudBackupSchedUpdateRequest) error
+	// CloudBackupGroupSchedCreate creates a schedule to backup a volumegroup to cloud
+	CloudBackupGroupSchedUpdate(input *api.CloudBackupGroupSchedUpdateRequest) error
 	// CloudBackupSchedDelete delete a backup schedule
 	CloudBackupSchedDelete(input *api.CloudBackupSchedDeleteRequest) error
 	// CloudBackupSchedEnumerate enumerates the configured backup schedules in the cluster
@@ -178,7 +185,7 @@ type CloudMigrateDriver interface {
 	// CloudMigrateCancel cancels a migrate operation
 	CloudMigrateCancel(request *api.CloudMigrateCancelRequest) error
 	// CloudMigrateStatus returns status for the migration operations
-	CloudMigrateStatus() (*api.CloudMigrateStatusResponse, error)
+	CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error)
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the

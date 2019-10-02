@@ -2,6 +2,8 @@ package options
 
 import (
 	"strconv"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 // Options specifies keys from a key-value pair
@@ -49,8 +51,13 @@ const (
 	// - Detach
 	// It indicates the Volume Driver to forcefully detach device from kernel
 	OptionsForceDetach = "FORCE_DETACH"
+	// OptionsAccessMode is an option provided to the following Openstorage Volume API
+	// - Mount
+	// It indicates the mode in which volume must be mounted
+	OptionsAccessMode = "ACCESS_MODE"
 )
 
+// IsBoolOptionSet checks if a boolean option key is set
 func IsBoolOptionSet(options map[string]string, key string) bool {
 	if options != nil {
 		if value, ok := options[key]; ok {
@@ -61,4 +68,21 @@ func IsBoolOptionSet(options map[string]string, key string) bool {
 	}
 
 	return false
+}
+
+// NewVolumeAttachOptions converts a map of options to api.SdkVolumeAttachOptions
+func NewVolumeAttachOptions(options map[string]string) *api.SdkVolumeAttachOptions {
+	return &api.SdkVolumeAttachOptions{
+		SecretName:    options[OptionsSecret],
+		SecretKey:     options[OptionsSecretKey],
+		SecretContext: options[OptionsSecretContext],
+	}
+}
+
+// NewVolumeUnmountOptions converts a map of options to api.SdkVolumeUnmounOptions
+func NewVolumeUnmountOptions(options map[string]string) *api.SdkVolumeUnmountOptions {
+	return &api.SdkVolumeUnmountOptions{
+		DeleteMountPath:                IsBoolOptionSet(options, OptionsDeleteAfterUnmount),
+		NoDelayBeforeDeletingMountPath: IsBoolOptionSet(options, OptionsWaitBeforeDelete),
+	}
 }

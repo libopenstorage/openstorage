@@ -7,6 +7,7 @@ import (
 
 	"gopkg.in/yaml.v2"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -28,18 +29,19 @@ func init() {
 
 // swagger:model
 type ClusterConfig struct {
-	ClusterId         string
-	ClusterUuid       string
-	NodeId            string
-	SchedulerNodeName string
-	MgtIface          string
-	DataIface         string
-	DefaultDriver     string
-	MgmtIp            string
-	DataIp            string
-	LoggingURL        string
-	ManagementURL     string
-	FluentDHost       string
+	ClusterId          string
+	ClusterUuid        string
+	NodeId             string
+	SchedulerNodeName  string
+	MgtIface           string
+	DataIface          string
+	DefaultDriver      string
+	MgmtIp             string
+	DataIp             string
+	ManagementURL      string
+	FluentDHost        string
+	SystemSharedSecret string
+	HWType             api.HardwareType
 }
 
 // swagger:model

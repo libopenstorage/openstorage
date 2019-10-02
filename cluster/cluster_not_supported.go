@@ -3,9 +3,11 @@ package cluster
 import (
 	time "time"
 
+	"github.com/libopenstorage/gossip/types"
 	api "github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
+	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -23,6 +25,7 @@ type NullClusterManager struct {
 	secrets.NullSecrets
 	schedpolicy.NullSchedMgr
 	objectstore.NullObjectStoreMgr
+	clusterdomain.NullClusterDomainManager
 }
 
 func NewDefaultClusterManager() Cluster {
@@ -97,17 +100,25 @@ func (m *NullClusterManager) Shutdown() error {
 }
 
 // Start
-func (m *NullClusterManager) Start(arg0 int, arg1 bool, arg2 string) error {
+func (m *NullClusterManager) Start(arg1 bool, arg2 string, arg3 string) error {
 	return ErrNotImplemented
 }
 
 // StartWithConfiguration
-func (m *NullClusterManager) StartWithConfiguration(arg0 int, arg1 bool, arg2 string, arg3 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration) error {
 	return ErrNotImplemented
 }
 
 func (n *NullClusterManager) Uuid() string {
 	return ""
+}
+
+func (n *NullClusterManager) ClusterNotifyNodeDown(culpritNodeId string) (string, error) {
+	return "", ErrNotImplemented
+}
+
+func (n *NullClusterManager) ClusterNotifyClusterDomainsUpdate(types.ClusterDomainsActiveMap) error {
+	return ErrNotImplemented
 }
 
 // NullClusterData implementations
@@ -119,6 +130,11 @@ func (m *NullClusterData) UpdateData(arg0 map[string]interface{}) error {
 
 // UpdateLabels
 func (m *NullClusterData) UpdateLabels(arg0 map[string]string) error {
+	return ErrNotImplemented
+}
+
+// UpdateSchedulerNodeName
+func (m *NullClusterData) UpdateSchedulerNodeName(arg0 string) error {
 	return ErrNotImplemented
 }
 
@@ -208,6 +224,11 @@ func (m *NullClusterPair) RefreshPair(arg0 string) error {
 // EnumeratePairs
 func (m *NullClusterPair) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
 	return nil, ErrNotImplemented
+}
+
+// ValidatePair
+func (m *NullClusterPair) ValidatePair(arg0 string) error {
+	return ErrNotImplemented
 }
 
 // DeletePair
