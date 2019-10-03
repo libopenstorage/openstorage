@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -150,6 +151,20 @@ func (s *CloudBackupServer) GroupCreate(
 				Id: req.GetGroupId(),
 			},
 		}, api.Ownership_Read); err != nil {
+			statusError, ok := status.FromError(err)
+			if ok && statusError.Code() == codes.PermissionDenied {
+				var locatorContents string
+				switch {
+				case len(req.GetLabels()) > 0 && len(req.GetGroupId()) > 0:
+					locatorContents = fmt.Sprintf("labels %s and group ID %s", req.GetLabels(), req.GetGroupId())
+				case len(req.GetLabels()) > 0:
+					locatorContents = fmt.Sprintf("labels %s", req.GetLabels())
+				case len(req.GetGroupId()) > 0:
+					locatorContents = fmt.Sprintf("group ID %s", req.GetGroupId())
+				}
+				return nil, status.Errorf(codes.PermissionDenied, "Access denied to at least one volume with %s", locatorContents)
+			}
+
 			return nil, err
 		}
 	}
