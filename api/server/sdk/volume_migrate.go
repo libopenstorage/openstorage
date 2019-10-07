@@ -252,7 +252,9 @@ func (s *VolumeServer) filterStatusResponseForPermissions(
 	filteredResp.Info = make(map[string]*api.CloudMigrateInfoList)
 	for clusterId, cluster := range resp.Info {
 		filteredCluster := api.CloudMigrateInfoList{}
-		filteredCluster.List = make([]*api.CloudMigrateInfo, 0)
+		if filteredCluster.List == nil {
+			filteredCluster.List = make([]*api.CloudMigrateInfo, 0)
+		}
 
 		for _, migrateInfo := range cluster.List {
 			if found := volAccessPermitted[migrateInfo.GetLocalVolumeId()]; found {
