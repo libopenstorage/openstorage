@@ -18,6 +18,7 @@ const (
 	Name                     = "name"
 	Token                    = "token"
 	TokenSecret              = "token_secret"
+	TokenSecretNamespace     = "token_secret_namespace"
 	SpecNodes                = "nodes"
 	SpecParent               = "parent"
 	SpecEphemeral            = "ephemeral"
@@ -339,6 +340,9 @@ type CloudBackupGenericRequest struct {
 	StatusFilter CloudBackupStatusType
 	// MetadataFilter indicates backups whose metadata has these kv pairs
 	MetadataFilter map[string]string
+	// CloudBackupID must be specified if one needs to enumerate known single
+	// backup( format is clusteruuidORBucketName/srcVolId-SnapId(-incr)
+	CloudBackupID string
 }
 
 type CloudBackupInfo struct {
@@ -832,7 +836,10 @@ func (s *Node) ToStorageNode() *StorageNode {
 
 	node.Disks = make(map[string]*StorageResource)
 	for k, v := range s.Disks {
-		node.Disks[k] = &v
+		// need to take the address of a local variable and not of v
+		// since its address does not change
+		vv := v
+		node.Disks[k] = &vv
 	}
 
 	node.NodeLabels = make(map[string]string)
@@ -842,7 +849,10 @@ func (s *Node) ToStorageNode() *StorageNode {
 
 	node.Pools = make([]*StoragePool, len(s.Pools))
 	for i, v := range s.Pools {
-		node.Pools[i] = &v
+		// need to take the address of a local variable and not of v
+		// since its address does not change
+		vv := v
+		node.Pools[i] = &vv
 	}
 
 	return node
@@ -1140,4 +1150,18 @@ func (m *VolumeStateAction) IsMount() bool {
 
 func (m *VolumeStateAction) IsUnMount() bool {
 	return m.GetMount() == VolumeActionParam_VOLUME_ACTION_PARAM_OFF
+}
+
+// IsAttached checks if a volume is attached
+func (v *Volume) IsAttached() bool {
+	return len(v.AttachedOn) > 0 &&
+		v.State == VolumeState_VOLUME_STATE_ATTACHED &&
+		v.AttachedState != AttachState_ATTACH_STATE_INTERNAL
+}
+
+// TokenSecretContext contains all nessesary information to get a
+// token secret from any provider
+type TokenSecretContext struct {
+	SecretName      string
+	SecretNamespace string
 }

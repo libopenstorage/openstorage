@@ -17,23 +17,18 @@ limitations under the License.
 package csi
 
 import (
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"os"
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
-	"google.golang.org/grpc"
-
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-	"golang.org/x/net/context"
-
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -41,17 +36,23 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 const (
 	mockDriverName   = "mock"
 	testSharedSecret = "mysecret"
-	testSdkSock      = "/tmp/sdk.sock"
 	fakeWithSched    = "fake-sched"
 )
 
@@ -71,8 +72,12 @@ type testServer struct {
 	server grpcserver.Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
+	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	sdk    *sdk.Server
+	port   string
+	gwport string
+	uds    string
 }
 
 func setupFakeDriver() {
@@ -133,19 +138,18 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 func newTestServer(t *testing.T) *testServer {
 	return newTestServerWithConfig(t, &OsdCsiServerConfig{
 		DriverName: mockDriverName,
-		Net:        "tcp",
-		Address:    "127.0.0.1:0",
-		SdkUds:     testSdkSock,
 	})
 }
 
 func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	if config.Cluster == nil {
 		config.Cluster = tester.c
@@ -159,12 +163,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
-	// Setup simple driver
-	tester.server, err = NewOsdCsiServer(config)
-	assert.Nil(t, err)
-	err = tester.server.Start()
-	assert.Nil(t, err)
-
 	// Setup storage policy
 	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
 	assert.NoError(t, err)
@@ -174,7 +172,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	}
 	assert.NotNil(t, stp)
 
-	os.Remove(testSdkSock)
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
 		UsernameClaim: auth.UsernameClaimTypeName,
@@ -182,15 +179,16 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 
 	// setup sdk server
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":8123",
-		RestPort:      "8124",
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		StoragePolicy: stp,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:        "fake",
+		Net:               "tcp",
+		Address:           ":" + tester.port,
+		RestPort:          tester.gwport,
+		Cluster:           tester.c,
+		Socket:            tester.uds,
+		StoragePolicy:     stp,
+		StoragePoolServer: tester.s,
+		AccessOutput:      ioutil.Discard,
+		AuditOutput:       ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{
@@ -205,6 +203,15 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 		"mock":    tester.m,
 		"default": tester.m,
 	})
+
+	// Setup CSI simple driver
+	config.Net = "tcp"
+	config.Address = "127.0.0.1:0"
+	config.SdkUds = tester.uds
+	tester.server, err = NewOsdCsiServer(config)
+	assert.Nil(t, err)
+	err = tester.server.Start()
+	assert.Nil(t, err)
 
 	// Setup a connection to the driver
 	tester.conn, err = grpc.Dial(tester.server.Address(), grpc.WithInsecure())
@@ -223,6 +230,16 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	volumedrivers.Register(fakeWithSched, nil)
 	*/
 	return tester
+}
+
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(20000) + 10000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
+	s.uds = fmt.Sprintf("/tmp/osd-csi-ut-%d.sock", port)
 }
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
@@ -301,7 +318,9 @@ func TestCSIServerStop(t *testing.T) {
 }
 
 func TestNewCSIServerBadParameters(t *testing.T) {
-	setupMockDriver(&testServer{}, t)
+	tester := &testServer{}
+	tester.setPorts()
+	setupMockDriver(tester, t)
 	s, err := NewOsdCsiServer(nil)
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -313,7 +332,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:    "test",
-		SdkUds: testSdkSock,
+		SdkUds: tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -322,7 +341,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 	s, err = NewOsdCsiServer(&OsdCsiServerConfig{
 		Net:     "test",
 		Address: "blah",
-		SdkUds:  testSdkSock,
+		SdkUds:  tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -332,7 +351,7 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "name",
-		SdkUds:     testSdkSock,
+		SdkUds:     tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
@@ -359,9 +378,28 @@ func TestNewCSIServerBadParameters(t *testing.T) {
 		Net:        "test",
 		Address:    "blah",
 		DriverName: "mock",
-		SdkUds:     testSdkSock,
+		SdkUds:     tester.uds,
 	})
 	assert.Nil(t, s)
 	assert.NotNil(t, err)
 	assert.Contains(t, err.Error(), "Unable to setup server")
+	os.Remove(tester.uds)
+}
+
+func TestAddEncryptionInfoToLabels(t *testing.T) {
+	s := OsdCsiServer{}
+
+	secrets := map[string]string{
+		options.OptionsSecret:        "secret",
+		options.OptionsSecretContext: "context",
+		options.OptionsSecretKey:     "key",
+	}
+	labels := map[string]string{
+		"test": "val",
+	}
+	labels = s.addEncryptionInfoToLabels(labels, secrets)
+
+	assert.Equal(t, labels[options.OptionsSecret], "secret")
+	assert.Equal(t, labels[options.OptionsSecretContext], "context")
+	assert.Equal(t, labels[options.OptionsSecretKey], "key")
 }

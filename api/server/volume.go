@@ -15,11 +15,10 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
-	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
-	osecrets "github.com/libopenstorage/secrets"
 	"github.com/urfave/negroni"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -334,11 +333,14 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if req.Options["SECRET_CONTEXT"] != "" {
 		attachOptions.SecretContext = req.Options["SECRET_CONTEXT"]
 	}
-	if req.Options["FORCE_DETACH"] == "true" {
+	if req.Options[options.OptionsForceDetach] == "true" {
 		detachOptions.Force = true
 	}
-	if req.Options["UNMOUNT_BEFORE_DETACH"] == "true" {
+	if req.Options[options.OptionsUnmountBeforeDetach] == "true" {
 		detachOptions.UnmountBeforeDetach = true
+	}
+	if req.Options[options.OptionsRedirectDetach] == "true" {
+		detachOptions.Redirect = true
 	}
 
 	unmountOptions := &api.SdkVolumeUnmountOptions{}
@@ -423,14 +425,25 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 	resVol, err2 := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: volumeID,
+		Options: &api.VolumeInspectOptions{
+			Deep: true,
+		},
 	})
 	if err2 != nil {
 		resp.Volume = &api.Volume{}
+		if req.Action.IsAttach() {
+			resp.VolumeResponse = &api.VolumeResponse{
+				Error: responseStatus(err2),
+			}
+		}
 	} else {
 		resp.Volume = resVol.GetVolume()
 	}
-	resp.VolumeResponse = &api.VolumeResponse{
-		Error: responseStatus(err),
+	// Do not clear inspect err for attach
+	if err != nil {
+		resp.VolumeResponse = &api.VolumeResponse{
+			Error: responseStatus(err),
+		}
 	}
 	json.NewEncoder(w).Encode(resp)
 
@@ -1687,8 +1700,6 @@ func (vd *volAPI) Routes() []*Route {
 
 func (vd *volAPI) SetupRoutesWithAuth(
 	router *mux.Router,
-	authProviderType secrets.AuthTokenProviders,
-	authProvider osecrets.Secrets,
 ) (*mux.Router, error) {
 	// We setup auth middlewares for all the APIs that get invoked
 	// from a Container Orchestrator.
@@ -1698,10 +1709,7 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	// - DELETE
 	// For all other routes it is expected that the REST client uses an auth token
 
-	authM, err := NewAuthMiddleware(authProvider, authProviderType)
-	if err != nil {
-		return router, err
-	}
+	authM := NewAuthMiddleware()
 
 	// Setup middleware for Create
 	nCreate := negroni.New()
@@ -1766,8 +1774,6 @@ type ServerRegisterRoute func(
 // is invoked. It is added for legacy support where negroni middleware was not used
 func GetVolumeAPIRoutesWithAuth(
 	name, sdkUds string,
-	authProviderType secrets.AuthTokenProviders,
-	authProvider osecrets.Secrets,
 	router *mux.Router,
 	serverRegisterRoute ServerRegisterRoute,
 	preRouteCheckFn func(http.ResponseWriter, *http.Request) bool,
@@ -1778,10 +1784,7 @@ func GetVolumeAPIRoutesWithAuth(
 		dummyMux: runtime.NewServeMux(),
 	}
 
-	authM, err := NewAuthMiddleware(authProvider, authProviderType)
-	if err != nil {
-		return router, err
-	}
+	authM := NewAuthMiddleware()
 
 	// We setup auth middlewares for all the APIs that get invoked
 	// from a Container Orchestrator.

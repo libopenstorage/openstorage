@@ -97,6 +97,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 			req.GetVolumeContext())
 	}
 
+	// Get volume encryption info from req.Secrets
+	driverOpts := s.addEncryptionInfoToLabels(make(map[string]string), req.GetSecrets())
+
 	// prepare for mount/attaching
 	mounts := api.NewOpenStorageMountAttachClient(conn)
 	opts := &api.SdkVolumeAttachOptions{
@@ -104,8 +107,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
-			VolumeId: req.GetVolumeId(),
-			Options:  opts,
+			VolumeId:      req.GetVolumeId(),
+			Options:       opts,
+			DriverOptions: driverOpts,
 		}); err != nil {
 			return nil, err
 		}
@@ -153,11 +157,16 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	// Get volume information
-	_, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	vol, err := util.VolumeFromName(s.driver, req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 			req.GetVolumeId(),
 			err.Error())
+	}
+
+	if !vol.IsAttached() {
+		logrus.Infof("Volume %s was already unmounted", req.GetVolumeId())
+		return &csi.NodeUnpublishVolumeResponse{}, nil
 	}
 
 	// Get information about the target since the request does not
@@ -190,9 +199,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 
 		// Mount volume onto the path
 		if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-			return nil, status.Errorf(
-				codes.Internal,
-				"Unable to unmount volume %s onto %s: %s",
+			logrus.Infof("Unable to unmount volume %s onto %s: %s",
 				req.GetVolumeId(),
 				req.GetTargetPath(),
 				err.Error())

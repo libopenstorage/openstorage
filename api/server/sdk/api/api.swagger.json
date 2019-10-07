@@ -115,6 +115,29 @@
         "title": "- UNKNOWN: Unknown service\n - CLUSTER: Cluster management\n - CLOUD_BACKUP: Cloud backup of volumes management\n - CREDENTIALS: Credentials management\n - NODE: Node management\n - OBJECT_STORAGE: Object Storage management\n - SCHEDULE_POLICY: Schedule policy management\n - VOLUME: Volume management\n - ALERTS: Alert enumeration\n - MOUNT_ATTACH: Mount/Attach Support\n - ROLE: Role service\n - CLUSTER_PAIR: Cluster Pair service\n - MIGRATE: Migrate service\n - STORAGE_POLICY: StoragePolicy Service",
         "type": "string"
       },
+      "SdkStoragePoolOperationStatus": {
+        "default": "OPERATION_PENDING",
+        "description": "- OPERATION_PENDING: Operation pending\n - OPERATION_IN_PROGRESS: Operation is in progress\n - OPERATION_SUCCESSFUL: Operation is successful\n - OPERATION_FAILED: Operation failed",
+        "enum": [
+          "OPERATION_PENDING",
+          "OPERATION_IN_PROGRESS",
+          "OPERATION_SUCCESSFUL",
+          "OPERATION_FAILED"
+        ],
+        "title": "OperationStatus captures the various statuses of a storage pool operation",
+        "type": "string"
+      },
+      "SdkStoragePoolResizeOperationType": {
+        "default": "RESIZE_TYPE_AUTO",
+        "description": "- RESIZE_TYPE_AUTO: Automatically pick the optimum resize operation type\n - RESIZE_TYPE_ADD_DISK: Add a new drive to resize the pool\n - RESIZE_TYPE_RESIZE_DISK: Resize existing drives to resize the pool",
+        "enum": [
+          "RESIZE_TYPE_AUTO",
+          "RESIZE_TYPE_ADD_DISK",
+          "RESIZE_TYPE_RESIZE_DISK"
+        ],
+        "title": "Defines the operation types available to resize a storage pool",
+        "type": "string"
+      },
       "VolumeSpecPolicyPolicyOp": {
         "default": "Equal",
         "description": "- Equal: Policy will make sure the value must be equal\n - Minimum: Policy will make sure the requested value must be greater than or equal\n - Maximum: Policy will make sure the requested value must be less than or equal",
@@ -1056,6 +1079,10 @@
             "description": "(optional) All indicates if the request should show cloud backups for all clusters or the current cluster.",
             "format": "boolean",
             "type": "boolean"
+          },
+          "cloud_backup_id": {
+            "title": "If one wants to enumerate known backup, set this field to the backup ID\nnaming format :clusteruuidORbicketname/srcVolId-snapId(-incr)",
+            "type": "string"
           },
           "cluster_id": {
             "title": "(optional) Cluster id specifies the cluster for the request",
@@ -2273,6 +2300,19 @@
         "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to validate volume specs or ensure minimum volume creation\nrules followed",
         "type": "object"
       },
+      "apiSdkStoragePoolOperationType": {
+        "default": "OPERATION_RESIZE",
+        "description": "- OPERATION_RESIZE: Resize operation",
+        "enum": [
+          "OPERATION_RESIZE"
+        ],
+        "title": "OperationType defines the various operations that are performed on a storage pool",
+        "type": "string"
+      },
+      "apiSdkStoragePoolResizeResponse": {
+        "title": "Defines a response when resizing a storage pool",
+        "type": "object"
+      },
       "apiSdkTimeWeekday": {
         "default": "SdkTimeWeekdaySunday",
         "description": "- SdkTimeWeekdaySunday: Sunday\n - SdkTimeWeekdayMonday: Monday\n - SdkTimeWeekdayTuesday: Tuesday\n - SdkTimeWeekdayWednesday: Wednesday\n - SdkTimeWeekdayThursday: Thursday\n - SdkTimeWeekdayFriday: Friday\n - SdkTimeWeekdaySaturday: Saturday",
@@ -2433,6 +2473,11 @@
           "force": {
             "format": "boolean",
             "title": "Forcefully detach device from the kernel",
+            "type": "boolean"
+          },
+          "redirect": {
+            "format": "boolean",
+            "title": "redirect the request to the attached node",
             "type": "boolean"
           },
           "unmount_before_detach": {
@@ -2985,7 +3030,7 @@
           },
           "ID": {
             "format": "int32",
-            "title": "ID pool ID",
+            "title": "Deprecated! Use `uuid` instead. ID pool ID",
             "type": "integer"
           },
           "Medium": {
@@ -3011,9 +3056,39 @@
             },
             "title": "Labels is a list of user defined name-value pairs",
             "type": "object"
+          },
+          "last_operation": {
+            "$ref": "#/components/schemas/apiStoragePoolOperation"
+          },
+          "uuid": {
+            "title": "UUID is the unique identifier for a storage pool",
+            "type": "string"
           }
         },
         "title": "StoragePool groups different storage devices based on their CosType",
+        "type": "object"
+      },
+      "apiStoragePoolOperation": {
+        "properties": {
+          "msg": {
+            "title": "Msg is a user friendly message for the operation",
+            "type": "string"
+          },
+          "params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Params for the parameters for the operation",
+            "type": "object"
+          },
+          "status": {
+            "$ref": "#/components/schemas/SdkStoragePoolOperationStatus"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiSdkStoragePoolOperationType"
+          }
+        },
+        "title": "StoragePoolOperation defines an operation being performed on a storage pool",
         "type": "object"
       },
       "apiStorageResource": {
@@ -3125,6 +3200,11 @@
             },
             "type": "array"
           },
+          "attach_time": {
+            "description": "AttachTime time this device was last attached externally.",
+            "format": "date-time",
+            "type": "string"
+          },
           "attached_on": {
             "description": "AttachedOn is the node instance identifier for clustered systems.",
             "type": "string"
@@ -3135,6 +3215,11 @@
           "ctime": {
             "format": "date-time",
             "title": "Volume creation time",
+            "type": "string"
+          },
+          "detach_time": {
+            "description": "DetachTime time this device was detached.",
+            "format": "date-time",
             "type": "string"
           },
           "device_path": {
@@ -3204,7 +3289,7 @@
             "$ref": "#/components/schemas/apiVolumeStatus"
           },
           "usage": {
-            "description": "Usage is bytes consumed by vtheis volume.",
+            "description": "Usage is bytes consumed by this volume.",
             "format": "uint64",
             "type": "string"
           },
@@ -3725,7 +3810,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.60.0"
+    "version": "0.64.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5585,6 +5670,37 @@
         "summary": "Deletes specified storage policy",
         "tags": [
           "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepools/resize/{uuid}": {
+      "put": {
+        "operationId": "Resize",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkStoragePoolResizeResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Resize resizes the specified storage pool based on the request parameters",
+        "tags": [
+          "OpenStoragePool"
         ]
       }
     },

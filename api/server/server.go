@@ -9,8 +9,6 @@ import (
 	"regexp"
 
 	"github.com/gorilla/mux"
-	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
-	osecrets "github.com/libopenstorage/secrets"
 	"github.com/sirupsen/logrus"
 )
 
@@ -66,8 +64,6 @@ func StartVolumeMgmtAPI(
 	mgmtBase string,
 	mgmtPort uint16,
 	auth bool,
-	authProviderType secrets.AuthTokenProviders,
-	authProvider osecrets.Secrets,
 ) (*http.Server, *http.Server, error) {
 	var (
 		unixServer, portServer *http.Server
@@ -81,8 +77,6 @@ func StartVolumeMgmtAPI(
 			mgmtBase,
 			mgmtPort,
 			volMgmtApi,
-			authProviderType,
-			authProvider,
 		)
 	} else {
 		unixServer, portServer, err = startServer(
@@ -102,21 +96,8 @@ func StartVolumePluginAPI(
 	name, sdkUds string,
 	pluginBase string,
 	pluginPort uint16,
-	authProviderType secrets.AuthTokenProviders,
-	authProvider osecrets.Secrets,
 ) error {
-	var secretsStore secrets.Auth
-	var err error
-
-	// Only initialize secrets store if we have a valid auth provider.
-	if authProvider != nil && authProviderType != secrets.TypeNone {
-		secretsStore, err = secrets.NewAuth(authProviderType, authProvider)
-		if err != nil {
-			return err
-		}
-	}
-
-	volPluginApi := newVolumePlugin(name, sdkUds, secretsStore)
+	volPluginApi := newVolumePlugin(name, sdkUds)
 	if _, _, err := startServer(
 		name,
 		pluginBase,
@@ -150,13 +131,11 @@ func startServerWithAuth(
 	name, sockBase string,
 	port uint16,
 	rs restServer,
-	authProviderType secrets.AuthTokenProviders,
-	authProvider osecrets.Secrets,
 ) (*http.Server, *http.Server, error) {
 	var err error
 	router := mux.NewRouter()
 	router.NotFoundHandler = http.HandlerFunc(notFound)
-	router, err = rs.SetupRoutesWithAuth(router, authProviderType, authProvider)
+	router, err = rs.SetupRoutesWithAuth(router)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -201,7 +180,7 @@ func startServerCommon(name string, sockBase string, port uint16, rs restServer,
 
 type restServer interface {
 	Routes() []*Route
-	SetupRoutesWithAuth(router *mux.Router, authProviderType secrets.AuthTokenProviders, authProvider osecrets.Secrets) (*mux.Router, error)
+	SetupRoutesWithAuth(router *mux.Router) (*mux.Router, error)
 	String() string
 	logRequest(request string, id string) *logrus.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)

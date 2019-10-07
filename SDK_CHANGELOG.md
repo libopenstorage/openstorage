@@ -2,6 +2,22 @@
 
 ## Releases
 
+### v0.64.0 - Tech Preview (9/26/2019)
+
+* Deprecated StoragePool.ID. Please use StoragePool.Uuid
+
+### v0.63.0 - Tech Preview (9/26/2019)
+
+* Added new parameter to cloudbackup enumerate API to specify backup ID
+
+### v0.62.0 - Tech Preview (9/26/2019)
+
+* Added new api to resize storage pools
+* Added new fields UUID and LastOperation to the StoragePool object
+
+### v0.61.0 - Tech Preview (9/10/2019)
+
+* Add fields last_attached and last_detached to the Volume object.
 
 ### v0.60.0 - Tech Preview (6/11/2019)
 

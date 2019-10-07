@@ -218,7 +218,7 @@ message StorageResource {
 
 // StoragePool groups different storage devices based on their CosType
 message StoragePool {
-  // ID pool ID
+  // Deprecated! Use `uuid` instead. ID pool ID
   int32 ID = 1;
   // Cos reflects the capabilities of this drive pool
   CosType Cos = 2;
@@ -232,7 +232,24 @@ message StoragePool {
   uint64 Used = 8;
   // Labels is a list of user defined name-value pairs
   map<string, string> labels = 9;
+  // UUID is the unique identifier for a storage pool
+  string uuid = 10;
+  // LastOperation is the most recent operation being performed on a storage pool
+  StoragePoolOperation last_operation = 11;
 }
+
+// StoragePoolOperation defines an operation being performed on a storage pool
+message StoragePoolOperation {
+  // Type is the type of the operation
+  SdkStoragePool.OperationType type = 1;
+  // Msg is a user friendly message for the operation
+  string msg = 2;
+  // Params for the parameters for the operation
+  map<string, string> params = 3;
+  // Status is the status of the operation
+  SdkStoragePool.OperationStatus status = 4;
+}
+
 
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
@@ -542,19 +559,19 @@ message Volume {
   google.protobuf.Timestamp ctime = 6;
   // User specified VolumeSpec
   VolumeSpec spec = 7;
-  // Usage is bytes consumed by vtheis volume.
+  // Usage is bytes consumed by this volume.
   uint64 usage = 8;
   // LastScan is the time when an integrity check was run.
   google.protobuf.Timestamp last_scan = 9;
   // Format specifies the filesytem for this volume.
   FSType format = 10;
-  // Status is the availability status of this volume.
+  // VolumeStatus is the availability status of this volume.
   VolumeStatus status = 11;
-  // State is the current runtime state of this volume.
+  // VolumeState is the current runtime state of this volume.
   VolumeState state = 12;
   // AttachedOn is the node instance identifier for clustered systems.
   string attached_on = 13;
-  // AttachedState shows whether the device is attached for internal or external use.
+  // AttachState shows whether the device is attached for internal or external use.
   AttachState attached_state = 14;
   // DevicePath is the device exported by block device implementations.
   string device_path = 15;
@@ -575,6 +592,10 @@ message Volume {
   repeated VolumeConsumer volume_consumers = 22;
   // FsResizeRequired if an FS resize is required on the volume.
   bool fs_resize_required = 23;
+  // AttachTime time this device was last attached externally.
+  google.protobuf.Timestamp attach_time = 24;
+  // DetachTime time this device was detached.
+  google.protobuf.Timestamp detach_time= 25;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1269,6 +1290,19 @@ service OpenStorageClusterDomains {
     returns (SdkClusterDomainDeactivateResponse) {
       option(google.api.http) = {
         post: "/v1/clusterdomains/deactivate/{cluster_domain_name}"
+      };
+    }
+
+}
+
+
+// OpenStoragePool is a service used to manage storage pools in the cluster
+service OpenStoragePool {
+  // Resize resizes the specified storage pool based on the request parameters
+  rpc Resize(SdkStoragePoolResizeRequest)
+    returns (SdkStoragePoolResizeResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepools/resize/{uuid}"
       };
     }
 
@@ -2409,6 +2443,8 @@ message SdkVolumeDetachOptions {
   bool force = 1;
   // Unmount the volume before detaching
   bool unmount_before_detach = 2;
+  //  redirect the request to the attached node
+  bool redirect = 3;
 }
 
 // Defines a request to detach a volume
@@ -2716,6 +2752,58 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
+// Defines a request when inspect a storage pool
+message SdkStoragePoolResizeRequest {
+  // UUID of the storage pool to inspect
+  string uuid = 1;
+  // ResizeFactor is the option to indiciate if you would like to resize the pool
+  // by a fixed size or by a percentage of current size
+  oneof resize_factor {
+    // Size is the new desired size of the storage pool
+    uint64 size = 200;
+    // Size is the new desired size of the storage pool
+    uint64 percentage = 201;
+  }
+  // OperationType is the operation that's used to resize the storage pool (optional)
+  SdkStoragePool.ResizeOperationType operation_type = 3;
+}
+
+
+
+message SdkStoragePool {
+  // OperationStatus captures the various statuses of a storage pool operation
+  enum OperationStatus {
+    // Operation pending
+    OPERATION_PENDING = 0;
+    // Operation is in progress
+    OPERATION_IN_PROGRESS = 1;
+    // Operation is successful
+    OPERATION_SUCCESSFUL = 2;
+    // Operation failed
+    OPERATION_FAILED = 3;
+  }
+
+  // OperationType defines the various operations that are performed on a storage pool
+  enum OperationType {
+    // Resize operation
+    OPERATION_RESIZE = 0;
+  }
+
+  // Defines the operation types available to resize a storage pool
+  enum ResizeOperationType {
+    // Automatically pick the optimum resize operation type
+   RESIZE_TYPE_AUTO = 0;
+   // Add a new drive to resize the pool
+   RESIZE_TYPE_ADD_DISK = 1;
+   // Resize existing drives to resize the pool
+   RESIZE_TYPE_RESIZE_DISK = 2;
+  }
+}
+
+// Defines a response when resizing a storage pool
+message SdkStoragePoolResizeResponse {
+}
+
 // Defines a response when inspecting a node
 message SdkNodeInspectResponse {
   // Node information
@@ -2940,6 +3028,9 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   // Returned in the enumerate response if not all of the backups could be returned in the
   // response.
   string continuation_token = 8;
+  // If one wants to enumerate known backup, set this field to the backup ID
+  // naming format :clusteruuidORbicketname/srcVolId-snapId(-incr)
+  string cloud_backup_id = 9;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -2964,7 +3055,7 @@ message SdkCloudBackupEnumerateWithFiltersResponse {
   repeated SdkCloudBackupInfo backups = 1;
   // if this is not an empty string, callers must pass this to get next list of
   // backups
-	string continuation_token = 2;
+  string continuation_token = 2;
 }
 
 // CloudBackup operations types
@@ -3380,7 +3471,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 60;
+    Minor = 64;
     // SDK version patch value of this specification
     Patch = 0;
   }

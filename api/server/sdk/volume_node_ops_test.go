@@ -173,6 +173,7 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 		Options: &api.SdkVolumeDetachOptions{
 			Force:               false,
 			UnmountBeforeDetach: true,
+			Redirect:            true,
 		},
 	}
 	gomock.InOrder(
@@ -219,6 +220,7 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 		Options: &api.SdkVolumeDetachOptions{
 			Force:               true,
 			UnmountBeforeDetach: false,
+			Redirect:            true,
 		},
 	}
 	gomock.InOrder(

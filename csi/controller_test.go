@@ -291,7 +291,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -307,7 +307,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -323,7 +323,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -339,7 +339,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -408,7 +408,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -424,7 +424,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -440,7 +440,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -456,7 +456,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -525,7 +525,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -541,7 +541,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -557,7 +557,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -573,7 +573,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -642,7 +642,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -658,7 +658,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: false,
+						Sharedv4: false,
 					},
 				},
 			}, nil),
@@ -674,7 +674,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -690,7 +690,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
-						Shared: true,
+						Sharedv4: true,
 					},
 				},
 			}, nil),
@@ -751,7 +751,7 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 				Id:       id,
 				Readonly: false,
 				Spec: &api.VolumeSpec{
-					Shared: false,
+					Sharedv4: false,
 				},
 			},
 		}, nil).
@@ -859,6 +859,30 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 						Locator: &api.VolumeLocator{
 							Name: "size",
 						},
+						Status: api.VolumeStatus_VOLUME_STATUS_UP,
+						Spec: &api.VolumeSpec{
+
+							// Size is different
+							Size: 10,
+						},
+					}}, nil).
+					Times(1),
+
+				s.MockDriver().
+					EXPECT().
+					Inspect([]string{"size"}).
+					Return(nil, fmt.Errorf("not found")).
+					Times(1),
+
+				s.MockDriver().
+					EXPECT().
+					Enumerate(&api.VolumeLocator{Name: "size"}, nil).
+					Return([]*api.Volume{&api.Volume{
+						Id: "size",
+						Locator: &api.VolumeLocator{
+							Name: "size",
+						},
+						Status: api.VolumeStatus_VOLUME_STATUS_UP,
 						Spec: &api.VolumeSpec{
 
 							// Size is different
@@ -876,7 +900,6 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 		assert.Error(t, err)
 		serverError, ok := status.FromError(err)
 		assert.True(t, ok)
-		fmt.Println("err", err)
 		assert.Equal(t, codes.AlreadyExists, serverError.Code())
 	}
 }
@@ -937,8 +960,8 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 						Name: name,
 					},
 					Spec: &api.VolumeSpec{
-						Size:   defaultCSIVolumeSize,
-						Shared: true,
+						Size:     defaultCSIVolumeSize,
+						Sharedv4: true,
 					},
 				},
 			}, nil).
@@ -991,6 +1014,30 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 					Locator: &api.VolumeLocator{
 						Name: name,
 					},
+					Status: api.VolumeStatus_VOLUME_STATUS_UP,
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Status: api.VolumeStatus_VOLUME_STATUS_UP,
 					Spec: &api.VolumeSpec{
 						Size: uint64(size),
 					},
@@ -1008,6 +1055,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 				Locator: &api.VolumeLocator{
 					Name: name,
 				},
+				Status: api.VolumeStatus_VOLUME_STATUS_UP,
 				Spec: &api.VolumeSpec{
 					Size: uint64(1234),
 				},
@@ -1195,6 +1243,87 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "snapshoterr")
 }
 
+func TestControllerCreateVolumeWithSharedv4Volume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	modes := []csi.VolumeCapability_AccessMode_Mode{
+		csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+		csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER,
+	}
+
+	for _, mode := range modes {
+		// Setup request
+		name := "myvol"
+		size := int64(1234)
+		req := &csi.CreateVolumeRequest{
+			Name: name,
+			VolumeCapabilities: []*csi.VolumeCapability{
+				&csi.VolumeCapability{
+					AccessMode: &csi.VolumeCapability_AccessMode{
+						Mode: mode,
+					},
+				},
+			},
+			CapacityRange: &csi.CapacityRange{
+				RequiredBytes: size,
+			},
+			Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+		}
+
+		// Setup mock functions
+		id := "myid"
+		gomock.InOrder(
+			s.MockDriver().
+				EXPECT().
+				Inspect([]string{name}).
+				Return([]*api.Volume{}, nil).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Enumerate(&api.VolumeLocator{Name: name}, nil).
+				Return(nil, fmt.Errorf("not found")).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Create(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(id, nil).
+				Times(1),
+
+			s.MockDriver().
+				EXPECT().
+				Enumerate(&api.VolumeLocator{
+					VolumeIds: []string{id},
+				}, nil).
+				Return([]*api.Volume{
+					&api.Volume{
+						Id: id,
+						Locator: &api.VolumeLocator{
+							Name: name,
+						},
+						Spec: &api.VolumeSpec{
+							Size:     uint64(size),
+							Sharedv4: true,
+						},
+					},
+				}, nil).
+				Times(1),
+		)
+
+		r, err := c.CreateVolume(context.Background(), req)
+		assert.Nil(t, err)
+		assert.NotNil(t, r)
+		volumeInfo := r.GetVolume()
+
+		assert.Equal(t, id, volumeInfo.GetVolumeId())
+		assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+		assert.Equal(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
+	}
+}
 func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -1223,6 +1352,9 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 				RequiredBytes: size,
 			},
 			Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+			Parameters: map[string]string{
+				api.SpecShared: "true",
+			},
 		}
 
 		// Setup mock functions
@@ -1389,10 +1521,16 @@ func TestControllerCreateVolume(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
+	secretKeyForLabels := "key123"
+	secretValForLabels := "val123"
 
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
+	secretsMap := map[string]string{
+		authsecrets.SecretTokenKey: systemUserToken,
+		secretKeyForLabels:         secretValForLabels,
+	}
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
@@ -1401,7 +1539,7 @@ func TestControllerCreateVolume(t *testing.T) {
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
 		},
-		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+		Secrets: secretsMap,
 	}
 
 	// Setup mock functions
@@ -1434,7 +1572,8 @@ func TestControllerCreateVolume(t *testing.T) {
 				&api.Volume{
 					Id: id,
 					Locator: &api.VolumeLocator{
-						Name: name,
+						Name:         name,
+						VolumeLabels: secretsMap,
 					},
 					Spec: &api.VolumeSpec{
 						Size: uint64(size),
@@ -1451,7 +1590,7 @@ func TestControllerCreateVolume(t *testing.T) {
 
 	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 }
 
 func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
@@ -1564,7 +1703,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 	volumeInfo := r.GetVolume()
 
 	assert.Equal(t, id, volumeInfo.GetVolumeId())
-	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
 }
 
@@ -1716,7 +1855,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 
 	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecShared])
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
 }
 

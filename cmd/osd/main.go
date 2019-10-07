@@ -32,8 +32,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/sirupsen/logrus"
-
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
@@ -48,7 +46,6 @@ import (
 	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
@@ -59,6 +56,7 @@ import (
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 )
 
 var (
@@ -381,8 +379,6 @@ func start(c *cli.Context) error {
 			d, sdksocket,
 			volume.PluginAPIBase,
 			uint16(pluginPort),
-			0,
-			nil,
 		); err != nil {
 			return fmt.Errorf("Unable to start plugin api server: %v", err)
 		}
@@ -392,7 +388,6 @@ func start(c *cli.Context) error {
 			volume.DriverAPIBase,
 			uint16(mgmtPort),
 			false,
-			osecrets.TypeNone, nil,
 		); err != nil {
 			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
 		}
