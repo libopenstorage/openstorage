@@ -1606,7 +1606,8 @@ service OpenStorageMigrate {
       };
     }
 
-  // Inspect the status of migration operation
+// Status for migration operation.
+// If status request is empty, status for all migration operation will be returned.
   rpc Status(SdkCloudMigrateStatusRequest)
     returns (SdkCloudMigrateStatusResponse) {
       option(google.api.http) = {
