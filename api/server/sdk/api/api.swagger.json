@@ -3796,7 +3796,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.43.0"
+    "version": "0.42.18"
   },
   "openapi": "3.0.0",
   "paths": {
