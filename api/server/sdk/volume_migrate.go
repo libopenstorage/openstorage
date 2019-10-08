@@ -278,7 +278,12 @@ func (s *VolumeServer) Status(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	resp, err := s.driver(ctx).CloudMigrateStatus(req.GetRequest())
+	csReq := req.GetRequest()
+	if csReq == nil {
+		csReq = &api.CloudMigrateStatusRequest{}
+	}
+
+	resp, err := s.driver(ctx).CloudMigrateStatus(csReq)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Cannot get status of migration : %v", err)
 	}

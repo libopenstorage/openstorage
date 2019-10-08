@@ -5739,7 +5739,7 @@
             "description": ""
           }
         },
-        "summary": "Inspect the status of migration operation",
+        "summary": "Status for migration operation.\nIf status request is empty, status for all migration operation will be returned.",
         "tags": [
           "OpenStorageMigrate"
         ]
