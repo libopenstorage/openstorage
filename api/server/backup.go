@@ -7,6 +7,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
 	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
+	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -118,31 +119,12 @@ func (vd *volAPI) cloudBackupRestore(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-
-	/*
-		NEED TO ADD TO SDK
-		if restoreReq.NodeID != "" {
-			nodeIds, err := vd.nodeIPtoIds([]string{restoreReq.NodeID})
-			if err != nil {
-				vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			if len(nodeIds) > 0 {
-				if nodeIds[0] != restoreReq.NodeID {
-					restoreReq.NodeID = nodeIds[0]
-				}
-			}
-		}
-	*/
-
+	// NOTE:Cloud restores do not go through SDK
 	restoreResp, err := d.CloudBackupRestore(restoreReq)
 	if err != nil {
-		if serverError, ok := status.FromError(err); ok {
-			if serverError.Code() == codes.AlreadyExists {
-				w.WriteHeader(http.StatusConflict)
-				return
-			}
+		if err == volume.ErrExist {
+			w.WriteHeader(http.StatusConflict)
+			return
 		}
 		vd.sendError(method, restoreReq.ID, w, err.Error(), http.StatusInternalServerError)
 		return
