@@ -218,7 +218,7 @@ message StorageResource {
 
 // StoragePool groups different storage devices based on their CosType
 message StoragePool {
-  // ID pool ID
+  // Deprecated! Use `uuid` instead. ID pool ID
   int32 ID = 1;
   // Cos reflects the capabilities of this drive pool
   CosType Cos = 2;
@@ -3466,7 +3466,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 18;
+    Patch = 19;
   }
 
   // The following cannot be set to use the enum Version because the REST

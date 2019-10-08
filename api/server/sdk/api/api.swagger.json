@@ -3026,7 +3026,7 @@
           },
           "ID": {
             "format": "int32",
-            "title": "ID pool ID",
+            "title": "Deprecated! Use `uuid` instead. ID pool ID",
             "type": "integer"
           },
           "Medium": {
@@ -3796,7 +3796,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.18"
+    "version": "0.42.19"
   },
   "openapi": "3.0.0",
   "paths": {
