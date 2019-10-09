@@ -216,35 +216,6 @@ func (s *VolumeServer) Cancel(
 func (s *VolumeServer) filterStatusResponseForPermissions(
 	ctx context.Context,
 	resp *api.CloudMigrateStatusResponse) (*api.CloudMigrateStatusResponse, error) {
-	allVolIds := make([]string, 0)
-
-	// get all volume ids to inspect
-	for _, cluster := range resp.Info {
-		for _, migrateInfo := range cluster.List {
-			allVolIds = append(allVolIds, migrateInfo.GetLocalVolumeId())
-		}
-	}
-
-	// When no vol ids are found, exit quickly
-	if len(allVolIds) == 0 {
-		return resp, nil
-	}
-
-	// Setup ownership locator
-	allVols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{
-		VolumeIds: allVolIds,
-	}, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	// check which volumes we have access to
-	volAccessPermitted := make(map[string]bool)
-	for _, vol := range allVols {
-		if vol.IsPermitted(ctx, api.Ownership_Read) {
-			volAccessPermitted[vol.Id] = true
-		}
-	}
 
 	// Generate new response with permitted migrate info based
 	// on which volume ids we have access to
@@ -255,12 +226,15 @@ func (s *VolumeServer) filterStatusResponseForPermissions(
 		filteredCluster.List = make([]*api.CloudMigrateInfo, 0)
 
 		for _, migrateInfo := range cluster.List {
-			if found := volAccessPermitted[migrateInfo.GetLocalVolumeId()]; found {
+			err := checkAccessFromDriverForLocator(ctx, s.driver(ctx), &api.VolumeLocator{
+				VolumeIds: []string{migrateInfo.GetLocalVolumeId()},
+			}, api.Ownership_Read)
+			if err == nil {
 				filteredCluster.List = append(filteredCluster.List, migrateInfo)
 			}
 		}
 
-		// Do not return empty clusters we don't have access to.
+		// Do not include cluster if we don't have access to any of the volumes.
 		if len(cluster.List) > 0 {
 			filteredResp.Info[clusterId] = &filteredCluster
 		}
