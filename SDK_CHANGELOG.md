@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.19 - Tech Preview (10/8/2019)
+
+* Deprecated StoragePool.ID. Please use StoragePool.Uuid
+
 ### v0.42.18 - Tech Preview (9/26/2019)
 
 * Added new api to resize storage pools
