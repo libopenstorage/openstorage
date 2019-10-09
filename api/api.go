@@ -356,6 +356,9 @@ type CloudBackupGenericRequest struct {
 	StatusFilter CloudBackupStatusType
 	// MetadataFilter indicates backups whose metadata has these kv pairs
 	MetadataFilter map[string]string
+	// CloudBackupID must be specified if one needs to enumerate known single
+	// backup( format is clusteruuidORBucketName/srcVolId-SnapId(-incr)
+	CloudBackupID string
 }
 
 type CloudBackupInfo struct {
