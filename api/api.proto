@@ -482,6 +482,8 @@ message VolumeSpecPolicy {
 // coded - for clustered storage arrays
 message ReplicaSet {
   repeated string nodes = 1;
+  // Unique IDs of the storage pools for this replica set
+  repeated string pool_uuids = 2;
 }
 
 // RuntimeStateMap is a list of name value mapping of driver specific runtime
@@ -3472,7 +3474,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 64;
+    Minor = 65;
     // SDK version patch value of this specification
     Patch = 0;
   }
