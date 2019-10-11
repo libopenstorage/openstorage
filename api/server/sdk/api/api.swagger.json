@@ -708,6 +708,13 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "pool_uuids": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unique IDs of the storage pools for this replica set",
+            "type": "array"
           }
         },
         "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays",
@@ -3800,7 +3807,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.20"
+    "version": "0.42.21"
   },
   "openapi": "3.0.0",
   "paths": {

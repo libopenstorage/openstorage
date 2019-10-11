@@ -482,6 +482,8 @@ message VolumeSpecPolicy {
 // coded - for clustered storage arrays
 message ReplicaSet {
   repeated string nodes = 1;
+  // Unique IDs of the storage pools for this replica set
+  repeated string pool_uuids = 2;
 }
 
 // RuntimeStateMap is a list of name value mapping of driver specific runtime
@@ -3469,7 +3471,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 20;
+    Patch = 21;
   }
 
   // The following cannot be set to use the enum Version because the REST

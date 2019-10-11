@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.21 - Tech Preview (09/10/2019)
+
+* Add pool UUIDs in ReplicaSet object
+
 ### v0.42.20 - Tech Preview (10/9/2019)
 
 * Added new parameter to cloudbackup enumerate API to specify backup ID
