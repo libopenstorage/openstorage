@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.65.0 - Tech Preview (09/10/2019)
+
+* Add pool UUIDs in ReplicaSet object
+
 ### v0.64.0 - Tech Preview (9/26/2019)
 
 * Deprecated StoragePool.ID. Please use StoragePool.Uuid
