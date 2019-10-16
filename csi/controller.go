@@ -531,7 +531,8 @@ func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
 		// Check access mode is setup correctly
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
-			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER {
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
 			return true
 		}
 	}
