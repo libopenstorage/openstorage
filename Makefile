@@ -180,7 +180,7 @@ docker-proto: $(GOPATH)/bin/protoc-gen-go
 		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
 		quay.io/openstorage/osd-proto \
-			make proto
+			make proto mockgen
 
 proto: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/protoc-gen-grpc-gateway $(GOPATH)/bin/protoc-gen-swagger
 ifndef DOCKER_PROTO
@@ -403,3 +403,10 @@ push-docker-images: docker-images
 # For release branches, major and minor should be frozen.
 sdk-check-version:
 	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
+
+mockgen:
+	go get github.com/golang/mock/gomock
+	go get github.com/golang/mock/mockgen
+	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
+	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
+	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
