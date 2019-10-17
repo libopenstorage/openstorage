@@ -891,10 +891,10 @@
 			"revisionTime": "2016-01-25T20:49:56Z"
 		},
 		{
-			"checksumSHA1": "p6nlXuapL3U+fpBdQ/aLuQd7YA0=",
+			"checksumSHA1": "IHIm2BA6DrJDHvALz65pY2G38sM=",
 			"path": "github.com/golang/mock/gomock",
-			"revision": "61503c535dc549c7ffc1ff07902345658a0f20a2",
-			"revisionTime": "2017-10-20T16:37:50Z"
+			"revision": "dd8d2a22370e4c8a334e80ca8477f71356c8e4bb",
+			"revisionTime": "2019-07-13T10:24:42Z"
 		},
 		{
 			"checksumSHA1": "NPefLsS2pv0+YlXAuJJvkNOMgyE=",
