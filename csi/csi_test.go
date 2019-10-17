@@ -292,15 +292,6 @@ func TestCSIServerStop(t *testing.T) {
 	assert.True(t, s.Server().IsRunning())
 	s.Stop()
 	assert.False(t, s.Server().IsRunning())
-
-	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.Server().IsRunning())
-	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.Server().IsRunning())
-	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.Server().IsRunning())
-	assert.NotPanics(t, s.Stop)
-	assert.False(t, s.Server().IsRunning())
 }
 
 func TestNewCSIServerBadParameters(t *testing.T) {
