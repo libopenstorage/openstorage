@@ -45,6 +45,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 		Name:          "test",
 		Bucket:        "mybucket",
 		EncryptionKey: "key",
+		UseProxy:      true,
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
 				AccessKey:        "dummy-access",
@@ -69,6 +70,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "true"
 	params[api.OptCredDisablePathStyle] = "false"
+	params[api.OptCredProxy] = "true"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -96,7 +98,8 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:     "test",
+		UseProxy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
 				AccessKey: "dummy-access",
@@ -119,6 +122,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "false"
 	params[api.OptCredDisablePathStyle] = "false"
+	params[api.OptCredProxy] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -197,7 +201,8 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:     "test",
+		UseProxy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_AzureCredential{
 			AzureCredential: &api.SdkAzureCredentialRequest{
 				AccountKey:  "dummy-account-key",
@@ -214,6 +219,7 @@ func TestSdkAzureCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredBucket] = ""
 	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
 	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
+	params[api.OptCredProxy] = "false"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -240,7 +246,8 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:     "test",
+		UseProxy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_AzureCredential{
 			AzureCredential: &api.SdkAzureCredentialRequest{
 				AccountKey:  "dummy-account-key",
@@ -257,6 +264,7 @@ func TestSdkAzureCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredBucket] = ""
 	params[api.OptCredAzureAccountKey] = req.GetAzureCredential().GetAccountKey()
 	params[api.OptCredAzureAccountName] = req.GetAzureCredential().GetAccountName()
+	params[api.OptCredProxy] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -321,7 +329,8 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:     "test",
+		UseProxy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_GoogleCredential{
 			GoogleCredential: &api.SdkGoogleCredentialRequest{
 				ProjectId: "dummy-project-id",
@@ -338,6 +347,7 @@ func TestSdkGoogleCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredBucket] = ""
 	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
 	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
+	params[api.OptCredProxy] = "false"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -364,7 +374,8 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 	defer s.Stop()
 
 	req := &api.SdkCredentialCreateRequest{
-		Name: "test",
+		Name:     "test",
+		UseProxy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_GoogleCredential{
 			GoogleCredential: &api.SdkGoogleCredentialRequest{
 				ProjectId: "dummy-project-id",
@@ -381,6 +392,7 @@ func TestSdkGoogleCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredBucket] = ""
 	params[api.OptCredGoogleJsonKey] = req.GetGoogleCredential().GetJsonKey()
 	params[api.OptCredGoogleProjectID] = req.GetGoogleCredential().GetProjectId()
+	params[api.OptCredProxy] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -460,6 +472,7 @@ func TestSdkCredentialValidateSuccess(t *testing.T) {
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAzure,
@@ -494,6 +507,7 @@ func TestSdkCredentialValidateFailed(t *testing.T) {
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAzure,
@@ -559,6 +573,7 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 		api.OptCredSecretKey: "test-secret",
 		api.OptCredEndpoint:  "test-endpoint",
 		api.OptCredRegion:    "test-region",
+		api.OptCredProxy:     "false",
 	}
 
 	enumS3test2 := map[string]interface{}{
@@ -567,12 +582,14 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 		api.OptCredSecretKey: "test-secret1",
 		api.OptCredEndpoint:  "test-endpoint1",
 		api.OptCredRegion:    "test-region1",
+		api.OptCredProxy:     "false",
 	}
 
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		"test-cred-uuid1": enumS3test1,
@@ -614,17 +631,20 @@ func TestSdkCredentialInspectIdNotFound(t *testing.T) {
 		api.OptCredSecretKey: "test-secret",
 		api.OptCredEndpoint:  "test-endpoint",
 		api.OptCredRegion:    "test-region",
+		api.OptCredProxy:     "false",
 	}
 
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 
 	enumGoogle := map[string]interface{}{
 		api.OptCredType:            "google",
 		api.OptCredGoogleProjectID: "test-google-project-id",
+		api.OptCredProxy:           "false",
 	}
 
 	enumerateData := map[string]interface{}{
@@ -693,6 +713,7 @@ func TestSdkAWSInspect(t *testing.T) {
 		api.OptCredSecretKey:        "secret",
 		api.OptCredDisableSSL:       "false",
 		api.OptCredDisablePathStyle: "false",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -738,6 +759,7 @@ func TestSdkCredentialAzureInspect(t *testing.T) {
 		api.OptCredEncrKey:          "key",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAzure,
@@ -774,6 +796,7 @@ func TestSdkCredentialDeleteSuccess(t *testing.T) {
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		cred_id: enumAzure,
@@ -827,6 +850,7 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	enumerateData := map[string]interface{}{
 		cred_id: enumAzure,
@@ -879,6 +903,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 		Name:          "test",
 		Bucket:        "mybucket",
 		EncryptionKey: "key",
+		UseProxy:      false,
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
 				AccessKey:        "dummy-access",
@@ -903,6 +928,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
 	params[api.OptCredDisableSSL] = "true"
 	params[api.OptCredDisablePathStyle] = "false"
+	params[api.OptCredProxy] = "false"
 
 	// Create a marshalled ownership for the expect params
 	ownership := &api.Ownership{
