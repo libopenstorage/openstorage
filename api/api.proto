@@ -3232,7 +3232,11 @@ message SdkCloudBackupScheduleInfo{
   bool full = 5;
   // Number of days that Scheduled CloudBackups will be kept after which they
   // are deleted
- uint32 retention_days = 6;
+  uint32 retention_days = 6;
+  // GroupId indicates the group of volumes for which this schedule applies
+  string group_id = 7;
+  // labels indicates group of volumes with similar labels for which this schedule applies
+  map<string, string> labels = 8;
 }
 
 // Defines a request to create a schedule for volume backups to a
@@ -3474,7 +3478,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 65;
+    Minor = 66;
     // SDK version patch value of this specification
     Patch = 0;
   }
