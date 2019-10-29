@@ -152,7 +152,7 @@ func TestMiddlewareVolumeCreateSuccess(t *testing.T) {
 	defer mc.Finish()
 	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -177,7 +177,7 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 		Return(lsecrets.TypeK8s).
 		AnyTimes()
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -833,7 +833,7 @@ func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
 	defer mc.Finish()
 	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -881,7 +881,8 @@ func TestMiddlewareVolumeSetFailure(t *testing.T) {
 	defer mc.Finish()
 	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	// TODO(stgleb): Fix it
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2383,7 +2384,7 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 	defer mc.Finish()
 	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
@@ -2423,7 +2424,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	defer mc.Finish()
 	lsecrets.SetInstance(mockSecret)
 
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
 	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
 	defer unixServer.Close()
 	defer portServer.Close()
