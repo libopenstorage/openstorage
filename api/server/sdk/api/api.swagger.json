@@ -3218,6 +3218,11 @@
             },
             "type": "array"
           },
+          "attach_time": {
+            "description": "AttachTime time this device was last attached externally.",
+            "format": "date-time",
+            "type": "string"
+          },
           "attached_on": {
             "description": "AttachedOn is the node instance identifier for clustered systems.",
             "type": "string"
@@ -3228,6 +3233,11 @@
           "ctime": {
             "format": "date-time",
             "title": "Volume creation time",
+            "type": "string"
+          },
+          "detach_time": {
+            "description": "DetachTime time this device was detached.",
+            "format": "date-time",
             "type": "string"
           },
           "device_path": {
@@ -3297,7 +3307,7 @@
             "$ref": "#/components/schemas/apiVolumeStatus"
           },
           "usage": {
-            "description": "Usage is bytes consumed by vtheis volume.",
+            "description": "Usage is bytes consumed by this volume.",
             "format": "uint64",
             "type": "string"
           },
