@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.66.0 - Tech Preview (10/22/2019)
+
+* Add missing fields to cloudbackup schedule structure in sdk
+
 ### v0.65.0 - Tech Preview (09/10/2019)
 
 * Add pool UUIDs in ReplicaSet object
