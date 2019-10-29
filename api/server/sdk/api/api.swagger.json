@@ -1382,6 +1382,17 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "group_id": {
+            "title": "GroupId indicates the group of volumes for which this schedule applies",
+            "type": "string"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "labels indicates group of volumes with similar labels for which this schedule applies",
+            "type": "object"
+          },
           "max_backups": {
             "format": "uint64",
             "title": "MaxBackups indicates when to force full backup to cloud. If RetentionDays\nis not specified or is 0 (older scheme), this is also the maximum number\nof scheduled backups retained in the cloud. Older backups are deleted",
@@ -3817,7 +3828,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.65.0"
+    "version": "0.66.0"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -407,6 +407,9 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 			Schedule:       backupSchedReq.Schedule,
 			MaxBackups:     backupSchedReq.MaxBackups,
 			RetentionDays:  backupSchedReq.RetentionDays,
+			Full:           backupSchedReq.Full,
+			GroupID:        backupSchedReq.GroupID,
+			Labels:         backupSchedReq.Labels,
 		}),
 	})
 	if err != nil {
@@ -446,6 +449,9 @@ func (vd *volAPI) cloudBackupSchedUpdate(w http.ResponseWriter, r *http.Request)
 			Schedule:       backupSchedReq.Schedule,
 			MaxBackups:     backupSchedReq.MaxBackups,
 			RetentionDays:  backupSchedReq.RetentionDays,
+			Full:           backupSchedReq.Full,
+			GroupID:        backupSchedReq.GroupID,
+			Labels:         backupSchedReq.Labels,
 		}),
 		SchedUuid: backupSchedReq.SchedUUID,
 	})
