@@ -952,9 +952,11 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	}
 	req := &api.SdkCloudBackupSchedCreateRequest{
 		CloudSchedInfo: &api.SdkCloudBackupScheduleInfo{
-			SrcVolumeId:  id,
-			CredentialId: "uuid",
-			Schedules:    testSched,
+			SrcVolumeId:   id,
+			CredentialId:  "uuid",
+			Schedules:     testSched,
+			Full:          true,
+			RetentionDays: 3,
 		},
 	}
 
@@ -962,6 +964,8 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	mockReq.SrcVolumeID = req.GetCloudSchedInfo().GetSrcVolumeId()
 	mockReq.CredentialUUID = req.GetCloudSchedInfo().GetCredentialId()
 	mockReq.Schedule = "- freq: daily\n  minute: 30\n  retain: 1\n"
+	mockReq.Full = true
+	mockReq.RetentionDays = 3
 
 	// Create response
 	s.MockDriver().

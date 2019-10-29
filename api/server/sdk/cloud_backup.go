@@ -569,6 +569,8 @@ func (s *CloudBackupServer) SchedCreate(
 	bkpRequest.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
 	bkpRequest.RetentionDays = req.GetCloudSchedInfo().GetRetentionDays()
 	bkpRequest.Full = req.GetCloudSchedInfo().GetFull()
+	bkpRequest.GroupID = req.GetCloudSchedInfo().GetGroupId()
+	bkpRequest.Labels = req.GetCloudSchedInfo().GetLabels()
 
 	// Create the backup
 	schedResp, err := s.driver(ctx).CloudBackupSchedCreate(&bkpRequest)
@@ -622,6 +624,8 @@ func (s *CloudBackupServer) SchedUpdate(
 	schedUpdateReq.MaxBackups = uint(req.GetCloudSchedInfo().GetMaxBackups())
 	schedUpdateReq.RetentionDays = req.GetCloudSchedInfo().GetRetentionDays()
 	schedUpdateReq.Full = req.GetCloudSchedInfo().GetFull()
+	schedUpdateReq.GroupID = req.GetCloudSchedInfo().GetGroupId()
+	schedUpdateReq.Labels = req.GetCloudSchedInfo().GetLabels()
 	schedUpdateReq.SchedUUID = req.GetSchedUuid()
 
 	// Update the backup
@@ -743,6 +747,8 @@ func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudB
 		MaxBackups:    uint64(s.MaxBackups),
 		RetentionDays: s.RetentionDays,
 		Full:          s.Full,
+		GroupId:       s.GroupID,
+		Labels:        s.Labels,
 	}
 	return cloudSched
 }
