@@ -116,6 +116,8 @@ const (
 	OptCredAzureAccountKey = "CredAccountKey"
 	// Credential ownership key in params
 	OptCredOwnership = "CredOwnership"
+	// OptCredProxy proxy key in params
+	OptCredProxy = "CredProxy"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptSrcVolID is the source volume ID of the backup

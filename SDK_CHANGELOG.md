@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.67.0 - Tech Preview (11/01/2019)
+
+* Add proxy flag for credentials
+*
 ### v0.66.0 - Tech Preview (10/22/2019)
 
 * Add missing fields to cloudbackup schedule structure in sdk

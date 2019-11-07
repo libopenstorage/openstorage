@@ -1669,6 +1669,7 @@ service OpenStorageCredentials {
   // {% codetabs name="Golang", type="go" -%}
   // id, err := client.Create(context.Background(), &api.SdkCredentialCreateRequest{
   //     Name: "awscred",
+  //     UseProxy: false,
   //     CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
   //       AwsCredential: &api.SdkAwsCredentialRequest{
   //       AccessKey: "dummy-access",
@@ -2226,6 +2227,8 @@ message SdkCredentialCreateRequest {
   // Ownership of the credential. Collaborators and groups may be
   // added here with their appropriate ACLS.
   Ownership ownership = 4;
+  // use_proxy indicates if a proxy must be used
+  bool use_proxy = 5;
 
   // Start at field number 200 to allow for expansion
   oneof credential_type {
@@ -2330,6 +2333,8 @@ message SdkCredentialInspectResponse {
   string bucket = 3;
   // Ownership of the credential
   Ownership ownership = 4;
+  // proxy flag for the credential
+  bool use_proxy = 5;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -3478,7 +3483,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 66;
+    Minor = 67;
     // SDK version patch value of this specification
     Patch = 0;
   }

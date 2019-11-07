@@ -94,6 +94,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -134,6 +135,7 @@ func (s *CredentialServer) azureCreate(
 	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
 	params[api.OptCredAzureAccountName] = azure.GetAccountName()
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -174,6 +176,7 @@ func (s *CredentialServer) googleCreate(
 	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredGoogleProjectID] = google.GetProjectId()
 	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -368,6 +371,12 @@ func (s *CredentialServer) Inspect(
 		Bucket:       bucket,
 		Ownership:    ownership,
 	}
+	useProxy, ok := info[api.OptCredProxy].(string)
+	if !ok {
+		// older format creds
+		resp.UseProxy = false
+	}
+	resp.UseProxy = useProxy == "true"
 
 	switch info[api.OptCredType] {
 	case "s3":
@@ -389,7 +398,8 @@ func (s *CredentialServer) Inspect(
 		}
 		disablePathStyle, ok := info[api.OptCredDisablePathStyle].(string)
 		if !ok {
-			return nil, status.Error(codes.Internal, "Unable to parse disabling path-style was requested")
+			// older format creds
+			disablePathStyle = "false"
 		}
 
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
