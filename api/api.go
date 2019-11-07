@@ -123,6 +123,8 @@ const (
 	OptCredAzureAccountKey = "CredAccountKey"
 	// Credential ownership key in params
 	OptCredOwnership = "CredOwnership"
+	// OptCredProxy proxy key in params
+	OptCredProxy = "CredProxy"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
