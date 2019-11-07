@@ -611,7 +611,6 @@ func (c *ClusterManager) initNodeInCluster(
 // Alert all listeners that we are joining the cluster
 func (c *ClusterManager) joinCluster(
 	self *api.Node,
-	exist bool,
 ) error {
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
@@ -648,10 +647,6 @@ func (c *ClusterManager) joinCluster(
 			}
 			logrus.Warnf("Failed to initialize Join %s: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
-
-			if exist == false {
-				c.cleanupInit(initState.ClusterInfo, self)
-			}
 			logrus.Errorln("Failed to join cluster.", err)
 			return err
 		}
@@ -987,7 +982,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			// Achieved quorum in the cluster.
 			// Lets start the node
 			c.selfNode.Status = api.Status_STATUS_INIT
-			err := c.joinCluster(&c.selfNode, exist)
+			err := c.joinCluster(&c.selfNode)
 			if err != nil {
 				if c.selfNode.Status != api.Status_STATUS_MAINTENANCE {
 					c.selfNode.Status = api.Status_STATUS_ERROR
