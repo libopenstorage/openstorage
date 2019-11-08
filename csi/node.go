@@ -21,7 +21,7 @@ import (
 	"os"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/util"
+	"github.com/portworx/kvdb"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
@@ -157,12 +157,18 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	// Get volume information
-	vol, err := util.VolumeFromName(s.driver, req.GetVolumeId())
-	if err != nil {
+	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	if err != nil || len(vols) < 1 {
+		if err == kvdb.ErrNotFound {
+			logrus.Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
+			return &csi.NodeUnpublishVolumeResponse{}, nil
+		}
+
 		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 			req.GetVolumeId(),
 			err.Error())
 	}
+	vol := vols[0]
 
 	if !vol.IsAttached() {
 		logrus.Infof("Volume %s was already unmounted", req.GetVolumeId())
