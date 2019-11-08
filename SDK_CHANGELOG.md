@@ -1,6 +1,11 @@
 # Changelog
 
 ## Releases
+
+### v0.68.0 - Tech Preview (11/01/2019)
+
+* Add proxy flag for credentials
+
 ### v0.67.0 - Tech Preview (10/29/2019)
 
 * Add fields last_attached and last_detached to the Volume object.
