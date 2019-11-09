@@ -480,12 +480,6 @@ func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 			Inspect([]string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
-
-		s.MockDriver().
-			EXPECT().
-			Enumerate(&api.VolumeLocator{Name: name}, nil).
-			Return(nil, fmt.Errorf("not found")).
-			Times(1),
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
