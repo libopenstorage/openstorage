@@ -366,6 +366,26 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			// skip, if not it would be added to the labels
 		case api.StoragePolicy:
 			spec.StoragePolicy = v
+		case api.SpecExportProtocol:
+			if spec.ExportSpec == nil {
+				spec.ExportSpec = &api.ExportSpec{}
+			}
+			if v == api.SpecExportProtocolPXD {
+				spec.ExportSpec.ExportProtocol = api.ExportProtocol_PXD
+			} else if v == api.SpecExportProtocolNFS {
+				spec.ExportSpec.ExportProtocol = api.ExportProtocol_NFS
+			} else if v == api.SpecExportProtocolISCSI {
+				spec.ExportSpec.ExportProtocol = api.ExportProtocol_ISCSI
+			} else if v == api.SpecExportProtocolCustom {
+				spec.ExportSpec.ExportProtocol = api.ExportProtocol_CUSTOM
+			} else {
+				return nil, nil, nil, fmt.Errorf("unsupported Export Protocol %v", v)
+			}
+		case api.SpecExportOptions:
+			if spec.ExportSpec == nil {
+				spec.ExportSpec = &api.ExportSpec{}
+			}
+			spec.ExportSpec.ExportOptions = v
 		default:
 			locator.VolumeLabels[k] = v
 		}
