@@ -281,6 +281,26 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
+// ExportProtocol defines how the device is exported..
+enum ExportProtocol  {
+  // ExportProtocolPxd the volume is exported over Portworx block interace.
+  EXPORT_PROTOCOL_PXD = 0;
+  // ExportProtocolISCSI the volume is exported over ISCSI.
+  EXPORT_PROTOCOL_ISCSI = 1;
+  // ExportProtocolNFS the volume is exported over NFS.
+  EXPORT_PROTOCOL_NFS = 2;
+  // ExportProtocolCustom the volume is exported over custom interace.
+  EXPORT_PROTOCOL_CUSTOM = 3;
+}
+
+// ExportSpec defines how the volume is exported..
+message ExportSpec {
+   // ExportProtocol defines how the volume is exported.
+   ExportProtocol export_protocol = 1;
+   // ExportOptions options exporting the volume.
+   string export_options = 2;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -345,8 +365,10 @@ message VolumeSpec {
   VolumePlacementStrategy placement_strategy = 31;
   // StoragePolicy if applied/specified while creating volume
   string storage_policy = 32;
-  // Owner
+  // Ownership
   Ownership ownership = 33;
+  // ExportSpec defines how the volume should be exported.
+  ExportSpec export_spec = 34;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -459,6 +481,8 @@ message VolumeSpecPolicy {
   oneof nodiscard_opt { bool nodiscard = 54; }
   // IoStrategy preferred strategy for I/O.
   IoStrategy io_strategy = 55;
+  // ExportSpec preferred volume export options.
+  oneof export_spec_opt { ExportSpec export_spec = 56; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure

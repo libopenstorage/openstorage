@@ -53,6 +53,11 @@ const (
 	SpecIoProfile            = "io_profile"
 	SpecAsyncIo              = "async_io"
 	SpecEarlyAck             = "early_ack"
+	SpecExportProtocolISCSI  = "export_iscsi"
+	SpecExportProtocolPXD    = "export_pxd"
+	SpecExportProtocolNFS    = "export_nfs"
+	SpecExportProtocolCustom = "export_custom"
+	SpecExportOptions        = "export_options"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"

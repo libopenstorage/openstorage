@@ -497,6 +497,30 @@
         "title": "Defines the types of enforcement on the given rules",
         "type": "string"
       },
+      "apiExportProtocol": {
+        "default": "EXPORT_PROTOCOL_PXD",
+        "description": "ExportProtocol defines how the device is exported..\n\n - EXPORT_PROTOCOL_PXD: ExportProtocolPxd the volume is exported over Portworx block interace.\n - EXPORT_PROTOCOL_ISCSI: ExportProtocolISCSI the volume is exported over ISCSI.\n - EXPORT_PROTOCOL_NFS: ExportProtocolNFS the volume is exported over NFS.\n - EXPORT_PROTOCOL_CUSTOM: ExportProtocolCustom the volume is exported over custom interace.",
+        "enum": [
+          "EXPORT_PROTOCOL_PXD",
+          "EXPORT_PROTOCOL_ISCSI",
+          "EXPORT_PROTOCOL_NFS",
+          "EXPORT_PROTOCOL_CUSTOM"
+        ],
+        "type": "string"
+      },
+      "apiExportSpec": {
+        "description": "ExportSpec defines how the volume is exported..",
+        "properties": {
+          "export_options": {
+            "description": "ExportOptions options exporting the volume.",
+            "type": "string"
+          },
+          "export_protocol": {
+            "$ref": "#/components/schemas/apiExportProtocol"
+          }
+        },
+        "type": "object"
+      },
       "apiFSType": {
         "default": "FS_TYPE_NONE",
         "enum": [
@@ -3398,6 +3422,9 @@
             "title": "Ephemeral storage",
             "type": "boolean"
           },
+          "export_spec": {
+            "$ref": "#/components/schemas/apiExportSpec"
+          },
           "force_unsupported_fs_type": {
             "description": "Use to force a file system type which is not recommended.\nThe driver may still refuse to use the file system type.",
             "format": "boolean",
@@ -3517,6 +3544,9 @@
           "encrypted": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "export_spec": {
+            "$ref": "#/components/schemas/apiExportSpec"
           },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
