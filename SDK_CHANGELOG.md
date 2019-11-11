@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.62.0 - Tech Preview (11/11/2019)
+
+* Add fields export_spec to the Volume object.
+
 ### v0.61.0 - Tech Preview (9/10/2019)
 
 * Add fields last_attached and last_detached to the Volume object.
