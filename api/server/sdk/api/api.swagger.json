@@ -498,13 +498,14 @@
         "type": "string"
       },
       "apiExportProtocol": {
-        "default": "EXPORT_PROTOCOL_PXD",
-        "description": "ExportProtocol defines how the device is exported..\n\n - EXPORT_PROTOCOL_PXD: ExportProtocolPxd the volume is exported over Portworx block interace.\n - EXPORT_PROTOCOL_ISCSI: ExportProtocolISCSI the volume is exported over ISCSI.\n - EXPORT_PROTOCOL_NFS: ExportProtocolNFS the volume is exported over NFS.\n - EXPORT_PROTOCOL_CUSTOM: ExportProtocolCustom the volume is exported over custom interace.",
+        "default": "INVALID",
+        "description": "ExportProtocol defines how the device is exported..\n\n - INVALID: Invalid uninitialized value\n - PXD: PXD the volume is exported over Portworx block interace.\n - ISCSI: ISCSI the volume is exported over ISCSI.\n - NFS: NFS the volume is exported over NFS.\n - CUSTOM: Custom the volume is exported over custom interace.",
         "enum": [
-          "EXPORT_PROTOCOL_PXD",
-          "EXPORT_PROTOCOL_ISCSI",
-          "EXPORT_PROTOCOL_NFS",
-          "EXPORT_PROTOCOL_CUSTOM"
+          "INVALID",
+          "PXD",
+          "ISCSI",
+          "NFS",
+          "CUSTOM"
         ],
         "type": "string"
       },
@@ -3637,6 +3638,9 @@
           "dedupe": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "export_spec": {
+            "$ref": "#/components/schemas/apiExportSpec"
           },
           "group": {
             "$ref": "#/components/schemas/apiGroup"

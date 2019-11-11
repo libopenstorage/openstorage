@@ -777,6 +777,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.QueueDepth = vol.GetQueueDepth()
 	}
 
+	// ExportSpec
+	if req.GetExportSpec() != nil {
+		spec.ExportSpec = req.GetExportSpec()
+	} else {
+		spec.ExportSpec = vol.GetExportSpec()
+	}
+
 	return spec
 }
 
@@ -1032,6 +1039,7 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		}
 		spec.IoStrategy = req.GetIoStrategy()
 	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }

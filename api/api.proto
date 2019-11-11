@@ -283,14 +283,16 @@ message IoStrategy {
 
 // ExportProtocol defines how the device is exported..
 enum ExportProtocol  {
-  // ExportProtocolPxd the volume is exported over Portworx block interace.
-  EXPORT_PROTOCOL_PXD = 0;
-  // ExportProtocolISCSI the volume is exported over ISCSI.
-  EXPORT_PROTOCOL_ISCSI = 1;
-  // ExportProtocolNFS the volume is exported over NFS.
-  EXPORT_PROTOCOL_NFS = 2;
-  // ExportProtocolCustom the volume is exported over custom interace.
-  EXPORT_PROTOCOL_CUSTOM = 3;
+  // Invalid uninitialized value
+  INVALID = 0;
+  // PXD the volume is exported over Portworx block interace.
+  PXD = 1;
+  // ISCSI the volume is exported over ISCSI.
+  ISCSI = 2;
+  // NFS the volume is exported over NFS.
+  NFS = 3;
+  // Custom the volume is exported over custom interace.
+  CUSTOM = 4;
 }
 
 // ExportSpec defines how the volume is exported..
@@ -414,6 +416,8 @@ message VolumeSpecUpdate {
   oneof nodiscard_opt { bool nodiscard = 27; }
   // IoStrategy preferred strategy for I/O.
   IoStrategy io_strategy = 28;
+  // ExportSpec volume export spec
+  oneof export_spec_opt { ExportSpec export_spec = 29; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
