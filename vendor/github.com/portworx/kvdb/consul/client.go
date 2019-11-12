@@ -20,9 +20,13 @@ const (
 	// eofError is also a substring returned by consul during EOF errors.
 	eofError = "EOF"
 	// connRefused connection refused
-	connRefused = "getsockopt: connection refused"
+	connRefused = "connection refused"
 	// keyIndexMismatch indicates consul error for key index mismatch
 	keyIndexMismatch = "Key Index mismatch"
+	// nameResolutionError indicates no host found, can be temporary
+	nameResolutionError = "no such host"
+	// connReset connection reset by peer
+	connReset = "connection reset by peer"
 )
 
 // clientConsul defines methods that a px based consul client should satisfy.
@@ -115,11 +119,7 @@ func newConsulClient(config *api.Config,
 		connParams:     p,
 		reconnectDelay: reconnectDelay,
 	}
-	if len(c.connParams.machines) < 3 {
-		c.maxRetries = 3
-	} else {
-		c.maxRetries = 2 * len(c.connParams.machines)
-	}
+	c.maxRetries = 12 /// with default 5 second delay this would be a minute
 	return c
 }
 
@@ -170,7 +170,9 @@ func (c *consulClientImpl) reconnect(conn *consulConnection) error {
 func isConsulErrNeedingRetry(err error) bool {
 	return strings.Contains(err.Error(), httpError) ||
 		strings.Contains(err.Error(), eofError) ||
-		strings.Contains(err.Error(), connRefused)
+		strings.Contains(err.Error(), connRefused) ||
+		strings.Contains(err.Error(), nameResolutionError) ||
+		strings.Contains(err.Error(), connReset)
 }
 
 // isKeyIndexMismatchErr returns true if error contains key index mismatch substring
@@ -246,7 +248,7 @@ func (c *consulClientImpl) writeRetryFunc(f writeFunc) (*api.WriteMeta, error) {
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		meta, err = f(conn)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 	return meta, err
@@ -261,6 +263,7 @@ func (c *consulClientImpl) reconnectIfConnectionError(conn *consulConnection, er
 		if clientErr := c.reconnect(conn); clientErr != nil {
 			return false, clientErr
 		} else {
+			logrus.Infof("consul connection success, returning true")
 			return true, nil
 		}
 	} else {
@@ -277,7 +280,7 @@ func (c *consulClientImpl) Get(key string, q *api.QueryOptions) (*api.KVPair, *a
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		pair, meta, err = conn.client.KV().Get(key, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -311,7 +314,7 @@ func (c *consulClientImpl) Keys(prefix, separator string, q *api.QueryOptions) (
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		list, meta, err = conn.client.KV().Keys(prefix, separator, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -327,7 +330,7 @@ func (c *consulClientImpl) List(prefix string, q *api.QueryOptions) (api.KVPairs
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		pairs, meta, err = conn.client.KV().List(prefix, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -342,7 +345,7 @@ func (c *consulClientImpl) Acquire(p *api.KVPair, q *api.WriteOptions) (*api.Wri
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		ok, meta, err = conn.client.KV().Acquire(p, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -367,7 +370,7 @@ func (c *consulClientImpl) Create(se *api.SessionEntry, q *api.WriteOptions) (st
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		session, meta, err = conn.client.Session().Create(se, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -389,7 +392,7 @@ func (c *consulClientImpl) Renew(id string, q *api.WriteOptions) (*api.SessionEn
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		entry, meta, err = conn.client.Session().Renew(id, q)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 
@@ -408,7 +411,7 @@ func (c *consulClientImpl) RenewPeriodic(
 	c.runWithRetry(func() bool {
 		conn := c.conn
 		err = conn.client.Session().RenewPeriodic(initialTTL, id, q, doneCh)
-		retry, err = c.reconnectIfConnectionError(conn, err)
+		retry, _ = c.reconnectIfConnectionError(conn, err)
 		return retry
 	})
 

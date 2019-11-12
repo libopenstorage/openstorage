@@ -21,7 +21,6 @@ import (
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 
@@ -86,7 +85,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 
 	setupMockDriver(tester, t)
 	// Initialise storage policy manager
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	_, err = policy.Init(kv)
 

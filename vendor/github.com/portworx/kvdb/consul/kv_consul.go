@@ -115,7 +115,7 @@ func New(
 ) (kvdb.Kvdb, error) {
 
 	// check for unsupported options
-	for _, opt := range []string{kvdb.UsernameKey, kvdb.PasswordKey, kvdb.CAFileKey} {
+	for _, opt := range []string{kvdb.UsernameKey, kvdb.PasswordKey} {
 		// Check if username provided
 		if _, ok := options[opt]; ok {
 			return nil, kvdb.ErrAuthNotSupported
@@ -600,8 +600,10 @@ func (kv *consulKV) Unlock(kvp *kvdb.KVPair) error {
 		return fmt.Errorf("Invalid lock structure for key: %v", string(kvp.Key))
 	}
 	_, err := kv.Delete(kvp.Key)
-	if err == nil {
+
+	if err == nil || isConsulErrNeedingRetry(err) {
 		_ = l.lock.Unlock()
+		// stop refreshing the lock, this will automatically release the lock
 		if l.doneCh != nil {
 			close(l.doneCh)
 		}

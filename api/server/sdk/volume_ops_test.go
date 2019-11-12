@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/kubernetes-csi/csi-test/utils"
-	"github.com/sirupsen/logrus"
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
@@ -40,7 +39,7 @@ import (
 )
 
 func init() {
-	kv, _ := kvdb.New(mem.Name, "policyvolopstest", []string{}, nil, logrus.Panicf)
+	kv, _ := kvdb.New(mem.Name, "policyvolopstest", []string{}, nil, kvdb.LogFatalErrorCB)
 	policy.Init(kv)
 }
 
@@ -1420,7 +1419,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 	mc := gomock.NewController(&utils.SafeGoroutineTester{})
 	mv := mockdriver.NewMockVolumeDriver(mc)
 	mcluster := mockcluster.NewMockCluster(mc)
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	// Init storage policy manager
@@ -1650,7 +1649,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 	mv := mockdriver.NewMockVolumeDriver(mc)
 	mcluster := mockcluster.NewMockCluster(mc)
 
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	// Init storage policy manager

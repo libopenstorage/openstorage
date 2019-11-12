@@ -27,14 +27,13 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
 func TestVolSpecToSdkStoragePolicy(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	m := jsonpb.Marshaler{OrigName: true}
@@ -83,7 +82,7 @@ func TestVolSpecToSdkStoragePolicy(t *testing.T) {
 	assert.Equal(t, resp.GetStoragePolicy().GetPolicy().GetSize(), volSpec.GetSize())
 }
 func TestSdkStoragePolicyDeleteWithOwnership(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	_, err = Init(kv)
 
