@@ -117,12 +117,13 @@
       },
       "SdkStoragePoolOperationStatus": {
         "default": "OPERATION_PENDING",
-        "description": "- OPERATION_PENDING: Operation pending\n - OPERATION_IN_PROGRESS: Operation is in progress\n - OPERATION_SUCCESSFUL: Operation is successful\n - OPERATION_FAILED: Operation failed",
+        "description": "- OPERATION_PENDING: Operation pending\n - OPERATION_IN_PROGRESS: Operation is in progress\n - OPERATION_SUCCESSFUL: Operation is successful\n - OPERATION_FAILED: Operation failed\n - OPERATION_STATUS_UPDATE_REQUIRED: Operation is waiting for a pool status update",
         "enum": [
           "OPERATION_PENDING",
           "OPERATION_IN_PROGRESS",
           "OPERATION_SUCCESSFUL",
-          "OPERATION_FAILED"
+          "OPERATION_FAILED",
+          "OPERATION_STATUS_UPDATE_REQUIRED"
         ],
         "title": "OperationStatus captures the various statuses of a storage pool operation",
         "type": "string"

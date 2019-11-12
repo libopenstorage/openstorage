@@ -2789,6 +2789,8 @@ message SdkStoragePool {
     OPERATION_SUCCESSFUL = 2;
     // Operation failed
     OPERATION_FAILED = 3;
+    // Operation is waiting for a pool status update
+    OPERATION_STATUS_UPDATE_REQUIRED = 4;
   }
 
   // OperationType defines the various operations that are performed on a storage pool
