@@ -290,7 +290,7 @@ func TestExportSpec(t *testing.T) {
 		api.SpecExportProtocol: api.SpecExportProtocolPXD,
 	})
 	require.NoError(t, err)
-	exportSpec = spec.GetExportSpec()
+	exportSpec := spec.GetExportSpec()
 	require.NotNil(t, exportSpec)
 	require.Equal(t, api.ExportProtocol_PXD, exportSpec.ExportProtocol)
 
