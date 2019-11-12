@@ -124,6 +124,8 @@ var (
 	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
 	nodiscardRegex              = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
 	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
+	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
+	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -367,6 +369,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 		case api.StoragePolicy:
 			spec.StoragePolicy = v
 		case api.SpecExportProtocol:
+			fmt.Println("here")
 			if spec.ExportSpec == nil {
 				spec.ExportSpec = &api.ExportSpec{}
 			}
@@ -528,6 +531,12 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, storagepolicy := d.getVal(storagePolicyRegex, str); ok {
 		opts[api.StoragePolicy] = storagepolicy
+	}
+	if ok, exportProtocol := d.getVal(exportProtocolRegex, str); ok {
+		opts[api.SpecExportProtocol] = exportProtocol
+	}
+	if ok, exportOptions := d.getVal(exportOptionsRegex, str); ok {
+		opts[api.SpecExportOptions] = exportOptions
 	}
 
 	return true, opts, name
