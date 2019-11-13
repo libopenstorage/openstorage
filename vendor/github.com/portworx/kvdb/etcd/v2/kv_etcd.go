@@ -397,6 +397,7 @@ func (kv *etcdKV) LockWithTimeout(
 		return nil, err
 	}
 	kvPair.TTL = int64(time.Duration(ttl) * time.Second)
+	lock.AcquisitionTime = time.Now()
 	kvPair.Lock = lock
 	go kv.refreshLock(kvPair, lockerID, lockHoldDuration)
 
@@ -584,10 +585,10 @@ func (kv *etcdKV) refreshLock(
 				)
 				currentRefresh = time.Now()
 				if err != nil {
-					kv.FatalCb(
-						"Error refreshing lock. [Key %v] [Err: %v]"+
+					kv.FatalCb(kvdb.ErrLockRefreshFailed,
+						"Error refreshing lock. [Key %v] [Err: %v] [Acquisition Time: %v]"+
 							" [Current Refresh: %v] [Previous Refresh: %v]",
-						keyString, err, currentRefresh, prevRefresh,
+						keyString, err, l.AcquisitionTime, currentRefresh, prevRefresh,
 					)
 					l.Err = err
 					l.Unlock()
