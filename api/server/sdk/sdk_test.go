@@ -100,7 +100,7 @@ func newTestServer(t *testing.T) *testServer {
 
 	setupMockDriver(tester, t)
 
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	// Init storage policy manager
 	_, err = policy.Init(kv)
@@ -251,7 +251,7 @@ func TestSdkGateway(t *testing.T) {
 }
 
 func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}

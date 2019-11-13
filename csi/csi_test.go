@@ -81,7 +81,7 @@ type testServer struct {
 }
 
 func setupFakeDriver() {
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}
@@ -158,13 +158,13 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	setupMockDriver(tester, t)
 
 	// Initialise storage policy manager
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
 	// Setup storage policy
-	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	stp, err := storagepolicy.Init(kv)
 	if err != nil {

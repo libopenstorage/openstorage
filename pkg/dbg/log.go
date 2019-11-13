@@ -6,8 +6,19 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+func LogErrorAndPanicf(err error, format string, args ...interface{}) {
+	logrus.Errorf("LogErrorAndPanicf: error: %v", err)
+	panicf(format, args...)
+
+}
+
 // Panicf outputs error message, dumps threads and exits.
 func Panicf(format string, args ...interface{}) {
+	panicf(format, args...)
+}
+
+// Panicf outputs error message, dumps threads and exits.
+func panicf(format string, args ...interface{}) {
 	logrus.Warnf(format, args...)
 	err := DumpGoProfile()
 	if err != nil {
