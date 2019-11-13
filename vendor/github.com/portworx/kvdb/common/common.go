@@ -84,7 +84,7 @@ func (b *BaseKvdb) LockTimedout(key string) {
 
 // lockTimedout function is invoked if lock is held past configured timeout.
 func (b *BaseKvdb) lockTimedout(key string) {
-	b.FatalCb("Lock %s hold timeout triggered", key)
+	b.FatalCb(kvdb.ErrLockHoldTimeoutTriggered, "Lock %s hold timeout triggered", key)
 }
 
 // SerializeAll Serializes all key value pairs to a byte array.

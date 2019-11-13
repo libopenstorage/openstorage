@@ -102,7 +102,7 @@ func newTestCluster(t *testing.T) *testCluster {
 }
 
 func setupFakeDriver() {
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}
@@ -134,7 +134,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
-	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	stp, err := storagepolicy.Init(kv)
 	if err != nil {
@@ -189,7 +189,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	// Create a role manager
-	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
@@ -321,7 +321,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 	ts := httptest.NewServer(router)
 	testVolDriver := newTestServer(t)
 	// Initialise storage policy manager
-	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	_, err = storagepolicy.Init(kv)
 

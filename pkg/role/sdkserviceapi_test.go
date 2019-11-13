@@ -24,7 +24,6 @@ import (
 
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -106,7 +105,7 @@ func TestMatchRule(t *testing.T) {
 }
 
 func TestSdkRuleCreateBadArguments(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -192,7 +191,7 @@ func TestSdkRuleCreateBadArguments(t *testing.T) {
 }
 
 func TestSdkRuleCreateCollisionSystemRole(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -216,7 +215,7 @@ func TestSdkRuleCreateCollisionSystemRole(t *testing.T) {
 }
 
 func TestSdkRuleCreate(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -267,7 +266,7 @@ func TestSdkRuleCreate(t *testing.T) {
 }
 
 func TestSdkRuleEnumerate(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -299,7 +298,7 @@ func TestSdkRuleEnumerate(t *testing.T) {
 }
 
 func TestSdkRuleInspectBadArgument(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -325,7 +324,7 @@ func TestSdkRuleInspectBadArgument(t *testing.T) {
 }
 
 func TestSdkRuleInspectDelete(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -371,7 +370,7 @@ func TestSdkRuleInspectDelete(t *testing.T) {
 }
 
 func TestSdkRuleDeleteCollisionSystemRole(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -392,7 +391,7 @@ func TestSdkRuleDeleteCollisionSystemRole(t *testing.T) {
 }
 
 func TestSdkRuleUpdateBadArguments(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -446,7 +445,7 @@ func TestSdkRuleUpdateBadArguments(t *testing.T) {
 }
 
 func TestSdkRuleUpdateCollisionSystemRole(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -470,7 +469,7 @@ func TestSdkRuleUpdateCollisionSystemRole(t *testing.T) {
 }
 
 func TestSdkRuleUpdate(t *testing.T) {
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
@@ -585,7 +584,7 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		},
 	}
 
-	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 
 	s, err := NewSdkRoleManager(kv)
