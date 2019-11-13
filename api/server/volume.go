@@ -1605,10 +1605,9 @@ func (vd *volAPI) VolService(w http.ResponseWriter, r *http.Request) {
 	var (
 		volumeID string
 		err      error
-		vsreq    api.VolumeServiceRequest  
+		vsreq    api.VolumeServiceRequest
 	)
 	method := "Srv:VolService"
-
 
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
@@ -1668,7 +1667,7 @@ func migratePath(route, version string) string {
 }
 
 func volServicePath(route, version string) string {
-	return volVersion(api.OsdVolumeServicePath + route, version)
+	return volVersion(api.OsdVolumeServicePath+route, version)
 }
 
 func (vd *volAPI) versionRoute() *Route {
