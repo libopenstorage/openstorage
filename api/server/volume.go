@@ -1576,6 +1576,69 @@ func (vd *volAPI) catalog(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(dk)
 }
 
+// swagger:operation POST /osd-volumes/volservice/{id} volume VolumeService
+//
+// Does Volume Service operation in the background on a given volume
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: path
+//   description: id to get volume with
+//   required: true
+//   type: integer
+// - name: VolumeServiceRequest
+//   in: body
+//   description: Contains the volume service command and parameters for the command
+//   required: true
+//   schema:
+//         "$ref": "#/definitions/VolumeServiceRequest"
+// responses:
+//   '200':
+//     description: volume service response
+//     schema:
+//       $ref: '#/definitions/VolumeServiceResponse'
+//
+func (vd *volAPI) VolService(w http.ResponseWriter, r *http.Request) {
+	var (
+		volumeID string
+		err      error
+		vsreq    api.VolumeServiceRequest  
+	)
+	method := "Srv:VolService"
+
+
+	if volumeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = json.NewDecoder(r.Body).Decode(&vsreq)
+	if err != nil {
+		e := fmt.Errorf("Failed to Decode api.VolumeServiceRequest from HTTP request body: Err: %s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	vsresp, err := d.VolService(volumeID, &vsreq)
+	if err != nil {
+		e := fmt.Errorf("%s", err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	json.NewEncoder(w).Encode(*vsresp)
+}
+
 func volVersion(route, version string) string {
 	if version == "" {
 		return "/" + route
@@ -1602,6 +1665,10 @@ func backupPath(route, version string) string {
 
 func migratePath(route, version string) string {
 	return volVersion(route, version)
+}
+
+func volServicePath(route, version string) string {
+	return volVersion(api.OsdVolumeServicePath + route, version)
 }
 
 func (vd *volAPI) versionRoute() *Route {
@@ -1638,6 +1705,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
+		{verb: "POST", path: volServicePath("/{id}", volume.APIVersion), fn: vd.VolService},
 	}
 }
 

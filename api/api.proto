@@ -993,6 +993,33 @@ message VolumeConsumer {
   string owner_type = 6;
 }
 
+
+// VolumeServiceRequest provides details on what volume service command to 
+// perform in background on the volume
+message VolumeServiceRequest {
+  // User specified volume service command
+  string srv_cmd = 1;
+  // User specified volume service command's params
+  map<string, string> srv_cmd_params = 2;
+}
+
+
+message VolumeServiceInstanceResponse {
+  // Error code
+  string error = 1;
+  // Status information exposed a map
+  map<string, string> status = 2;
+}
+
+// VolumeServiceResponse specifies the response to a Volume Service command
+// performed on a volumen
+message VolumeServiceResponse {
+  // Number of VolumeServiceInstanceResponse returned as part of this response
+  // structure
+  int32 vol_srv_rsp_obj_cnt = 1;
+  repeated VolumeServiceInstanceResponse vol_srv_rsp = 2;
+}
+
 // GraphDriverChanges represent a list of changes between the filesystem layers
 // specified by the ID and Parent.  // Parent may be an empty string, in which
 // case there is no parent.

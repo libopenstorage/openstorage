@@ -227,6 +227,8 @@ type ProtoDriver interface {
 	Shutdown()
 	// DU specified volume and potentially the subfolder if provided.
 	Catalog(volumeid, subfolder string, depth string) (api.CatalogResponse, error)
+	// Does a Filesystem Trim operation to free unused space to block device(block discard)
+	VolService(volumeID string, vsreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error)
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.

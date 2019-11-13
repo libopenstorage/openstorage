@@ -217,3 +217,7 @@ func (d *driver) Unquiesce(volumeID string) error {
 func (d *driver) Catalog(volumeID, path string, depth string) (api.CatalogResponse, error) {
 	return api.CatalogResponse{}, volume.ErrNotSupported
 }
+
+func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
+	return nil, volume.ErrNotSupported
+}

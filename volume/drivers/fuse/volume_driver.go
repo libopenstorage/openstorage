@@ -175,3 +175,7 @@ func (v *volumeDriver) Shutdown() {}
 func (d *volumeDriver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
 	return api.CatalogResponse{}, volume.ErrNotSupported
 }
+
+func (d *volumeDriver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
+	return nil, volume.ErrNotSupported
+}
