@@ -59,6 +59,9 @@ const (
 const (
 	// LocationConstaint is a label that specifies data location constraint.
 	LocationConstraint = "LocationConstraint"
+	// PoolLocationConstraint is a label that specifies storage pool constraint. The value associated with this label
+	// should be the pool UUID
+	PoolLocationConstraint = "PoolLocationConstraint"
 	// LocalNode is an alias for this node - similar to localhost.
 	LocalNode = "LocalNode"
 )
