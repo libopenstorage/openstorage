@@ -96,15 +96,6 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(2)
-	s.MockDriver().
-		EXPECT().
 		CloudBackupCreate(&api.CloudBackupCreateRequest{
 			VolumeID:       id,
 			CredentialUUID: uuid,
@@ -600,15 +591,6 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(3)
-	s.MockDriver().
-		EXPECT().
 		CloudBackupStatus(&api.CloudBackupStatusRequest{
 			SrcVolumeID: id,
 			Local:       false,
@@ -749,15 +731,6 @@ func TestSdkCloudBackupHistory(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(1)
-	s.MockDriver().
-		EXPECT().
 		CloudBackupHistory(&api.CloudBackupHistoryRequest{
 			SrcVolumeID: id,
 		}).
@@ -852,15 +825,6 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 
 	for _, test := range tests {
 		// Create response
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{id}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: id,
-				},
-			}, nil).
-			Times(1)
 		s.MockDriver().
 			EXPECT().
 			CloudBackupStatus(&api.CloudBackupStatusRequest{
@@ -970,15 +934,6 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
-		Times(1)
-	s.MockDriver().
-		EXPECT().
 		CloudBackupSchedCreate(&mockReq).
 		Return(&api.CloudBackupSchedCreateResponse{UUID: "uuid"}, nil).
 		Times(1)
@@ -1070,15 +1025,6 @@ func TestSdkCloudBackupSchedUpdate(t *testing.T) {
 		EXPECT().
 		CloudBackupSchedEnumerate().
 		Return(schedList, nil).
-		Times(1)
-	s.MockDriver().
-		EXPECT().
-		Inspect([]string{id}).
-		Return([]*api.Volume{
-			&api.Volume{
-				Id: id,
-			},
-		}, nil).
 		Times(1)
 	s.MockDriver().
 		EXPECT().
