@@ -283,3 +283,7 @@ func (d *driver) getAuthSession() (session *napping.Session, err error) {
 func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, error) {
 	return api.CatalogResponse{}, volume.ErrNotSupported
 }
+
+func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
+	return nil, volume.ErrNotSupported
+}
