@@ -1666,10 +1666,6 @@ func migratePath(route, version string) string {
 	return volVersion(route, version)
 }
 
-func volServicePath(route, version string) string {
-	return volVersion(api.OsdVolumeServicePath+route, version)
-}
-
 func (vd *volAPI) versionRoute() *Route {
 	return &Route{verb: "GET", path: "/" + api.OsdVolumePath + "/versions", fn: vd.versions}
 
@@ -1704,7 +1700,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/quiesce/{id}", volume.APIVersion), fn: vd.quiesce},
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
-		{verb: "POST", path: volServicePath("/{id}", volume.APIVersion), fn: vd.VolService},
+		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
 	}
 }
 

@@ -131,6 +131,8 @@ const (
 	OptCatalogSubFolder = "subfolder"
 	// OptCatalogMaxDepth query parameter used to limit the depth we return
 	OptCatalogMaxDepth = "depth"
+	// OptVolumeService query parameter used to request background volume services 
+	OptVolService = "volservice"
 )
 
 // Api clientserver Constants
@@ -143,7 +145,6 @@ const (
 	OsdMigrateStartPath  = OsdMigratePath + "/start"
 	OsdMigrateCancelPath = OsdMigratePath + "/cancel"
 	OsdMigrateStatusPath = OsdMigratePath + "/status"
-	OsdVolumeServicePath = "/" + OsdVolumePath + "/volservice"
 	TimeLayout           = "Jan 2 15:04:05 UTC 2006"
 )
 
