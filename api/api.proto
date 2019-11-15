@@ -2774,6 +2774,8 @@ message SdkStoragePoolResizeRequest {
   }
   // OperationType is the operation that's used to resize the storage pool (optional)
   SdkStoragePool.ResizeOperationType operation_type = 3;
+  // SkipWaitForCleanVolumes would skip the wait for all volumes on the pool to be clean before doing a resize
+  bool skip_wait_for_clean_volumes = 4;
 }
 
 
