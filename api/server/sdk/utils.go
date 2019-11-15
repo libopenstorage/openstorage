@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/volume"
 
@@ -240,40 +241,17 @@ func openLog(logfile string) (*os.File, error) {
 	return file, nil
 }
 
-func checkAccessFromDriverForVolumeIds(
-	ctx context.Context,
-	d volume.VolumeDriver,
-	volumeIds []string,
-	accessType api.Ownership_AccessType,
-) error {
-	vols, err := d.Inspect(volumeIds)
-	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
-		return status.Errorf(
-			codes.NotFound,
-			"Volume ids %s not found",
-			volumeIds)
-	} else if err != nil {
-		return status.Errorf(
-			codes.Internal,
-			"Failed to find volumes %s: %v",
-			volumeIds, err)
-	}
-
-	for _, vol := range vols {
-		if !vol.IsPermitted(ctx, accessType) {
-			return status.Errorf(codes.PermissionDenied, "Access denied to volume %s", vol.Id)
-		}
-	}
-
-	return nil
-}
-
 func checkAccessFromDriverForLocator(
 	ctx context.Context,
 	d volume.VolumeDriver,
 	locator *api.VolumeLocator,
 	accessType api.Ownership_AccessType,
 ) error {
+	// Avoid costly driver calls if auth is disabled.
+	if !auth.Enabled() {
+		return nil
+	}
+
 	vols, err := d.Enumerate(locator, nil)
 	if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 		return status.Errorf(
@@ -292,6 +270,18 @@ func checkAccessFromDriverForLocator(
 	}
 
 	return nil
+}
+
+func checkAccessFromDriverForVolumeIds(
+	ctx context.Context,
+	d volume.VolumeDriver,
+	volumeIds []string,
+	accessType api.Ownership_AccessType,
+) error {
+	return checkAccessFromDriverForLocator(ctx, d, &api.VolumeLocator{
+		VolumeIds: volumeIds,
+	}, accessType)
+
 }
 
 func enumerateVolumeIdsAsMap(d volume.VolumeDriver, locator *api.VolumeLocator) (map[string]bool, error) {
