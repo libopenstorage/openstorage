@@ -843,3 +843,12 @@ func (v *volumeClient) Catalog(id, subfolder, maxDepth string) (api.CatalogRespo
 
 	return catalog, nil
 }
+
+func (v *volumeClient) VolService(volumeID string, vsreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
+	vsresp := &api.VolumeServiceResponse{}
+
+	req := v.c.Post().Resource(volumePath + "/volservice").Instance(volumeID).Body(vsreq)
+	err := req.Do().Unmarshal(&vsresp)
+
+	return vsresp, err
+}

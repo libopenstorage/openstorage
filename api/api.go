@@ -131,6 +131,8 @@ const (
 	OptCatalogSubFolder = "subfolder"
 	// OptCatalogMaxDepth query parameter used to limit the depth we return
 	OptCatalogMaxDepth = "depth"
+	// OptVolumeService query parameter used to request background volume services
+	OptVolService = "volservice"
 )
 
 // Api clientserver Constants
