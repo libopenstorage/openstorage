@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -39,16 +38,6 @@ func TestVolumeMigrate_StartVolumeSuccess(t *testing.T) {
 			},
 		},
 	}
-
-	resp := &api.Volume{
-		Locator: &api.VolumeLocator{
-			Name: "Target",
-		},
-	}
-
-	s.MockDriver().EXPECT().
-		Inspect(gomock.Any()).
-		Return([]*api.Volume{resp}, nil)
 
 	resp2 := &api.CloudMigrateStartResponse{
 		TaskId: "1",
@@ -226,18 +215,6 @@ func TestVolumeMigrate_StartVolumeFailure(t *testing.T) {
 			},
 		},
 	}
-
-	resp := &api.Volume{
-		Id: "Target",
-		Locator: &api.VolumeLocator{
-			Name: "Target",
-		},
-	}
-
-	// Inspect volumes to get their ownership
-	s.MockDriver().EXPECT().
-		Inspect(gomock.Any()).
-		Return([]*api.Volume{resp}, nil)
 
 	s.MockDriver().EXPECT().
 		CloudMigrateStart(&api.CloudMigrateStartRequest{
