@@ -773,16 +773,26 @@ func (v *Volume) Scaled() bool {
 	return v.Spec.Scale > 1
 }
 
-// Contains returns true if mid is a member of volume's replication set.
-func (m *Volume) Contains(mid string) bool {
+// Contains returns true if locationConstraint is a member of volume's replication set.
+func (m *Volume) Contains(locationConstraint string) bool {
 	rsets := m.GetReplicaSets()
 	for _, rset := range rsets {
 		for _, node := range rset.Nodes {
-			if node == mid {
+			if node == locationConstraint {
 				return true
 			}
 		}
 	}
+
+	// also check storage pool UUIDs
+	for _, replSet := range m.ReplicaSets {
+		for _, uid := range replSet.PoolUuids {
+			if uid == locationConstraint {
+				return true
+			}
+		}
+	}
+
 	return false
 }
 
