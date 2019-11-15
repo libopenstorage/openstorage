@@ -62,6 +62,10 @@ const (
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
 	SpecNodiscard              = "nodiscard"
 	StoragePolicy              = "storagepolicy"
+	// ReplRuntimeState is the key in the RuntimeState map for volume's replication state
+	ReplRuntimeState = "RuntimeState"
+	// RuntimeStateClean is the value when the volume's replication state is clean
+	RuntimeStateClean = "clean"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -1169,6 +1173,26 @@ func (v *Volume) IsAttached() bool {
 	return len(v.AttachedOn) > 0 &&
 		v.State == VolumeState_VOLUME_STATE_ATTACHED &&
 		v.AttachedState != AttachState_ATTACH_STATE_INTERNAL
+}
+
+func (v *Volume) HasCoordinator() bool {
+	return len(v.AttachedOn) > 0
+}
+
+func (v *Volume) IsClean() bool {
+	if v.HasCoordinator() {
+		for i, _ := range v.ReplicaSets {
+			if len(v.RuntimeState) > 0 {
+				if rState, ok := v.RuntimeState[i].RuntimeState[ReplRuntimeState]; ok {
+					if rState != RuntimeStateClean {
+						return false
+					}
+				}
+			}
+		}
+	}
+
+	return true
 }
 
 // TokenSecretContext contains all nessesary information to get a
