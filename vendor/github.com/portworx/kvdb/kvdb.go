@@ -112,6 +112,8 @@ var (
 	ErrIllegal = errors.New("Illegal operation")
 	// ErrValueMismatch raised if existing KVDB value mismatches with user provided value
 	ErrValueMismatch = errors.New("Value mismatch")
+	// ErrEmptyValue raised if the value is empty
+	ErrEmptyValue = errors.New("Value cannot be empty")
 	// ErrModified raised during an atomic operation if the index does not match the one in the store
 	ErrModified = errors.New("Key Index mismatch")
 	// ErrSetTTLFailed raised if unable to set ttl value for a key create/put/update action
@@ -131,6 +133,14 @@ var (
 	// ErrMemberDoesNotExist returned when an operation fails for a member
 	// which does not exist
 	ErrMemberDoesNotExist = errors.New("Kvdb member does not exist")
+	// ErrWatchRevisionCompacted requested watch version has been compacted
+	ErrWatchRevisionCompacted = errors.New("Kvdb watch revision compacted")
+	// ErrLockRefreshFailed could not refresh lock key so exclusive access to lock may be lost
+	ErrLockRefreshFailed = errors.New("Failed to refresh lock")
+	// ErrLockHoldTimeoutTriggered triggers if lock is held beyond configured timeout
+	ErrLockHoldTimeoutTriggered = errors.New("Lock held beyond configured timeout")
+	// ErrNoConnection no connection to server
+	ErrNoConnection = errors.New("No server connection")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -149,7 +159,7 @@ type PermissionType int
 type WatchCB func(prefix string, opaque interface{}, kvp *KVPair, err error) error
 
 // FatalErrorCB callback is invoked incase of fatal errors
-type FatalErrorCB func(format string, args ...interface{})
+type FatalErrorCB func(err error, format string, args ...interface{})
 
 // DatastoreInit is called to activate a backend KV store.
 type DatastoreInit func(domain string, machines []string, options map[string]string,
@@ -387,4 +397,9 @@ type Controller interface {
 	// Defragment defrags the underlying database for the given endpoint
 	// with a timeout specified in seconds
 	Defragment(endpoint string, timeout int) error
+}
+
+func LogFatalErrorCB(err error, format string, args ...interface{}) {
+	logrus.Errorf("encountered fatal error: %v", err)
+	logrus.Panicf(format, args...)
 }

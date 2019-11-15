@@ -19,11 +19,8 @@ package fake
 import (
 	"encoding/json"
 	"fmt"
-	"time"
-
-	"github.com/sirupsen/logrus"
-
 	"strings"
+	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
@@ -34,6 +31,7 @@ import (
 	"github.com/pborman/uuid"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -82,7 +80,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 
 	// This instance of the KVDB is Always in memory and created for each instance of the fake driver
 	// It is not necessary to run a single instance, and it helps tests create a new kvdb on each test
-	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		return nil, err
 	}

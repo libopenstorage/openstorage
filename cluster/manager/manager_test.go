@@ -40,7 +40,7 @@ var (
 
 func init() {
 	var err error
-	kv, err = kvdb.New(mem.Name, "manager_test/"+testClusterId, []string{}, nil, logrus.Panicf)
+	kv, err = kvdb.New(mem.Name, "manager_test/"+testClusterId, []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		logrus.Panicf("Failed to initialize KVDB")
 	}

@@ -34,7 +34,7 @@ type fakeSchedMgr struct {
 func NewFakeScheduler() *fakeSchedMgr {
 	// This instance of the KVDB is Always in memory and created for each instance of the fake driver
 	// It is not necessary to run a single instance, and it helps tests create a new kvdb on each test
-	kv, err := kvdb.New(mem.Name, "fake_sched", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "fake_sched", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
 		logrus.Fatalf("Failed to create kv: %v", err)
 		return nil

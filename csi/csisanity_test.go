@@ -33,7 +33,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/kubernetes-csi/csi-test/pkg/sanity"
@@ -57,7 +56,7 @@ func TestCSISanity(t *testing.T) {
 	defer cm.Shutdown()
 
 	// Setup sdk server
-	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, logrus.Panicf)
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	stp, err := storagepolicy.Init(kv)
 	if err != nil {
