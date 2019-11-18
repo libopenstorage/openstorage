@@ -559,6 +559,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			HaLevel: spec.HaLevel,
 		}
 	}
+	if spec.ExportSpec != nil {
+		newSpec.ExportSpecOpt = &api.VolumeSpecUpdate_ExportSpec{
+			ExportSpec: spec.ExportSpec,
+		}
+	}
 	return newSpec
 }
 
