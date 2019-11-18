@@ -953,3 +953,7 @@ func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, err
 		},
 	}, nil
 }
+
+func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
+	return nil, volume.ErrNotSupported
+}
