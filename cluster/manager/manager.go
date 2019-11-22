@@ -77,6 +77,8 @@ type ClusterManager struct {
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
+	// kvdbWatchIndex stores the kvdb index to start the watch
+	kvdbWatchIndex uint64
 }
 
 // Init instantiates a new cluster manager.
@@ -332,7 +334,7 @@ func (c *ClusterManager) UpdateSchedulerNodeName(schedulerNodeName string) error
 		return true, nil
 	}
 
-	return updateLockedDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
+	return updateDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
 }
 
 // GetData returns self node's data
@@ -420,14 +422,22 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, watchErr error) error {
 
-	db, kvdbVersion, err := readClusterInfo()
+	// restart watch incase of errors
+	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
+		logrus.Errorf("ClusterManager watch stopped, restarting (err: %v)",
+			watchErr)
+		c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+		return watchErr
+	}
 
-	if err != nil {
-		logrus.Warnln("Failed to read database after update ", err)
-		// Exit since an update may be missed here.
+	db, kvdbVersion, err := unmarshalClusterInfo(kvp)
+	if err != nil || len(db.NodeEntries) == 0 {
+		logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
+		// cluster database should not be nil, exit since we don't know what happened
 		os.Exit(1)
 	}
 
+	c.kvdbWatchIndex = kvdbVersion
 	// Update all the listeners with the new db
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, &db)
@@ -489,11 +499,6 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
-	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
-		logrus.Errorf("ClusterManager watch stopped, restarting (err: %v)",
-			watchErr)
-		c.startClusterDBWatch(kvdbVersion, kvdb.Instance())
-	}
 	return watchErr
 }
 
@@ -656,11 +661,11 @@ func (c *ClusterManager) joinCluster(
 		logrus.Panicln("Fatal, Unable to find self node entry in local cache")
 	}
 
-	_, _, err = c.updateNodeEntryDB(selfNodeEntry, nil)
-	if err != nil {
-		return err
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		db.NodeEntries[selfNodeEntry.Id] = selfNodeEntry
+		return true, nil
 	}
-	return nil
+	return updateDB("joinCluster", selfNodeEntry.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) initClusterForListeners(
@@ -687,7 +692,8 @@ done:
 func (c *ClusterManager) startClusterDBWatch(lastIndex uint64,
 	kv kvdb.Kvdb) error {
 	logrus.Infof("Cluster manager starting watch at version %d", lastIndex)
-	go kv.WatchKey(ClusterDBKey, lastIndex, nil, c.watchDB)
+	c.kvdbWatchIndex = lastIndex
+	go kv.WatchKey(ClusterDBKey, c.kvdbWatchIndex, nil, c.watchDB)
 	return nil
 }
 
@@ -1028,53 +1034,44 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain strin
 	*cluster.ClusterInfo,
 	error,
 ) {
-	kvlock, err := db.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		logrus.Panicln("Fatal, Unable to obtain cluster lock.", err)
-	}
-	defer db.Unlock(kvlock)
-
-	clusterInfo, _, err := readClusterInfo()
-	if err != nil {
-		logrus.Panicln(err)
-	}
-
-	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
-	if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
-		msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
-			c.selfNode.Id)
-		logrus.Errorln(msg)
-		return nil, cluster.ErrNodeDecommissioned
-	}
-	// Set the clusterID in db
-	clusterInfo.Id = c.config.ClusterId
-
-	if clusterInfo.Status == api.Status_STATUS_INIT {
-		logrus.Infoln("Initializing a new cluster.")
-		// Initialize self node
-		clusterInfo.Status = api.Status_STATUS_OK
-
-		err = c.initClusterForListeners(&c.selfNode)
-		if err != nil {
-			logrus.Errorln("Failed to initialize the cluster.", err)
-			return nil, err
+	var clusterInfo *cluster.ClusterInfo
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		selfNodeEntry, ok := db.NodeEntries[c.config.NodeId]
+		if ok && selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+			msg := fmt.Sprintf("Node is in decommision state, Node ID %s.",
+				c.selfNode.Id)
+			logrus.Errorln(msg)
+			return false, cluster.ErrNodeDecommissioned
 		}
-		// While we hold the lock write the cluster info
-		// to kvdb.
-		_, err := writeClusterInfo(&clusterInfo)
-		if err != nil {
-			logrus.Errorln("Failed to initialize the cluster.", err)
-			return nil, err
+		clusterInfo = db
+		// Set the clusterID in db
+		clusterInfo.Id = c.config.ClusterId
+
+		if clusterInfo.Status == api.Status_STATUS_INIT {
+			logrus.Infoln("Initializing a new cluster.")
+			// Initialize self node
+			clusterInfo.Status = api.Status_STATUS_OK
+
+			if err := c.initClusterForListeners(&c.selfNode); err != nil {
+				logrus.Errorln("Failed to initialize the cluster.", err)
+				return false, err
+			}
+			return true, nil
+		} else if clusterInfo.Status&api.Status_STATUS_OK > 0 {
+			logrus.Infoln("Cluster state is OK... Joining the cluster.")
+			return false, nil
+		} else {
+			return false, errors.New("Fatal, Cluster is in an unexpected state.")
 		}
-	} else if clusterInfo.Status&api.Status_STATUS_OK > 0 {
-		logrus.Infoln("Cluster state is OK... Joining the cluster.")
-	} else {
-		return nil, errors.New("Fatal, Cluster is in an unexpected state.")
+	}
+	if err := updateDB("initCluster", c.config.NodeId, updateCallbackFn); err != nil {
+		logrus.Errorln("Failed to initialize the cluster.", err)
+		return nil, err
 	}
 	// Cluster database max size... 0 if unlimited.
 	c.size = clusterInfo.Size
 	c.status = api.Status_STATUS_OK
-	return &clusterInfo, nil
+	return clusterInfo, nil
 }
 
 func (c *ClusterManager) quorumMember() bool {
@@ -1135,30 +1132,31 @@ func (c *ClusterManager) initListeners(
 		logrus.Infof("This node does not participates in quorum decisions")
 	}
 
-	initFunc := func(clusterInfo *cluster.ClusterInfo) error {
+	var kvClusterInfo *cluster.ClusterInfo
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		db.NodeEntries[selfNodeEntry.Id] = selfNodeEntry
 		// Irrespective of whether the node is doing an Init or is
 		// already in cluster, check with listeners if it is OK to join
 		// this cluster.
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
 			err := e.Value.(cluster.ClusterListener).CanNodeJoin(&c.selfNode, clusterInfo, nodeInitialized)
 			if err != nil {
-				logrus.Errorf("Failed finalizing init: %s", err.Error())
-				return err
+				logrus.Errorf("Failed finalizing init (can node join): %s", err.Error())
+				return false, err
 			}
 		}
 		// Finalize inits from subsystems under cluster db lock.
 		// finalizeCbs can be empty if this node is already initialized
 		for _, finalizeCb := range finalizeCbs {
 			if err := finalizeCb(clusterInfo); err != nil {
-				logrus.Errorf("Failed finalizing init: %s", err.Error())
-				return err
+				logrus.Errorf("Failed finalizing init (finalize): %s", err.Error())
+				return false, err
 			}
 		}
-		return nil
+		kvClusterInfo = db
+		return true, nil
 	}
-
-	kvp, kvClusterInfo, err := c.updateNodeEntryDB(selfNodeEntry,
-		initFunc)
+	kvp, err := updateAndGetDB("initListeners", selfNodeEntry.Id, updateCallbackFn, false)
 	if err != nil {
 		logrus.Errorln("Failed to save the database.", err)
 		return 0, nil, err
@@ -1501,60 +1499,13 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 	return clusterState, nil
 }
 
-func (c *ClusterManager) updateNodeEntryDB(
-	nodeEntry cluster.NodeEntry,
-	checkCbBeforeUpdate checkFunc,
-) (*kvdb.KVPair, *cluster.ClusterInfo, error) {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for updating cluster DB.",
-			err)
-		return nil, nil, err
-	}
-	defer kvdb.Unlock(kvlock)
-
-	currentState, _, err := readClusterInfo()
-	if err != nil {
-		return nil, nil, err
-	}
-
-	currentState.NodeEntries[nodeEntry.Id] = nodeEntry
-
-	if checkCbBeforeUpdate != nil {
-		err = checkCbBeforeUpdate(&currentState)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	kvp, err := writeClusterInfo(&currentState)
-	if err != nil {
-		logrus.Errorln("Failed to save the database.", err)
-	}
-	return kvp, &currentState, err
-}
-
 // SetSize sets the maximum number of nodes in a cluster.
 func (c *ClusterManager) SetSize(size int) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for updating config", err)
-		return nil
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		db.Size = size
+		return true, nil
 	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	db.Size = size
-
-	_, err = writeClusterInfo(&db)
-
-	return err
+	return updateDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
@@ -1583,61 +1534,30 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 }
 
 func (c *ClusterManager) markNodeDecommission(node api.Node) error {
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		logrus.Warnln("Unable to obtain cluster lock for marking "+
-			"node decommission",
-			err)
-		return err
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		nodeEntry, ok := db.NodeEntries[node.Id]
+		if !ok {
+			msg := fmt.Sprintf("Node entry does not exist, Node ID %s",
+				node.Id)
+			return false, errors.New(msg)
+		}
+
+		nodeEntry.Status = api.Status_STATUS_DECOMMISSION
+		db.NodeEntries[node.Id] = nodeEntry
+		if c.selfNode.Id == node.Id {
+			c.selfNode.Status = api.Status_STATUS_DECOMMISSION
+		}
+		return true, nil
 	}
-	defer kvdb.Unlock(kvlock)
-
-	db, _, err := readClusterInfo()
-	if err != nil {
-		return err
-	}
-
-	nodeEntry, ok := db.NodeEntries[node.Id]
-	if !ok {
-		msg := fmt.Sprintf("Node entry does not exist, Node ID %s",
-			node.Id)
-		return errors.New(msg)
-	}
-
-	nodeEntry.Status = api.Status_STATUS_DECOMMISSION
-	db.NodeEntries[node.Id] = nodeEntry
-
-	if c.selfNode.Id == node.Id {
-		c.selfNode.Status = api.Status_STATUS_DECOMMISSION
-	}
-	_, err = writeClusterInfo(&db)
-
-	return err
+	return updateDB("markNodeDecommission", c.selfNode.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) deleteNodeFromDB(nodeID string) error {
-	// Delete node from cluster DB
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
-	if err != nil {
-		logrus.Panicln("fatal, unable to obtain cluster lock. ", err)
+	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		delete(db.NodeEntries, nodeID)
+		return true, nil
 	}
-	defer kvdb.Unlock(kvlock)
-
-	currentState, _, err := readClusterInfo()
-	if err != nil {
-		logrus.Errorln("Failed to read cluster info. ", err)
-		return err
-	}
-
-	delete(currentState.NodeEntries, nodeID)
-
-	_, err = writeClusterInfo(&currentState)
-	if err != nil {
-		logrus.Errorln("Failed to save the database.", err)
-	}
-	return err
+	return updateDB("deleteNodeFromDB", c.selfNode.Id, updateCallbackFn)
 }
 
 // Remove node(s) from the cluster permanently.
