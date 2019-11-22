@@ -58,7 +58,8 @@ func TestCSISanity(t *testing.T) {
 	// Setup sdk server
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	stp, err := storagepolicy.Init(kv)
+	kvdb.SetInstance(kv)
+	stp, err := storagepolicy.Init()
 	if err != nil {
 		stp, _ = storagepolicy.Inst()
 	}

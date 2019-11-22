@@ -72,6 +72,8 @@ const (
 	InsecureSkipVerify = "InsecureSkipVerify"
 	// TransportScheme points to http transport being either http or https.
 	TransportScheme = "TransportScheme"
+	// LogPathOption is the name of the option which specified the log path location
+	LogPathOption = "LogPathOption"
 )
 
 // List of kvdb endpoints supported versions
@@ -96,6 +98,25 @@ const (
 	// DefaultSeparator separate key components
 	DefaultSeparator = "/"
 )
+
+type WrapperName string
+
+const (
+	Wrapper_None     = WrapperName("Wrapper_None")
+	Wrapper_Log      = WrapperName("Wrapper_Log")
+	Wrapper_NoQuorum = WrapperName("Wrapper_NoQuorum")
+)
+
+type KvdbWrapper interface {
+	// WrapperName is the name of this wrapper
+	WrapperName() WrapperName
+	// WrappedKvdb is the Kvdb wrapped by this wrapper
+	WrappedKvdb() Kvdb
+	// Removed is called when wrapper is removed
+	Removed()
+	// WrappedKvdb is the Kvdb wrapped by this wrapper
+	SetWrappedKvdb(kvdb Kvdb) error
+}
 
 var (
 	// ErrNotSupported implemenation of a specific function is not supported.
@@ -141,6 +162,8 @@ var (
 	ErrLockHoldTimeoutTriggered = errors.New("Lock held beyond configured timeout")
 	// ErrNoConnection no connection to server
 	ErrNoConnection = errors.New("No server connection")
+	// ErrNoQuorum kvdb has lost quorum
+	ErrNoQuorum = errors.New("Kvdb lost quorum")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -167,6 +190,9 @@ type DatastoreInit func(domain string, machines []string, options map[string]str
 
 // DatastoreVersion is called to get the version of a backend KV store
 type DatastoreVersion func(url string, kvdbOptions map[string]string) (string, error)
+
+// WrapperInit is called to activate a backend KV store.
+type WrapperInit func(kv Kvdb, options map[string]string) (Kvdb, error)
 
 // EnumerateSelect function is a callback function provided to EnumerateWithSelect API
 // This fn is executed over all the keys and only those values are returned by Enumerate for which
@@ -310,6 +336,7 @@ type Kvdb interface {
 	Serialize() ([]byte, error)
 	// Deserialize deserializes the given byte array into a list of kv pairs
 	Deserialize([]byte) (KVPairs, error)
+	KvdbWrapper
 }
 
 // ReplayCb provides info required for replay

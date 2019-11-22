@@ -102,8 +102,9 @@ func newTestServer(t *testing.T) *testServer {
 
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 	// Init storage policy manager
-	_, err = policy.Init(kv)
+	_, err = policy.Init()
 	sp, err := policy.Inst()
 	assert.NotNil(t, sp)
 
@@ -263,10 +264,13 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		NodeId:    "fakeNode",
 	})
 	cm, err := clustermanager.Inst()
+	startChan := make(chan bool)
 	go func() {
 		cm.Start(false, "9002", "")
+		close(startChan)
 	}()
 	defer cm.Shutdown()
+	<-startChan
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
 		t.Fatalf("Unable to start volume driver fake: %v", err)
 	}
