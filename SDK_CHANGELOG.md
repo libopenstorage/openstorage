@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.0 - Tech Preview (11/22/2019)
+
+* Add VolumeSpec and Locator to CloudBackuprestore api
+
 ### v0.68.0 - Tech Preview (11/01/2019)
 
 * Add ExportSpec to Volume object

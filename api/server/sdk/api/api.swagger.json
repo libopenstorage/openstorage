@@ -1314,6 +1314,9 @@
             "title": "The credential to be used for restore operation",
             "type": "string"
           },
+          "locator": {
+            "$ref": "#/components/schemas/apiVolumeLocator"
+          },
           "node_id": {
             "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
             "type": "string"
@@ -1321,6 +1324,9 @@
           "restore_volume_name": {
             "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup",
             "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/apiVolumeSpec"
           },
           "task_id": {
             "title": "TaskId of the task performing this restore",
@@ -3872,7 +3878,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.67.0"
+    "version": "0.69.0"
   },
   "openapi": "3.0.0",
   "paths": {
