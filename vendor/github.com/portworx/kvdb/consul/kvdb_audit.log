@@ -1,0 +1,240 @@
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T16:45:29Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T17:57:31Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T18:01:14Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T18:11:54Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T18:12:34Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-19T18:12:34Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-19T18:12:34Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-19T18:12:34Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-19T18:12:34Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-21T22:37:48Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-21T22:38:28Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-21T22:38:28Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-21T22:38:28Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-21T22:38:28Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-21T22:38:28Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-22T18:06:47Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-22T18:07:27Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-22T18:07:27Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Create output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Get output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Put output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=GetValue output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Update output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" length=0 operation=Enumerate
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" length=0 operation=Keys
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=CompareAndSet output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Lock output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=LockWithID output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=LockWithTimeout output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" length=0 operation=EnumerateWithSelect
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=SnapPut output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=AddUser
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=RemoveUser
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Snapshot
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=Delete output="<nil>"
+time="2019-11-22T18:07:27Z" level=info error="Kvdb lost quorum" operation=DeleteTree
+time="2019-11-22T18:07:27Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?consistent=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchKey
+time="2019-11-22T18:07:27Z" level=info error="Get http://127.0.0.1:8500/v1/kv/pwx/test/key?recurse=: dial tcp 127.0.0.1:8500: connect: connection refused" operation=WatchTree

@@ -467,7 +467,7 @@ func start(c *cli.Context) error {
 			auth.InitSystemTokenManager(stm)
 		}
 
-		sp, err := policy.Init(kv)
+		sp, err := policy.Init()
 		if err != nil {
 			return fmt.Errorf("Unable to Initialise Storage Policy Manager Instances %v", err)
 		}
