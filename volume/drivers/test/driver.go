@@ -28,7 +28,7 @@ func init() {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
 
-	_, err = policy.Init(kv)
+	_, err = policy.Init()
 	if err != nil {
 		logrus.Panicf("Failed to init storae policy instance %v", err)
 	}

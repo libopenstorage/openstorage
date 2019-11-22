@@ -35,6 +35,7 @@ import (
 func TestVolSpecToSdkStoragePolicy(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
 	m := jsonpb.Marshaler{OrigName: true}
 	volSpec := &api.VolumeSpecPolicy{
@@ -66,7 +67,7 @@ func TestVolSpecToSdkStoragePolicy(t *testing.T) {
 	_, err = kv.Create(prefixWithName("testkey2"), policyStr, 0)
 	assert.NoError(t, err)
 
-	_, err = Init(kv)
+	_, err = Init()
 	assert.NoError(t, err)
 
 	s, err := Inst()
@@ -84,7 +85,8 @@ func TestVolSpecToSdkStoragePolicy(t *testing.T) {
 func TestSdkStoragePolicyDeleteWithOwnership(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	_, err = Init(kv)
+	kvdb.SetInstance(kv)
+	_, err = Init()
 
 	s, err := Inst()
 

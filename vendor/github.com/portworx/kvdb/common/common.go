@@ -3,6 +3,7 @@ package common
 import (
 	"container/list"
 	"encoding/json"
+	"fmt"
 	"strings"
 	"sync"
 	"time"
@@ -37,6 +38,21 @@ type BaseKvdb struct {
 	FatalCb kvdb.FatalErrorCB
 	// lock to guard updates to timeout and fatalCb
 	lock sync.Mutex
+}
+
+func (b *BaseKvdb) WrapperName() kvdb.WrapperName {
+	return kvdb.Wrapper_None
+}
+
+func (b *BaseKvdb) WrappedKvdb() kvdb.Kvdb {
+	return nil
+}
+
+func (b *BaseKvdb) Removed() {
+}
+
+func (b *BaseKvdb) SetWrappedKvdb(kvdb kvdb.Kvdb) error {
+	return fmt.Errorf("not suppoorted")
 }
 
 // SetFatalCb callback is invoked when an unrecoverable KVDB error happens.
