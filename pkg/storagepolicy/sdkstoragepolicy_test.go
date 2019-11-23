@@ -39,7 +39,8 @@ func TestPrefixWithName(t *testing.T) {
 func TestSdkStoragePolicyCreate(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	_, err = Init(kv)
+	kvdb.SetInstance(kv)
+	_, err = Init()
 
 	s, err := Inst()
 	assert.NoError(t, err)
