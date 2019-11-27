@@ -162,11 +162,14 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		if err == kvdb.ErrNotFound {
 			logrus.Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
+		} else if err != nil {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
+				req.GetVolumeId(),
+				err.Error())
+		} else {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: Inspect returned no volumes",
+				req.GetVolumeId())
 		}
-
-		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
-			req.GetVolumeId(),
-			err.Error())
 	}
 	vol := vols[0]
 
