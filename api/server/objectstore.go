@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"github.com/libopenstorage/openstorage/api"
 	"net/http"
 	"strconv"
 
@@ -33,24 +34,36 @@ func (c *clusterApi) objectStoreInspect(w http.ResponseWriter, r *http.Request) 
 	var objstoreID string
 	params := r.URL.Query()
 	v := params[objectstore.ObjectStoreID]
-
 	if v != nil {
 		objstoreID = v[0]
 	}
 
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	objInfo, err := inst.ObjectStoreInspect(objstoreID)
-	if err != nil {
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	} else {
+		objectStoreClient := api.NewOpenStorageObjectstoreClient(conn)
 
-	json.NewEncoder(w).Encode(objInfo)
+		resp, err := objectStoreClient.Inspect(ctx, &api.SdkObjectstoreInspectRequest{
+			ObjectstoreId: objstoreID,
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(resp.ObjectstoreStatus); err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 // swagger:operation POST /cluster/objectstore objectstore objectStoreCreate
