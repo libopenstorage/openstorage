@@ -96,19 +96,32 @@ func (c *clusterApi) objectStoreCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	objInfo, err := inst.ObjectStoreCreate(volumeName[0])
-	if err != nil {
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	} else {
+		objectStoreClient := api.NewOpenStorageObjectstoreClient(conn)
 
-	json.NewEncoder(w).Encode(objInfo)
+		resp, err := objectStoreClient.Create(ctx, &api.SdkObjectstoreCreateRequest{
+			VolumeId: volumeName[0],
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(resp.ObjectstoreStatus); err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 // swagger:operation PUT /cluster/objectstore objectstore objectStoreUpdate

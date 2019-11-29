@@ -111,8 +111,8 @@ func StartVolumePluginAPI(
 
 // StartClusterAPI starts a REST server to receive driver configuration commands
 // from the CLI/UX to control the OSD cluster.
-func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
-	clusterApi := newClusterAPI()
+func StartClusterAPI(sdkSocket, clusterApiBase string, clusterPort uint16) error {
+	clusterApi := newClusterAPI(sdkSocket)
 
 	// start server as before
 	if _, _, err := startServer("osd", clusterApiBase, clusterPort, clusterApi); err != nil {
@@ -123,7 +123,7 @@ func StartClusterAPI(clusterApiBase string, clusterPort uint16) error {
 }
 
 func GetClusterAPIRoutes() []*Route {
-	clusterApi := newClusterAPI()
+	clusterApi := newClusterAPI("")
 	return clusterApi.Routes()
 }
 

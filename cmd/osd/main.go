@@ -335,7 +335,8 @@ func start(c *cli.Context) error {
 		if err := clustermanager.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
-		if err := server.StartClusterAPI(cluster.APIBase, 0); err != nil {
+		//  TODO(stgleb): Wee need to pass unix socket here
+		if err := server.StartClusterAPI("", cluster.APIBase, 0); err != nil {
 			return fmt.Errorf("Unable to start cluster API server: %v", err)
 		}
 		clusterInit = true
