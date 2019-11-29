@@ -384,7 +384,7 @@ func testRestServerSdk(t *testing.T) (*httptest.Server, *testServer) {
 
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
-	capi := newClusterAPI()
+	capi := newClusterAPI("")
 	router := mux.NewRouter()
 	// Register all routes from the App
 	for _, route := range capi.Routes() {
