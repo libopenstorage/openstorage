@@ -1,18 +1,26 @@
 package server
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/gorilla/mux"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
 	client "github.com/libopenstorage/openstorage/api/client/cluster"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 )
 
 const (
@@ -22,15 +30,61 @@ const (
 
 type clusterApi struct {
 	restBase
+
+	sdkUds   string
+	conn     *grpc.ClientConn
+	dummyMux *runtime.ServeMux
+	mu       sync.Mutex
 }
 
-func newClusterAPI() restServer {
+func newClusterAPI(sdkUds string) restServer {
 	return &clusterApi{
 		restBase: restBase{
 			version: cluster.APIVersion,
 			name:    "Cluster API",
 		},
+		sdkUds:   sdkUds,
+		dummyMux: runtime.NewServeMux(),
 	}
+}
+
+// TODO(stgleb): Why not to have one helper method for getting grpc connections sync.Pool ???
+func (c *clusterApi) getConn() (*grpc.ClientConn, error) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.conn == nil {
+		var err error
+		c.conn, err = grpcserver.Connect(
+			c.sdkUds,
+			[]grpc.DialOption{
+				grpc.WithInsecure(),
+				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)),
+			})
+		if err != nil {
+			return nil, fmt.Errorf("failed to connect to gRPC handler: %v", err)
+		}
+	}
+	return c.conn, nil
+}
+
+func (c *clusterApi) annotateContext(r *http.Request) (context.Context, error) {
+	// This creates a context and populates the authentication token
+	// using the same function as the SDK REST Gateway
+	ctx, err := runtime.AnnotateContext(context.Background(), c.dummyMux, r)
+	if err != nil {
+		return ctx, err
+	}
+	// If a header exists in the request fetch the requested driver name if provided
+	// and pass it in the grpc context as a metadata key value
+	userAgent := r.Header.Get("User-Agent")
+	if len(userAgent) > 0 {
+		// Check if the request is coming from a container orchestrator
+		clientName := strings.Split(userAgent, "/")
+		if len(clientName) > 0 {
+			return grpcserver.AddMetadataToContext(ctx, sdk.ContextDriverKey, clientName[0]), nil
+		}
+	}
+	return ctx, nil
 }
 
 func (c *clusterApi) String() string {
@@ -55,17 +109,31 @@ func (c *clusterApi) String() string {
 //            $ref: '#/definitions/Cluster'
 func (c *clusterApi) enumerate(w http.ResponseWriter, r *http.Request) {
 	method := "enumerate"
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
+
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	cluster, err := inst.Enumerate()
-	if err != nil {
+
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
+	} else {
+		clusterClient := api.NewOpenStorageClusterClient(conn)
+		//  TODO(stgleb): sdk must suppor other methods for cluster enumerate, update, delete
+		resp, err := clusterClient.InspectCurrent(ctx, &api.SdkClusterInspectCurrentRequest{})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		if err := json.NewEncoder(w).Encode(resp.Cluster); err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
-	json.NewEncoder(w).Encode(cluster)
 }
 
 func (c *clusterApi) setSize(w http.ResponseWriter, r *http.Request) {
