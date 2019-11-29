@@ -167,16 +167,27 @@ func (c *clusterApi) objectStoreUpdate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = inst.ObjectStoreUpdate(objstoreID, enable)
-	if err != nil {
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
+	} else {
+		objectStoreClient := api.NewOpenStorageObjectstoreClient(conn)
+
+		_, err := objectStoreClient.Update(ctx, &api.SdkObjectstoreUpdateRequest{
+			ObjectstoreId: objstoreID,
+			Enable:        enable,
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	w.WriteHeader(http.StatusOK)
