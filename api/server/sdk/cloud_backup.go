@@ -734,7 +734,7 @@ func ToSdkCloudBackupSchedEnumerateResponse(r *api.CloudBackupSchedEnumerateResp
 
 func ToSdkCloudBackupdScheduleInfo(s api.CloudBackupScheduleInfo) *api.SdkCloudBackupScheduleInfo {
 
-	schedules, err := retainInternalSpecYamlByteToSdkSched([]byte(s.Schedule))
+	schedules, err := RetainInternalSpecYamlByteToSdkSched([]byte(s.Schedule))
 	if err != nil {
 		return nil
 	}
