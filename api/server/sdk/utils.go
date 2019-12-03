@@ -210,7 +210,7 @@ func retainInternalSpecToSdkSched(spec *sched.RetainIntervalSpec) (*api.SdkSched
 	return resp, nil
 }
 
-func RetainInternalSpecYamlByteToSdkSched(
+func retainInternalSpecYamlByteToSdkSched(
 	in []byte,
 ) ([]*api.SdkSchedulePolicyInterval, error) {
 

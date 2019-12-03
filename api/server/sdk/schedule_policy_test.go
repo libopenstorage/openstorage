@@ -96,7 +96,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 			assert.Equal(t, req.GetSchedulePolicy().GetName(), name)
 
 			// Verify data is correct
-			policies, err := RetainInternalSpecYamlByteToSdkSched([]byte(schedule))
+			policies, err := retainInternalSpecYamlByteToSdkSched([]byte(schedule))
 			assert.NoError(t, err)
 			assert.Len(t, policies, len(req.GetSchedulePolicy().GetSchedules()))
 

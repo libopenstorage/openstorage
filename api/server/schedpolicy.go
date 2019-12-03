@@ -2,7 +2,6 @@ package server
 
 import (
 	"encoding/json"
-	"github.com/libopenstorage/openstorage/api"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -29,31 +28,20 @@ import (
 //           $ref: '#/definitions/SchedPolicy'
 func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request) {
 	method := "schedPolicyEnumerate"
-	ctx, err := c.annotateContext(r)
 
+	inst, err := clustermanager.Inst()
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	if conn, err := c.getConn(); err != nil {
+	schedPolicies, err := inst.SchedPolicyEnumerate()
+	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
-	} else {
-		schedulePolicyClient := api.NewOpenStorageSchedulePolicyClient(conn)
-		resp, err := schedulePolicyClient.Enumerate(ctx, &api.SdkSchedulePolicyEnumerateRequest{})
-
-		if err != nil {
-			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
-
-		// TODO(stgleb): convert SdkSchedulePolicy to SchedPolicy
-		if err := json.NewEncoder(w).Encode(resp.Policies); err != nil {
-			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-			return
-		}
 	}
+
+	json.NewEncoder(w).Encode(schedPolicies)
 }
 
 // swagger:operation GET /cluster/schedpolicy/{name} schedpolicy schedPolicyGet
