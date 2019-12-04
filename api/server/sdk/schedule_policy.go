@@ -163,7 +163,7 @@ func (s *SchedulePolicyServer) Enumerate(
 	sdkpolicies := []*api.SdkSchedulePolicy{}
 	for _, policy := range policies {
 
-		schedules, err := retainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
+		schedules, err := RetainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
 		if err != nil {
 			return nil, err
 		}
@@ -205,7 +205,7 @@ func (s *SchedulePolicyServer) Inspect(
 			err.Error())
 	}
 
-	schedules, err := retainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
+	schedules, err := RetainInternalSpecYamlByteToSdkSched([]byte(policy.Schedule))
 	if err != nil {
 		return nil, err
 	}
