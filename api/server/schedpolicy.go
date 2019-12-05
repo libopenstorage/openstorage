@@ -102,20 +102,44 @@ func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := clustermanager.Inst()
-	if err != nil {
-		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	schedPolicy, err := inst.SchedPolicyGet(schedName)
+	ctx, err := c.annotateContext(r)
 
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(schedPolicy)
+	if conn, err := c.getConn(); err != nil {
+		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	} else {
+		schedulePolicyClient := api.NewOpenStorageSchedulePolicyClient(conn)
+		resp, err := schedulePolicyClient.Inspect(ctx, &api.SdkSchedulePolicyInspectRequest{
+			Name: schedName,
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		policyBytes, err := sdk.SdkSchedToRetainInternalSpecYamlByte(resp.Policy.Schedules)
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		schedPolicy := &sched.SchedPolicy{
+			Name:     resp.Policy.Name,
+			Schedule: string(policyBytes),
+		}
+
+		if err := json.NewEncoder(w).Encode(schedPolicy); err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
 }
 
 // swagger:operation POST /cluster/schedpolicy schedpolicy schedPolicyCreate
