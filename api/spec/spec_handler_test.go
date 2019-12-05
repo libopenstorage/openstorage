@@ -283,3 +283,65 @@ func TestGetTokenSecretContextFromString(t *testing.T) {
 	require.Equal(t, false, ok)
 
 }
+
+func TestExportSpec(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecExportProtocol: api.SpecExportProtocolPXD,
+	})
+	require.NoError(t, err)
+	exportSpec := spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_PXD, exportSpec.ExportProtocol)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecExportProtocol: api.SpecExportProtocolNFS,
+	})
+	require.NoError(t, err)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_NFS, exportSpec.ExportProtocol)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecExportProtocol: api.SpecExportProtocolISCSI,
+	})
+	require.NoError(t, err)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_ISCSI, exportSpec.ExportProtocol)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecExportProtocol: api.SpecExportProtocolCustom,
+	})
+	require.NoError(t, err)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_CUSTOM, exportSpec.ExportProtocol)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecExportProtocol: "invalid",
+	})
+	require.Error(t, err)
+
+	spec = testSpecFromString(t, api.SpecExportProtocol, api.SpecExportProtocolPXD)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_PXD, exportSpec.ExportProtocol)
+
+	spec = testSpecFromString(t, api.SpecExportProtocol, api.SpecExportProtocolNFS)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_NFS, exportSpec.ExportProtocol)
+
+	spec = testSpecFromString(t, api.SpecExportProtocol, api.SpecExportProtocolCustom)
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, api.ExportProtocol_CUSTOM, exportSpec.ExportProtocol)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecExportOptions: "exportOptions",
+	})
+	exportSpec = spec.GetExportSpec()
+	require.NotNil(t, exportSpec)
+	require.Equal(t, "exportOptions", exportSpec.ExportOptions)
+}
