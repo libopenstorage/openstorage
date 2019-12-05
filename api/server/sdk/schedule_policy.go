@@ -59,7 +59,7 @@ func (s *SchedulePolicyServer) Create(
 			return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 		}
 	}
-	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
+	out, err := SdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (s *SchedulePolicyServer) Update(
 			return nil, status.Error(codes.InvalidArgument, "Must retain more than 0")
 		}
 	}
-	out, err := sdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
+	out, err := SdkSchedToRetainInternalSpecYamlByte(req.GetSchedulePolicy().GetSchedules())
 	if err != nil {
 		return nil, err
 	}

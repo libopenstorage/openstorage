@@ -557,7 +557,7 @@ func (s *CloudBackupServer) SchedCreate(
 		}
 	}
 
-	sched, err := sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
+	sched, err := SdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
 	if err != nil {
 		return nil, err
 	}
@@ -611,7 +611,7 @@ func (s *CloudBackupServer) SchedUpdate(
 	sched := make([]byte, 0)
 	var err error
 	if req.GetCloudSchedInfo() != nil {
-		sched, err = sdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
+		sched, err = SdkSchedToRetainInternalSpecYamlByte(req.GetCloudSchedInfo().GetSchedules())
 		if err != nil {
 			return nil, err
 		}

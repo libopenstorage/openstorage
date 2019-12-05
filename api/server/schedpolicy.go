@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -48,8 +49,24 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		// TODO(stgleb): convert SdkSchedulePolicy to SchedPolicy
-		if err := json.NewEncoder(w).Encode(resp.Policies); err != nil {
+		var schedPolicies []*sched.SchedPolicy
+
+		for _, policy := range resp.Policies {
+
+			policyBytes, err := sdk.SdkSchedToRetainInternalSpecYamlByte(policy.Schedules)
+
+			if err != nil {
+				c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			schedPolicies = append(schedPolicies, &sched.SchedPolicy{
+				Name:     policy.Name,
+				Schedule: string(policyBytes),
+			})
+		}
+
+		if err := json.NewEncoder(w).Encode(schedPolicies); err != nil {
 			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 			return
 		}

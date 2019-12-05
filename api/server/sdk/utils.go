@@ -143,7 +143,7 @@ func sdkSchedToRetainInternalSpec(
 	}, nil
 }
 
-func sdkSchedToRetainInternalSpecYamlByte(sdkScheds []*api.SdkSchedulePolicyInterval) ([]byte, error) {
+func SdkSchedToRetainInternalSpecYamlByte(sdkScheds []*api.SdkSchedulePolicyInterval) ([]byte, error) {
 	scheds := make([]*sched.RetainIntervalSpec, 0)
 	for _, sdkSched := range sdkScheds {
 		sched, err := sdkSchedToRetainInternalSpec(sdkSched)
@@ -161,7 +161,7 @@ func sdkSchedToRetainInternalSpecYamlByte(sdkScheds []*api.SdkSchedulePolicyInte
 	return out, nil
 }
 
-func retainInternalSpecToSdkSched(spec *sched.RetainIntervalSpec) (*api.SdkSchedulePolicyInterval, error) {
+func RetainInternalSpecToSdkSched(spec *sched.RetainIntervalSpec) (*api.SdkSchedulePolicyInterval, error) {
 
 	var resp *api.SdkSchedulePolicyInterval
 	switch spec.Freq {
@@ -225,7 +225,7 @@ func RetainInternalSpecYamlByteToSdkSched(
 	scheds := make([]*api.SdkSchedulePolicyInterval, len(specs))
 	for i, spec := range specs {
 		var err error
-		scheds[i], err = retainInternalSpecToSdkSched(&spec)
+		scheds[i], err = RetainInternalSpecToSdkSched(&spec)
 		if err != nil {
 			return nil, err
 		}
