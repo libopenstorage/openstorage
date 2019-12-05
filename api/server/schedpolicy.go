@@ -49,8 +49,7 @@ func (c *clusterApi) schedPolicyEnumerate(w http.ResponseWriter, r *http.Request
 			return
 		}
 
-		var schedPolicies []*sched.SchedPolicy
-
+		schedPolicies := make([]*sched.SchedPolicy, 0, len(resp.Policies))
 		for _, policy := range resp.Policies {
 
 			policyBytes, err := sdk.SdkSchedToRetainInternalSpecYamlByte(policy.Schedules)
