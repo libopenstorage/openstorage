@@ -162,7 +162,6 @@ func (c *clusterApi) schedPolicyGet(w http.ResponseWriter, r *http.Request) {
 //   '200':
 //     description: success
 func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
-
 	method := "schedPolicyCreate"
 	var schedReq sched.SchedPolicy
 
@@ -171,19 +170,40 @@ func (c *clusterApi) schedPolicyCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
+
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = inst.SchedPolicyCreate(schedReq.Name, schedReq.Schedule)
-	if err != nil {
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	} else {
+		schedulePolicyClient := api.NewOpenStorageSchedulePolicyClient(conn)
 
-	w.WriteHeader(http.StatusOK)
+		intervals, err := sdk.RetainInternalSpecYamlByteToSdkSched([]byte(schedReq.Schedule))
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		_, err = schedulePolicyClient.Create(ctx, &api.SdkSchedulePolicyCreateRequest{
+			SchedulePolicy: &api.SdkSchedulePolicy{
+				Name:      schedReq.Name,
+				Schedules: intervals,
+			},
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 // swagger:operation PUT /cluster/schedpolicy schedpolicy schedPolicyUpdate
