@@ -7,8 +7,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
-
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 )
 
@@ -296,17 +294,27 @@ func (c *clusterApi) schedPolicyDelete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	inst, err := clustermanager.Inst()
+	ctx, err := c.annotateContext(r)
+
 	if err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	err = inst.SchedPolicyDelete(schedName)
-	if err != nil {
+	if conn, err := c.getConn(); err != nil {
 		c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
-	}
+	} else {
+		schedulePolicyClient := api.NewOpenStorageSchedulePolicyClient(conn)
 
-	w.WriteHeader(http.StatusOK)
+		_, err = schedulePolicyClient.Delete(ctx, &api.SdkSchedulePolicyDeleteRequest{
+			Name: schedName,
+		})
+
+		if err != nil {
+			c.sendError(c.name, method, w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+	}
 }
