@@ -35,7 +35,6 @@ errcheck:
 		github.com/portworx/kvdb/common \
 		github.com/portworx/kvdb/consul \
 		github.com/portworx/kvdb/mem \
-		github.com/portworx/kvdb/wrappers \
 		github.com/portworx/kvdb/zookeeper
 
 pretest: deps errcheck lint vet

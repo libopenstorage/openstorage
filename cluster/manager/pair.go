@@ -300,31 +300,35 @@ func (c *ClusterManager) ValidatePair(
 func (c *ClusterManager) GetPairToken(
 	reset bool,
 ) (*api.ClusterPairTokenGetResponse, error) {
-	var (
-		pairToken   string
-		returnError error
-	)
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	if err != nil {
+		logrus.Errorf("Unable to obtain cluster lock for getting cluster pair token: %v", err)
+		return nil, err
+	}
+	defer kvdb.Unlock(kvlock)
 
-	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
-		// Generate a token if we don't have one or a reset has been requested
-		if db.PairToken == "" || reset {
-			token, err := c.generatePairToken()
-			if err != nil {
-				returnError = errors.Wrap(err, "Failed to generate token")
-				return false, nil
-			} else {
-				pairToken = fmt.Sprintf("%s", token)
-			}
-			db.PairToken = pairToken
-			return true, nil
-		}
-		return false, nil
+	db, _, err := readClusterInfo()
+	if err != nil {
+		return nil, err
 	}
 
-	returnError = updateDB("GetPairToken", c.selfNode.Id, updateCallbackFn)
+	// Generate a token if we don't have one or a reset has been requested
+	if db.PairToken == "" || reset {
+		token, err := c.generatePairToken()
+		if err != nil {
+			return nil, errors.Wrap(err, "Failed to generate token")
+		}
+		db.PairToken = fmt.Sprintf("%s", token)
+		_, err = writeClusterInfo(&db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return &api.ClusterPairTokenGetResponse{
-		Token: pairToken,
-	}, returnError
+		Token: db.PairToken,
+	}, nil
 }
 
 func (c *ClusterManager) generatePairToken() (string, error) {

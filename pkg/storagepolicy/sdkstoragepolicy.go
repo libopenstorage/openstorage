@@ -37,6 +37,7 @@ import (
 // SdkPolicyManager is an implementation of the
 // Storage Policy Manager for the SDK
 type SdkPolicyManager struct {
+	kv kvdb.Kvdb
 }
 
 const (
@@ -55,16 +56,18 @@ var (
 	}
 )
 
-func Init() (PolicyManager, error) {
+func Init(kv kvdb.Kvdb) (PolicyManager, error) {
 	if inst != nil {
 		return nil, fmt.Errorf("Policy Manager is already initialized")
 	}
-	if kvdb.Instance() == nil {
+	if kv == nil {
 		return nil, fmt.Errorf("KVDB is not yet initialized.  " +
 			"A valid KVDB instance required for the Storage Policy.")
 	}
 
-	inst = &SdkPolicyManager{}
+	inst = &SdkPolicyManager{
+		kv: kv,
+	}
 
 	// Convert existing storagePolicy to new StoragePolicy struct,
 	// may be need to move this to indivisual functions
@@ -113,7 +116,7 @@ func (p *SdkPolicyManager) Create(
 		return nil, status.Errorf(codes.Internal, "Json Marshal failed for policy %s: %v", req.GetStoragePolicy().GetName(), err)
 	}
 
-	_, err = kvdb.Instance().Create(prefixWithName(req.GetStoragePolicy().GetName()), policyStr, 0)
+	_, err = p.kv.Create(prefixWithName(req.GetStoragePolicy().GetName()), policyStr, 0)
 	if err == kvdb.ErrExist {
 		return nil, status.Errorf(codes.AlreadyExists, "Storage Policy already exist : %v", req.GetStoragePolicy().GetName())
 	} else if err != nil {
@@ -172,7 +175,7 @@ func (p *SdkPolicyManager) Update(
 			return nil, err
 		}
 	}
-	_, err = kvdb.Instance().Update(prefixWithName(req.GetStoragePolicy().GetName()), updateStr, 0)
+	_, err = p.kv.Update(prefixWithName(req.GetStoragePolicy().GetName()), updateStr, 0)
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Storage Policy %s not found", req.GetStoragePolicy().GetPolicy())
 	} else if err != nil {
@@ -220,7 +223,7 @@ func (p *SdkPolicyManager) Delete(
 		}
 	}
 
-	_, err = kvdb.Instance().Delete(prefixWithName(req.GetName()))
+	_, err = p.kv.Delete(prefixWithName(req.GetName()))
 	if err != kvdb.ErrNotFound && err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete Storage Policy %s: %v", req.GetName(), err)
 	}
@@ -238,7 +241,7 @@ func (p *SdkPolicyManager) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a Storage Policy Name")
 	}
 
-	kvp, err := kvdb.Instance().Get(prefixWithName(req.GetName()))
+	kvp, err := p.kv.Get(prefixWithName(req.GetName()))
 	if err == kvdb.ErrNotFound {
 		return nil, status.Errorf(codes.NotFound, "Policy %s not found", req.GetName())
 	} else if err != nil {
@@ -266,7 +269,7 @@ func (p *SdkPolicyManager) Enumerate(
 	req *api.SdkOpenStoragePolicyEnumerateRequest,
 ) (*api.SdkOpenStoragePolicyEnumerateResponse, error) {
 	// get all keyValue pair at /storage/policy/policies
-	kvp, err := kvdb.Instance().Enumerate(policyPrefix + policyPath)
+	kvp, err := p.kv.Enumerate(policyPrefix + policyPath)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get policies from database: %v", err)
 	}
@@ -320,9 +323,9 @@ func (p *SdkPolicyManager) SetDefault(
 		return nil, status.Errorf(codes.Internal, "Json marshal failed for policy %s :%v", req.GetName(), err)
 	}
 
-	_, err = kvdb.Instance().Update(defaultPath, policyStr, 0)
+	_, err = p.kv.Update(defaultPath, policyStr, 0)
 	if err == kvdb.ErrNotFound {
-		if _, err := kvdb.Instance().Create(defaultPath, policyStr, 0); err != nil {
+		if _, err := p.kv.Create(defaultPath, policyStr, 0); err != nil {
 			return nil, status.Errorf(codes.Internal, "Unable to save default policy details %v", err)
 		}
 	} else if err != nil {
@@ -351,7 +354,7 @@ func (p *SdkPolicyManager) Release(
 
 	// empty represents no policy is set as default
 	strB, _ := json.Marshal("")
-	_, err = kvdb.Instance().Update(defaultPath, strB, 0)
+	_, err = p.kv.Update(defaultPath, strB, 0)
 	if err != kvdb.ErrNotFound && err != nil {
 		return nil, status.Errorf(codes.Internal, "Remove storage policy restriction failed with: %v", err)
 	}
@@ -368,7 +371,7 @@ func (p *SdkPolicyManager) DefaultInspect(
 	var policyName string
 	defaultPolicy := &api.SdkOpenStoragePolicyDefaultInspectResponse{}
 
-	_, err := kvdb.Instance().GetVal(defaultPath, &policyName)
+	_, err := p.kv.GetVal(defaultPath, &policyName)
 	// defaultPath key is not created
 	if err == kvdb.ErrNotFound {
 		return defaultPolicy, nil
@@ -397,7 +400,7 @@ func (p *SdkPolicyManager) DefaultInspect(
 }
 
 func volSpecToSdkStoragePolicy(inst *SdkPolicyManager) error {
-	kvp, err := kvdb.Instance().Enumerate(policyPrefix + policyPath)
+	kvp, err := inst.kv.Enumerate(policyPrefix + policyPath)
 	if err == kvdb.ErrNotFound {
 		// no previous sign of storage policy
 		logrus.Infof("No Storage Policy created previously")
@@ -420,7 +423,7 @@ func volSpecToSdkStoragePolicy(inst *SdkPolicyManager) error {
 			if err != nil {
 				return err
 			}
-			_, err = kvdb.Instance().Update(prefixWithName(storagePolicy.Name), updateStr, 0)
+			_, err = inst.kv.Update(prefixWithName(storagePolicy.Name), updateStr, 0)
 			if err != nil {
 				return fmt.Errorf("Storage Policy init failed %v", err)
 			}
