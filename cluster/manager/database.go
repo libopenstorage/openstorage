@@ -61,7 +61,10 @@ func snapAndReadClusterInfo(snapshotPrefixes []string) (*cluster.ClusterInitStat
 		return nil, err
 	}
 
-	db := emptyClusterInfo()
+	db := cluster.ClusterInfo{
+		Status:      api.Status_STATUS_INIT,
+		NodeEntries: make(map[string]cluster.NodeEntry),
+	}
 	state := &cluster.ClusterInitState{
 		ClusterInfo: &db,
 		InitDb:      snap,
@@ -81,104 +84,70 @@ func snapAndReadClusterInfo(snapshotPrefixes []string) (*cluster.ClusterInitStat
 	return state, nil
 }
 
-func emptyClusterInfo() cluster.ClusterInfo {
-	return cluster.ClusterInfo{
+func readClusterInfo() (cluster.ClusterInfo, uint64, error) {
+	kvdb := kvdb.Instance()
+
+	db := cluster.ClusterInfo{
 		Status:      api.Status_STATUS_INIT,
 		NodeEntries: make(map[string]cluster.NodeEntry),
 	}
-}
+	kv, err := kvdb.Get(ClusterDBKey)
 
-func unmarshalClusterInfo(kv *kvdb.KVPair) (cluster.ClusterInfo, uint64, error) {
-	db := emptyClusterInfo()
-	version := uint64(0)
-	if kv != nil {
-		version = kv.ModifiedIndex
+	if err != nil && !strings.Contains(err.Error(), "Key not found") {
+		logrus.Warnln("Warning, could not read cluster database")
+		return db, 0, err
 	}
+
 	if kv == nil || bytes.Compare(kv.Value, []byte("{}")) == 0 {
 		logrus.Infoln("Cluster is uninitialized...")
-		return db, version, nil
+		return db, 0, nil
 	}
 	if err := json.Unmarshal(kv.Value, &db); err != nil {
 		logrus.Warnln("Fatal, Could not parse cluster database ", kv)
-		return db, version, err
+		return db, 0, err
 	}
-	return db, version, nil
+
+	return db, kv.KVDBIndex, nil
 }
 
-func readClusterInfo() (cluster.ClusterInfo, uint64, error) {
-	kv, err := kvdb.Instance().Get(ClusterDBKey)
-	if err != nil && !strings.Contains(err.Error(), "Key not found") {
-		logrus.Warnln("Warning, could not read cluster database")
-		return emptyClusterInfo(), 0, err
+func writeClusterInfo(db *cluster.ClusterInfo) (*kvdb.KVPair, error) {
+	kvdb := kvdb.Instance()
+	b, err := json.Marshal(db)
+	if err != nil {
+		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		return nil, err
 	}
-	return unmarshalClusterInfo(kv)
+
+	kvp, err := kvdb.Put(ClusterDBKey, b, 0)
+	if err != nil {
+		logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
+		return nil, err
+	}
+	return kvp, nil
 }
 
-func lockAndUpdateDB(fn, lockID string, cb updateCallbackFn) (*kvdb.KVPair, error) {
-	kv := kvdb.Instance()
-
-	kvlock, err := kv.LockWithID(clusterLockKey, lockID)
+func updateLockedDB(fn, lockID string, cb updateCallbackFn) error {
+	kvdb := kvdb.Instance()
+	kvlock, err := kvdb.LockWithID(clusterLockKey, lockID)
 	if err != nil {
 		logrus.Warnf("Unable to obtain cluster lock for %v op: %v", fn, err)
-		return nil, err
+		return err
 	}
-	defer kv.Unlock(kvlock)
+	defer kvdb.Unlock(kvlock)
 
-	db, version, err := readClusterInfo()
+	db, _, err := readClusterInfo()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	update, err := cb(&db)
 	if err != nil {
-		return nil, err
+		return err
 	}
 	if !update {
-		return nil, nil
+		return nil
 	}
 
-	if version != 0 {
-		b, err := json.Marshal(db)
-		if err != nil {
-			logrus.Warnf("Fatal, Could not marshal cluster database to JSON: %v", err)
-			return nil, err
-		}
-
-		kvpInput := &kvdb.KVPair{
-			Key:           ClusterDBKey,
-			Value:         b,
-			ModifiedIndex: version,
-		}
-
-		return kv.CompareAndSet(kvpInput, kvdb.KVModifiedIndex, nil)
-	} else {
-		// key does not exists yet, call create
-		kvp, err := kv.Create(ClusterDBKey, db, 0)
-		if err == kvdb.ErrExist {
-			// key created, we may have lost the lock, retry
-			err = kvdb.ErrModified
-		}
-		return kvp, err
-	}
-}
-
-func updateDB(fn, lockID string, cb updateCallbackFn) error {
-	_, err := updateAndGetDB(fn, lockID, cb, true)
+	_, err = writeClusterInfo(&db)
 	return err
-}
-
-func updateAndGetDB(
-	fn string,
-	lockID string,
-	cb updateCallbackFn,
-	retry bool,
-) (*kvdb.KVPair, error) {
-	for {
-		if kvp, err := lockAndUpdateDB(fn, lockID, cb); err == kvdb.ErrModified && retry {
-			// compare and set failed, retry
-			continue
-		} else {
-			return kvp, err
-		}
-	}
 }

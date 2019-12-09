@@ -87,9 +87,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
-
-	_, err = policy.Init()
+	_, err = policy.Init(kv)
 
 	// Setup simple driver
 	tester.server, err = NewOsdCsiServer(config)

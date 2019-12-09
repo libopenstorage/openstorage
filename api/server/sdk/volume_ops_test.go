@@ -40,8 +40,7 @@ import (
 
 func init() {
 	kv, _ := kvdb.New(mem.Name, "policyvolopstest", []string{}, nil, kvdb.LogFatalErrorCB)
-	kvdb.SetInstance(kv)
-	policy.Init()
+	policy.Init(kv)
 }
 
 func TestSdkVolumeCreateCheckIdempotencyWaitForRemoved(t *testing.T) {
@@ -1421,11 +1420,10 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 	mv := mockdriver.NewMockVolumeDriver(mc)
 	mcluster := mockcluster.NewMockCluster(mc)
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
-	kvdb.SetInstance(kv)
 	assert.NoError(t, err)
 
 	// Init storage policy manager
-	_, err = policy.Init()
+	_, err = policy.Init(kv)
 	storePolicy, err := policy.Inst()
 	assert.NoError(t, err)
 
@@ -1653,10 +1651,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
 
 	// Init storage policy manager
-	_, err = policy.Init()
+	_, err = policy.Init(kv)
 	storePolicy, err := policy.Inst()
 	assert.NoError(t, err)
 

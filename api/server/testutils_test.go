@@ -136,8 +136,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
-	stp, err := storagepolicy.Init()
+	stp, err := storagepolicy.Init(kv)
 	if err != nil {
 		stp, _ = storagepolicy.Inst()
 	}
@@ -192,12 +191,11 @@ func newTestServerSdk(t *testing.T) *testServer {
 	// Create a role manager
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
 	// Do not check for error, just initialize it
-	stp, err := storagepolicy.Init()
+	stp, err := storagepolicy.Init(kv)
 	if err != nil {
 		stp, _ = storagepolicy.Inst()
 	}
@@ -325,8 +323,7 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
-	_, err = storagepolicy.Init()
+	_, err = storagepolicy.Init(kv)
 
 	return ts, testVolDriver
 }

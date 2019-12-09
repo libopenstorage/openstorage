@@ -170,8 +170,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	// Setup storage policy
 	kv, err = kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	kvdb.SetInstance(kv)
-	stp, err := storagepolicy.Init()
+	stp, err := storagepolicy.Init(kv)
 	if err != nil {
 		stp, _ = storagepolicy.Inst()
 	}
