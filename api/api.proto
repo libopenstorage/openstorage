@@ -1832,6 +1832,58 @@ service OpenStorageSchedulePolicy {
     }
 }
 
+// OpenStorageOsdConfig service is used to osd configuration objects
+service OpenStorageOsdConfig {
+  // Create creates a new snapshot schedule. They can be setup daily,
+  // weekly, or monthly.
+  rpc GetClusterConf(SdkOsdGetClusterConfigRequest)
+    returns (SdkOsdGetClusterConfigResponse) {
+      option(google.api.http) = {
+        get: "/v1/config/cluster"
+      };
+    }
+
+  // GetNodeConf get config of node with provided id
+  rpc GetNodeConf(SdkOsdGetNodeConfigRequest)
+    returns (SdkOsdNodeConfig) {
+      option(google.api.http) = {
+        get: "/v1/config/node/{Id}"
+      };
+    }
+
+  // EnumerateNodeConf returns list of all nodes configs
+  rpc EnumerateNodeConf(SdkOsdEnumerateNodeConfigRequest)
+    returns (SdkOsdEnumerateNodeConfigResponse) {
+      option(google.api.http) = {
+        get: "/v1/config/enumerate"
+      };
+    }
+
+  // DeleteNodeConf delete particular node config
+  rpc DeleteNodeConf(SdkOsdDeleteNodeConfigRequest)
+      returns (SdkOsdDeleteNodeConfigResponse) {
+        option(google.api.http) = {
+          delete: "/v1/config/node/{Id}"
+        };
+      }
+
+  // SetClusterConf sets config to a cluster
+  rpc SetClusterConf(SdkOsdSetClusterConfigRequest)
+    returns (SdkOsdSetClusterConfigResponse) {
+      option(google.api.http) = {
+        post: "/v1/config/cluster"
+      };
+    }
+
+  // SetNodeConf sets config to a particular node
+  rpc SetNodeConf(SdkOsdNodeConfig)
+    returns (SdkOsdNodeConfig) {
+      option(google.api.http) = {
+        get: "/v1/config/node/{Id}"
+      };
+    }
+}
+
 // OpenStorageCloudBackup service manages backing up volumes to a cloud
 // location like Amazon, Google, or Azure.
 //
@@ -2269,6 +2321,156 @@ message SdkSchedulePolicy {
   string name = 1;
   // Schedule policies
   repeated SdkSchedulePolicyInterval schedules = 2;
+}
+
+// Empty Request
+message SdkOsdGetClusterConfigRequest {}
+
+message VaultConfig {
+    string Token = 1;
+	string Address = 2;
+    string CACert = 3;
+    string CAPath = 4;
+    string ClientCert = 5;
+    string ClientKey = 6;
+    string TLSSkipVerify = 7;
+    string TLSServerName = 8;
+    string BasePath = 9;
+    string BackendPath = 10;
+}
+
+message KvdbConfig {
+	string Name = 1;
+	string Username = 2;
+	string Password = 3;
+	string CAFile = 4;
+	string CertFile = 5;
+	string CertKeyFile = 6;
+	string TrustedCAFile = 7;
+	string ClientCertAuth = 8;
+	string AclToken = 9;
+	string CAAuthAddress = 10;
+	bool InsecureSkipVerify  = 11;
+	string TransportScheme = 12;
+	repeated string Discovery = 13;
+}
+
+message AwsConfig {
+	string AccessKeyId = 1;
+	string SecretAccessKey = 2;
+	string SecretTokenKey = 3;
+	string Cmk = 4;
+	string Region = 5;
+}
+
+message SecretConfig {
+	string SecretType = 1;
+	string ClusterSecretKey = 2;
+	VaultConfig Vault = 3;
+	AwsConfig Aws = 4;
+}
+
+// Defines response for get cluster config
+message SdkOsdGetClusterConfigResponse {
+	// Description of cluster config
+	string Description = 1;
+	// Cluster mode
+	string Mode = 2;
+	// Version info for cluster
+	string Version = 3;
+	// Creation info of the cluster
+	google.protobuf.Timestamp Created = 4;
+	// Cluster id
+	string ClusterId = 5;
+	// Cluster domain
+	string Domain = 6;
+	// Secrets information
+	SecretConfig Secrets = 7;
+	// Key-value database configuration
+	KvdbConfig Kvdb = 8;
+}
+
+// Empty Request
+message SdkOsdGetNodeConfigRequest {
+    // Id of the node
+    string Id = 1;
+}
+
+message NetworkConfig {
+	string ManagementInterface = 1;
+	string DataInterface = 2;
+}
+
+message StorageConfig {
+    repeated string DevicesMode = 1;
+    repeated string Devices = 2;
+    uint32	MaxCount = 3;
+    uint32  MaxDriveSetCount = 4;
+    string	RaidLevel = 5;
+    string	RaidLevelMode = 6;
+}
+
+message GeoConfig {
+    string Rack = 1;
+    string Zone = 2;
+    string Region = 3;
+}
+
+// Empty
+message SdkOsdEnumerateNodeConfigRequest {
+}
+
+// SdkOsdEnumerateNodeConfigResponse provides list of node configs
+message SdkOsdEnumerateNodeConfigResponse {
+    repeated SdkOsdNodeConfig NodeConfig = 1;
+}
+
+// Empty Request
+message SdkOsdDeleteNodeConfigRequest {
+    // Id of the node
+    string Id = 1;
+}
+
+// Empty
+message SdkOsdDeleteNodeConfigResponse {
+}
+
+// SdkOsdSetClusterConfigRequest sets configuration to a cluster
+message SdkOsdSetClusterConfigRequest {
+	// Description of cluster config
+	string Description = 1;
+	// Cluster mode
+	string Mode = 2;
+	// Version info for cluster
+	string Version = 3;
+	// Creation info of the cluster
+	google.protobuf.Timestamp Created = 4;
+	// Cluster id
+	string ClusterId = 5;
+}
+
+// SdkOsdSetClusterConfigResponse replies with configuration that has been applied
+message SdkOsdSetClusterConfigResponse {
+	// Description of cluster config
+	string Description = 1;
+	// Cluster mode
+	string Mode = 2;
+	// Version info for cluster
+	string Version = 3;
+	// Creation info of the cluster
+	google.protobuf.Timestamp Created = 4;
+	// Cluster id
+	string ClusterId = 5;
+}
+
+message SdkOsdNodeConfig {
+    // Id of the node
+    string Id = 1;
+    string CSIEndpoint = 2;
+    NetworkConfig Network = 3;
+    StorageConfig Storage = 4;
+    GeoConfig Geo = 5;
+    string ClusterDomain = 6;
 }
 
 // Defines a request to create credentials

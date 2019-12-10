@@ -218,6 +218,26 @@
         "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
         "type": "string"
       },
+      "apiAwsConfig": {
+        "properties": {
+          "AccessKeyId": {
+            "type": "string"
+          },
+          "Cmk": {
+            "type": "string"
+          },
+          "Region": {
+            "type": "string"
+          },
+          "SecretAccessKey": {
+            "type": "string"
+          },
+          "SecretTokenKey": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiCapacityUsageInfo": {
         "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
         "properties": {
@@ -560,6 +580,20 @@
         ],
         "type": "string"
       },
+      "apiGeoConfig": {
+        "properties": {
+          "Rack": {
+            "type": "string"
+          },
+          "Region": {
+            "type": "string"
+          },
+          "Zone": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -608,6 +642,54 @@
         },
         "type": "object"
       },
+      "apiKvdbConfig": {
+        "properties": {
+          "AclToken": {
+            "type": "string"
+          },
+          "CAAuthAddress": {
+            "type": "string"
+          },
+          "CAFile": {
+            "type": "string"
+          },
+          "CertFile": {
+            "type": "string"
+          },
+          "CertKeyFile": {
+            "type": "string"
+          },
+          "ClientCertAuth": {
+            "type": "string"
+          },
+          "Discovery": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "InsecureSkipVerify": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "Name": {
+            "type": "string"
+          },
+          "Password": {
+            "type": "string"
+          },
+          "TransportScheme": {
+            "type": "string"
+          },
+          "TrustedCAFile": {
+            "type": "string"
+          },
+          "Username": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiLabelSelectorRequirement": {
         "description": "LabelSelectorRequirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
         "properties": {
@@ -624,6 +706,17 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "apiNetworkConfig": {
+        "properties": {
+          "DataInterface": {
+            "type": "string"
+          },
+          "ManagementInterface": {
+            "type": "string"
           }
         },
         "type": "object"
@@ -2063,6 +2156,110 @@
         "title": "Empty Response",
         "type": "object"
       },
+      "apiSdkOsdDeleteNodeConfigResponse": {
+        "title": "Empty",
+        "type": "object"
+      },
+      "apiSdkOsdEnumerateNodeConfigResponse": {
+        "properties": {
+          "NodeConfig": {
+            "items": {
+              "$ref": "#/components/schemas/apiSdkOsdNodeConfig"
+            },
+            "type": "array"
+          }
+        },
+        "title": "SdkOsdEnumerateNodeConfigResponse provides list of node configs",
+        "type": "object"
+      },
+      "apiSdkOsdGetClusterConfigResponse": {
+        "properties": {
+          "ClusterId": {
+            "title": "Cluster id",
+            "type": "string"
+          },
+          "Created": {
+            "format": "date-time",
+            "title": "Creation info of the cluster",
+            "type": "string"
+          },
+          "Description": {
+            "title": "Description of cluster config",
+            "type": "string"
+          },
+          "Domain": {
+            "title": "Cluster domain",
+            "type": "string"
+          },
+          "Kvdb": {
+            "$ref": "#/components/schemas/apiKvdbConfig"
+          },
+          "Mode": {
+            "title": "Cluster mode",
+            "type": "string"
+          },
+          "Secrets": {
+            "$ref": "#/components/schemas/apiSecretConfig"
+          },
+          "Version": {
+            "title": "Version info for cluster",
+            "type": "string"
+          }
+        },
+        "title": "Defines response for get cluster config",
+        "type": "object"
+      },
+      "apiSdkOsdNodeConfig": {
+        "properties": {
+          "CSIEndpoint": {
+            "type": "string"
+          },
+          "ClusterDomain": {
+            "type": "string"
+          },
+          "Geo": {
+            "$ref": "#/components/schemas/apiGeoConfig"
+          },
+          "Id": {
+            "title": "Id of the node",
+            "type": "string"
+          },
+          "Network": {
+            "$ref": "#/components/schemas/apiNetworkConfig"
+          },
+          "Storage": {
+            "$ref": "#/components/schemas/apiStorageConfig"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkOsdSetClusterConfigResponse": {
+        "properties": {
+          "ClusterId": {
+            "title": "Cluster id",
+            "type": "string"
+          },
+          "Created": {
+            "format": "date-time",
+            "title": "Creation info of the cluster",
+            "type": "string"
+          },
+          "Description": {
+            "title": "Description of cluster config",
+            "type": "string"
+          },
+          "Mode": {
+            "title": "Cluster mode",
+            "type": "string"
+          },
+          "Version": {
+            "title": "Version info for cluster",
+            "type": "string"
+          }
+        },
+        "title": "SdkOsdSetClusterConfigResponse replies with configuration that has been applied",
+        "type": "object"
+      },
       "apiSdkRole": {
         "properties": {
           "name": {
@@ -2891,6 +3088,23 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSecretConfig": {
+        "properties": {
+          "Aws": {
+            "$ref": "#/components/schemas/apiAwsConfig"
+          },
+          "ClusterSecretKey": {
+            "type": "string"
+          },
+          "SecretType": {
+            "type": "string"
+          },
+          "Vault": {
+            "$ref": "#/components/schemas/apiVaultConfig"
+          }
+        },
+        "type": "object"
+      },
       "apiSeverityType": {
         "default": "SEVERITY_TYPE_NONE",
         "enum": [
@@ -2986,6 +3200,37 @@
           }
         },
         "title": "StorageCluster represents the state and information about the cluster",
+        "type": "object"
+      },
+      "apiStorageConfig": {
+        "properties": {
+          "Devices": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "DevicesMode": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "MaxCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "MaxDriveSetCount": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "RaidLevel": {
+            "type": "string"
+          },
+          "RaidLevelMode": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "apiStorageMedium": {
@@ -3234,6 +3479,41 @@
           }
         },
         "title": "Version information about the storage system",
+        "type": "object"
+      },
+      "apiVaultConfig": {
+        "properties": {
+          "Address": {
+            "type": "string"
+          },
+          "BackendPath": {
+            "type": "string"
+          },
+          "BasePath": {
+            "type": "string"
+          },
+          "CACert": {
+            "type": "string"
+          },
+          "CAPath": {
+            "type": "string"
+          },
+          "ClientCert": {
+            "type": "string"
+          },
+          "ClientKey": {
+            "type": "string"
+          },
+          "TLSServerName": {
+            "type": "string"
+          },
+          "TLSSkipVerify": {
+            "type": "string"
+          },
+          "Token": {
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "apiVolume": {
@@ -4676,6 +4956,239 @@
         "summary": "InspectCurrent returns information about the current cluster",
         "tags": [
           "OpenStorageCluster"
+        ]
+      }
+    },
+    "/v1/config/cluster": {
+      "get": {
+        "operationId": "GetClusterConf",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkOsdGetClusterConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Create creates a new snapshot schedule. They can be setup daily,\nweekly, or monthly.",
+        "tags": [
+          "OpenStorageOsdConfig"
+        ]
+      },
+      "post": {
+        "operationId": "SetClusterConf",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkOsdSetClusterConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "SetClusterConf sets config to a cluster",
+        "tags": [
+          "OpenStorageOsdConfig"
+        ]
+      }
+    },
+    "/v1/config/enumerate": {
+      "get": {
+        "operationId": "EnumerateNodeConf",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkOsdEnumerateNodeConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateNodeConf returns list of all nodes configs",
+        "tags": [
+          "OpenStorageOsdConfig"
+        ]
+      }
+    },
+    "/v1/config/node/{Id}": {
+      "delete": {
+        "operationId": "DeleteNodeConf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "Id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkOsdDeleteNodeConfigResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "DeleteNodeConf delete particular node config",
+        "tags": [
+          "OpenStorageOsdConfig"
+        ]
+      },
+      "get": {
+        "operationId": "SetNodeConf",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "Id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "CSIEndpoint",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Network.ManagementInterface",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Network.DataInterface",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.DevicesMode",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.Devices",
+            "required": false,
+            "schema": {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.MaxCount",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.MaxDriveSetCount",
+            "required": false,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.RaidLevel",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Storage.RaidLevelMode",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Geo.Rack",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Geo.Zone",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "Geo.Region",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ClusterDomain",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkOsdNodeConfig"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "SetNodeConf sets config to a particular node",
+        "tags": [
+          "OpenStorageOsdConfig"
         ]
       }
     },
