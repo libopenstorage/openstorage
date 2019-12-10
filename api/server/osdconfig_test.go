@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"github.com/libopenstorage/openstorage/api"
 	"testing"
 	"time"
 
@@ -208,4 +209,107 @@ func TestSetNodeConfSuccess(t *testing.T) {
 	restClient := clusterclient.ClusterManager(c)
 	resp := restClient.SetNodeConf(nodeConfig)
 	assert.NoError(t, resp)
+}
+
+func TestConversionSdkOsd(t *testing.T) {
+	osdNodeConfig := &osdconfig.NodeConfig{
+		NodeId:        "node-id",
+		CSIEndpoint:   "csi-endpoint",
+		ClusterDomain: "cluster-domain",
+		Network: &osdconfig.NetworkConfig{
+			DataIface: "data-iface",
+			MgtIface:  "mgnmt-iface",
+		},
+		Storage: &osdconfig.StorageConfig{
+			RaidLevelMd: "0",
+			RaidLevel:   "0",
+			MaxCount:    3,
+		},
+		Geo: &osdconfig.GeoConfig{
+			Rack:   "rack-1",
+			Zone:   "zone-1",
+			Region: "region-1",
+		},
+	}
+	sdkNodeConfig := osdNodeConfigSdkNodeConfig(osdNodeConfig)
+	compareSdkOsd(osdNodeConfig, sdkNodeConfig, t)
+}
+
+func TestConversionOsdSdk(t *testing.T) {
+	sdkNodeConfig := &api.SdkOsdNodeConfig{
+		Id:            "node0-id",
+		CSIEndpoint:   "csi-endpoint",
+		ClusterDomain: "cluster-domain",
+		Network: &api.NetworkConfig{
+			ManagementInterface: "mgmt-iface",
+			DataInterface:       "data-iface",
+		},
+		Storage: &api.StorageConfig{
+			RaidLevel:     "raid-level",
+			RaidLevelMode: "raid-level-mode",
+			MaxCount:      42,
+		},
+		Geo: &api.GeoConfig{},
+	}
+	osdNodeConfig := sdkNodeConfigToOsdNodeConfig(sdkNodeConfig)
+	compareSdkOsd(osdNodeConfig, sdkNodeConfig, t)
+}
+
+func compareSdkOsd(osdNodeConfig *osdconfig.NodeConfig, sdkNodeConfig *api.SdkOsdNodeConfig,
+	t *testing.T) {
+
+	if (sdkNodeConfig.Network != nil || osdNodeConfig.Network != nil) !=
+		(sdkNodeConfig.Network != nil && osdNodeConfig.Network != nil) {
+		t.Errorf("Network object must both be not nil or nil")
+	}
+
+	if sdkNodeConfig.Network.DataInterface != osdNodeConfig.Network.DataIface {
+		t.Errorf("Data interface are different sdk %s osd %s",
+			sdkNodeConfig.Network.DataInterface, osdNodeConfig.Network.DataIface)
+	}
+
+	if sdkNodeConfig.Network.ManagementInterface != osdNodeConfig.Network.MgtIface {
+		t.Errorf("Management interface are different sdk %s osd %s",
+			sdkNodeConfig.Network.ManagementInterface, osdNodeConfig.Network.MgtIface)
+	}
+
+	if (sdkNodeConfig.Storage != nil || osdNodeConfig.Storage != nil) !=
+		(sdkNodeConfig.Storage != nil && osdNodeConfig.Storage != nil) {
+		t.Errorf("Storage object must both be not nil or nil")
+	}
+
+	if sdkNodeConfig.Storage.RaidLevel != osdNodeConfig.Storage.RaidLevel {
+		t.Errorf("Raid level are different sdk %s osd %s",
+			sdkNodeConfig.Storage.RaidLevel, osdNodeConfig.Storage.RaidLevel)
+	}
+
+	if sdkNodeConfig.Storage.RaidLevelMode != osdNodeConfig.Storage.RaidLevelMd {
+		t.Errorf("Raid level mode are different sdk %s osd %s",
+			sdkNodeConfig.Storage.RaidLevelMode, osdNodeConfig.Storage.RaidLevelMd)
+	}
+
+	if sdkNodeConfig.Storage.MaxCount != osdNodeConfig.Storage.MaxCount {
+		t.Errorf("Max count are different sdk %d osd %d",
+			sdkNodeConfig.Storage.MaxCount, osdNodeConfig.Storage.MaxCount)
+	}
+
+	if (sdkNodeConfig.Geo != nil || osdNodeConfig.Geo != nil) !=
+		(sdkNodeConfig.Geo != nil && osdNodeConfig.Geo != nil) {
+		t.Errorf("Geo object must both be not nil or nil")
+	}
+
+	if sdkNodeConfig.Geo.Rack != osdNodeConfig.Geo.Rack {
+		t.Errorf("Racks are different sdk %s osd %s",
+			sdkNodeConfig.Geo.Rack, osdNodeConfig.Geo.Rack)
+	}
+
+	if sdkNodeConfig.Geo.Zone != osdNodeConfig.Geo.Zone {
+		t.Errorf("Zones are different sdk %s osd %s",
+			sdkNodeConfig.Geo.Zone, osdNodeConfig.Geo.Zone)
+	}
+
+	if sdkNodeConfig.Geo.Region != osdNodeConfig.Geo.Region {
+		t.Errorf("Regions are different sdk %s osd %s",
+			sdkNodeConfig.Geo.Region, osdNodeConfig.Geo.Region)
+	}
 }
