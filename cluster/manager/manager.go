@@ -422,22 +422,45 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, watchErr error) error {
 
-	// restart watch incase of errors
-	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
-		logrus.Errorf("ClusterManager watch stopped, restarting (err: %v)",
-			watchErr)
-		c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
-		return watchErr
+	var (
+		db          cluster.ClusterInfo
+		kvdbVersion uint64
+		err         error
+	)
+	if watchErr != nil {
+		if c.selfNode.Status == api.Status_STATUS_DECOMMISSION {
+			logrus.Warn("Node is decommissioned, got watch error: %v", watchErr)
+			// node is decommissioned, no need to do anything
+			return watchError
+		}
+
+		logrus.Errorf("ClusterManager watch error: %v", watchErr)
+		// since ClusterManager handles multiple updates at once, we should
+		// be ok to get the latest version of clusterDB and then starting
+		// watch from that version.
+		logrus.Infof("ClusterManager getting latest cluster database")
+		db, kvdbVersion, err = readClusterInfo()
+		if err != nil {
+			// can't do much, try restarting watch
+			c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+			return watchErr
+		} else {
+			// start the watch
+			defer c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+		}
 	}
 
-	db, kvdbVersion, err := unmarshalClusterInfo(kvp)
-	if err != nil || len(db.NodeEntries) == 0 {
-		logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
-		// cluster database should not be nil, exit since we don't know what happened
-		os.Exit(1)
+	if watchErr == nil {
+		db, kvdbVersion, err = unmarshalClusterInfo(kvp)
+		if err != nil || len(db.NodeEntries) == 0 {
+			logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
+			// cluster database should not be nil, exit since we don't know what happened
+			os.Exit(1)
+		}
 	}
 
 	c.kvdbWatchIndex = kvdbVersion
+
 	// Update all the listeners with the new db
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, &db)
