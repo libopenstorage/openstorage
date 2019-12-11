@@ -306,15 +306,15 @@ func (c *ClusterManager) GetPairToken(
 	)
 
 	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		pairToken = db.PairToken
 		// Generate a token if we don't have one or a reset has been requested
-		if db.PairToken == "" || reset {
+		if pairToken == "" || reset {
 			token, err := c.generatePairToken()
 			if err != nil {
 				returnError = errors.Wrap(err, "Failed to generate token")
 				return false, nil
-			} else {
-				pairToken = fmt.Sprintf("%s", token)
 			}
+			pairToken = fmt.Sprintf("%s", token)
 			db.PairToken = pairToken
 			return true, nil
 		}
