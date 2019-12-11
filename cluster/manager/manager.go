@@ -429,37 +429,35 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 	)
 	if watchErr != nil {
 		if c.selfNode.Status == api.Status_STATUS_DECOMMISSION {
-			logrus.Warn("Node is decommissioned, got watch error: %v", watchErr)
+			logrus.Warnf("Node is decommissioned, got watch error: %v", watchErr)
 			// node is decommissioned, no need to do anything
-			return watchError
+			return watchErr
 		}
 
-		logrus.Errorf("ClusterManager watch error: %v", watchErr)
+		logrus.Warnf("ClusterManager watch error: %v, getting latest db directly", watchErr)
 		// since ClusterManager handles multiple updates at once, we should
 		// be ok to get the latest version of clusterDB and then starting
 		// watch from that version.
-		logrus.Infof("ClusterManager getting latest cluster database")
 		db, kvdbVersion, err = readClusterInfo()
 		if err != nil {
+			logrus.Errorf("ClusterManager could not get db directly: %v", err)
 			// can't do much, try restarting watch
 			c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
 			return watchErr
 		} else {
 			// start the watch
+			c.kvdbWatchIndex = kvdbVersion
 			defer c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
 		}
-	}
-
-	if watchErr == nil {
+	} else {
 		db, kvdbVersion, err = unmarshalClusterInfo(kvp)
 		if err != nil || len(db.NodeEntries) == 0 {
 			logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
 			// cluster database should not be nil, exit since we don't know what happened
 			os.Exit(1)
 		}
+		c.kvdbWatchIndex = kvdbVersion
 	}
-
-	c.kvdbWatchIndex = kvdbVersion
 
 	// Update all the listeners with the new db
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
