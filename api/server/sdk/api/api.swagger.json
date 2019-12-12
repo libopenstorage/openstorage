@@ -1890,16 +1890,6 @@
         "title": "Empty response",
         "type": "object"
       },
-      "apiSdkFilesystemCheckCheckHealthGetStatusRequest": {
-        "properties": {
-          "volume_id": {
-            "title": "Id of the volume",
-            "type": "string"
-          }
-        },
-        "title": "SdkFilesystemCheckCheckHealthGetStatusRequest defines a request to get status of a\nbackground filesystem check operation",
-        "type": "object"
-      },
       "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
         "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
         "properties": {
@@ -1937,16 +1927,6 @@
             "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
           }
         },
-        "type": "object"
-      },
-      "apiSdkFilesystemCheckFixAllGetStatusRequest": {
-        "properties": {
-          "volume_id": {
-            "title": "Id of the volume",
-            "type": "string"
-          }
-        },
-        "title": "SdkFilesystemCheckFixAllGetStatusRequest defines a request to get status of a\nbackground filesystem check operation",
         "type": "object"
       },
       "apiSdkFilesystemCheckFixAllGetStatusResponse": {
@@ -2000,20 +1980,6 @@
       },
       "apiSdkFilesystemCheckStopResponse": {
         "title": "Empty response",
-        "type": "object"
-      },
-      "apiSdkFilesystemTrimGetStatusRequest": {
-        "properties": {
-          "mount_path": {
-            "title": "Path where the volume is mounted",
-            "type": "string"
-          },
-          "volume_id": {
-            "title": "Id of the volume",
-            "type": "string"
-          }
-        },
-        "title": "SdkFilesystemTrimGetStatusRequest defines a request to get status of a\nbackground filesystem trim operation",
         "type": "object"
       },
       "apiSdkFilesystemTrimGetStatusResponse": {
@@ -5092,19 +5058,19 @@
         ]
       }
     },
-    "/v1/filesystem-check/checkhealth-status": {
-      "post": {
+    "/v1/filesystem-check/checkhealth/status/{volume_id}": {
+      "get": {
         "operationId": "CheckHealthGetStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthGetStatusRequest"
-              }
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5154,19 +5120,19 @@
         ]
       }
     },
-    "/v1/filesystem-check/fixall-status": {
-      "post": {
+    "/v1/filesystem-check/fixall/status/{volume_id}": {
+      "get": {
         "operationId": "FixAllGetStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllGetStatusRequest"
-              }
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
-          },
-          "required": true
-        },
+          }
+        ],
         "responses": {
           "200": {
             "content": {
@@ -5247,19 +5213,27 @@
         ]
       }
     },
-    "/v1/filesystem-trim/status": {
-      "post": {
+    "/v1/filesystem-trim/status/{volume_id}/{mount_path}": {
+      "get": {
         "operationId": "GetStatus",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkFilesystemTrimGetStatusRequest"
-              }
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
             }
           },
-          "required": true
-        },
+          {
+            "in": "path",
+            "name": "mount_path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "content": {
