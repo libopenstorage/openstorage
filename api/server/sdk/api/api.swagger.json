@@ -1999,16 +1999,7 @@
         "type": "object"
       },
       "apiSdkFilesystemCheckStopResponse": {
-        "description": "SdkFilesystemCheckStopResponse defines the response for a\nSdkFilesystemCheckStopRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
-          }
-        },
+        "title": "Empty response",
         "type": "object"
       },
       "apiSdkFilesystemTrimGetStatusRequest": {
@@ -2080,16 +2071,7 @@
         "type": "object"
       },
       "apiSdkFilesystemTrimStopResponse": {
-        "description": "SdkFilesystemTrimStopResponse defines the response for a\nSdkFilesystemTrimStopRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
-          }
-        },
+        "title": "Empty response",
         "type": "object"
       },
       "apiSdkGoogleCredentialRequest": {

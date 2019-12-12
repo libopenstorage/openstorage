@@ -3657,13 +3657,8 @@ message SdkFilesystemTrimStopRequest {
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimStopResponse defines the response for a
-// SdkFilesystemTrimStopRequest.
+// Empty response
 message SdkFilesystemTrimStopResponse{
-  // Status code representing the state of the filesystem trim operation
-  FilesystemTrim.FilesystemTrimStatus status = 1;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 2;
 }
 
 message FilesystemCheck {
@@ -3788,13 +3783,8 @@ message SdkFilesystemCheckStopRequest {
   string volume_id = 1;
 }
 
-// SdkFilesystemCheckStopResponse defines the response for a
-// SdkFilesystemCheckStopRequest.
+// Empty response
 message SdkFilesystemCheckStopResponse{
-  // Status code representing the state of the filesystem check operation
-  FilesystemCheck.FilesystemCheckStatus status = 1;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 2;
 }
 
 // Empty request
