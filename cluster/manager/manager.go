@@ -432,9 +432,8 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 
 	db, kvdbVersion, err := unmarshalClusterInfo(kvp)
 	if err != nil || len(db.NodeEntries) == 0 {
-		logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
-		// cluster database should not be nil, exit since we don't know what happened
-		os.Exit(1)
+		// cluster database should not be nil, fatal since we don't know what happened
+		logrus.Fatalf("watch returned nil or empty cluster database: %v", kvp)
 	}
 
 	c.kvdbWatchIndex = kvdbVersion
@@ -792,7 +791,6 @@ func (c *ClusterManager) updateClusterStatus() {
 			if c.size > 0 && numNodes > c.size {
 				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
 					"exceeded the cluster size: %d > %d", numNodes, c.size)
-				os.Exit(1)
 			}
 
 			// Special handling for self node
@@ -823,8 +821,7 @@ func (c *ClusterManager) updateClusterStatus() {
 					c.gossip.UpdateSelfStatus(types.NODE_STATUS_DOWN)
 					c.selfNode.Status = api.Status_STATUS_OFFLINE
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
-					c.Shutdown()
-					os.Exit(1)
+					logrus.Fatal(c.Shutdown())
 				} else if c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM &&
 					gossipNodeInfo.Status == types.NODE_STATUS_UP {
 					// Current:
