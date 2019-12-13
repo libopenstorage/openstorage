@@ -23,10 +23,9 @@ import (
 	"google.golang.org/grpc/status"
 	"github.com/libopenstorage/openstorage/volume"
 )
-
 // FilesystemTrimServer is an implementation of the gRPC OpenStorageFilesystemTrim interface
 type FilesystemTrimServer struct {
-	server      serverAccessor
+	server serverAccessor
 }
 func (s *FilesystemTrimServer) driver(ctx context.Context) volume.VolumeDriver {
 	return s.server.driver(ctx)

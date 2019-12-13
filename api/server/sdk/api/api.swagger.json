@@ -5167,14 +5167,15 @@
         ]
       }
     },
-    "/v1/filesystem-check/checkhealth/status/{volume_id}": {
+    "/v1/filesystem-check/checkhealth/status": {
       "get": {
         "operationId": "CheckHealthGetStatus",
         "parameters": [
           {
-            "in": "path",
+            "description": "Id of the volume.",
+            "in": "query",
             "name": "volume_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5229,14 +5230,15 @@
         ]
       }
     },
-    "/v1/filesystem-check/fixall/status/{volume_id}": {
+    "/v1/filesystem-check/fixall/status": {
       "get": {
         "operationId": "FixAllGetStatus",
         "parameters": [
           {
-            "in": "path",
+            "description": "Id of the volume.",
+            "in": "query",
             "name": "volume_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
@@ -5322,22 +5324,24 @@
         ]
       }
     },
-    "/v1/filesystem-trim/status/{volume_id}/{mount_path}": {
+    "/v1/filesystem-trim/status": {
       "get": {
         "operationId": "GetStatus",
         "parameters": [
           {
-            "in": "path",
+            "description": "Id of the volume.",
+            "in": "query",
             "name": "volume_id",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }
           },
           {
-            "in": "path",
+            "description": "Path where the volume is mounted.",
+            "in": "query",
             "name": "mount_path",
-            "required": true,
+            "required": false,
             "schema": {
               "type": "string"
             }

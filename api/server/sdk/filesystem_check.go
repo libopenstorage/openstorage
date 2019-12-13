@@ -24,8 +24,7 @@ import (
 	"google.golang.org/grpc/status"
 	"github.com/libopenstorage/openstorage/volume"
 )
-
-// FilesystemCheckServer is an implementation of the gRPC OpenStorageFilesystemCheck interface
+// FilesystemTrimServer is an implementation of the gRPC OpenStorageFilesystemTrim interface
 type FilesystemCheckServer struct {
 	server      serverAccessor
 }
