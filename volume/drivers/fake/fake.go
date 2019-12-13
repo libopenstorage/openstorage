@@ -51,6 +51,8 @@ type driver struct {
 	volume.CredsDriver
 	volume.CloudBackupDriver
 	volume.CloudMigrateDriver
+	volume.FilesystemTrimDriver
+	volume.FilesystemCheckDriver
 	kv          kvdb.Kvdb
 	thisCluster cluster.Cluster
 }
@@ -90,6 +92,8 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		StatsDriver:        volume.StatsNotSupported,
 		QuiesceDriver:      volume.QuiesceNotSupported,
 		CloudMigrateDriver: volume.CloudMigrateNotSupported,
+		FilesystemTrimDriver: volume.FilesystemTrimNotSupported,
+		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                 kv,
 	}
 
