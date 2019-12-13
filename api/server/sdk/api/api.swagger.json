@@ -21,6 +21,60 @@
         "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery",
         "type": "string"
       },
+      "FilesystemCheckCheckHealthStatus": {
+        "default": "CHECK_HEALTH_STATUS_UNKNOWN",
+        "enum": [
+          "CHECK_HEALTH_STATUS_UNKNOWN",
+          "CHECK_HEALTH_STATUS_HEALTHY",
+          "CHECK_HEALTH_STATUS_NOT_HEALTHY"
+        ],
+        "title": "- CHECK_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - CHECK_HEALTH_STATUS_HEALTHY: filesystem health is healthy\n - CHECK_HEALTH_STATUS_NOT_HEALTHY: filesystem health is not healthy",
+        "type": "string"
+      },
+      "FilesystemCheckFilesystemCheckStatus": {
+        "default": "FS_CHECK_UNKNOWN",
+        "description": "- FS_CHECK_UNKNOWN: Filesystem Check operation is an unknown state\n - FS_CHECK_NOT_RUNNING: FilesystemCheck operation not running for the specified volume\n - FS_CHECK_STARTED: FilesystemCheck operation started for the specified volume\n - FS_CHECK_CHECK_HEALTH_INPROGRESS: FilesystemCheck CheckHealth operation is in progress\n - FS_CHECK_CHECK_HEALTH_STOPPED: FilesystemCheck CheckHealth operation was stopped by the user\n - FS_CHECK_CHECK_HEALTH_COMPLETED: FilesystemCheck CheckHealth operation completed successfully\n - FS_CHECK_CHECK_HEALTH_FAILED: FilesystemCheck CheckHealth operation failed due to internal error\n - FS_CHECK_FIXALL_INPROGRESS: FilesystemCheck FixAll operation is in progress\n - FS_CHECK_FIXALL_STOPPED: FilesystemCheck FixAll operation was stopped by the user\n - FS_CHECK_FIXALL_COMPLETED: FilesystemCheck FixAll operation completed successfully\n - FS_CHECK_FIXALL_FAILED: FilesystemCheck FixAll operation failed due to internal error",
+        "enum": [
+          "FS_CHECK_UNKNOWN",
+          "FS_CHECK_NOT_RUNNING",
+          "FS_CHECK_STARTED",
+          "FS_CHECK_CHECK_HEALTH_INPROGRESS",
+          "FS_CHECK_CHECK_HEALTH_STOPPED",
+          "FS_CHECK_CHECK_HEALTH_COMPLETED",
+          "FS_CHECK_CHECK_HEALTH_FAILED",
+          "FS_CHECK_FIXALL_INPROGRESS",
+          "FS_CHECK_FIXALL_STOPPED",
+          "FS_CHECK_FIXALL_COMPLETED",
+          "FS_CHECK_FIXALL_FAILED"
+        ],
+        "title": "FilesystemChecktatus represents the status codes returned from\nOpenStorageFilesystemCheck service APIs()",
+        "type": "string"
+      },
+      "FilesystemCheckFixAllStatus": {
+        "default": "FIXALL_STATUS_UNKNOWN",
+        "enum": [
+          "FIXALL_STATUS_UNKNOWN",
+          "FIXALL_STATUS_HEALTHY",
+          "FIXALL_STATUS_NOT_HEALTHY"
+        ],
+        "title": "- FIXALL_STATUS_UNKNOWN: filesystem check fixall status is unknown\n - FIXALL_STATUS_HEALTHY: filesystem check fixall is healthy\n - FIXALL_STATUS_NOT_HEALTHY: check fixall is not healthy",
+        "type": "string"
+      },
+      "FilesystemTrimFilesystemTrimStatus": {
+        "default": "FS_TRIM_UNKNOWN",
+        "description": "- FS_TRIM_UNKNOWN: Filesystem Trim operation is an unknown state\n - FS_TRIM_NOT_RUNNING: Filesystem Trim operation is not running for the specified volume\n - FS_TRIM_STARTED: Filesystem Trim operation started for the specified volume\n - FS_TRIM_INPROGRESS: Filesystem Trim operation is in progress for the specified volume\n - FS_TRIM_STOPPED: Filesystem Trim operation was stopped by the user for the specified volume\n - FS_TRIM_COMPLETED: Filesystem Trim operation completed successfully for the specified volume\n - FS_TRIM_FAILED: Filesystem Trim operation failed due to internal error for the specified\nvolume",
+        "enum": [
+          "FS_TRIM_UNKNOWN",
+          "FS_TRIM_NOT_RUNNING",
+          "FS_TRIM_STARTED",
+          "FS_TRIM_INPROGRESS",
+          "FS_TRIM_STOPPED",
+          "FS_TRIM_COMPLETED",
+          "FS_TRIM_FAILED"
+        ],
+        "title": "FilesystemTrimStatus represents the status codes returned from\nOpenStorageFilesystemTrim service APIs()",
+        "type": "string"
+      },
       "LabelSelectorRequirementOperator": {
         "default": "In",
         "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
@@ -1833,6 +1887,156 @@
         "type": "object"
       },
       "apiSdkCredentialValidateResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
+        "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
+        "properties": {
+          "health_status": {
+            "$ref": "#/components/schemas/FilesystemCheckCheckHealthStatus"
+          },
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckCheckHealthRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkFilesystemCheckCheckHealthRequest defines a request to report the\nfilesystem consistency issues",
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckCheckHealthResponse": {
+        "description": "SdkFilesystemCheckCheckHealthResponse defines the response for a\nSdkFilesystemCheckCheckHealthRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckFixAllGetStatusResponse": {
+        "description": "SdkFilesystemCheckFixAllGetStatusResponse defines the response for a\nSdkFilesystemCheckFixAllGetStatusRequest.",
+        "properties": {
+          "health_status": {
+            "$ref": "#/components/schemas/FilesystemCheckFixAllStatus"
+          },
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckFixAllRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkFilesystemCheckFixAllRequest defines a request to fix all the filesystem\nconsistency issues",
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckFixAllResponse": {
+        "description": "SdkFilesystemCheckFixAllResponse defines the response for a\nSdkFilesystemCheckFixAllRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckStopRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkFilesystemCheckStopRequest defines a request to stop a background\nfilesystem check operation",
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckStopResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimGetStatusResponse": {
+        "description": "SdkFilesystemTrimGetStatusResponse defines the response for a\nSdkFilesystemTrimGetStatusRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStartRequest": {
+        "properties": {
+          "mount_path": {
+            "title": "Path where the volume is mounted",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkFilesystemTrimStartRequest defines a request to start a background filesystem trim operation",
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStartResponse": {
+        "description": "SdkFilesystemTrimStartResponse defines the response for a \nSdkFilesystemTrimStartRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStopRequest": {
+        "properties": {
+          "mount_path": {
+            "title": "Path where the volume is mounted",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkFilesystemTrimStopRequest defines a request to stop a background\nfilesystem trim operation",
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStopResponse": {
         "title": "Empty response",
         "type": "object"
       },
@@ -3872,7 +4076,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.67.0"
+    "version": "0.69.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4820,6 +5024,262 @@
         "summary": "Delete a specified credential",
         "tags": [
           "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/filesystem-check/checkhealth": {
+      "post": {
+        "operationId": "CheckHealth",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get a report of issues found on the filesystem. This operation works on an\nunmounted volume.",
+        "tags": [
+          "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-check/checkhealth/status/{volume_id}": {
+      "get": {
+        "operationId": "CheckHealthGetStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthGetStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get Status of a filesystem CheckHealth background operation on an unmounted\nvolume, if any",
+        "tags": [
+          "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-check/fixall": {
+      "post": {
+        "operationId": "FixAll",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "FixAll fixes all the issues reported in the response to CheckHealth API on\na filesystem. This operation works on an unmounted volume.",
+        "tags": [
+          "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-check/fixall/status/{volume_id}": {
+      "get": {
+        "operationId": "FixAllGetStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllGetStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get Status of a filesystem FixAll background operation on an unmounted\nvolume, if any",
+        "tags": [
+          "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-check/stop": {
+      "post": {
+        "operationId": "Stop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilesystemCheckStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckStopResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Stop a filesystem check background operation on an unmounted volume, if any",
+        "tags": [
+          "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/start": {
+      "post": {
+        "operationId": "Start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilesystemTrimStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimStartResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Start a filesystem Trim background operation on a mounted volume",
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/status/{volume_id}/{mount_path}": {
+      "get": {
+        "operationId": "GetStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "mount_path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimGetStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get Status of a filesystem Trim background operation on a mounted\nvolume, if any",
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/stop": {
+      "post": {
+        "operationId": "Stop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilesystemTrimStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimStopResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Stop a filesystem Trim background operation on a mounted volume, if any",
+        "tags": [
+          "OpenStorageFilesystemTrim"
         ]
       }
     },
