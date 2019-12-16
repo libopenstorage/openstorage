@@ -806,7 +806,8 @@
           "RESOURCE_TYPE_VOLUME",
           "RESOURCE_TYPE_NODE",
           "RESOURCE_TYPE_CLUSTER",
-          "RESOURCE_TYPE_DRIVE"
+          "RESOURCE_TYPE_DRIVE",
+          "RESOURCE_TYPE_POOL"
         ],
         "type": "string"
       },
