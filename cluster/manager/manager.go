@@ -422,22 +422,43 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 func (c *ClusterManager) watchDB(key string, opaque interface{},
 	kvp *kvdb.KVPair, watchErr error) error {
 
-	// restart watch incase of errors
-	if watchErr != nil && c.selfNode.Status != api.Status_STATUS_DECOMMISSION {
-		logrus.Errorf("ClusterManager watch stopped, restarting (err: %v)",
-			watchErr)
-		c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
-		return watchErr
+	var (
+		db          cluster.ClusterInfo
+		kvdbVersion uint64
+		err         error
+	)
+	if watchErr != nil {
+		if c.selfNode.Status == api.Status_STATUS_DECOMMISSION {
+			logrus.Warnf("Node is decommissioned, got watch error: %v", watchErr)
+			// node is decommissioned, no need to do anything
+			return watchErr
+		}
+
+		logrus.Warnf("ClusterManager watch error: %v, getting latest db directly", watchErr)
+		// since ClusterManager handles multiple updates at once, we should
+		// be ok to get the latest version of clusterDB and then starting
+		// watch from that version.
+		db, kvdbVersion, err = readClusterInfo()
+		if err != nil {
+			logrus.Errorf("ClusterManager could not get db directly: %v", err)
+			// can't do much, try restarting watch
+			c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+			return watchErr
+		} else {
+			// start the watch
+			c.kvdbWatchIndex = kvdbVersion
+			defer c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+		}
+	} else {
+		db, kvdbVersion, err = unmarshalClusterInfo(kvp)
+		if err != nil || len(db.NodeEntries) == 0 {
+			logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
+			// cluster database should not be nil, exit since we don't know what happened
+			os.Exit(1)
+		}
+		c.kvdbWatchIndex = kvdbVersion
 	}
 
-	db, kvdbVersion, err := unmarshalClusterInfo(kvp)
-	if err != nil || len(db.NodeEntries) == 0 {
-		logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
-		// cluster database should not be nil, exit since we don't know what happened
-		os.Exit(1)
-	}
-
-	c.kvdbWatchIndex = kvdbVersion
 	// Update all the listeners with the new db
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).UpdateCluster(&c.selfNode, &db)
