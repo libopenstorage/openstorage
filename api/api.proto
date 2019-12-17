@@ -79,6 +79,7 @@ enum ResourceType {
   RESOURCE_TYPE_NODE = 2;
   RESOURCE_TYPE_CLUSTER = 3;
   RESOURCE_TYPE_DRIVE = 4;
+  RESOURCE_TYPE_POOL = 5;
 }
 
 enum AlertActionType {
