@@ -1069,6 +1069,10 @@ func (r *CloudBackupHistoryResponse) ToSdkCloudBackupHistoryResponse() *SdkCloud
 }
 
 func (l *VolumeLocator) MergeVolumeSpecLabels(s *VolumeSpec) *VolumeLocator {
+	if l.VolumeLabels == nil && len(s.GetVolumeLabels()) > 0 {
+		l.VolumeLabels = make(map[string]string)
+	}
+
 	for k, v := range s.GetVolumeLabels() {
 		l.VolumeLabels[k] = v
 	}
