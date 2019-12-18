@@ -614,6 +614,72 @@
         ],
         "type": "string"
       },
+      "apiFastpathProtocol": {
+        "default": "FASTPATH_PROTO_UNKNOWN",
+        "enum": [
+          "FASTPATH_PROTO_UNKNOWN",
+          "FASTPATH_PROTO_NVMEOF_TCP",
+          "FASTPATH_PROTO_ISCSI"
+        ],
+        "type": "string"
+      },
+      "apiFastpathStatus": {
+        "default": "FASTPATH_UNKNOWN",
+        "description": "- FASTPATH_UNKNOWN: backward compatible state\n - FASTPATH_ACTIVE: fastpath activated and enabled\n - FASTPATH_INACTIVE: fastpath inactive\n - FASTPATH_UNSUPPORTED: fastpath unsupported, disabled\n - FASTPATH_PENDING: fastpath operation setup in progress\n - FASTPATH_ERRORED: fastpath error'd, possible stuck failure",
+        "enum": [
+          "FASTPATH_UNKNOWN",
+          "FASTPATH_ACTIVE",
+          "FASTPATH_INACTIVE",
+          "FASTPATH_UNSUPPORTED",
+          "FASTPATH_PENDING",
+          "FASTPATH_ERRORED"
+        ],
+        "title": "fastpath extensions",
+        "type": "string"
+      },
+      "apiFastpathTargetState": {
+        "properties": {
+          "acl": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "block": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "dev_id": {
+            "format": "uint64",
+            "type": "string"
+          },
+          "devpath": {
+            "type": "string"
+          },
+          "exported": {
+            "format": "boolean",
+            "title": "target info",
+            "type": "boolean"
+          },
+          "exported_device": {
+            "type": "string"
+          },
+          "imported": {
+            "format": "boolean",
+            "title": "initiator info",
+            "type": "boolean"
+          },
+          "node_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/apiFastpathProtocol"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -2613,6 +2679,10 @@
       },
       "apiSdkVolumeAttachOptions": {
         "properties": {
+          "fastpath": {
+            "title": "Indicates whether fastpath needs to be enabled during attach",
+            "type": "string"
+          },
           "secret_context": {
             "description": "It indicates the additional context which could be used to retrieve the secret.\nIn case of Kubernetes, this is the namespace in which the secret is created.",
             "type": "string"
@@ -3491,6 +3561,26 @@
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
+          "fp_promote": {
+            "format": "boolean",
+            "title": "Fastpath temporary promotion during attach",
+            "type": "boolean"
+          },
+          "fp_setup_on": {
+            "format": "int32",
+            "title": "Fastpath extensions\nfastpath setup on this node",
+            "type": "integer"
+          },
+          "fp_status": {
+            "$ref": "#/components/schemas/apiFastpathStatus"
+          },
+          "fp_targets": {
+            "items": {
+              "$ref": "#/components/schemas/apiFastpathTargetState"
+            },
+            "title": "Fastpath target state for each replica in replica set",
+            "type": "array"
+          },
           "fs_resize_required": {
             "description": "FsResizeRequired if an FS resize is required on the volume.",
             "format": "boolean",
@@ -3742,6 +3832,11 @@
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
+          "fp_preference": {
+            "format": "boolean",
+            "title": "fastpath extensions",
+            "type": "boolean"
+          },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
           },
@@ -3950,6 +4045,10 @@
           "export_spec": {
             "$ref": "#/components/schemas/apiExportSpec"
           },
+          "fastpath": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
           },
@@ -4017,7 +4116,7 @@
       },
       "apiVolumeState": {
         "default": "VOLUME_STATE_NONE",
-        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore",
+        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore\n - VOLUME_STATE_ATTACHING: Volume is in the process of attaching to a co-ordinator",
         "enum": [
           "VOLUME_STATE_NONE",
           "VOLUME_STATE_PENDING",
@@ -4028,7 +4127,8 @@
           "VOLUME_STATE_ERROR",
           "VOLUME_STATE_DELETED",
           "VOLUME_STATE_TRY_DETACHING",
-          "VOLUME_STATE_RESTORE"
+          "VOLUME_STATE_RESTORE",
+          "VOLUME_STATE_ATTACHING"
         ],
         "type": "string"
       },
