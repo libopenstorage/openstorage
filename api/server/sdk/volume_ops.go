@@ -694,6 +694,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
 	spec.Nodiscard = setSpecBool(vol.GetNodiscard(), req.GetNodiscard(), req.GetNodiscardOpt())
 
+	// fastpath extensions
+	if req.GetFastpathOpt() != nil {
+		spec.FpPreference = req.GetFastpath()
+	} else {
+		spec.FpPreference = vol.GetFpPreference()
+	}
+
 	if req.GetIoStrategy() != nil {
 		spec.IoStrategy = req.GetIoStrategy()
 	} else {

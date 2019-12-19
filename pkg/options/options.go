@@ -55,6 +55,10 @@ const (
 	// - Mount
 	// It indicates the mode in which volume must be mounted
 	OptionsAccessMode = "ACCESS_MODE"
+	// OptionsFastpath is an option to control IO path
+	// - Attach
+	// It indicates which IO path to use to complete user IO
+	OptionsFastpath = "FASTPATH_STATE"
 )
 
 // IsBoolOptionSet checks if a boolean option key is set
@@ -76,6 +80,7 @@ func NewVolumeAttachOptions(options map[string]string) *api.SdkVolumeAttachOptio
 		SecretName:    options[OptionsSecret],
 		SecretKey:     options[OptionsSecretKey],
 		SecretContext: options[OptionsSecretContext],
+		Fastpath:      options[OptionsFastpath],
 	}
 }
 

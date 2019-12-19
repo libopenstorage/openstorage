@@ -560,6 +560,98 @@
         ],
         "type": "string"
       },
+      "apiFastpathConfig": {
+        "properties": {
+          "promote": {
+            "format": "boolean",
+            "title": "Fastpath temporary promotion during attach",
+            "type": "boolean"
+          },
+          "replicas": {
+            "items": {
+              "$ref": "#/components/schemas/apiFastpathReplState"
+            },
+            "title": "Fastpath replica state for each replica in replica set",
+            "type": "array"
+          },
+          "setup_on": {
+            "format": "int32",
+            "title": "fastpath setup on this node",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/apiFastpathStatus"
+          }
+        },
+        "title": "FastpathConfig part of volume",
+        "type": "object"
+      },
+      "apiFastpathProtocol": {
+        "default": "FASTPATH_PROTO_UNKNOWN",
+        "enum": [
+          "FASTPATH_PROTO_UNKNOWN",
+          "FASTPATH_PROTO_NVMEOF_TCP",
+          "FASTPATH_PROTO_ISCSI"
+        ],
+        "type": "string"
+      },
+      "apiFastpathReplState": {
+        "properties": {
+          "acl": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "block": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "dev_id": {
+            "format": "uint64",
+            "type": "string"
+          },
+          "devpath": {
+            "type": "string"
+          },
+          "exported": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "exported_device": {
+            "title": "target info",
+            "type": "string"
+          },
+          "imported": {
+            "format": "boolean",
+            "title": "initiator info",
+            "type": "boolean"
+          },
+          "node_id": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "protocol": {
+            "$ref": "#/components/schemas/apiFastpathProtocol"
+          },
+          "target": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiFastpathStatus": {
+        "default": "FASTPATH_UNKNOWN",
+        "description": "- FASTPATH_UNKNOWN: backward compatible state\n - FASTPATH_ACTIVE: fastpath activated and enabled\n - FASTPATH_INACTIVE: fastpath inactive\n - FASTPATH_UNSUPPORTED: fastpath unsupported, disabled\n - FASTPATH_PENDING: fastpath operation setup in progress\n - FASTPATH_ERRORED: fastpath error'd, possible stuck failure",
+        "enum": [
+          "FASTPATH_UNKNOWN",
+          "FASTPATH_ACTIVE",
+          "FASTPATH_INACTIVE",
+          "FASTPATH_UNSUPPORTED",
+          "FASTPATH_PENDING",
+          "FASTPATH_ERRORED"
+        ],
+        "title": "fastpath extensions",
+        "type": "string"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -2409,6 +2501,10 @@
       },
       "apiSdkVolumeAttachOptions": {
         "properties": {
+          "fastpath": {
+            "title": "Indicates whether fastpath needs to be enabled during attach",
+            "type": "string"
+          },
           "secret_context": {
             "description": "It indicates the additional context which could be used to retrieve the secret.\nIn case of Kubernetes, this is the namespace in which the secret is created.",
             "type": "string"
@@ -3287,6 +3383,9 @@
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
+          "fpConfig": {
+            "$ref": "#/components/schemas/apiFastpathConfig"
+          },
           "fs_resize_required": {
             "description": "FsResizeRequired if an FS resize is required on the volume.",
             "format": "boolean",
@@ -3538,6 +3637,11 @@
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
+          "fp_preference": {
+            "format": "boolean",
+            "title": "fastpath extensions",
+            "type": "boolean"
+          },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
           },
@@ -3745,6 +3849,10 @@
           },
           "export_spec": {
             "$ref": "#/components/schemas/apiExportSpec"
+          },
+          "fastpath": {
+            "format": "boolean",
+            "type": "boolean"
           },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
