@@ -60,6 +60,9 @@ func (s *VolumeServer) Attach(
 		if len(req.GetOptions().GetSecretName()) != 0 {
 			options[mountattachoptions.OptionsSecret] = req.GetOptions().GetSecretName()
 		}
+		if len(req.GetOptions().GetFastpath()) != 0 {
+			options[mountattachoptions.OptionsFastpath] = req.GetOptions().GetFastpath()
+		}
 	}
 
 	devPath, err := s.driver(ctx).Attach(req.GetVolumeId(), options)
