@@ -135,8 +135,6 @@ enum VolumeState {
   VOLUME_STATE_TRY_DETACHING = 8;
   // Volume is undergoing restore
   VOLUME_STATE_RESTORE = 9;
-  // Volume is in the process of attaching to a co-ordinator
-  VOLUME_STATE_ATTACHING = 10;
 }
 
 // VolumeStatus represents a health status for a volume.
@@ -345,21 +343,34 @@ enum FastpathProtocol {
     FASTPATH_PROTO_ISCSI = 2;
 }
 
-message FastpathTargetState {
+message FastpathReplState {
     uint64 dev_id = 1;
     uint32 node_id = 2;
 
-    // target info
-    bool exported = 3;
+    FastpathProtocol protocol = 3;
     bool acl = 4;
-    string target = 5;
-    FastpathProtocol protocol = 6;
-    string exported_device = 7;
-    bool block = 8;
+
+    // target info
+    string exported_device = 5;
+    bool block = 6;
+    string target = 7;
+    bool exported = 8;
 
     // initiator info
     bool imported = 9;
     string devpath = 10;
+}
+
+// FastpathConfig part of volume
+message FastpathConfig {
+  // fastpath setup on this node
+  int32 setup_on = 1;
+  // Fastpath temporary promotion during attach
+  bool promote = 2;
+  // Fastpath consolidated current status across replicas
+  FastpathStatus status = 3;
+  // Fastpath replica state for each replica in replica set
+  repeated FastpathReplState replicas = 4;
 }
 
 // VolumeSpec has the properties needed to create a volume.
@@ -673,14 +684,7 @@ message Volume {
   // DetachTime time this device was detached.
   google.protobuf.Timestamp detach_time= 25;
   // Fastpath extensions
-  // fastpath setup on this node
-  int32 fp_setup_on = 26;
-  // Fastpath temporary promotion during attach
-  bool fp_promote = 27;
-  // Fastpath current status
-  FastpathStatus fp_status = 28;
-  // Fastpath target state for each replica in replica set
-  repeated FastpathTargetState fp_targets = 29;
+  FastpathConfig fpConfig = 26;
 }
 
 // Stats is a structure that represents last collected stats for a volume

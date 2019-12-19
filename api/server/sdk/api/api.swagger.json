@@ -614,6 +614,32 @@
         ],
         "type": "string"
       },
+      "apiFastpathConfig": {
+        "properties": {
+          "promote": {
+            "format": "boolean",
+            "title": "Fastpath temporary promotion during attach",
+            "type": "boolean"
+          },
+          "replicas": {
+            "items": {
+              "$ref": "#/components/schemas/apiFastpathReplState"
+            },
+            "title": "Fastpath replica state for each replica in replica set",
+            "type": "array"
+          },
+          "setup_on": {
+            "format": "int32",
+            "title": "fastpath setup on this node",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/apiFastpathStatus"
+          }
+        },
+        "title": "FastpathConfig part of volume",
+        "type": "object"
+      },
       "apiFastpathProtocol": {
         "default": "FASTPATH_PROTO_UNKNOWN",
         "enum": [
@@ -623,21 +649,7 @@
         ],
         "type": "string"
       },
-      "apiFastpathStatus": {
-        "default": "FASTPATH_UNKNOWN",
-        "description": "- FASTPATH_UNKNOWN: backward compatible state\n - FASTPATH_ACTIVE: fastpath activated and enabled\n - FASTPATH_INACTIVE: fastpath inactive\n - FASTPATH_UNSUPPORTED: fastpath unsupported, disabled\n - FASTPATH_PENDING: fastpath operation setup in progress\n - FASTPATH_ERRORED: fastpath error'd, possible stuck failure",
-        "enum": [
-          "FASTPATH_UNKNOWN",
-          "FASTPATH_ACTIVE",
-          "FASTPATH_INACTIVE",
-          "FASTPATH_UNSUPPORTED",
-          "FASTPATH_PENDING",
-          "FASTPATH_ERRORED"
-        ],
-        "title": "fastpath extensions",
-        "type": "string"
-      },
-      "apiFastpathTargetState": {
+      "apiFastpathReplState": {
         "properties": {
           "acl": {
             "format": "boolean",
@@ -656,10 +668,10 @@
           },
           "exported": {
             "format": "boolean",
-            "title": "target info",
             "type": "boolean"
           },
           "exported_device": {
+            "title": "target info",
             "type": "string"
           },
           "imported": {
@@ -679,6 +691,20 @@
           }
         },
         "type": "object"
+      },
+      "apiFastpathStatus": {
+        "default": "FASTPATH_UNKNOWN",
+        "description": "- FASTPATH_UNKNOWN: backward compatible state\n - FASTPATH_ACTIVE: fastpath activated and enabled\n - FASTPATH_INACTIVE: fastpath inactive\n - FASTPATH_UNSUPPORTED: fastpath unsupported, disabled\n - FASTPATH_PENDING: fastpath operation setup in progress\n - FASTPATH_ERRORED: fastpath error'd, possible stuck failure",
+        "enum": [
+          "FASTPATH_UNKNOWN",
+          "FASTPATH_ACTIVE",
+          "FASTPATH_INACTIVE",
+          "FASTPATH_UNSUPPORTED",
+          "FASTPATH_PENDING",
+          "FASTPATH_ERRORED"
+        ],
+        "title": "fastpath extensions",
+        "type": "string"
       },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
@@ -3561,25 +3587,8 @@
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
-          "fp_promote": {
-            "format": "boolean",
-            "title": "Fastpath temporary promotion during attach",
-            "type": "boolean"
-          },
-          "fp_setup_on": {
-            "format": "int32",
-            "title": "Fastpath extensions\nfastpath setup on this node",
-            "type": "integer"
-          },
-          "fp_status": {
-            "$ref": "#/components/schemas/apiFastpathStatus"
-          },
-          "fp_targets": {
-            "items": {
-              "$ref": "#/components/schemas/apiFastpathTargetState"
-            },
-            "title": "Fastpath target state for each replica in replica set",
-            "type": "array"
+          "fpConfig": {
+            "$ref": "#/components/schemas/apiFastpathConfig"
           },
           "fs_resize_required": {
             "description": "FsResizeRequired if an FS resize is required on the volume.",
@@ -4116,7 +4125,7 @@
       },
       "apiVolumeState": {
         "default": "VOLUME_STATE_NONE",
-        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore\n - VOLUME_STATE_ATTACHING: Volume is in the process of attaching to a co-ordinator",
+        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore",
         "enum": [
           "VOLUME_STATE_NONE",
           "VOLUME_STATE_PENDING",
@@ -4127,8 +4136,7 @@
           "VOLUME_STATE_ERROR",
           "VOLUME_STATE_DELETED",
           "VOLUME_STATE_TRY_DETACHING",
-          "VOLUME_STATE_RESTORE",
-          "VOLUME_STATE_ATTACHING"
+          "VOLUME_STATE_RESTORE"
         ],
         "type": "string"
       },
