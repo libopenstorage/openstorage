@@ -321,6 +321,58 @@ message ExportSpec {
    string export_options = 2;
 }
 
+// fastpath extensions
+enum FastpathStatus {
+	// backward compatible state
+	FASTPATH_UNKNOWN = 0;
+	// fastpath activated and enabled
+	FASTPATH_ACTIVE = 1;
+	// fastpath inactive
+	FASTPATH_INACTIVE = 2;
+	// fastpath unsupported, disabled
+	FASTPATH_UNSUPPORTED = 3;
+	// fastpath operation setup in progress
+	FASTPATH_PENDING = 4;
+	// fastpath error'd, possible stuck failure
+	FASTPATH_ERRORED = 5;
+}
+
+enum FastpathProtocol {
+    FASTPATH_PROTO_UNKNOWN = 0;
+    FASTPATH_PROTO_NVMEOF_TCP = 1;
+    FASTPATH_PROTO_ISCSI = 2;
+}
+
+message FastpathReplState {
+    uint64 dev_id = 1;
+    uint32 node_id = 2;
+
+    FastpathProtocol protocol = 3;
+    bool acl = 4;
+
+    // target info
+    string exported_device = 5;
+    bool block = 6;
+    string target = 7;
+    bool exported = 8;
+
+    // initiator info
+    bool imported = 9;
+    string devpath = 10;
+}
+
+// FastpathConfig part of volume
+message FastpathConfig {
+  // fastpath setup on this node
+  int32 setup_on = 1;
+  // Fastpath temporary promotion during attach
+  bool promote = 2;
+  // Fastpath consolidated current status across replicas
+  FastpathStatus status = 3;
+  // Fastpath replica state for each replica in replica set
+  repeated FastpathReplState replicas = 4;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -389,6 +441,8 @@ message VolumeSpec {
   Ownership ownership = 33;
   // ExportSpec defines how the volume should be exported.
   ExportSpec export_spec = 34;
+  // fastpath extensions
+  bool fp_preference = 35;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -436,6 +490,8 @@ message VolumeSpecUpdate {
   IoStrategy io_strategy = 28;
   // ExportSpec volume export spec
   oneof export_spec_opt { ExportSpec export_spec = 29; }
+  // fastpath preference
+  oneof fastpath_opt { bool fastpath = 30; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -627,6 +683,8 @@ message Volume {
   google.protobuf.Timestamp attach_time = 24;
   // DetachTime time this device was detached.
   google.protobuf.Timestamp detach_time= 25;
+  // Fastpath extensions
+  FastpathConfig fpConfig = 26;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -2433,6 +2491,8 @@ message SdkVolumeAttachOptions {
   // It indicates the additional context which could be used to retrieve the secret.
   // In case of Kubernetes, this is the namespace in which the secret is created.
   string secret_context = 3;
+  // Indicates whether fastpath needs to be enabled during attach
+  string fastpath = 4;
 }
 
 // Defines a request to mount a volume to the node receiving this request
