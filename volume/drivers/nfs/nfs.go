@@ -72,17 +72,17 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:           volume.IONotSupported,
-		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:        volume.StatsNotSupported,
-		QuiesceDriver:      volume.QuiesceNotSupported,
-		nfsServers:         servers,
-		CredsDriver:        volume.CredsNotSupported,
-		nfsPath:            path,
-		mounter:            mounter,
-		CloudBackupDriver:  volume.CloudBackupNotSupported,
-		CloudMigrateDriver: volume.CloudMigrateNotSupported,
-		FilesystemTrimDriver: volume.FilesystemTrimNotSupported,
+		IODriver:              volume.IONotSupported,
+		StoreEnumerator:       common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:           volume.StatsNotSupported,
+		QuiesceDriver:         volume.QuiesceNotSupported,
+		nfsServers:            servers,
+		CredsDriver:           volume.CredsNotSupported,
+		nfsPath:               path,
+		mounter:               mounter,
+		CloudBackupDriver:     volume.CloudBackupNotSupported,
+		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
+		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 	}
 

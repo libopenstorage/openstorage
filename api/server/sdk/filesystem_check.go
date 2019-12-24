@@ -20,13 +20,14 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"github.com/libopenstorage/openstorage/volume"
 )
+
 // FilesystemTrimServer is an implementation of the gRPC OpenStorageFilesystemTrim interface
 type FilesystemCheckServer struct {
-	server      serverAccessor
+	server serverAccessor
 }
 
 func (s *FilesystemCheckServer) driver(ctx context.Context) volume.VolumeDriver {
@@ -70,6 +71,7 @@ func (s *FilesystemCheckServer) CheckHealthGetStatus(
 
 	return r, err
 }
+
 // Start a filesystem trim operation on a mounted volume
 func (s *FilesystemCheckServer) FixAll(
 	ctx context.Context,

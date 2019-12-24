@@ -4,10 +4,8 @@ import (
 	"context"
 	"testing"
 
-
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
-
 )
 
 func TestSdkFilesystemCheckCheckHealth(t *testing.T) {
@@ -23,19 +21,19 @@ func TestSdkFilesystemCheckCheckHealth(t *testing.T) {
 		VolumeId: testVolumeId,
 	}
 
-	testMockResp := &api.SdkFilesystemCheckCheckHealthResponse {
-		Status: testStatus,
-		Message : testMessage,
+	testMockResp := &api.SdkFilesystemCheckCheckHealthResponse{
+		Status:  testStatus,
+		Message: testMessage,
 	}
 
 	// Create response
-		s.MockDriver().
-			EXPECT().
-			FilesystemCheckCheckHealth(&api.SdkFilesystemCheckCheckHealthRequest{
-				VolumeId: testVolumeId,
-			}).
-			Return(testMockResp, nil).
-			Times(1)
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckCheckHealth(&api.SdkFilesystemCheckCheckHealthRequest{
+			VolumeId: testVolumeId,
+		}).
+		Return(testMockResp, nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
@@ -46,8 +44,6 @@ func TestSdkFilesystemCheckCheckHealth(t *testing.T) {
 	assert.Equal(t, resp.Status, testMockResp.Status)
 	assert.Equal(t, resp.Message, testMockResp.Message)
 }
-
-
 
 func TestSdkFilesystemCheckCheckHealthGetStatus(t *testing.T) {
 
@@ -62,19 +58,19 @@ func TestSdkFilesystemCheckCheckHealthGetStatus(t *testing.T) {
 		VolumeId: testVolumeId,
 	}
 
-	testMockResp := &api.SdkFilesystemCheckCheckHealthGetStatusResponse {
-		Status: testStatus,
-		Message : testMessage,
+	testMockResp := &api.SdkFilesystemCheckCheckHealthGetStatusResponse{
+		Status:  testStatus,
+		Message: testMessage,
 	}
 
 	// Create response
-		s.MockDriver().
-			EXPECT().
-			FilesystemCheckCheckHealthGetStatus(&api.SdkFilesystemCheckCheckHealthGetStatusRequest{
-				VolumeId: testVolumeId,
-			}).
-			Return(testMockResp, nil).
-			Times(1)
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckCheckHealthGetStatus(&api.SdkFilesystemCheckCheckHealthGetStatusRequest{
+			VolumeId: testVolumeId,
+		}).
+		Return(testMockResp, nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
@@ -85,7 +81,6 @@ func TestSdkFilesystemCheckCheckHealthGetStatus(t *testing.T) {
 	assert.Equal(t, resp.Status, testMockResp.Status)
 	assert.Equal(t, resp.Message, testMockResp.Message)
 }
-
 
 func TestSdkFilesystemCheckFixAll(t *testing.T) {
 
@@ -100,19 +95,19 @@ func TestSdkFilesystemCheckFixAll(t *testing.T) {
 		VolumeId: testVolumeId,
 	}
 
-	testMockResp := &api.SdkFilesystemCheckFixAllResponse {
-		Status: testStatus,
-		Message : testMessage,
+	testMockResp := &api.SdkFilesystemCheckFixAllResponse{
+		Status:  testStatus,
+		Message: testMessage,
 	}
 
 	// Create response
-		s.MockDriver().
-			EXPECT().
-			FilesystemCheckFixAll(&api.SdkFilesystemCheckFixAllRequest{
-				VolumeId: testVolumeId,
-			}).
-			Return(testMockResp, nil).
-			Times(1)
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckFixAll(&api.SdkFilesystemCheckFixAllRequest{
+			VolumeId: testVolumeId,
+		}).
+		Return(testMockResp, nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
@@ -123,8 +118,6 @@ func TestSdkFilesystemCheckFixAll(t *testing.T) {
 	assert.Equal(t, resp.Status, testMockResp.Status)
 	assert.Equal(t, resp.Message, testMockResp.Message)
 }
-
-
 
 func TestSdkFilesystemCheckFixAllGetStatus(t *testing.T) {
 
@@ -139,19 +132,19 @@ func TestSdkFilesystemCheckFixAllGetStatus(t *testing.T) {
 		VolumeId: testVolumeId,
 	}
 
-	testMockResp := &api.SdkFilesystemCheckFixAllGetStatusResponse {
-		Status: testStatus,
-		Message : testMessage,
+	testMockResp := &api.SdkFilesystemCheckFixAllGetStatusResponse{
+		Status:  testStatus,
+		Message: testMessage,
 	}
 
 	// Create response
-		s.MockDriver().
-			EXPECT().
-			FilesystemCheckFixAllGetStatus(&api.SdkFilesystemCheckFixAllGetStatusRequest{
-				VolumeId: testVolumeId,
-			}).
-			Return(testMockResp, nil).
-			Times(1)
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckFixAllGetStatus(&api.SdkFilesystemCheckFixAllGetStatusRequest{
+			VolumeId: testVolumeId,
+		}).
+		Return(testMockResp, nil).
+		Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
@@ -174,17 +167,16 @@ func TestSdkFilesystemCheckStop(t *testing.T) {
 		VolumeId: testVolumeId,
 	}
 
-	testMockResp := &api.SdkFilesystemCheckStopResponse {
-	}
+	testMockResp := &api.SdkFilesystemCheckStopResponse{}
 
 	// Create response
-		s.MockDriver().
-			EXPECT().
-			FilesystemCheckStop(&api.SdkFilesystemCheckStopRequest{
-				VolumeId: testVolumeId,
-			}).
-			Return(testMockResp, nil).
-			Times(1)
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckStop(&api.SdkFilesystemCheckStopRequest{
+			VolumeId: testVolumeId,
+		}).
+		Return(testMockResp, nil).
+		Times(1)
 	// Setup client
 	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
 
@@ -192,4 +184,3 @@ func TestSdkFilesystemCheckStop(t *testing.T) {
 	_, err := c.Stop(context.Background(), req)
 	assert.NoError(t, err)
 }
-

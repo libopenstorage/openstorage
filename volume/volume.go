@@ -205,7 +205,7 @@ type FilesystemTrimDriver interface {
 // FilesystemCheckDriver interface exposes APIs to manage filesystem check
 // operation on a volume
 type FilesystemCheckDriver interface {
-	// FilesystemCheckReport starts a filesystem check background operation to 
+	// FilesystemCheckReport starts a filesystem check background operation to
 	// report the issues found on the filesystem of a specified volume
 	FilesystemCheckCheckHealth(request *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error)
 	// FilesystemCheckCheckHealthGetStatus returns the status of a filesystem check
@@ -222,7 +222,6 @@ type FilesystemCheckDriver interface {
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
 }
 
-
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -233,7 +232,7 @@ type ProtoDriver interface {
 	CloudBackupDriver
 	CloudMigrateDriver
 	FilesystemTrimDriver
-	FilesystemCheckDriver	
+	FilesystemCheckDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver

@@ -87,14 +87,14 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		return nil, err
 	}
 	inst := &driver{
-		IODriver:           volume.IONotSupported,
-		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kv),
-		StatsDriver:        volume.StatsNotSupported,
-		QuiesceDriver:      volume.QuiesceNotSupported,
-		CloudMigrateDriver: volume.CloudMigrateNotSupported,
-		FilesystemTrimDriver: volume.FilesystemTrimNotSupported,
+		IODriver:              volume.IONotSupported,
+		StoreEnumerator:       common.NewDefaultStoreEnumerator(Name, kv),
+		StatsDriver:           volume.StatsNotSupported,
+		QuiesceDriver:         volume.QuiesceNotSupported,
+		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
+		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		kv:                 kv,
+		kv: kv,
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()

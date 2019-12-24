@@ -30,8 +30,8 @@ type volumeClient struct {
 
 func newVolumeClient(c *client.Client) volume.VolumeDriver {
 	return &volumeClient{
-		IODriver: volume.IONotSupported,
-		FilesystemTrimDriver: volume.FilesystemTrimNotSupported,
+		IODriver:              volume.IONotSupported,
+		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		c: c}
 }

@@ -172,23 +172,22 @@ type sdkGrpcServer struct {
 	alertHandler   alerts.FilterDeleter
 
 	// gRPC Handlers
-	clusterServer        *ClusterServer
-	nodeServer           *NodeServer
-	volumeServer         *VolumeServer
-	objectstoreServer    *ObjectstoreServer
-	schedulePolicyServer *SchedulePolicyServer
-	clusterPairServer    *ClusterPairServer
-	cloudBackupServer    *CloudBackupServer
-	credentialServer     *CredentialServer
-	identityServer       *IdentityServer
-	clusterDomainsServer *ClusterDomainsServer
-	roleServer           role.RoleManager
-	alertsServer         api.OpenStorageAlertsServer
-	policyServer         policy.PolicyManager
-	storagePoolServer    api.OpenStoragePoolServer
-	filesystemTrimServer api.OpenStorageFilesystemTrimServer
+	clusterServer         *ClusterServer
+	nodeServer            *NodeServer
+	volumeServer          *VolumeServer
+	objectstoreServer     *ObjectstoreServer
+	schedulePolicyServer  *SchedulePolicyServer
+	clusterPairServer     *ClusterPairServer
+	cloudBackupServer     *CloudBackupServer
+	credentialServer      *CredentialServer
+	identityServer        *IdentityServer
+	clusterDomainsServer  *ClusterDomainsServer
+	roleServer            role.RoleManager
+	alertsServer          api.OpenStorageAlertsServer
+	policyServer          policy.PolicyManager
+	storagePoolServer     api.OpenStoragePoolServer
+	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
-
 }
 
 // Interface check

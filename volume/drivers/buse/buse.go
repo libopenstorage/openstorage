@@ -100,12 +100,12 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		IODriver: volume.IONotSupported,
 		StoreEnumerator: common.NewDefaultStoreEnumerator(Name,
 			kvdb.Instance()),
-		StatsDriver:        volume.StatsNotSupported,
-		QuiesceDriver:      volume.QuiesceNotSupported,
-		CredsDriver:        volume.CredsNotSupported,
-		CloudBackupDriver:  volume.CloudBackupNotSupported,
-		CloudMigrateDriver: volume.CloudMigrateNotSupported,
-		FilesystemTrimDriver: volume.FilesystemTrimNotSupported,
+		StatsDriver:           volume.StatsNotSupported,
+		QuiesceDriver:         volume.QuiesceNotSupported,
+		CredsDriver:           volume.CredsNotSupported,
+		CloudBackupDriver:     volume.CloudBackupNotSupported,
+		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
+		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
