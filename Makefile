@@ -410,3 +410,5 @@ mockgen:
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
+	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
+	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
