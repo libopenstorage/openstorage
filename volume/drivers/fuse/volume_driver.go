@@ -26,8 +26,6 @@ type volumeDriver struct {
 	volume.CredsDriver
 	volume.CloudBackupDriver
 	volume.CloudMigrateDriver
-	volume.FilesystemTrimDriver
-	volume.FilesystemCheckDriver
 	name        string
 	baseDirPath string
 	provider    Provider
@@ -51,8 +49,6 @@ func newVolumeDriver(
 		volume.CredsNotSupported,
 		volume.CloudBackupNotSupported,
 		volume.CloudMigrateNotSupported,
-		volume.FilesystemTrimNotSupported,
-		volume.FilesystemCheckNotSupported,
 		name,
 		baseDirPath,
 		provider,

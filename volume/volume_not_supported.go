@@ -28,12 +28,6 @@ var (
 	// CloudMigrateNotSupported implements cloudMigrateDriver by returning
 	// Not supported error
 	CloudMigrateNotSupported = &cloudMigrateNotSupported{}
-	// FilesystemTrimNotSupported implements FilesystemTrimDriver by returning
-	// Not supported error
-	FilesystemTrimNotSupported = &filesystemTrimNotSupported{}
-	// FilesystemCheckNotSupported implements FilesystemCheckDriver by returning
-	// Not supported error
-	FilesystemCheckNotSupported = &filesystemCheckNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -247,35 +241,5 @@ func (cl *cloudMigrateNotSupported) CloudMigrateCancel(request *api.CloudMigrate
 	return ErrNotSupported
 }
 func (cl *cloudMigrateNotSupported) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error) {
-	return nil, ErrNotSupported
-}
-
-type filesystemTrimNotSupported struct{}
-
-func (cl *filesystemTrimNotSupported) FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemTrimNotSupported) FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
-	return nil, ErrNotSupported
-}
-
-type filesystemCheckNotSupported struct{}
-
-func (cl *filesystemCheckNotSupported) FilesystemCheckCheckHealth(request *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckCheckHealthGetStatus(request *api.SdkFilesystemCheckCheckHealthGetStatusRequest) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckFixAll(request *api.SdkFilesystemCheckFixAllRequest) (*api.SdkFilesystemCheckFixAllResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckFixAllGetStatus(request *api.SdkFilesystemCheckFixAllGetStatusRequest) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
 	return nil, ErrNotSupported
 }

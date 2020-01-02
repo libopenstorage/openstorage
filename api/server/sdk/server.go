@@ -172,22 +172,20 @@ type sdkGrpcServer struct {
 	alertHandler   alerts.FilterDeleter
 
 	// gRPC Handlers
-	clusterServer         *ClusterServer
-	nodeServer            *NodeServer
-	volumeServer          *VolumeServer
-	objectstoreServer     *ObjectstoreServer
-	schedulePolicyServer  *SchedulePolicyServer
-	clusterPairServer     *ClusterPairServer
-	cloudBackupServer     *CloudBackupServer
-	credentialServer      *CredentialServer
-	identityServer        *IdentityServer
-	clusterDomainsServer  *ClusterDomainsServer
-	roleServer            role.RoleManager
-	alertsServer          api.OpenStorageAlertsServer
-	policyServer          policy.PolicyManager
-	storagePoolServer     api.OpenStoragePoolServer
-	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
-	filesystemCheckServer api.OpenStorageFilesystemCheckServer
+	clusterServer        *ClusterServer
+	nodeServer           *NodeServer
+	volumeServer         *VolumeServer
+	objectstoreServer    *ObjectstoreServer
+	schedulePolicyServer *SchedulePolicyServer
+	clusterPairServer    *ClusterPairServer
+	cloudBackupServer    *CloudBackupServer
+	credentialServer     *CredentialServer
+	identityServer       *IdentityServer
+	clusterDomainsServer *ClusterDomainsServer
+	roleServer           role.RoleManager
+	alertsServer         api.OpenStorageAlertsServer
+	policyServer         policy.PolicyManager
+	storagePoolServer    api.OpenStoragePoolServer
 }
 
 // Interface check
@@ -415,13 +413,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.clusterDomainsServer = &ClusterDomainsServer{
 		server: s,
 	}
-	s.filesystemTrimServer = &FilesystemTrimServer{
-		server: s,
-	}
-	s.filesystemCheckServer = &FilesystemCheckServer{
-		server: s,
-	}
-
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
 	s.storagePoolServer = config.StoragePoolServer
@@ -482,8 +473,6 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterPairServer(grpcServer, s.clusterPairServer)
 		api.RegisterOpenStoragePolicyServer(grpcServer, s.policyServer)
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
-		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
-		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
 		if s.storagePoolServer != nil {
 			api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
 		}

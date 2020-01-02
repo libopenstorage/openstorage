@@ -23,17 +23,11 @@ const (
 
 type volumeClient struct {
 	volume.IODriver
-	volume.FilesystemTrimDriver
-	volume.FilesystemCheckDriver
 	c *client.Client
 }
 
 func newVolumeClient(c *client.Client) volume.VolumeDriver {
-	return &volumeClient{
-		IODriver:              volume.IONotSupported,
-		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
-		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		c:                     c}
+	return &volumeClient{volume.IONotSupported, c}
 }
 
 // String description of this driver.
