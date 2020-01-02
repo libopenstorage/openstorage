@@ -65,6 +65,8 @@ type driver struct {
 	volume.CredsDriver
 	volume.CloudBackupDriver
 	volume.CloudMigrateDriver
+	volume.FilesystemTrimDriver
+	volume.FilesystemCheckDriver
 	consistencyGroup string
 	project          string
 	varray           string
@@ -112,19 +114,21 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	d := &driver{
-		IODriver:           volume.IONotSupported,
-		StoreEnumerator:    common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
-		StatsDriver:        volume.StatsNotSupported,
-		QuiesceDriver:      volume.QuiesceNotSupported,
-		CredsDriver:        volume.CredsNotSupported,
-		CloudBackupDriver:  volume.CloudBackupNotSupported,
-		CloudMigrateDriver: volume.CloudMigrateNotSupported,
-		consistencyGroup:   consistencyGroup,
-		project:            project,
-		varray:             varray,
-		vpool:              vpool,
-		url:                restUrl,
-		creds:              url.UserPassword(user, pass),
+		IODriver:              volume.IONotSupported,
+		StoreEnumerator:       common.NewDefaultStoreEnumerator(Name, kvdb.Instance()),
+		StatsDriver:           volume.StatsNotSupported,
+		QuiesceDriver:         volume.QuiesceNotSupported,
+		CredsDriver:           volume.CredsNotSupported,
+		CloudBackupDriver:     volume.CloudBackupNotSupported,
+		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
+		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
+		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		consistencyGroup:      consistencyGroup,
+		project:               project,
+		varray:                varray,
+		vpool:                 vpool,
+		url:                   restUrl,
+		creds:                 url.UserPassword(user, pass),
 		httpClient: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
