@@ -1303,7 +1303,7 @@ service OpenStorageFilesystemTrim {
   rpc GetStatus(SdkFilesystemTrimGetStatusRequest)
     returns (SdkFilesystemTrimGetStatusResponse){
       option(google.api.http) = {
-        get: "/v1/filesystem-trim/status/{volume_id}/{mount_path}"
+        get: "/v1/filesystem-trim/status"
       };
     }
 
@@ -1363,7 +1363,7 @@ service OpenStorageFilesystemCheck {
   rpc CheckHealthGetStatus(SdkFilesystemCheckCheckHealthGetStatusRequest)
     returns (SdkFilesystemCheckCheckHealthGetStatusResponse){
       option(google.api.http) = {
-        get: "/v1/filesystem-check/checkhealth/status/{volume_id}"
+        get: "/v1/filesystem-check/checkhealth/status"
       };
     }
 
@@ -1382,7 +1382,7 @@ service OpenStorageFilesystemCheck {
   rpc FixAllGetStatus(SdkFilesystemCheckFixAllGetStatusRequest)
     returns (SdkFilesystemCheckFixAllGetStatusResponse){
       option(google.api.http) = {
-        get: "/v1/filesystem-check/fixall/status/{volume_id}"
+        get: "/v1/filesystem-check/fixall/status"
       };
     }
 
