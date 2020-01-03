@@ -607,6 +607,17 @@ func (m *Mounter) Unmount(
 		m.Unlock()
 		logrus.Warnf("Unable to unmount device %q path %q: %v",
 			devPath, path, ErrEnoent.Error())
+		logrus.Infof("Found %v mounts in mounter's cache: ", len(m.mounts))
+		logrus.Infof("Mounter has the following mountpoints: ")
+		for dev, info := range m.mounts {
+			logrus.Infof("For Device %v: Info: %v", dev, info)
+			if info == nil {
+				continue
+			}
+			for _, path := range info.Mountpoint {
+				logrus.Infof("\t Mountpath: %v Rootpath: %v", path.Path, path.Root)
+			}
+		}
 		return ErrEnoent
 	}
 	m.Unlock()
