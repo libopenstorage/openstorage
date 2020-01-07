@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.69.0 - Tech Preview (10/12/2019)
+
+* Add support for filesystem trim background operation
+* Add support for filesystem check background operation
+
 ### v0.68.0 - Tech Preview (11/01/2019)
 
 * Add ExportSpec to Volume object
