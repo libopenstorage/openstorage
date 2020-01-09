@@ -500,7 +500,7 @@ func (s CredentialServer) isPermitted(
 	}
 
 	// If ownership is missing then it is also public
-	if ownership == nil || ownership.IsPublic() {
+	if ownership == nil || ownership.IsPublic(accessType) {
 		return true
 	}
 
