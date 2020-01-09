@@ -2415,37 +2415,6 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 
 }
 
-func TestMiddlewareVolumeDeleteFailure(t *testing.T) {
-	testVolDriver := newTestServerSdk(t)
-	defer testVolDriver.Stop()
-
-	_, mockSecrets, mc := getSecretsMock(t)
-	defer mc.Finish()
-	lsecrets.SetInstance(mockSecrets)
-
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true)
-	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
-	defer unixServer.Close()
-	defer portServer.Close()
-
-	time.Sleep(1 * time.Second)
-
-	// Send a request without the sched user agent
-	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, "")
-	assert.NoError(t, err, "Unexpected error on NewDriverClient")
-	driverclient := volumeclient.VolumeDriver(c)
-	err = driverclient.Delete("foobar")
-	assert.Error(t, err, "Expected an error on Delete")
-
-	// Send a request for a non existent volume
-	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
-	assert.NoError(t, err, "Unexpected error on NewDriverClient")
-	driverclient = volumeclient.VolumeDriver(c)
-	err = driverclient.Delete("foobar")
-	assert.Error(t, err, "Expected an error on Delete")
-
-}
-
 func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()

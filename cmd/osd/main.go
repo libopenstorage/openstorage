@@ -483,9 +483,10 @@ func start(c *cli.Context) error {
 			Cluster:       cm,
 			StoragePolicy: sp,
 			Security: &sdk.SecurityConfig{
-				Role:           rm,
-				Tls:            tlsConfig,
-				Authenticators: authenticators,
+				Role:                         rm,
+				Tls:                          tlsConfig,
+				Authenticators:               authenticators,
+				PublicVolumeCreationDisabled: !c.Bool("public-volume-create-allowed"),
 			},
 		})
 		if err != nil {
