@@ -27,6 +27,9 @@ type InterceptorContextkey string
 const (
 	// Key to store in the token claims in gRPC context
 	InterceptorContextTokenKey InterceptorContextkey = "tokenclaims"
+
+	// PublicUsername
+	PublicUsername = "system.public"
 )
 
 // UserInfo contains information about the user taken from the token
@@ -37,6 +40,8 @@ type UserInfo struct {
 	Username string
 	// Claims holds the claims required by the storage system
 	Claims Claims
+	// Public marks whether the user is a public one
+	Public bool
 }
 
 // ContextSaveUserInfo saves user information in the context for other functions to consume
@@ -49,4 +54,20 @@ func ContextSaveUserInfo(ctx context.Context, u *UserInfo) context.Context {
 func NewUserInfoFromContext(ctx context.Context) (*UserInfo, bool) {
 	u, ok := ctx.Value(InterceptorContextTokenKey).(*UserInfo)
 	return u, ok
+}
+
+// NewPublicUser creates UserInfo for the system public user
+func NewPublicUser() *UserInfo {
+	return &UserInfo{
+		Claims: Claims{
+			Roles:  []string{PublicUsername},
+			Groups: []string{"*"},
+		},
+		Public: true,
+	}
+}
+
+// IsPublic returns whether or not the UserInfo is for a public user
+func (ui *UserInfo) IsPublic() bool {
+	return ui.Public
 }

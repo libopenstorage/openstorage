@@ -596,6 +596,11 @@ message Ownership {
     // This type automatically provides Read and Write access also.
     Admin = 2;
   }
+  // PublicAccessControl allows assigning public ownership
+  message PublicAccessControl {
+    // AccessType declares which level of public access is allowed
+    AccessType type = 1;
+  }
 
   message AccessControl {
     // Group access to resource which must match the group set in the
@@ -615,6 +620,8 @@ message Ownership {
     // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
     // _username1_ and _username2_ are allowed.
     map <string, AccessType> collaborators = 2;
+    // Public access to resource may be assigned for access by the public userd
+    PublicAccessControl public = 3;
   }
 
   // Username of owner.
@@ -3932,7 +3939,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 1;
   }
 
   // The following cannot be set to use the enum Version because the REST

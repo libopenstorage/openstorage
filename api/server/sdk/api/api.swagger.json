@@ -104,6 +104,9 @@
             },
             "description": "Group access to resource which must match the group set in the\nauthorization token.\nCan be set by the owner or the system administrator only.\nPossible values are:\n1. no groups: Means no groups are given access.\n2. `[\"*\"]`: All groups are allowed.\n3. `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n_group1_ and _group2_ are allowed.",
             "type": "object"
+          },
+          "public": {
+            "$ref": "#/components/schemas/OwnershipPublicAccessControl"
           }
         },
         "type": "object"
@@ -117,6 +120,15 @@
           "Admin"
         ],
         "type": "string"
+      },
+      "OwnershipPublicAccessControl": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/OwnershipAccessType"
+          }
+        },
+        "title": "PublicAccessControl allows assigning public ownership",
+        "type": "object"
       },
       "SdkCloudMigrateStartRequestMigrateAllVolumes": {
         "title": "Defines a migration request for all volumes in a cluster",
@@ -4185,7 +4197,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.0"
+    "version": "0.69.1"
   },
   "openapi": "3.0.0",
   "paths": {

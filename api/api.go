@@ -1077,7 +1077,7 @@ func (v *VolumeSpec) IsPermitted(ctx context.Context, accessType Ownership_Acces
 }
 
 func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Ownership_AccessType) bool {
-	if v.IsPublic() {
+	if v.IsPublic(accessType) {
 		return true
 	}
 
@@ -1087,8 +1087,8 @@ func (v *VolumeSpec) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Own
 	return true
 }
 
-func (v *VolumeSpec) IsPublic() bool {
-	return v.GetOwnership() == nil || v.GetOwnership().IsPublic()
+func (v *VolumeSpec) IsPublic(accessType Ownership_AccessType) bool {
+	return v.GetOwnership() == nil || v.GetOwnership().IsPublic(accessType)
 }
 
 // GetCloneCreatorOwnership returns the appropriate ownership for the
@@ -1098,7 +1098,6 @@ func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, 
 
 	// If there is user information, then auth is enabled
 	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
-
 		// Check if the owner is the one who cloned it
 		if o != nil && o.IsOwner(userinfo) {
 			return o, false
@@ -1115,7 +1114,7 @@ func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, 
 // Check access permission of SdkStoragePolicy Objects
 
 func (s *SdkStoragePolicy) IsPermitted(ctx context.Context, accessType Ownership_AccessType) bool {
-	if s.IsPublic() {
+	if s.IsPublic(accessType) {
 		return true
 	}
 
@@ -1131,7 +1130,7 @@ func (s *SdkStoragePolicy) IsPermitted(ctx context.Context, accessType Ownership
 }
 
 func (s *SdkStoragePolicy) IsPermittedFromUserInfo(user *auth.UserInfo, accessType Ownership_AccessType) bool {
-	if s.IsPublic() {
+	if s.IsPublic(accessType) {
 		return true
 	}
 
@@ -1141,8 +1140,8 @@ func (s *SdkStoragePolicy) IsPermittedFromUserInfo(user *auth.UserInfo, accessTy
 	return true
 }
 
-func (s *SdkStoragePolicy) IsPublic() bool {
-	return s.GetOwnership() == nil || s.GetOwnership().IsPublic()
+func (s *SdkStoragePolicy) IsPublic(accessType Ownership_AccessType) bool {
+	return s.GetOwnership() == nil || s.GetOwnership().IsPublic(accessType)
 }
 
 func CloudBackupRequestedStateToSdkCloudBackupRequestedState(

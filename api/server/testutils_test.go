@@ -231,6 +231,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 			Authenticators: map[string]auth.Authenticator{
 				"testcode": selfsignedJwt,
 			},
+			PublicVolumeCreationDisabled: true,
 		},
 	})
 	assert.Nil(t, err)
