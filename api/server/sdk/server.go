@@ -73,6 +73,9 @@ type SecurityConfig struct {
 	//     "openstorage-sdk-auth: selfSigned,
 	// }
 	Authenticators map[string]auth.Authenticator
+	// PublicVolumeCreationDisabled controls whether or not we can create
+	// public volumes with no ownership in an authenticated system.
+	PublicVolumeCreationDisabled bool
 }
 
 // ServerConfig provides the configuration to the SDK server

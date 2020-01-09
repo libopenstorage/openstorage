@@ -1,6 +1,9 @@
 # Changelog
 
 ## Releases
+### v0.42.25 - Tech Preview (1/9/2020)
+
+* Add support for public user access
 
 ### v0.42.24 - Tech Preview (11/01/2019)
 

@@ -101,7 +101,6 @@ func (s *VolumeServer) create(
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
 	v, err := util.VolumeFromName(s.driver(ctx), volName)
-
 	// If the volume is still there but it is being delete, then wait until it is removed
 	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
 		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
