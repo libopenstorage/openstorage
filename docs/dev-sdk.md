@@ -28,6 +28,27 @@ All SDK APIs and values must satisfy by the following:
 
 ## Creating new API
 
+###  API Development style-guide
+SDK API is following well-known [google protocol buffers style guide](https://developers.google.com/protocol-buffers/docs/style) please follow it when modifying API.
+
+Based on abovementioned style guide every developer should follow additional guidelines:
+* Use messages as argument/return extensibility mechanism, when in doubt, give each RPC its own request/response messages.
+* Use `google.protobuf.Empty` type only for request/response which could not be extended in future  e. g. `Delete` calls.
+* If you need to have primitive type filed nullable just wrappers e. g. `google.protobuf.DoubleValue`, `google.protobuf.StringValue`, etc. For time use `google.protobuf.Timestamp`.
+* RPCs could not be overloaded (the same name with different arguments), RPC is uniquely distinguished by its name `package.Service/Method`.
+* Use `google.golang.org/grpc/status` package for sending error details (it is based on [`google.rpc.Status`](https://cloud.google.com/tasks/docs/reference/rpc/google.rpc)), [encode error details in messages if needed](https://github.com/googleapis/googleapis/blob/master/google/rpc/error_details.proto)
+* Please avoid field mask, custom options, custom plugins, etc... proto file should be able to compiled by standard protobufs [compiler](https://github.com/protocolbuffers/protobuf)
+* introduce http binding for RPCs using `google.api.http` option, e.g.
+```proto
+    rpc Delete(SdkAlertsDeleteRequest)
+      returns (SdkAlertsDeleteResponse) {
+        option(google.api.http) = {
+          post: "/v1/alerts"
+          body: "*"
+        };
+    }
+```
+
 ### Version
 Please request what the version number of the SDK should be changed to if at all.
 
