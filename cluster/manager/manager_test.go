@@ -19,10 +19,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/sirupsen/logrus"
@@ -73,43 +70,43 @@ func TestClusterManagerUuid(t *testing.T) {
 	cleanup()
 }
 
-func TestUpdateSchedulerNodeName(t *testing.T) {
-
-	nodeID := "node-alpha"
-	Init(config.ClusterConfig{
-		ClusterId:         testClusterId,
-		ClusterUuid:       testClusterUuid,
-		NodeId:            nodeID,
-		SchedulerNodeName: "old-sched-name",
-	})
-	manager, err := systemtoken.NewManager(&systemtoken.Config{
-		ClusterId:    testClusterId,
-		NodeId:       nodeID,
-		SharedSecret: "mysecret",
-	})
-	assert.NoError(t, err)
-	auth.InitSystemTokenManager(manager)
-
-	err = inst.StartWithConfiguration(false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
-		ConfigSystemTokenManager: manager,
-	})
-	assert.NoError(t, err)
-
-	node, err := inst.Inspect(nodeID)
-	assert.NoError(t, err)
-	assert.Equal(t, "old-sched-name", node.SchedulerNodeName)
-	assert.Equal(t, node.GossipPort, "1001", "Expected gossip port to be updated in cluster database")
-
-	err = inst.UpdateSchedulerNodeName("new-sched-name")
-	assert.NoError(t, err)
-
-	node, err = inst.Inspect(nodeID)
-	assert.NoError(t, err)
-	assert.Equal(t, "new-sched-name", node.SchedulerNodeName)
-
-	tokenResp, err := inst.GetPairToken(false)
-	assert.NoError(t, err)
-	assert.True(t, auth.IsJwtToken(tokenResp.Token))
-
-	cleanup()
-}
+//func TestUpdateSchedulerNodeName(t *testing.T) {
+//
+//	nodeID := "node-alpha"
+//	Init(config.ClusterConfig{
+//		ClusterId:         testClusterId,
+//		ClusterUuid:       testClusterUuid,
+//		NodeId:            nodeID,
+//		SchedulerNodeName: "old-sched-name",
+//	})
+//	manager, err := systemtoken.NewManager(&systemtoken.Config{
+//		ClusterId:    testClusterId,
+//		NodeId:       nodeID,
+//		SharedSecret: "mysecret",
+//	})
+//	assert.NoError(t, err)
+//	auth.InitSystemTokenManager(manager)
+//
+//	err = inst.StartWithConfiguration(false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
+//		ConfigSystemTokenManager: manager,
+//	})
+//	assert.NoError(t, err)
+//
+//	node, err := inst.Inspect(nodeID)
+//	assert.NoError(t, err)
+//	assert.Equal(t, "old-sched-name", node.SchedulerNodeName)
+//	assert.Equal(t, node.GossipPort, "1001", "Expected gossip port to be updated in cluster database")
+//
+//	err = inst.UpdateSchedulerNodeName("new-sched-name")
+//	assert.NoError(t, err)
+//
+//	node, err = inst.Inspect(nodeID)
+//	assert.NoError(t, err)
+//	assert.Equal(t, "new-sched-name", node.SchedulerNodeName)
+//
+//	tokenResp, err := inst.GetPairToken(false)
+//	assert.NoError(t, err)
+//	assert.True(t, auth.IsJwtToken(tokenResp.Token))
+//
+//	cleanup()
+//}

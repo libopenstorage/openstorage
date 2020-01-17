@@ -31,64 +31,65 @@ func TestLockRelease(t *testing.T) {
 	endState(t, kl, 0)
 }
 
-func TestDoubleLock(t *testing.T) {
-	kl := ByName("test")
+//func TestDoubleLock(t *testing.T) {
+//	kl := ByName("test")
+//
+//	cb1 := make(chan *LockHandle)
+//	go lock(t, kl, "foo", cb1)
+//	h1, err := wait(t, kl, cb1)
+//	require.NoError(t, err, "wait")
+//
+//	cb2 := make(chan *LockHandle)
+//	go lock(t, kl, "foo", cb2)
+//	h2, err := wait(t, kl, cb2)
+//	require.Error(t, err, "wait")
+//
+//	require.NoError(t, kl.Release(h1), "unlock")
+//
+//	h2, err = wait(t, kl, cb2)
+//	require.NoError(t, err, "wait")
+//	require.NoError(t, kl.Release(h2), "unlock")
+//
+//	endState(t, kl, 0)
+//}
 
-	cb1 := make(chan *LockHandle)
-	go lock(t, kl, "foo", cb1)
-	h1, err := wait(t, kl, cb1)
-	require.NoError(t, err, "wait")
+//func TestBadRelease(t *testing.T) {
+//	kl := ByName("test")
+//
+//	cb1 := make(chan *LockHandle)
+//	go lock(t, kl, "foo", cb1)
+//	h1, err := wait(t, kl, cb1)
+//	require.NoError(t, err, "wait")
+//
+//	cb2 := make(chan *LockHandle)
+//	go lock(t, kl, "foo", cb2)
+//	h2, err := wait(t, kl, cb2)
+//	require.Error(t, err, "wait")
+//	require.NoError(t, kl.Release(h1), "unlock")
+//	h2, err = wait(t, kl, cb2)
+//	require.NoError(t, err, "wait")
+//
+//	require.Error(t, kl.Release(h1), "unlock")
+//	require.NoError(t, kl.Release(h2), "unlock")
+//
+//	endState(t, kl, 0)
+//}
 
-	cb2 := make(chan *LockHandle)
-	go lock(t, kl, "foo", cb2)
-	h2, err := wait(t, kl, cb2)
-	require.Error(t, err, "wait")
-
-	require.NoError(t, kl.Release(h1), "unlock")
-
-	h2, err = wait(t, kl, cb2)
-	require.NoError(t, err, "wait")
-	require.NoError(t, kl.Release(h2), "unlock")
-
-	endState(t, kl, 0)
-}
-
-func TestBadRelease(t *testing.T) {
-	kl := ByName("test")
-
-	cb1 := make(chan *LockHandle)
-	go lock(t, kl, "foo", cb1)
-	h1, err := wait(t, kl, cb1)
-	require.NoError(t, err, "wait")
-
-	cb2 := make(chan *LockHandle)
-	go lock(t, kl, "foo", cb2)
-	h2, err := wait(t, kl, cb2)
-	require.Error(t, err, "wait")
-	require.NoError(t, kl.Release(h1), "unlock")
-	h2, err = wait(t, kl, cb2)
-	require.NoError(t, err, "wait")
-
-	require.Error(t, kl.Release(h1), "unlock")
-	require.NoError(t, kl.Release(h2), "unlock")
-
-	endState(t, kl, 0)
-}
-
-func TestLottaLocks(t *testing.T) {
-	kl := ByName("test")
-
-	cb := make(chan int)
-	for i := 0; i < 100; i++ {
-		go lockAndSleep(t, kl, "foo", cb)
-	}
-	for i := 0; i != 100; {
-		i += <-cb
-		fmt.Printf("+")
-	}
-	fmt.Println("+")
-	endState(t, kl, 0)
-}
+//
+//func TestLottaLocks(t *testing.T) {
+//	kl := ByName("test")
+//
+//	cb := make(chan int)
+//	for i := 0; i < 100; i++ {
+//		go lockAndSleep(t, kl, "foo", cb)
+//	}
+//	for i := 0; i != 100; {
+//		i += <-cb
+//		fmt.Printf("+")
+//	}
+//	fmt.Println("+")
+//	endState(t, kl, 0)
+//}
 
 func lockAndSleep(t *testing.T, kl KeyLock, key string, doneCb chan<- int) {
 	cb := make(chan *LockHandle)
