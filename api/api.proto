@@ -3224,6 +3224,10 @@ message SdkCloudBackupRestoreRequest {
   string node_id = 4;
   // TaskId of the task performing this restore
   string task_id = 5;
+  // Modifiable Restore volume spec
+  RestoreVolumeSpec spec = 6;
+  // RestoreVolume locator
+  VolumeLocator locator = 7;
 }
 
 // Defines a response when restoring a volume from a backup stored by
@@ -3938,7 +3942,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 70;
+    Minor = 71;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4437,4 +4441,45 @@ enum EnforcementType {
   required = 0;
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
+}
+
+// RestoreSpec allows some of the restore volume properties of to be modified
+// while restoring cloud baackup.
+message RestoreVolumeSpec {
+  // HaLevel specifies the number of copies of data.
+  int64 ha_level = 5;
+  // Cos specifies the relative class of service.
+  CosType cos = 6;
+  // IoProfile provides a hint about application using this volume.
+  IoProfile io_profile = 7;
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  uint32 snapshot_interval = 9;
+  // (deprecated, do not use) VolumeLabels configuration labels
+  map<string, string> volume_labels = 10;
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 12;
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  uint32 aggregation_level = 13;
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  string snapshot_schedule = 16;
+  // Scale allows autocreation of volumes.
+  uint32 scale = 17;
+  // Group identifies a consistency group
+  Group group = 21;
+  // GroupEnforced is true if consistency group creation is enforced.
+  bool group_enforced = 22;
+  // Journal is true if data for the volume goes into the journal.
+  bool journal = 25;
+  // QueueDepth defines the desired block device queue depth
+  uint32 queue_depth = 27;
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 30;
+  // PlacementStrategy specifies a spec to indicate where to place the volume.
+  VolumePlacementStrategy placement_strategy = 31;
+  // StoragePolicy if applied/specified while creating volume
+  string storage_policy = 32;
+  // Ownership
+  Ownership ownership = 33;
+  // ExportSpec defines how the volume should be exported.
+  ExportSpec export_spec = 34;
 }

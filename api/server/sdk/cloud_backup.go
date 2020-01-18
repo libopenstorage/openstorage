@@ -224,6 +224,8 @@ func (s *CloudBackupServer) Restore(
 		CredentialUUID:    credId,
 		NodeID:            req.GetNodeId(),
 		Name:              req.GetTaskId(),
+		Spec:              req.GetSpec(),
+		Locator:           req.GetLocator(),
 	})
 	if err != nil {
 		if err == volume.ErrExist {

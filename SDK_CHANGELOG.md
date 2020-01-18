@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.71.0 - Tech Preview (1/9/2020)
+
+* Add Restore volume spec for Cloud Backup restore api
+
 ### v0.70.0 - Tech Preview (1/9/2020)
 
 * Add support for public user access
