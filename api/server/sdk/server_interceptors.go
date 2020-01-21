@@ -54,8 +54,16 @@ func (s *sdkGrpcServer) rwlockIntercepter(
 
 // Authenticate user and add authorization information back in the context
 func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
+	var token string
+	var err error
+
+	// public call attempted, add system.public user
+	if auth.IsPublic(ctx) {
+		return auth.ContextSaveUserInfo(ctx, auth.NewPublicUser()), nil
+	}
+
 	// Obtain token from metadata in the context
-	token, err := grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
+	token, err = grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
 	if err != nil {
 		return nil, err
 	}
@@ -140,6 +148,12 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 		"groups":   claims.Groups,
 		"method":   info.FullMethod,
 	})
+
+	// If a public create call is attempted, but public volume creation is disabled, then deny
+	if auth.IsPublic(ctx) && s.config.Security.PublicVolumeCreationDisabled &&
+		info.FullMethod == "/openstorage.api.OpenStorageVolume/Create" {
+		return nil, status.Errorf(codes.PermissionDenied, "Public volume creation is disabled")
+	}
 
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
