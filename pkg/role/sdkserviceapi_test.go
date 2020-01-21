@@ -35,6 +35,45 @@ func TestPrefixWithName(t *testing.T) {
 	assert.Equal(t, prefixWithName("hello"), rolePrefix+"/"+"hello")
 }
 
+func TestMatchDenyRule(t *testing.T) {
+
+	tests := []struct {
+		matchFound bool
+		role       string
+		s          string
+	}{
+		{
+			matchFound: false,
+			role:       "",
+			s:          "",
+		},
+		{
+			matchFound: true,
+			role:       "!*",
+			s:          "test",
+		},
+		{
+			matchFound: true,
+			role:       "!test",
+			s:          "test",
+		},
+		{
+			matchFound: true,
+			role:       "!!!!!!!!!!!!!*******************test****",
+			s:          "test",
+		},
+		{
+			matchFound: false,
+			role:       "test",
+			s:          "test",
+		},
+	}
+
+	for _, test := range tests {
+		assert.Equal(t, test.matchFound, denyRule(test.role, test.s))
+	}
+}
+
 func TestMatchRule(t *testing.T) {
 
 	tests := []struct {
@@ -522,6 +561,87 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		roles      []string
 	}{
 		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Enumerate",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"*"},
+					Apis:     []string{"!enumerate"},
+				},
+			},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Enumerate",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"!volumes"},
+					Apis:     []string{"*"},
+				},
+			},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"volumes"},
+					Apis:     []string{"*", "!create"},
+				},
+			},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"volumes"},
+					Apis:     []string{"!create", "*"},
+				},
+			},
+		},
+		{
+			// Denials have more priority
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"volumes"},
+					Apis:     []string{"!*", "create"},
+				},
+			},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"*", "!*"},
+					Apis:     []string{"*"},
+				},
+			},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"*"},
+					Apis:     []string{"*", "!*"},
+				},
+			},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageVolumes/Create",
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"volumes"},
+					Apis:     []string{"*"},
+				},
+			},
+		},
+		{
 			denied:     false,
 			fullmethod: "/openstorage.api.OpenStorageVolumes/Enumerate",
 			roles:      []string{"system.admin"},
@@ -604,7 +724,7 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		}
 
 		if test.denied {
-			assert.NotNil(t, err, test.fullmethod, rules)
+			assert.NotNil(t, err, test.fullmethod, fmt.Sprintf("%v", test))
 		} else {
 			assert.Nil(t, err, test.fullmethod, rules)
 		}
