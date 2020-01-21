@@ -1,6 +1,9 @@
 # Changelog
 
 ## Releases
+### v0.70.0 - Tech Preview (1/15/2020)
+
+* Add auto to IoProfile
 
 ### v0.69.0 - Tech Preview (10/12/2019)
 
