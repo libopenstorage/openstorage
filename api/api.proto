@@ -3560,6 +3560,9 @@ message SdkCloudBackupSchedEnumerateResponse{
 //
 // Values can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.
 //
+// Services and APIs can also be denied by prefixing the value with a `!`. Note that on rule conflicts,
+// denial will always be chosen.
+//
 // ### Examples
 //
 // * Allow any call:
@@ -3586,6 +3589,14 @@ message SdkCloudBackupSchedEnumerateResponse{
 //     Apis: ["*enumerate*"]
 //   - Services: ["*"]
 //     Apis: ["inspect*"]
+// ```
+// 
+// * Allow all volume call except create
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*", "!create"]
 // ```
 //
 message SdkRule {
@@ -3939,7 +3950,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 1;
+    Patch = 3;
   }
 
   // The following cannot be set to use the enum Version because the REST
