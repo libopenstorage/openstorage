@@ -447,7 +447,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		} else {
 			// start the watch
 			c.kvdbWatchIndex = kvdbVersion
-			defer c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+			defer c.startClusterDBWatch(0, kvdb.Instance())
 		}
 	} else {
 		db, kvdbVersion, err = unmarshalClusterInfo(kvp)
@@ -455,6 +455,10 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 			logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
 			// cluster database should not be nil, exit since we don't know what happened
 			os.Exit(1)
+		}
+		if kvdbVersion <= c.kvdbWatchIndex {
+			// skip processing version update
+			return nil
 		}
 		c.kvdbWatchIndex = kvdbVersion
 	}
