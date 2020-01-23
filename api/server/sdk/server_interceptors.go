@@ -149,12 +149,6 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 		"method":   info.FullMethod,
 	})
 
-	// If a public create call is attempted, but public volume creation is disabled, then deny
-	if auth.IsPublic(ctx) && s.config.Security.PublicVolumeCreationDisabled &&
-		info.FullMethod == "/openstorage.api.OpenStorageVolume/Create" {
-		return nil, status.Errorf(codes.PermissionDenied, "Public volume creation is disabled")
-	}
-
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
 		logger.Warning("Access denied")

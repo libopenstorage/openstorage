@@ -50,7 +50,7 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 			RequestAuthenticated:         false,
 
 			ExpectSuccess: false,
-			ExpectedError: "rpc error: code = PermissionDenied desc = Public volume creation is disabled",
+			ExpectedError: "rpc error: code = PermissionDenied desc = Access to /openstorage.api.OpenStorageVolume/Create denied: rpc error: code = PermissionDenied desc = Access denied to roles: [system.public]",
 		},
 		{
 			TestName:                     "2-1: Authenticated volume creation should succeed with public vol creation enabled",
@@ -73,8 +73,33 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 	s := newTestServerAuth(t)
 	defer s.Stop()
 	for _, tc := range tt {
-		fmt.Printf("Running %s\n", tc.TestName)
-		s.server.config.Security.PublicVolumeCreationDisabled = tc.PublicVolumeCreationDisabled
+		volumeAPIs := "*"
+		if tc.PublicVolumeCreationDisabled {
+			volumeAPIs = "!create"
+		}
+		rc := api.NewOpenStorageRoleClient(s.Conn())
+		updateCtx, err := contextWithToken(context.Background(), "jim.stevens", "system.admin", "mysecret")
+		assert.NoError(t, err, "Expected context with token to succeed")
+		_, err = rc.Update(updateCtx, &api.SdkRoleUpdateRequest{
+			Role: &api.SdkRole{
+				Name: "system.public",
+				Rules: []*api.SdkRule{
+					&api.SdkRule{
+						Services: []string{"volume"},
+						Apis:     []string{volumeAPIs},
+					},
+					&api.SdkRule{
+						Services: []string{"mountattach", "cloudbackup", "migrate"},
+						Apis:     []string{"*"},
+					},
+					&api.SdkRule{
+						Services: []string{"identity"},
+						Apis:     []string{"version"},
+					},
+				},
+			},
+		})
+		assert.NoError(t, err, "Expected role update to succeed")
 
 		name := "myvol"
 		size := uint64(1234)
@@ -109,7 +134,6 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 
 		// Call create with or without auth
 		ctx := context.Background()
-		var err error
 		if tc.RequestAuthenticated {
 			ctx, err = contextWithToken(ctx, "jim.stevens", "system.admin", "mysecret")
 			assert.NoError(t, err)

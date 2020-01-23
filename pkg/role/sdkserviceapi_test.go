@@ -197,11 +197,11 @@ func TestSdkRuleCreateCollisionSystemRole(t *testing.T) {
 	s, err := NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
-	for systemRole, rules := range defaultRoles {
+	for roleName, defaultRole := range defaultRoles {
 		req := &api.SdkRoleCreateRequest{
 			Role: &api.SdkRole{
-				Name:  systemRole,
-				Rules: rules,
+				Name:  roleName,
+				Rules: defaultRole.rules,
 			},
 		}
 		_, err := s.Create(context.Background(), req)
@@ -451,19 +451,23 @@ func TestSdkRuleUpdateCollisionSystemRole(t *testing.T) {
 	s, err := NewSdkRoleManager(kv)
 	assert.NoError(t, err)
 
-	for systemRole, rules := range defaultRoles {
+	for roleName, defaultRole := range defaultRoles {
 		req := &api.SdkRoleUpdateRequest{
 			Role: &api.SdkRole{
-				Name:  systemRole,
-				Rules: rules,
+				Name:  roleName,
+				Rules: defaultRole.rules,
 			},
 		}
 		_, err := s.Update(context.Background(), req)
-		assert.Error(t, err)
-		serverError, ok := status.FromError(err)
-		assert.True(t, ok)
-		assert.Equal(t, serverError.Code(), codes.InvalidArgument)
-		assert.Contains(t, serverError.Message(), "System role")
+		if defaultRole.mutable {
+			assert.NoError(t, err)
+		} else {
+			assert.Error(t, err)
+			serverError, ok := status.FromError(err)
+			assert.True(t, ok)
+			assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+			assert.Contains(t, serverError.Message(), "System role")
+		}
 	}
 
 }
