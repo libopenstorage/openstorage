@@ -342,6 +342,9 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	if req.Options[options.OptionsRedirectDetach] == "true" {
 		detachOptions.Redirect = true
 	}
+	if req.Options["FASTPATH_STATE"] != "" {
+		attachOptions.Fastpath = req.Options["FASTPATH_STATE"]
+	}
 
 	unmountOptions := &api.SdkVolumeUnmountOptions{}
 	if req.Options["DELETE_AFTER_UNMOUNT"] == "true" {
@@ -559,6 +562,18 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			HaLevel: spec.HaLevel,
 		}
 	}
+	if spec.ExportSpec != nil {
+		newSpec.ExportSpecOpt = &api.VolumeSpecUpdate_ExportSpec{
+			ExportSpec: spec.ExportSpec,
+		}
+	}
+
+	if spec.FpPreference != vol.Spec.FpPreference {
+		newSpec.FastpathOpt = &api.VolumeSpecUpdate_Fastpath{
+			Fastpath: spec.FpPreference,
+		}
+	}
+
 	return newSpec
 }
 

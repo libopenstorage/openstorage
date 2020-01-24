@@ -188,6 +188,40 @@ type CloudMigrateDriver interface {
 	CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*api.CloudMigrateStatusResponse, error)
 }
 
+// FilesystemTrimDriver interface exposes APIs to manage filesystem trim
+// operation on a volume
+type FilesystemTrimDriver interface {
+	// FilesystemTrimStart starts a filesystem trim background operation on a
+	// specified volume
+	FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error)
+	// FilesystemTrimGetStatus returns the status of a filesystem trim
+	// background operation on a specified volume, if any
+	FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error)
+	// FilesystemTrimGetStatus stops a filesystem trim background operation on
+	// a specified volume, if any
+	FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error)
+}
+
+// FilesystemCheckDriver interface exposes APIs to manage filesystem check
+// operation on a volume
+type FilesystemCheckDriver interface {
+	// FilesystemCheckReport starts a filesystem check background operation to
+	// report the issues found on the filesystem of a specified volume
+	FilesystemCheckCheckHealth(request *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error)
+	// FilesystemCheckCheckHealthGetStatus returns the status of a filesystem check
+	// background operation on the filesystem of a specified volume, if any.
+	FilesystemCheckCheckHealthGetStatus(request *api.SdkFilesystemCheckCheckHealthGetStatusRequest) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error)
+	// FilesystemCheckFixAll starts a filesystem check background operation to
+	// fix all the filesystem consistency issues in the specified volume
+	FilesystemCheckFixAll(request *api.SdkFilesystemCheckFixAllRequest) (*api.SdkFilesystemCheckFixAllResponse, error)
+	// FilesystemCheckFixAllGetStatus returns the status of a filesystem check
+	// background operation on the filesystem of a specified volume, if any.
+	FilesystemCheckFixAllGetStatus(request *api.SdkFilesystemCheckFixAllGetStatusRequest) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error)
+	// FilesystemCheckStop stops the filesystem check background operation on
+	// the filesystem of a specified volume, if any.
+	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -197,6 +231,8 @@ type ProtoDriver interface {
 	CredsDriver
 	CloudBackupDriver
 	CloudMigrateDriver
+	FilesystemTrimDriver
+	FilesystemCheckDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver

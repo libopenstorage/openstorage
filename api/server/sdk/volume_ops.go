@@ -694,6 +694,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	spec.Journal = setSpecBool(vol.GetJournal(), req.GetJournal(), req.GetJournalOpt())
 	spec.Nodiscard = setSpecBool(vol.GetNodiscard(), req.GetNodiscard(), req.GetNodiscardOpt())
 
+	// fastpath extensions
+	if req.GetFastpathOpt() != nil {
+		spec.FpPreference = req.GetFastpath()
+	} else {
+		spec.FpPreference = vol.GetFpPreference()
+	}
+
 	if req.GetIoStrategy() != nil {
 		spec.IoStrategy = req.GetIoStrategy()
 	} else {
@@ -775,6 +782,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.QueueDepth = req.GetQueueDepth()
 	} else {
 		spec.QueueDepth = vol.GetQueueDepth()
+	}
+
+	// ExportSpec
+	if req.GetExportSpec() != nil {
+		spec.ExportSpec = req.GetExportSpec()
+	} else {
+		spec.ExportSpec = vol.GetExportSpec()
 	}
 
 	return spec
@@ -1025,12 +1039,36 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		spec.Nodiscard = req.GetNodiscard()
 	}
 
-	// Io_strategy
+	// IoStrategy
 	if req.GetIoStrategy() != nil {
 		if isValidate && vol.GetIoStrategy() != req.GetIoStrategy() {
 			return vol, errMsg
 		}
 		spec.IoStrategy = req.GetIoStrategy()
+	}
+
+	// ExportSpec
+	if req.GetExportSpec() != nil {
+		if isValidate && vol.GetExportSpec() != req.GetExportSpec() {
+			return vol, errMsg
+		}
+		if exportPolicy := vol.GetExportSpec(); exportPolicy == nil {
+			spec.ExportSpec = req.GetExportSpec()
+		} else {
+			// If the spec has an ExportSpec then only modify the fields that came in
+			// the request.
+			reqExportSpec := req.GetExportSpec()
+			if reqExportSpec.ExportProtocol != api.ExportProtocol_INVALID {
+				spec.ExportSpec.ExportProtocol = reqExportSpec.ExportProtocol
+			}
+			if len(reqExportSpec.ExportOptions) != 0 {
+				if reqExportSpec.ExportOptions == api.SpecExportOptionsEmpty {
+					spec.ExportSpec.ExportOptions = ""
+				} else {
+					spec.ExportSpec.ExportOptions = reqExportSpec.ExportOptions
+				}
+			}
+		}
 	}
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil

@@ -403,8 +403,10 @@ push-docker-images: docker-images
 # to the SDK Version.
 # For master (until released), major should be 0 and patch should be 0.
 # For release branches, major and minor should be frozen.
+#
+# If you think you need to change this you are most likely doing something wrong
 sdk-check-version:
-	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
+	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=69
 
 mockgen:
 	go get github.com/golang/mock/gomock
@@ -412,3 +414,5 @@ mockgen:
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
+	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
+	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient

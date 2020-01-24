@@ -53,6 +53,13 @@ const (
 	SpecIoProfile            = "io_profile"
 	SpecAsyncIo              = "async_io"
 	SpecEarlyAck             = "early_ack"
+	SpecExportProtocol       = "export"
+	SpecExportProtocolISCSI  = "iscsi"
+	SpecExportProtocolPXD    = "pxd"
+	SpecExportProtocolNFS    = "nfs"
+	SpecExportProtocolCustom = "custom"
+	SpecExportOptions        = "export_options"
+	SpecExportOptionsEmpty   = "empty_export_options"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
@@ -1050,6 +1057,10 @@ func (r *CloudBackupHistoryResponse) ToSdkCloudBackupHistoryResponse() *SdkCloud
 }
 
 func (l *VolumeLocator) MergeVolumeSpecLabels(s *VolumeSpec) *VolumeLocator {
+	if l.VolumeLabels == nil && len(s.GetVolumeLabels()) > 0 {
+		l.VolumeLabels = make(map[string]string)
+	}
+
 	for k, v := range s.GetVolumeLabels() {
 		l.VolumeLabels[k] = v
 	}

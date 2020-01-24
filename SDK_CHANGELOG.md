@@ -2,13 +2,18 @@
 
 ## Releases
 
+### v0.69.0 - Tech Preview (10/12/2019)
+
+* Add support for filesystem trim background operation
+* Add support for filesystem check background operation
+
 ### v0.68.0 - Tech Preview (11/01/2019)
 
-* Add proxy flag for credentials
+* Add ExportSpec to Volume object
 
 ### v0.67.0 - Tech Preview (10/29/2019)
 
-* Add fields last_attached and last_detached to the Volume object.
+* Add proxy flag for credentials
 
 ### v0.66.0 - Tech Preview (10/22/2019)
 
