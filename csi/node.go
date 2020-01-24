@@ -171,48 +171,13 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 				req.GetVolumeId())
 		}
 	}
-	vol := vols[0]
 
-	if !vol.IsAttached() {
-		logrus.Infof("Volume %s was already unmounted", req.GetVolumeId())
-		return &csi.NodeUnpublishVolumeResponse{}, nil
-	}
-
-	// Get information about the target since the request does not
-	// tell us if it is for block or mount point.
-	// https://github.com/container-storage-interface/spec/issues/285
-	fileInfo, err := os.Lstat(req.GetTargetPath())
-	if err != nil && os.IsNotExist(err) {
-		// For idempotency, return that there is nothing to unmount
-		logrus.Infof("NodeUnpublishVolume on target path %s but it does "+
-			"not exist, returning there is nothing to do", req.GetTargetPath())
-		return &csi.NodeUnpublishVolumeResponse{}, nil
-	} else if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unknown error while verifying target location %s: %s",
+	// Mount volume onto the path
+	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+		logrus.Infof("Unable to unmount volume %s onto %s: %s",
+			req.GetVolumeId(),
 			req.GetTargetPath(),
 			err.Error())
-	}
-
-	// Check if it is block or not
-	if fileInfo.Mode()&os.ModeSymlink != 0 {
-		// If block, we just need to remove the link.
-		os.Remove(req.GetTargetPath())
-	} else {
-		if !fileInfo.IsDir() {
-			return nil, status.Errorf(
-				codes.NotFound,
-				"Target location %s is not a directory", req.GetTargetPath())
-		}
-
-		// Mount volume onto the path
-		if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-			logrus.Infof("Unable to unmount volume %s onto %s: %s",
-				req.GetVolumeId(),
-				req.GetTargetPath(),
-				err.Error())
-		}
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
