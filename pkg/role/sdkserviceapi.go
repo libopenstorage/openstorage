@@ -32,77 +32,99 @@ import (
 const (
 	rolePrefix   = "cluster/roles"
 	invalidChars = "/ "
+	negMatchChar = "!"
+
+	systemAdminRoleName  = "system.admin"
+	systemViewRoleName   = "system.view"
+	systemUserRoleName   = "system.user"
+	systemPublicRoleName = "system.public"
 )
+
+type defaultRole struct {
+	rules   []*api.SdkRule
+	mutable bool
+}
 
 var (
 	// Default roles. Should be prefixed by `system.` to avoid collisions
-	defaultRoles = map[string][]*api.SdkRule{
+	defaultRoles = map[string]*defaultRole{
 		// system:admin role can run any command
-		"system.admin": {
-			&api.SdkRule{
-				Services: []string{"*"},
-				Apis:     []string{"*"},
+		systemAdminRoleName: &defaultRole{
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"*"},
+					Apis:     []string{"*"},
+				},
 			},
+			mutable: false,
 		},
 
 		// system:view role can only run read-only commands
-		"system.view": {
-			&api.SdkRule{
-				Services: []string{"*"},
-				Apis: []string{
-					"*enumerate*",
-					"inspect*",
-					"stats",
-					"status",
-					"validate",
-					"capacityusage",
+		systemViewRoleName: &defaultRole{
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"*"},
+					Apis: []string{
+						"*enumerate*",
+						"inspect*",
+						"stats",
+						"status",
+						"validate",
+						"capacityusage",
+					},
+				},
+				&api.SdkRule{
+					Services: []string{"identity"},
+					Apis:     []string{"*"},
 				},
 			},
-			&api.SdkRule{
-				Services: []string{"identity"},
-				Apis:     []string{"*"},
-			},
+			mutable: false,
 		},
-
 		// system:user role can only access volume lifecycle commands
-		"system.user": {
-			&api.SdkRule{
-				Services: []string{
-					"volume",
-					"cloudbackup",
-					"credentials",
-					"objectstore",
-					"schedulepolicy",
-					"mountattach",
-					"migrate",
+		systemUserRoleName: &defaultRole{
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{
+						"volume",
+						"cloudbackup",
+						"credentials",
+						"objectstore",
+						"schedulepolicy",
+						"mountattach",
+						"migrate",
+					},
+					Apis: []string{"*"},
 				},
-				Apis: []string{"*"},
-			},
-			&api.SdkRule{
-				Services: []string{"identity"},
-				Apis:     []string{"*"},
-			},
-			&api.SdkRule{
-				Services: []string{"policy"},
-				Apis: []string{
-					"*enumerate*",
-					// This will allow system.user to view default policy also
-					"*inspect*",
+				&api.SdkRule{
+					Services: []string{"identity"},
+					Apis:     []string{"*"},
+				},
+				&api.SdkRule{
+					Services: []string{"policy"},
+					Apis: []string{
+						"*enumerate*",
+						// This will allow system.user to view default policy also
+						"*inspect*",
+					},
 				},
 			},
+			mutable: false,
 		},
 
 		// system:public role is used for any unauthenticated user.
 		// They can only use standard volume lifecycle commands.
-		"system.public": {
-			&api.SdkRule{
-				Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
-				Apis:     []string{"*"},
+		systemPublicRoleName: &defaultRole{
+			rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
+					Apis:     []string{"*"},
+				},
+				&api.SdkRule{
+					Services: []string{"identity"},
+					Apis:     []string{"version"},
+				},
 			},
-			&api.SdkRule{
-				Services: []string{"identity"},
-				Apis:     []string{"version"},
-			},
+			mutable: true,
 		},
 	}
 )
@@ -118,6 +140,15 @@ var _ RoleManager = &SdkRoleManager{}
 // Simple function which creates key for Kvdb
 func prefixWithName(name string) string {
 	return rolePrefix + "/" + name
+}
+
+// Determines if the rules deny string s
+func denyRule(rule, s string) bool {
+	if strings.HasPrefix(rule, negMatchChar) {
+		return matchRule(strings.TrimSpace(strings.Join(strings.Split(rule, negMatchChar), "")), s)
+	}
+
+	return false
 }
 
 // Determines if the rules apply to string s
@@ -168,13 +199,22 @@ func NewSdkRoleManager(kv kvdb.Kvdb) (*SdkRoleManager, error) {
 	}
 
 	// Load all default roles
-	for k, v := range defaultRoles {
-		role := &api.SdkRole{
-			Name:  k,
-			Rules: v,
+	for roleName, defaultRole := range defaultRoles {
+		roleExists := false
+		if _, err := kv.Get(prefixWithName(roleName)); err == nil {
+			roleExists = true
 		}
-		if _, err := kv.Put(prefixWithName(k), role, 0); err != nil {
-			return nil, err
+
+		// always re-initialize immutable default roles.
+		// if the role is mutable and does exist, skip kvdb put.
+		if !roleExists || !defaultRole.mutable {
+			role := &api.SdkRole{
+				Name:  roleName,
+				Rules: defaultRole.rules,
+			}
+			if _, err := kv.Put(prefixWithName(roleName), role, 0); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -304,8 +344,9 @@ func (r *SdkRoleManager) Update(
 		return nil, err
 	}
 
-	// Determine if there is collision with default roles
-	if _, ok := defaultRoles[req.GetRole().GetName()]; ok {
+	// Determine if there is collision with default roles.
+	// We can still update mutable default roles.
+	if defaultRole, ok := defaultRoles[req.GetRole().GetName()]; ok && !defaultRole.mutable {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"System role %s cannot be updated", req.GetRole().GetName())
@@ -359,7 +400,26 @@ func (r *SdkRoleManager) verifyRules(rules []*api.SdkRule, fullmethod string) er
 		reqApi = strings.ToLower(parts[2])
 	}
 
-	// Go through each rule until a match is found
+	// Look for denials first
+	for _, rule := range rules {
+		for _, service := range rule.Services {
+			// if the service is denied, then return here
+			if denyRule(service, reqService) {
+				return fmt.Errorf("access denied to service by role")
+			}
+
+			// If there is a match to the service now check the apis
+			if matchRule(service, reqService) {
+				for _, api := range rule.Apis {
+					if denyRule(api, reqApi) {
+						return fmt.Errorf("access denied to api by role")
+					}
+				}
+			}
+		}
+	}
+
+	// Look for permissions
 	for _, rule := range rules {
 		for _, service := range rule.Services {
 			if matchRule(service, reqService) {
