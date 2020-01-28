@@ -58,7 +58,7 @@ func TestNewCSIServerGetPluginInfoWithOverrideName(t *testing.T) {
 		DriverName:    mockDriverName,
 		Net:           "tcp",
 		Address:       "127.0.0.1:0",
-		SdkUds:        testSdkSock,
+		SdkUds:        "/tmp/notnecessary",
 		CsiDriverName: "override",
 	})
 	defer s.Stop()
