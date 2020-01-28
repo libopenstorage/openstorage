@@ -97,6 +97,7 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -120,8 +121,8 @@ func newTestServer(t *testing.T) *testServer {
 	tester.server, err = New(&ServerConfig{
 		DriverName:          mockDriverName,
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
@@ -144,7 +145,7 @@ func newTestServer(t *testing.T) *testServer {
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+testHttpsPort, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -392,11 +393,11 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	tester := &testServer{}
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
-
+	tester.setPorts()
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             cm,
 		StoragePolicy:       sp,
@@ -414,13 +415,15 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	assert.Nil(t, err)
 	err = server.Start()
 	assert.Nil(t, err)
-	defer server.Stop()
+	defer func() {
+		server.Stop()
+	}()
 
 	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
+	conn, err := grpc.Dial("localhost:"+tester.port, grpc.WithTransportCredentials(grpccreds))
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke
