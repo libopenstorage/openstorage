@@ -183,10 +183,35 @@ func TestScheduleStrings(t *testing.T) {
 				dockSched[j])
 		}
 	}
-	for _, sched := range dockSched {
-		_, _, err := ParseScheduleAndPolicies(sched)
+	for i, sched := range dockSched {
+		ivs, tags, err := ParseScheduleAndPolicies(sched)
 		require.Equal(t, err, nil, "Parsing policy %s, err: %v", sched, err)
+		require.NoError(t, err)
+		perDay := ScheduleIntervalsPerDay(ivs, tags)
+		if len(ivs) == 0 || i >= origLen {
+			continue
+		}
+		switch ivs[0].Spec().Freq {
+		case PeriodicType:
+			// every 10mins, 6 per hour and 144 per day
+			require.Equal(t, perDay, uint32(144), "Incorrect periodic intervals per day")
+		case DailyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect daily intervals per day")
+		case WeeklyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect Weekly intervals per day")
+		case MonthlyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect Monthly intervals per day")
+		}
 	}
+	cumulativeSched := dockSched[0] + scheduleSeparator +
+		dockSched[1] + scheduleSeparator +
+		dockSched[2] + scheduleSeparator +
+		dockSched[3]
+	ivs, tags, err := ParseScheduleAndPolicies(cumulativeSched)
+	require.NoError(t, err)
+	perDay := ScheduleIntervalsPerDay(ivs, tags)
+	require.Equal(t, perDay, uint32(147), "Unexpcted number of intervals per day")
+
 }
 
 func TestScheduleUpgrade(t *testing.T) {

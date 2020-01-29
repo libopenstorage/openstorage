@@ -314,6 +314,44 @@ func ScheduleIntervalSummary(items []Interval, policyTags *PolicyTags) string {
 	return summary
 }
 
+func ScheduleIntervalsPerDay(items []RetainInterval, policyTags *PolicyTags) uint32 {
+	if len(items) == 0 {
+		return 0
+	}
+	var intervalsPerDay uint32
+	for _, iv := range items {
+		var perDay uint32
+		switch iv.Spec().Freq {
+		case PeriodicType:
+			period := time.Duration(iv.Spec().Period).Minutes()
+			if period < float64(60*24) {
+				perDay = uint32(float64(60*24) / period)
+			} else {
+				perDay = uint32(1)
+			}
+		case DailyType:
+			perDay = uint32(1)
+		case WeeklyType:
+			perDay = uint32(1)
+		case MonthlyType:
+			perDay = uint32(1)
+		}
+		intervalsPerDay += perDay
+	}
+	return intervalsPerDay
+}
+
+func ScheduleTotalRetains(items []RetainInterval, policyTags *PolicyTags) uint32 {
+	if len(items) == 0 {
+		return 0
+	}
+	var totalRetains uint32
+	for _, iv := range items {
+		totalRetains += iv.RetainNumber()
+	}
+	return totalRetains
+}
+
 func ScheduleSummary(items []RetainInterval, policyTags *PolicyTags) string {
 	summary := ""
 	if policyTags != nil {
