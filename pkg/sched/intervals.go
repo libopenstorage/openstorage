@@ -13,6 +13,7 @@ import (
 const (
 	scheduleSeparator    = ";"
 	nonYamlTypeSeparator = "="
+	MinutesPerDay        = float64(60 * 24)
 	DailyType            = "daily"
 	MonthlyType          = "monthly"
 	WeeklyType           = "weekly"
@@ -312,6 +313,39 @@ func ScheduleIntervalSummary(items []Interval, policyTags *PolicyTags) string {
 		summary += iv.String()
 	}
 	return summary
+}
+
+func MaxPerDayInstances(items []RetainInterval) uint32 {
+	var intervalsPerDay uint32
+	for _, iv := range items {
+		var perDay uint32
+		switch iv.Spec().Freq {
+		case PeriodicType:
+			perDay = uint32(1)
+			period := time.Duration(iv.Spec().Period).Minutes()
+			if period == 0 {
+				perDay = 0
+			} else if period < MinutesPerDay {
+				perDay = uint32(MinutesPerDay / period)
+			}
+		case DailyType:
+			perDay = uint32(1)
+		case WeeklyType:
+			perDay = uint32(1)
+		case MonthlyType:
+			perDay = uint32(1)
+		}
+		intervalsPerDay += perDay
+	}
+	return intervalsPerDay
+}
+
+func ScheduleRetainSum(items []RetainInterval) uint32 {
+	var totalRetains uint32
+	for _, iv := range items {
+		totalRetains += iv.RetainNumber()
+	}
+	return totalRetains
 }
 
 func ScheduleSummary(items []RetainInterval, policyTags *PolicyTags) string {
