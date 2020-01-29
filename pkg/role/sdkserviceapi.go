@@ -91,6 +91,19 @@ var (
 				},
 			},
 		},
+
+		// system:public role is used for any unauthenticated user.
+		// They can only use standard volume lifecycle commands.
+		"system.public": {
+			&api.SdkRule{
+				Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
+				Apis:     []string{"*"},
+			},
+			&api.SdkRule{
+				Services: []string{"identity"},
+				Apis:     []string{"version"},
+			},
+		},
 	}
 )
 

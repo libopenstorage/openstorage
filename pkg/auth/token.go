@@ -16,12 +16,18 @@ limitations under the License.
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
+)
+
+const (
+	authorizationHeader = "authorization"
 )
 
 // Options provide any options to apply to the token
@@ -108,4 +114,8 @@ func Token(
 	}
 
 	return signedtoken, nil
+}
+
+func IsPublic(ctx context.Context) bool {
+	return metautils.ExtractIncoming(ctx).Get(authorizationHeader) == ""
 }
