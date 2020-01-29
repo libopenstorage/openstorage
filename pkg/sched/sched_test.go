@@ -3,6 +3,7 @@ package sched
 import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -184,10 +185,10 @@ func TestScheduleStrings(t *testing.T) {
 		}
 	}
 	for i, sched := range dockSched {
-		ivs, tags, err := ParseScheduleAndPolicies(sched)
+		ivs, _, err := ParseScheduleAndPolicies(sched)
 		require.Equal(t, err, nil, "Parsing policy %s, err: %v", sched, err)
 		require.NoError(t, err)
-		perDay := ScheduleIntervalsPerDay(ivs, tags)
+		perDay := MaxPerDayInstances(ivs)
 		if len(ivs) == 0 || i >= origLen {
 			continue
 		}
@@ -203,13 +204,10 @@ func TestScheduleStrings(t *testing.T) {
 			require.Equal(t, perDay, uint32(1), "Incorrect Monthly intervals per day")
 		}
 	}
-	cumulativeSched := dockSched[0] + scheduleSeparator +
-		dockSched[1] + scheduleSeparator +
-		dockSched[2] + scheduleSeparator +
-		dockSched[3]
-	ivs, tags, err := ParseScheduleAndPolicies(cumulativeSched)
+	cumulativeSched := strings.Join(dockSched[0:4], scheduleSeparator)
+	ivs, _, err := ParseScheduleAndPolicies(cumulativeSched)
 	require.NoError(t, err)
-	perDay := ScheduleIntervalsPerDay(ivs, tags)
+	perDay := MaxPerDayInstances(ivs)
 	require.Equal(t, perDay, uint32(147), "Unexpcted number of intervals per day")
 
 }
