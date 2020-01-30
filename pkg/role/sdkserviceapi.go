@@ -142,6 +142,15 @@ func prefixWithName(name string) string {
 	return rolePrefix + "/" + name
 }
 
+// Determines if the rules deny string s
+func denyRule(rule, s string) bool {
+	if strings.HasPrefix(rule, negMatchChar) {
+		return matchRule(strings.TrimSpace(strings.Join(strings.Split(rule, negMatchChar), "")), s)
+	}
+
+	return false
+}
+
 // Determines if the rules apply to string s
 // rule can be:
 // '*' - match all
@@ -391,7 +400,26 @@ func (r *SdkRoleManager) verifyRules(rules []*api.SdkRule, fullmethod string) er
 		reqApi = strings.ToLower(parts[2])
 	}
 
-	// Go through each rule until a match is found
+	// Look for denials first
+	for _, rule := range rules {
+		for _, service := range rule.Services {
+			// if the service is denied, then return here
+			if denyRule(service, reqService) {
+				return fmt.Errorf("access denied to service by role")
+			}
+
+			// If there is a match to the service now check the apis
+			if matchRule(service, reqService) {
+				for _, api := range rule.Apis {
+					if denyRule(api, reqApi) {
+						return fmt.Errorf("access denied to api by role")
+					}
+				}
+			}
+		}
+	}
+
+	// Look for permissions
 	for _, rule := range rules {
 		for _, service := range rule.Services {
 			if matchRule(service, reqService) {

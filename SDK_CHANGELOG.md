@@ -1,6 +1,15 @@
 # Changelog
 
 ## Releases
+
+### v0.69.3 - (1/21/2020)
+
+* Added documentation to SdkRule about new denial support
+
+### v0.69.2 - Tech Preview (1/15/2020)
+
+* Add auto to IoProfile
+
 ### v0.69.1 - Tech Preview (1/9/2020)
 
 * Add support for public user access
