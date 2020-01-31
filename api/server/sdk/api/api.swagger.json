@@ -3015,6 +3015,48 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkVolumeSetupEphemeralRequest": {
+        "properties": {
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Labels to apply to the volume",
+            "type": "object"
+          },
+          "mount_path": {
+            "description": "Mount path for mounting the volume.",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name for volume creation",
+            "type": "string"
+          },
+          "options": {
+            "$ref": "#/components/schemas/apiSdkVolumeAttachOptions"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/apiVolumeSpec"
+          },
+          "volume_id": {
+            "title": "Volume Id passed by container orchestrator",
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to setup an ephemeral volume",
+        "type": "object"
+      },
+      "apiSdkVolumeSetupEphemeralResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkVolumeSnapshotCreateRequest": {
         "description": "Defines the request when creating a snapshot from a volume.",
         "properties": {
@@ -3135,6 +3177,42 @@
           }
         },
         "title": "Defines a response containing drive statistics",
+        "type": "object"
+      },
+      "apiSdkVolumeTeardownEphemeralRequest": {
+        "properties": {
+          "detach_options": {
+            "$ref": "#/components/schemas/apiSdkVolumeDetachOptions"
+          },
+          "driver_options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Labels to apply to the volume",
+            "type": "object"
+          },
+          "mount_path": {
+            "description": "Mount path for mounting the volume.",
+            "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/apiVolumeSpec"
+          },
+          "unmount_options": {
+            "$ref": "#/components/schemas/apiSdkVolumeUnmountOptions"
+          },
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to setup an ephemeral volume",
         "type": "object"
       },
       "apiSdkVolumeUnmountOptions": {
@@ -4198,7 +4276,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.72.0"
+    "version": "0.73.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5542,6 +5620,66 @@
           }
         },
         "summary": "Mount mounts an attached volume in the host that the client is communicating with",
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/mountattach/setupephemeral": {
+      "post": {
+        "operationId": "SetupEphemeral",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeSetupEphemeralRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeSetupEphemeralResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageMountAttach"
+        ]
+      }
+    },
+    "/v1/mountattach/teardownephemeral": {
+      "post": {
+        "operationId": "TeardownEphemeral",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeTeardownEphemeralRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeSetupEphemeralResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
         "tags": [
           "OpenStorageMountAttach"
         ]

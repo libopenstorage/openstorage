@@ -222,6 +222,14 @@ type FilesystemCheckDriver interface {
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
 }
 
+// EphemeralVolumeDriver interface exposes APIs to use ephemeral volumes
+type EphemeralDriver interface {
+	//EphemeralSetupVolume performs a volume create, attach, and mount
+	EphemeralSetupVolume(request *api.SdkVolumeSetupEphemeralRequest) (*api.SdkVolumeSetupEphemeralResponse, error)
+	// EphemeralTeardownVolume performs a volume unmount, detach, and delete
+	EphemeralTeardownVolume(request *api.SdkVolumeTeardownEphemeralRequest) (*api.SdkVolumeTeardownEphemeralResponse, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -233,6 +241,7 @@ type ProtoDriver interface {
 	CloudMigrateDriver
 	FilesystemTrimDriver
 	FilesystemCheckDriver
+	EphemeralDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
