@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.70.0 - Tech Preview (1/27/2020)
+
+* Add Restore volume spec for Cloud Backup restore api
+
 ### v0.69.3 - (1/21/2020)
 
 * Added documentation to SdkRule about new denial support

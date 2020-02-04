@@ -111,6 +111,8 @@ enum IoProfile {
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
+  // IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile
+  IO_PROFILE_BKUPSRC = 6;
 }
 
 // VolumeState represents the state of a volume.
@@ -3223,6 +3225,10 @@ message SdkCloudBackupRestoreRequest {
   string node_id = 4;
   // TaskId of the task performing this restore
   string task_id = 5;
+  // Modifiable Restore volume spec
+  RestoreVolumeSpec spec = 6;
+  // RestoreVolume locator
+  VolumeLocator locator = 7;
 }
 
 // Defines a response when restoring a volume from a backup stored by
@@ -3950,7 +3956,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 3;
+    Patch = 4;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4447,4 +4453,65 @@ enum EnforcementType {
   required = 0;
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
+}
+
+enum RestoreParamBoolType {
+	PARAM_BKUPSRC = 0; // Default: whateever was cloudbakup's option for the parameter
+	PARAM_FALSE = 1;
+	PARAM_TRUE = 2;
+}
+
+message RestoreVolSnashotSchedule {
+	string schedule= 1;
+}
+message RestoreVolStoragePolicy {
+	string policy = 1;
+}
+// RestoreSpec allows some of the restore volume properties of to be modified
+// while restoring the cloud baackup. All pointer fields with nil value will 
+// inherit corresponding field value from backup's spec.
+message RestoreVolumeSpec {
+  // HaLevel specifies the number of copies of data.
+  int64 ha_level = 1;
+  // Cos specifies the relative class of service.
+  CosType cos = 2;
+  // IoProfile provides a hint about application using this volume.
+  IoProfile io_profile = 3;
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  uint32 snapshot_interval = 4;
+  // Shared is true if this volume can be concurrently accessed by multiple users.
+  RestoreParamBoolType shared = 5;
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 6;
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  uint32 aggregation_level = 7;
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  RestoreVolSnashotSchedule snapshot_schedule = 8;
+  // Sticky volumes cannot be deleted until the flag is removed.
+  RestoreParamBoolType sticky = 9;
+  // Group identifies a consistency group
+  Group group = 10;
+  // GroupEnforced is true if consistency group creation is enforced.
+  bool group_enforced = 11;
+  // Journal is true if data for the volume goes into the journal.
+  RestoreParamBoolType journal = 12;
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  RestoreParamBoolType sharedv4 = 13;
+  // QueueDepth defines the desired block device queue depth
+  uint32 queue_depth = 14;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  RestoreParamBoolType nodiscard = 15;
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 16;
+  // PlacementStrategy specifies a spec to indicate where to place the volume.
+  VolumePlacementStrategy placement_strategy = 17;
+  // StoragePolicy if applied/specified while creating volume
+  RestoreVolStoragePolicy storage_policy = 18;
+  // Ownership
+  Ownership ownership = 19;
+  // ExportSpec defines how the volume should be exported.
+  ExportSpec export_spec = 20;
+  // fastpath extensions
+  RestoreParamBoolType fp_preference = 21;
 }
