@@ -322,6 +322,13 @@ type CloudBackupRestoreRequest struct {
 	// Name is optional unique id to be used for this restore op
 	// restore creates this by default
 	Name string
+	// Optional RestoreVolumeSpec allows some of the restoreVolume fields to be modified.
+	// These fields default to the volume spec stored with cloudbackup.
+	// The request fails if both RestoreVolSpec and NodeID are specified.
+	Spec *RestoreVolumeSpec
+	// Optional Locator for restoreVolume. Request fails if both Name and
+	// locator are specified
+	Locator *VolumeLocator
 }
 
 type CloudBackupGroupCreateResponse struct {
