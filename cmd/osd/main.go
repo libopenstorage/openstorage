@@ -177,6 +177,11 @@ func main() {
 			Usage: "Cluster Domain Name",
 			Value: "",
 		},
+		cli.StringFlag{
+			Name:  "csidrivername",
+			Usage: "CSI Driver name",
+			Value: "",
+		},
 	}
 	app.Action = wrapAction(start)
 	app.Commands = []cli.Command{
@@ -407,16 +412,20 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
 		csiServer, err := csi.NewOsdCsiServer(&csi.OsdCsiServerConfig{
-			Net:        "unix",
-			Address:    csisock,
-			DriverName: d,
-			Cluster:    cm,
-			SdkUds:     sdksocket,
+			Net:           "unix",
+			Address:       csisock,
+			DriverName:    d,
+			Cluster:       cm,
+			SdkUds:        sdksocket,
+			CsiDriverName: c.String("csidrivername"),
 		})
+		if err != nil {
+			return fmt.Errorf("Failed to create CSI server for driver %s: %v", d, err)
+		}
+		err = csiServer.Start()
 		if err != nil {
 			return fmt.Errorf("Failed to start CSI server for driver %s: %v", d, err)
 		}
-		csiServer.Start()
 
 		// Create a role manager
 		rm, err := role.NewSdkRoleManager(kv)
