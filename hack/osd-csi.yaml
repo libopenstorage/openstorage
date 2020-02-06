@@ -209,6 +209,19 @@ spec:
       hostNetwork: true
       hostPID: false
       containers:
+        - name: osd
+          image: quay.io/openstorage/osd:latest
+          imagePullPolicy: Never # Manually loaded into KinD (see setup script)
+          args:
+              ["-d","--driver=name=fake", "--csidrivername","osd.openstorage.org"]
+          env:
+            - name: "CSI_ENDPOINT"
+              value: "/var/lib/kubelet/plugins/osd.openstorage.org/csi.sock"
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: csi-kubelet-path
+            mountPath: /var/lib/kubelet
         - name: csi-node-driver-registrar
           image: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
           args:
@@ -237,7 +250,7 @@ spec:
           hostPath:
             path: /var/lib/kubelet/plugins_registry
             type: DirectoryOrCreate
-        - name: csi-driver-path
+        - name: csi-kubelet-path
           hostPath:
-            path: /var/lib/kubelet/plugins/osd.openstorage.org
+            path: /var/lib/kubelet
             type: DirectoryOrCreate
