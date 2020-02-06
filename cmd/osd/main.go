@@ -28,6 +28,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -407,6 +408,9 @@ func start(c *cli.Context) error {
 			csisock = fmt.Sprintf("/var/lib/osd/driver/%s-csi.sock", d)
 		}
 		os.Remove(csisock)
+		if err := os.MkdirAll(filepath.Dir(csisock), 0750); err != nil {
+			return err
+		}
 		cm, err := clustermanager.Inst()
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
