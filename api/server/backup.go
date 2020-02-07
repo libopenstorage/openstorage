@@ -12,6 +12,21 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+type backupAPI struct {
+	restServer
+}
+
+func newBackupAPI(name, sdkUds string) restServer {
+	return &backupAPI{
+		restServer: newVolumeAPI(name, sdkUds),
+	}
+}
+
+// Routes override the volAPI's Routes implementation and only returns the backup routes
+func (bd *backupAPI) Routes() []*Route {
+	return bd.backupRoutes()
+}
+
 func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 	backupReq := &api.CloudBackupCreateRequest{}
 	var backupResp api.CloudBackupCreateResponse

@@ -1838,6 +1838,15 @@ func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
 	return volMgmtApi.Routes()
 }
 
+// GetBackupAPIRoutes returns all the backup routes.
+// A driver could use this function if it does not want openstorage
+// to setup the REST server but it sets up its own and wants to add
+// backup routes
+func GetBackupAPIRoutes(name, sdkUds string) []*Route {
+	backupMgmtApi := newBackupAPI(name, sdkUds)
+	return backupMgmtApi.Routes()
+}
+
 // ServerRegisterRoute is a callback function used by drivers to run their
 // preRouteChecks before the actual volume route gets invoked
 // This is added for legacy support before negroni middleware was added

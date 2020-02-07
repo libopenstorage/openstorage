@@ -90,6 +90,38 @@ func StartVolumeMgmtAPI(
 	return unixServer, portServer, err
 }
 
+// StartBackupMgmtAPI starts a REST server to receive backup management API commands
+func StartBackupMgmtAPI(
+	name, sdkUds string,
+	mgmtBase string,
+	mgmtPort uint16,
+	auth bool,
+) (*http.Server, *http.Server, error) {
+	var (
+		unixServer, portServer *http.Server
+		err                    error
+	)
+	backupMgmtApi := newBackupAPI(name, sdkUds)
+
+	if auth {
+		unixServer, portServer, err = startServerWithAuth(
+			name,
+			mgmtBase,
+			mgmtPort,
+			backupMgmtApi,
+		)
+	} else {
+		unixServer, portServer, err = startServer(
+			name,
+			mgmtBase,
+			mgmtPort,
+			backupMgmtApi,
+		)
+
+	}
+	return unixServer, portServer, err
+}
+
 // StartVolumePluginAPI starts a REST server to receive volume API commands
 // from the linux container  engine
 func StartVolumePluginAPI(
@@ -184,6 +216,7 @@ type restServer interface {
 	String() string
 	logRequest(request string, id string) *logrus.Entry
 	sendError(request string, id string, w http.ResponseWriter, msg string, code int)
+	backupRoutes() []*Route
 }
 
 type restBase struct {
