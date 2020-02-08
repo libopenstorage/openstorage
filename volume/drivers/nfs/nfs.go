@@ -118,25 +118,38 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		}
 		if !mounted {
 			if server != "" {
-				err = inst.mounter.Mount(
-					0,
-					nfsServer,
-					nfsMountPoint,
+				/*
+					err = inst.mounter.Mount(
+						0,
+						nfsServer,
+						nfsMountPoint,
+						"nfs",
+						0,
+						"user_xattr,nolock,addr="+v,
+						0,
+						nil)
+				*/
+				err = syscall.Mount(
+					src,
+					nfsMountPath+v,
 					"nfs",
 					0,
-					"user_xattr,nolock,addr="+v,
-					0,
-					nil)
+					"nolock,addr="+v,
+				)
+
 			} else {
-				err = inst.mounter.Mount(
-					0,
-					nfsServer,
-					nfsMountPoint,
-					"",
-					syscall.MS_BIND,
-					"user_xattr",
-					0,
-					nil)
+				err = syscall.Mount(src, nfsMountPath+v, "", syscall.MS_BIND, "")
+				/*
+					err = inst.mounter.Mount(
+						0,
+						nfsServer,
+						nfsMountPoint,
+						"",
+						syscall.MS_BIND,
+						"user_xattr",
+						0,
+						nil)
+				*/
 			}
 			if err != nil {
 				logrus.Errorf("Unable to mount %s:%s at %s (%+v)",
