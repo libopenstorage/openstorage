@@ -107,7 +107,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 
 	//mount each nfs server
 	for _, v := range inst.nfsServers {
-		nfsServer := v + src
+		nfsServer := src
 		nfsMountPoint := nfsMountPath + v
 		inst.mounter.Reload(nfsServer)
 
