@@ -124,7 +124,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 					nfsMountPoint,
 					"nfs",
 					0,
-					"nolock,addr="+v,
+					"user_xattr,nolock,addr="+v,
 					0,
 					nil)
 			} else {
@@ -134,7 +134,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 					nfsMountPoint,
 					"",
 					syscall.MS_BIND,
-					"",
+					"user_xattr",
 					0,
 					nil)
 			}
@@ -508,7 +508,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 				mountpath,
 				"",
 				syscall.MS_BIND,
-				"",
+				"user_xattr",
 				0,
 				nil,
 			); err != nil {
