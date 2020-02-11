@@ -334,6 +334,49 @@ func start(c *cli.Context) error {
 		return fmt.Errorf("Failed to initialize KVDB: %v", err)
 	}
 
+	// Get authenticators
+	authenticators := make(map[string]auth.Authenticator)
+	selfSigned, err := selfSignedAuth(c)
+	if err != nil {
+		logrus.Fatalf("Failed to create self signed config: %v", err)
+	} else if selfSigned != nil {
+		authenticators[c.String("jwt-issuer")] = selfSigned
+	}
+
+	oidcAuth, err := oidcAuth(c)
+	if err != nil {
+		logrus.Fatalf("Failed to create self signed config: %v", err)
+	} else if oidcAuth != nil {
+		authenticators[c.String("oidc-issuer")] = oidcAuth
+	}
+
+	tlsConfig, err := setupSdkTls(c)
+	if err != nil {
+		logrus.Fatalf("Failed to access TLS file information: %v", err)
+	}
+
+	// Auth is enabled, setup system token manager for inter-cluster communication
+	if len(authenticators) > 0 {
+		if c.String("jwt-system-shared-secret") == "" {
+			return fmt.Errorf("Must provide a jwt-system-shared-secret if auth with oidc or shared-secret is enabled")
+		}
+
+		if len(cfg.Osd.ClusterConfig.SystemSharedSecret) == 0 {
+			cfg.Osd.ClusterConfig.SystemSharedSecret = c.String("jwt-system-shared-secret")
+		}
+
+		// Initialize system token manager if an authenticator is setup
+		stm, err := systemtoken.NewManager(&systemtoken.Config{
+			ClusterId:    cfg.Osd.ClusterConfig.ClusterId,
+			NodeId:       cfg.Osd.ClusterConfig.NodeId,
+			SharedSecret: cfg.Osd.ClusterConfig.SystemSharedSecret,
+		})
+		if err != nil {
+			return fmt.Errorf("Failed to create system token manager: %v\n", err)
+		}
+		auth.InitSystemTokenManager(stm)
+	}
+
 	// Start the cluster state machine, if enabled.
 	clusterInit := false
 	if cfg.Osd.ClusterConfig.NodeId != "" && cfg.Osd.ClusterConfig.ClusterId != "" {
@@ -341,7 +384,7 @@ func start(c *cli.Context) error {
 		if err := clustermanager.Init(cfg.Osd.ClusterConfig); err != nil {
 			return fmt.Errorf("Unable to init cluster server: %v", err)
 		}
-		if err := server.StartClusterAPI(cluster.APIBase, 0); err != nil {
+		if err := server.StartClusterAPI(cluster.APIBase, 0, authenticators); err != nil {
 			return fmt.Errorf("Unable to start cluster API server: %v", err)
 		}
 		clusterInit = true
@@ -394,6 +437,7 @@ func start(c *cli.Context) error {
 			volume.DriverAPIBase,
 			uint16(mgmtPort),
 			false,
+			authenticators,
 		); err != nil {
 			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
 		}
@@ -435,49 +479,6 @@ func start(c *cli.Context) error {
 		rm, err := role.NewSdkRoleManager(kv)
 		if err != nil {
 			return fmt.Errorf("Failed to create a role manager")
-		}
-
-		// Get authenticators
-		authenticators := make(map[string]auth.Authenticator)
-		selfSigned, err := selfSignedAuth(c)
-		if err != nil {
-			logrus.Fatalf("Failed to create self signed config: %v", err)
-		} else if selfSigned != nil {
-			authenticators[c.String("jwt-issuer")] = selfSigned
-		}
-
-		oidcAuth, err := oidcAuth(c)
-		if err != nil {
-			logrus.Fatalf("Failed to create self signed config: %v", err)
-		} else if oidcAuth != nil {
-			authenticators[c.String("oidc-issuer")] = oidcAuth
-		}
-
-		tlsConfig, err := setupSdkTls(c)
-		if err != nil {
-			logrus.Fatalf("Failed to access TLS file information: %v", err)
-		}
-
-		// Auth is enabled, setup system token manager for inter-cluster communication
-		if len(authenticators) > 0 {
-			if c.String("jwt-system-shared-secret") == "" {
-				return fmt.Errorf("Must provide a jwt-system-shared-secret if auth with oidc or shared-secret is enabled")
-			}
-
-			if len(cfg.Osd.ClusterConfig.SystemSharedSecret) == 0 {
-				cfg.Osd.ClusterConfig.SystemSharedSecret = c.String("jwt-system-shared-secret")
-			}
-
-			// Initialize system token manager if an authenticator is setup
-			stm, err := systemtoken.NewManager(&systemtoken.Config{
-				ClusterId:    cfg.Osd.ClusterConfig.ClusterId,
-				NodeId:       cfg.Osd.ClusterConfig.NodeId,
-				SharedSecret: cfg.Osd.ClusterConfig.SystemSharedSecret,
-			})
-			if err != nil {
-				return fmt.Errorf("Failed to create system token manager: %v\n", err)
-			}
-			auth.InitSystemTokenManager(stm)
 		}
 
 		sp, err := policy.Init()
