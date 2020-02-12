@@ -67,8 +67,12 @@ const (
 	// the VolumeSpec.force_unsupported_fs_type. When set to true it asks
 	// the driver to use an unsupported value of VolumeSpec.format if possible
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
-	SpecNodiscard              = "nodiscard"
-	StoragePolicy              = "storagepolicy"
+	// SpecMatchSrcVolProvision defaults to false. Applicable to cloudbackup restores only.
+	// If set to "true", cloudbackup restore volume gets provisioned on same pools as
+	// backup, allowing for inplace restore after.
+	SpecMatchSrcVolProvision = "match_src_vol_provision"
+	SpecNodiscard            = "nodiscard"
+	StoragePolicy            = "storagepolicy"
 )
 
 // OptionKey specifies a set of recognized query params.
