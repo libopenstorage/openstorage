@@ -169,7 +169,7 @@ metadata:
   name: osd.openstorage.org
 spec:
   attachRequired: false
-  podInfoOnMount: false
+  podInfoOnMount: true
   volumeLifecycleModes:
   - Persistent
   - Ephemeral
