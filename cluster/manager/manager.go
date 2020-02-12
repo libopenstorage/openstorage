@@ -767,12 +767,6 @@ func (c *ClusterManager) startHeartBeat(
 			// Do not add nodes with mismatched version
 			continue
 		}
-		nodeIp := nodeEntry.DataIp + ":" + c.gossipPort
-		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
-			KnownUrl:      nodeIp,
-			ClusterDomain: nodeEntry.ClusterDomain,
-		}
-
 		gossipPort := nodeEntry.GossipPort
 		if gossipPort == "" {
 			// The cluster DB does not have the gossip port value
@@ -782,6 +776,13 @@ func (c *ClusterManager) startHeartBeat(
 			// node pings us, gossip protocol will automatically update the port
 			gossipPort = c.gossipPort
 		}
+
+		nodeIp := nodeEntry.DataIp + ":" + gossipPort
+		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
+			KnownUrl:      nodeIp,
+			ClusterDomain: nodeEntry.ClusterDomain,
+		}
+
 		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {
