@@ -286,7 +286,7 @@ func (r *Request) Do() *Response {
 		attemptNum++
 
 		// If we don't receive a retry header we should exit.
-		if !handleServiceUnavailable(resp, attemptNum) {
+		if !retryHeaderReceived(resp, attemptNum) {
 			break
 		}
 	}
@@ -306,7 +306,7 @@ func (r *Request) Do() *Response {
 	}
 }
 
-func handleServiceUnavailable(resp *http.Response, attemptNum int) bool {
+func retryHeaderReceived(resp *http.Response, attemptNum int) bool {
 	var duration = time.Duration(1 * time.Second)
 
 	// Close body so go-routines can spin down.
