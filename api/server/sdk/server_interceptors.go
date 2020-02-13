@@ -54,8 +54,16 @@ func (s *sdkGrpcServer) rwlockIntercepter(
 
 // Authenticate user and add authorization information back in the context
 func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
+	var token string
+	var err error
+
+	// public call attempted, add system.public user
+	if auth.IsPublic(ctx) {
+		return auth.ContextSaveUserInfo(ctx, auth.NewPublicUser()), nil
+	}
+
 	// Obtain token from metadata in the context
-	token, err := grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
+	token, err = grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
 	if err != nil {
 		return nil, err
 	}

@@ -15,3 +15,137 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 package sdk
+
+import (
+	"context"
+	"fmt"
+	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/stretchr/testify/assert"
+)
+
+func TestAuthorizationServerInterceptorCreate(t *testing.T) {
+	tt := []struct {
+		TestName                     string
+		PublicVolumeCreationDisabled bool
+		RequestAuthenticated         bool
+
+		ExpectSuccess      bool
+		ExpectedError      string
+		ExpectedDriverCall gomock.Call
+	}{
+		{
+			TestName:                     "1-1: Authenticated volume creation should succeed with public vol creation disabled",
+			PublicVolumeCreationDisabled: true,
+			RequestAuthenticated:         true,
+
+			ExpectSuccess: true,
+			ExpectedError: "",
+		},
+		{
+			TestName:                     "1-2: Unauthenticated volume creation should fail with public volume creation disabled",
+			PublicVolumeCreationDisabled: true,
+			RequestAuthenticated:         false,
+
+			ExpectSuccess: false,
+			ExpectedError: "rpc error: code = PermissionDenied desc = Access to /openstorage.api.OpenStorageVolume/Create denied: rpc error: code = PermissionDenied desc = Access denied to roles: [system.public]",
+		},
+		{
+			TestName:                     "2-1: Authenticated volume creation should succeed with public vol creation enabled",
+			PublicVolumeCreationDisabled: false,
+			RequestAuthenticated:         true,
+
+			ExpectSuccess: true,
+			ExpectedError: "",
+		},
+		{
+			TestName:                     "2-2: Unauthenticated volume creation should succeed with public volume creation enabled",
+			PublicVolumeCreationDisabled: false,
+			RequestAuthenticated:         false,
+
+			ExpectSuccess: true,
+			ExpectedError: "",
+		},
+	}
+
+	s := newTestServerAuth(t)
+	defer s.Stop()
+	for _, tc := range tt {
+		volumeAPIs := "*"
+		if tc.PublicVolumeCreationDisabled {
+			volumeAPIs = "!create"
+		}
+		rc := api.NewOpenStorageRoleClient(s.Conn())
+		updateCtx, err := contextWithToken(context.Background(), "jim.stevens", "system.admin", "mysecret")
+		assert.NoError(t, err, "Expected context with token to succeed")
+		_, err = rc.Update(updateCtx, &api.SdkRoleUpdateRequest{
+			Role: &api.SdkRole{
+				Name: "system.public",
+				Rules: []*api.SdkRule{
+					&api.SdkRule{
+						Services: []string{"volume"},
+						Apis:     []string{volumeAPIs},
+					},
+					&api.SdkRule{
+						Services: []string{"mountattach", "cloudbackup", "migrate"},
+						Apis:     []string{"*"},
+					},
+					&api.SdkRule{
+						Services: []string{"identity"},
+						Apis:     []string{"version"},
+					},
+				},
+			},
+		})
+		assert.NoError(t, err, "Expected role update to succeed")
+
+		name := "myvol"
+		size := uint64(1234)
+		req := &api.SdkVolumeCreateRequest{
+			Name: name,
+			Spec: &api.VolumeSpec{
+				Size: size,
+			},
+		}
+
+		id := "myid"
+		gomock.InOrder(
+			s.MockDriver().
+				EXPECT().
+				Inspect([]string{name}).
+				Return(nil, fmt.Errorf("not found")).
+				AnyTimes(),
+			s.MockDriver().
+				EXPECT().
+				Enumerate(&api.VolumeLocator{Name: name}, nil).
+				Return(nil, fmt.Errorf("not found")).
+				AnyTimes(),
+			s.MockDriver().
+				EXPECT().
+				Create(gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(id, nil).
+				AnyTimes(),
+		)
+
+		// Setup client
+		c := api.NewOpenStorageVolumeClient(s.Conn())
+
+		// Call create with or without auth
+		ctx := context.Background()
+		if tc.RequestAuthenticated {
+			ctx, err = contextWithToken(ctx, "jim.stevens", "system.admin", "mysecret")
+			assert.NoError(t, err)
+		}
+		r, err := c.Create(ctx, req)
+
+		if tc.ExpectSuccess {
+			assert.NoError(t, err)
+			assert.Equal(t, r.GetVolumeId(), "myid")
+		} else {
+			assert.Error(t, err)
+			assert.Equal(t, tc.ExpectedError, err.Error())
+		}
+	}
+}

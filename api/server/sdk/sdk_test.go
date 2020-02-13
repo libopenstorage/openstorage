@@ -18,11 +18,18 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
+
+	jwt "github.com/dgrijalva/jwt-go"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/role"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
@@ -45,14 +52,14 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
 
 const (
-	mockDriverName = "mock"
-	testUds        = "/tmp/sdk-test.sock"
-	testHttpsPort  = "34000"
-	testRESTPort   = "34001"
+	mockDriverName   = "mock"
+	testUds          = "/tmp/sdk-test.sock"
+	testSharedSecret = "mysecret"
 )
 
 // testServer is a simple struct used abstract
@@ -66,6 +73,8 @@ type testServer struct {
 	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	gw     *httptest.Server
+	port   string
+	gwport string
 }
 
 func init() {
@@ -86,6 +95,7 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -109,8 +119,8 @@ func newTestServer(t *testing.T) *testServer {
 	tester.server, err = New(&ServerConfig{
 		DriverName:          mockDriverName,
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
@@ -133,7 +143,7 @@ func newTestServer(t *testing.T) *testServer {
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+testHttpsPort, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -143,6 +153,88 @@ func newTestServer(t *testing.T) *testServer {
 	tester.gw = httptest.NewServer(mux)
 
 	return tester
+}
+
+func newTestServerAuth(t *testing.T) *testServer {
+	tester := &testServer{}
+	tester.setPorts()
+
+	// Add driver to registry
+	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
+	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
+	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
+
+	setupMockDriver(tester, t)
+
+	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
+	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
+	// Init storage policy manager
+	_, err = policy.Init()
+	sp, err := policy.Inst()
+	assert.NotNil(t, sp)
+
+	rm, err := role.NewSdkRoleManager(kv)
+	assert.NoError(t, err)
+
+	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+		SharedSecret:  []byte(testSharedSecret),
+		UsernameClaim: auth.UsernameClaimTypeName,
+	})
+
+	// Setup simple driver
+	os.Remove(testUds)
+	tester.server, err = New(&ServerConfig{
+		DriverName:          mockDriverName,
+		Net:                 "tcp",
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
+		Socket:              testUds,
+		Cluster:             tester.c,
+		StoragePolicy:       sp,
+		AlertsFilterDeleter: tester.a,
+		StoragePoolServer:   tester.s,
+		AccessOutput:        ioutil.Discard,
+		AuditOutput:         ioutil.Discard,
+		Security: &SecurityConfig{
+			Role: rm,
+			Tls: &TLSConfig{
+				CertFile: "test_certs/server-cert.pem",
+				KeyFile:  "test_certs/server-key.pem",
+			},
+			Authenticators: map[string]auth.Authenticator{
+				"testcode": selfsignedJwt,
+			},
+		},
+	})
+	assert.Nil(t, err)
+	err = tester.server.Start()
+	assert.Nil(t, err)
+
+	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	assert.Nil(t, err)
+
+	// Setup a connection to the driver
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	assert.Nil(t, err)
+
+	// Setup REST gateway
+	mux, err := tester.server.restGateway.restServerSetupHandlers()
+	assert.NoError(t, err)
+	assert.NotNil(t, mux)
+	tester.gw = httptest.NewServer(mux)
+	return tester
+}
+
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(2999) + 8000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
 }
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
@@ -184,6 +276,34 @@ func (s *testServer) UdsServer() grpcserver.Server {
 
 func (s *testServer) GatewayURL() string {
 	return s.gw.URL
+}
+
+func createToken(name, role, secret string) (string, error) {
+	claims := &auth.Claims{
+		Issuer: "testcode",
+		Name:   name,
+		Email:  name + "@openstorage.org",
+		Roles:  []string{role},
+	}
+	signature := &auth.Signature{
+		Key:  []byte(secret),
+		Type: jwt.SigningMethodHS256,
+	}
+	options := &auth.Options{
+		Expiration: time.Now().Add(1 * time.Hour).Unix(),
+	}
+	return auth.Token(claims, signature, options)
+}
+
+func contextWithToken(ctx context.Context, name, role, secret string) (context.Context, error) {
+	token, err := createToken(name, role, secret)
+	if err != nil {
+		return nil, err
+	}
+	md := metadata.New(map[string]string{
+		"authorization": "bearer " + token,
+	})
+	return metadata.NewOutgoingContext(ctx, md), nil
 }
 
 func TestSdkGateway(t *testing.T) {
@@ -271,11 +391,11 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	tester := &testServer{}
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
-
+	tester.setPorts()
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
-		Address:             ":" + testHttpsPort,
-		RestPort:            testRESTPort,
+		Address:             ":" + tester.port,
+		RestPort:            tester.gwport,
 		Socket:              testUds,
 		Cluster:             cm,
 		StoragePolicy:       sp,
@@ -293,13 +413,15 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	assert.Nil(t, err)
 	err = server.Start()
 	assert.Nil(t, err)
-	defer server.Stop()
+	defer func() {
+		server.Stop()
+	}()
 
 	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial("localhost:"+testHttpsPort, grpc.WithTransportCredentials(grpccreds))
+	conn, err := grpc.Dial("localhost:"+tester.port, grpc.WithTransportCredentials(grpccreds))
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke

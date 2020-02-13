@@ -2,6 +2,22 @@
 
 ## Releases
 
+### v0.70.0 - Tech Preview (1/27/2020)
+
+* Add Restore volume spec for Cloud Backup restore api
+
+### v0.69.3 - (1/21/2020)
+
+* Added documentation to SdkRule about new denial support
+
+### v0.69.2 - Tech Preview (1/15/2020)
+
+* Add auto to IoProfile
+
+### v0.69.1 - Tech Preview (1/9/2020)
+
+* Add support for public user access
+
 ### v0.69.0 - Tech Preview (10/12/2019)
 
 * Add support for filesystem trim background operation
