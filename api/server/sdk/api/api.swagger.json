@@ -746,8 +746,11 @@
           "IO_PROFILE_DB",
           "IO_PROFILE_DB_REMOTE",
           "IO_PROFILE_CMS",
-          "IO_PROFILE_SYNC_SHARED"
+          "IO_PROFILE_SYNC_SHARED",
+          "IO_PROFILE_AUTO",
+          "IO_PROFILE_BKUPSRC"
         ],
+        "title": "- IO_PROFILE_BKUPSRC: IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile",
         "type": "string"
       },
       "apiIoStrategy": {
@@ -914,6 +917,110 @@
           "RESOURCE_TYPE_POOL"
         ],
         "type": "string"
+      },
+      "apiRestoreParamBoolType": {
+        "default": "PARAM_BKUPSRC",
+        "enum": [
+          "PARAM_BKUPSRC",
+          "PARAM_FALSE",
+          "PARAM_TRUE"
+        ],
+        "type": "string"
+      },
+      "apiRestoreVolSnashotSchedule": {
+        "properties": {
+          "schedule": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiRestoreVolStoragePolicy": {
+        "properties": {
+          "policy": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiRestoreVolumeSpec": {
+        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will \ninherit corresponding field value from backup's spec.",
+        "properties": {
+          "aggregation_level": {
+            "description": "Aggregation level Specifies the number of parts the volume can be aggregated from.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "cos": {
+            "$ref": "#/components/schemas/apiCosType"
+          },
+          "export_spec": {
+            "$ref": "#/components/schemas/apiExportSpec"
+          },
+          "fp_preference": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "group": {
+            "$ref": "#/components/schemas/apiGroup"
+          },
+          "group_enforced": {
+            "description": "GroupEnforced is true if consistency group creation is enforced.",
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "ha_level": {
+            "description": "HaLevel specifies the number of copies of data.",
+            "format": "int64",
+            "type": "string"
+          },
+          "io_profile": {
+            "$ref": "#/components/schemas/apiIoProfile"
+          },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "journal": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "nodiscard": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
+          },
+          "placement_strategy": {
+            "$ref": "#/components/schemas/apiVolumePlacementStrategy"
+          },
+          "queue_depth": {
+            "format": "int64",
+            "title": "QueueDepth defines the desired block device queue depth",
+            "type": "integer"
+          },
+          "replica_set": {
+            "$ref": "#/components/schemas/apiReplicaSet"
+          },
+          "shared": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "sharedv4": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "snapshot_interval": {
+            "format": "int64",
+            "title": "SnapshotInterval in minutes, set to 0 to disable snapshots",
+            "type": "integer"
+          },
+          "snapshot_schedule": {
+            "$ref": "#/components/schemas/apiRestoreVolSnashotSchedule"
+          },
+          "sticky": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "storage_policy": {
+            "$ref": "#/components/schemas/apiRestoreVolStoragePolicy"
+          }
+        },
+        "type": "object"
       },
       "apiRuntimeStateMap": {
         "description": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.",
@@ -1473,6 +1580,9 @@
             "title": "The credential to be used for restore operation",
             "type": "string"
           },
+          "locator": {
+            "$ref": "#/components/schemas/apiVolumeLocator"
+          },
           "node_id": {
             "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
             "type": "string"
@@ -1480,6 +1590,9 @@
           "restore_volume_name": {
             "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup",
             "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/apiRestoreVolumeSpec"
           },
           "task_id": {
             "title": "TaskId of the task performing this restore",
@@ -4197,7 +4310,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.70.0"
+    "version": "0.72.0"
   },
   "openapi": "3.0.0",
   "paths": {

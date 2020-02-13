@@ -3,6 +3,7 @@ package sched
 import (
 	"github.com/stretchr/testify/require"
 	"gopkg.in/yaml.v2"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -183,10 +184,32 @@ func TestScheduleStrings(t *testing.T) {
 				dockSched[j])
 		}
 	}
-	for _, sched := range dockSched {
-		_, _, err := ParseScheduleAndPolicies(sched)
+	for i, sched := range dockSched {
+		ivs, _, err := ParseScheduleAndPolicies(sched)
 		require.Equal(t, err, nil, "Parsing policy %s, err: %v", sched, err)
+		require.NoError(t, err)
+		perDay := MaxPerDayInstances(ivs)
+		if len(ivs) == 0 || i >= origLen {
+			continue
+		}
+		switch ivs[0].Spec().Freq {
+		case PeriodicType:
+			// every 10mins, 6 per hour and 144 per day
+			require.Equal(t, perDay, uint32(144), "Incorrect periodic intervals per day")
+		case DailyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect daily intervals per day")
+		case WeeklyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect Weekly intervals per day")
+		case MonthlyType:
+			require.Equal(t, perDay, uint32(1), "Incorrect Monthly intervals per day")
+		}
 	}
+	cumulativeSched := strings.Join(dockSched[0:4], scheduleSeparator)
+	ivs, _, err := ParseScheduleAndPolicies(cumulativeSched)
+	require.NoError(t, err)
+	perDay := MaxPerDayInstances(ivs)
+	require.Equal(t, perDay, uint32(147), "Unexpcted number of intervals per day")
+
 }
 
 func TestScheduleUpgrade(t *testing.T) {
