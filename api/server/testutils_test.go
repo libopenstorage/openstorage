@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
+	"math/rand"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -61,12 +63,14 @@ var (
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service and REST server
 type testServer struct {
-	conn *grpc.ClientConn
-	m    *mockdriver.MockVolumeDriver
-	c    cluster.Cluster
-	s    *mockapi.MockOpenStoragePoolServer
-	mc   *gomock.Controller
-	sdk  *sdk.Server
+	conn   *grpc.ClientConn
+	m      *mockdriver.MockVolumeDriver
+	c      cluster.Cluster
+	s      *mockapi.MockOpenStoragePoolServer
+	mc     *gomock.Controller
+	sdk    *sdk.Server
+	port   string
+	gwport string
 }
 
 // Struct used for creation and setup of cluster api testing
@@ -127,6 +131,7 @@ func setupFakeDriver() {
 
 func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -146,8 +151,8 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
 		DriverName:        "fake",
 		Net:               "tcp",
-		Address:           ":8123",
-		RestPort:          "8124",
+		Address:           ":" + tester.port,
+		RestPort:          tester.gwport,
 		StoragePolicy:     stp,
 		StoragePoolServer: tester.s,
 		Cluster:           tester.c,
@@ -173,7 +178,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.sdk.UseVolumeDrivers(driverMap)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:8123", []grpc.DialOption{grpc.WithInsecure()})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithInsecure()})
 	assert.Nil(t, err)
 
 	return tester
@@ -181,6 +186,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 func newTestServerSdk(t *testing.T) *testServer {
 	tester := &testServer{}
+	tester.setPorts()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -210,8 +216,8 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
 		DriverName:        "fake",
 		Net:               "tcp",
-		Address:           ":8123",
-		RestPort:          "8124",
+		Address:           ":" + tester.port,
+		RestPort:          tester.gwport,
 		Cluster:           tester.c,
 		Socket:            testSdkSock,
 		StoragePolicy:     stp,
@@ -230,7 +236,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:8123", []grpc.DialOption{grpc.WithInsecure()})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithInsecure()})
 	assert.Nil(t, err)
 
 	// Create credential for cloudBackup testing
@@ -287,6 +293,15 @@ func newTestServer(t *testing.T) *testServer {
 	return tester
 }
 
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(2999) + 8000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
+}
+
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
 }
@@ -329,6 +344,9 @@ func testRestServer(t *testing.T) (*httptest.Server, *testServer) {
 }
 
 func testRestServerSdkNoAuth(t *testing.T) (*httptest.Server, *testServer) {
+	os.Remove(testSdkSock)
+	testVolDriver := newTestServerSdkNoAuth(t)
+
 	vapi := newVolumeAPI(mockDriverName, testSdkSock)
 	router := mux.NewRouter()
 	// Register all routes from the App
@@ -340,11 +358,13 @@ func testRestServerSdkNoAuth(t *testing.T) (*httptest.Server, *testServer) {
 	}
 
 	ts := httptest.NewServer(router)
-	testVolDriver := newTestServerSdkNoAuth(t)
 	return ts, testVolDriver
 }
 
 func testRestServerSdk(t *testing.T) (*httptest.Server, *testServer) {
+	os.Remove(testSdkSock)
+	testVolDriver := newTestServerSdk(t)
+
 	vapi := newVolumeAPI("fake", testSdkSock)
 	router := mux.NewRouter()
 	// Register all routes from the App
@@ -356,7 +376,6 @@ func testRestServerSdk(t *testing.T) (*httptest.Server, *testServer) {
 	}
 
 	ts := httptest.NewServer(router)
-	testVolDriver := newTestServerSdk(t)
 	return ts, testVolDriver
 }
 
