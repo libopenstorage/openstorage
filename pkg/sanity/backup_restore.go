@@ -104,7 +104,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -211,7 +211,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -333,10 +333,10 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(restoredVolume)
+			err = volumedriver.Delete(restoredVolume, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -474,7 +474,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -551,7 +551,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -642,7 +642,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -730,7 +730,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)

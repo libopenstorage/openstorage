@@ -342,7 +342,7 @@ func (s *VolumeServer) Delete(
 	}
 
 	// Delete the volume
-	err = s.driver(ctx).Delete(req.GetVolumeId())
+	err = s.driver(ctx).Delete(req.GetVolumeId(), req.Options)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

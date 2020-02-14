@@ -101,7 +101,7 @@ func (v *volumeDriver) Create(
 	return volume.Id, nil
 }
 
-func (v *volumeDriver) Delete(volumeID string) error {
+func (v *volumeDriver) Delete(volumeID string, opts *api.VolumeDeleteOptions) error {
 	if _, err := v.GetVol(volumeID); err != nil {
 		return err
 	}

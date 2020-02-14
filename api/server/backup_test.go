@@ -41,7 +41,7 @@ func TestClientBackupCreateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(id, nil)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -288,7 +288,7 @@ func TestClientBackupEnumerateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(id, nil)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -350,7 +350,7 @@ func TestClientBackupEnumerateFailed(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(id, nil)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -518,7 +518,7 @@ func TestClientBackupSchedCreateSuccess(t *testing.T) {
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(id, nil)
 
 	goodRequest := api.CloudBackupSchedCreateRequest{}
 	goodRequest.SrcVolumeID = id

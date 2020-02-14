@@ -244,7 +244,7 @@ type ProtoDriver interface {
 	Create(locator *api.VolumeLocator, Source *api.Source, spec *api.VolumeSpec) (string, error)
 	// Delete volume.
 	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
-	Delete(volumeID string) error
+	Delete(volumeID string, options *api.VolumeDeleteOptions) error
 	// Mount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Mount(volumeID string, mountPath string, options map[string]string) error

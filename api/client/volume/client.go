@@ -33,7 +33,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		c: c}
+		c:                     c}
 }
 
 // String description of this driver.
@@ -169,9 +169,9 @@ func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
 
 // Delete volume.
 // Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
-func (v *volumeClient) Delete(volumeID string) error {
+func (v *volumeClient) Delete(volumeID string, options *api.VolumeDeleteOptions) error {
 	response := &api.VolumeResponse{}
-	if err := v.c.Delete().Resource(volumePath).Instance(volumeID).Do().Unmarshal(response); err != nil {
+	if err := v.c.Delete().Resource(volumePath).Instance(volumeID).Body(options).Do().Unmarshal(response); err != nil {
 		return err
 	}
 	if response.Error != "" {

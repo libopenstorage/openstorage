@@ -66,10 +66,10 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(snapID)
+			err = volumedriver.Delete(snapID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -148,11 +148,11 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			for _, snapID := range snapIDs {
-				err = volumedriver.Delete(snapID)
+				err = volumedriver.Delete(snapID, nil)
 				Expect(err).ToNot(HaveOccurred())
 			}
 
@@ -247,10 +247,10 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(snapID)
+			err = volumedriver.Delete(snapID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)

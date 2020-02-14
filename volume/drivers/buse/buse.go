@@ -237,7 +237,7 @@ func (d *driver) Create(
 	return v.Id, err
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(volumeID string, opts *api.VolumeDeleteOptions) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
@@ -324,7 +324,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	// BUSE does not support snapshots, so just copy the block files.
 	err = copyFile(BuseMountPath+volumeID, BuseMountPath+newVolumeID)
 	if err != nil {
-		d.Delete(newVolumeID)
+		d.Delete(newVolumeID, nil)
 		return "", nil
 	}
 

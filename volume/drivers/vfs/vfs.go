@@ -91,7 +91,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	return v.Id, d.UpdateVol(v)
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(volumeID string, opts *api.VolumeDeleteOptions) error {
 	if _, err := d.GetVol(volumeID); err != nil {
 		return err
 	}

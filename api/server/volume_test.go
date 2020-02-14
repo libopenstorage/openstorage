@@ -69,7 +69,7 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.EqualValues(t, newsize, res[0].Spec.Size)
 
 	// DELETE
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Nil(t, err)
 }
 
@@ -2371,7 +2371,7 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Nil(t, err)
 }
 
@@ -2410,7 +2410,7 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
 		AnyTimes()
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Nil(t, err)
 
 }
@@ -2493,7 +2493,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 		Return(map[string]interface{}{secrets.SecretTokenKey: incorrectToken}, nil).
 		Times(1)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Error(t, err, "Expected an error on Delete")
 	mockSecret.EXPECT().
 		String().
@@ -2509,7 +2509,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 		Return(nil, fmt.Errorf("incorrect secret")).
 		AnyTimes()
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Error(t, err, "Expected an error on Delete")
 
 }
@@ -2607,7 +2607,7 @@ func TestStorkVolumeInspect(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(id, nil)
 	assert.Nil(t, err)
 
 	vols, err := driverclient.Inspect([]string{id})

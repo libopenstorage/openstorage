@@ -597,6 +597,10 @@ func request_OpenStorageVolume_Clone_0(ctx context.Context, marshaler runtime.Ma
 
 }
 
+var (
+	filter_OpenStorageVolume_Delete_0 = &utilities.DoubleArray{Encoding: map[string]int{"volume_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_OpenStorageVolume_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageVolumeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkVolumeDeleteRequest
 	var metadata runtime.ServerMetadata
@@ -617,6 +621,10 @@ func request_OpenStorageVolume_Delete_0(ctx context.Context, marshaler runtime.M
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "volume_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageVolume_Delete_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.Delete(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))

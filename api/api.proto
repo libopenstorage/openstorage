@@ -276,6 +276,12 @@ message VolumeInspectOptions {
   bool deep = 1;
 }
 
+// Options used for volume delete
+message VolumeDeleteOptions {
+  // archive if tree will archive the volume to the configured cloud store in the storage provicer
+  bool archive = 1;
+}
+
 // Source is a structure that can be given to a volume
 // to seed the volume with data.
 message Source {
@@ -2764,6 +2770,8 @@ message SdkVolumeCloneResponse {
 message SdkVolumeDeleteRequest {
   // Id of volume to delete
   string volume_id = 1;
+  // Options during deletion
+  VolumeDeleteOptions options = 2;
 }
 
 // Empty response

@@ -195,7 +195,7 @@ func (d *driver) Create(
 	return res.Task[0].Resource.Id, err
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(volumeID string, options *api.VolumeDeleteOptions) error {
 	return nil
 }
 

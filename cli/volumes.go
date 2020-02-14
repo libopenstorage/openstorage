@@ -269,7 +269,7 @@ func (v *volDriver) volumeDelete(context *cli.Context) {
 	}
 	volumeID := context.Args()[0]
 	v.volumeOptions(context)
-	err := v.volDriver.Delete(volumeID)
+	err := v.volDriver.Delete(volumeID, nil)
 	if err != nil {
 		cmdError(context, fn, err)
 		return

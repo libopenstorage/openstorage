@@ -449,7 +449,7 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// Delete volume
-	err = s.driver.Delete(req.GetVolumeId())
+	err = s.driver.Delete(req.GetVolumeId(), nil)
 	if err != nil {
 		e := fmt.Sprintf("Unable to delete volume with id %s: %s",
 			req.GetVolumeId(),
@@ -579,7 +579,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, err
 	}
 
-	err = s.driver.Delete(req.GetSnapshotId())
+	err = s.driver.Delete(req.GetSnapshotId(), nil)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),

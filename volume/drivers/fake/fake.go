@@ -94,7 +94,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		kv: kv,
+		kv:                    kv,
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -190,7 +190,7 @@ func (d *driver) Create(
 	return v.Id, nil
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(volumeID string, opts *api.VolumeDeleteOptions) error {
 	_, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)

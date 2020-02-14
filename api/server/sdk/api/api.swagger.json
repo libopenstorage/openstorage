@@ -3814,6 +3814,17 @@
         "title": "VolumeConsumer identifies a consumer for a Volume. An example of a VolumeConsumer\nwould be a Pod in Kubernetes who has mounted the PersistentVolumeClaim for the\nVolume",
         "type": "object"
       },
+      "apiVolumeDeleteOptions": {
+        "properties": {
+          "archive": {
+            "format": "boolean",
+            "title": "archive if tree will archive the volume to the configured cloud store in the storage provicer",
+            "type": "boolean"
+          }
+        },
+        "title": "Options used for volume delete",
+        "type": "object"
+      },
       "apiVolumeInspectOptions": {
         "properties": {
           "deep": {
@@ -7013,6 +7024,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "archive if tree will archive the volume to the configured cloud store in the storage provicer.",
+            "in": "query",
+            "name": "options.archive",
+            "required": false,
+            "schema": {
+              "format": "boolean",
+              "type": "boolean"
             }
           }
         ],

@@ -166,7 +166,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			By("Deleting the created volume")
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(volumeID, nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			endTime := time.Now()
