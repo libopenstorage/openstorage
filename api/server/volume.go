@@ -665,17 +665,27 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 //     schema:
 //       "$ref": "#/definitions/VolumeResponse"
 func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
-	var volumeID string
-	var err error
+	var (
+		volumeID string
+		err      error
+		opts     api.VolumeDeleteOptions
+	)
 
 	method := "delete"
+
+	err = json.NewDecoder(r.Body).Decode(&opts)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	if volumeID, err = vd.parseID(r); err != nil {
 		e := fmt.Errorf("Failed to parse parse volumeID: %s", err.Error())
 		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		return
 	}
 
-	vd.logRequest(method, volumeID).Infoln("")
+	vd.logRequest(method, volumeID).Infoln("[debug] delete opts: %v", opts)
 
 	volumeResponse := &api.VolumeResponse{}
 
@@ -692,8 +702,12 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	volumes := api.NewOpenStorageVolumeClient(conn)
-	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{VolumeId: volumeID})
+	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: volumeID,
+		Options:  &opts,
+	})
 	if err != nil {
 		volumeResponse.Error = err.Error()
 	}
