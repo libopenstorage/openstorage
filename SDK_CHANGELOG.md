@@ -1,6 +1,19 @@
 # Changelog
 
 ## Releases
+
+### v0.73.0 - Tech Preview (1/27/2020)
+
+* Add Restore volume spec for Cloud Backup restore api
+*
+### v0.72.0 - (1/21/2020)
+
+* Added documentation to SdkRule about new denial support
+
+### v0.71.0 - Tech Preview (1/15/2020)
+
+* Add auto to IoProfile
+
 ### v0.70.0 - Tech Preview (1/9/2020)
 
 * Add support for public user access

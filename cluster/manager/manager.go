@@ -447,7 +447,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		} else {
 			// start the watch
 			c.kvdbWatchIndex = kvdbVersion
-			defer c.startClusterDBWatch(c.kvdbWatchIndex, kvdb.Instance())
+			defer c.startClusterDBWatch(0, kvdb.Instance())
 		}
 	} else {
 		db, kvdbVersion, err = unmarshalClusterInfo(kvp)
@@ -455,6 +455,10 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 			logrus.Errorf("watch returned nil or empty cluster database: %v", kvp)
 			// cluster database should not be nil, exit since we don't know what happened
 			os.Exit(1)
+		}
+		if kvdbVersion <= c.kvdbWatchIndex {
+			// skip processing version update
+			return nil
 		}
 		c.kvdbWatchIndex = kvdbVersion
 	}
@@ -638,12 +642,24 @@ func (c *ClusterManager) initNodeInCluster(
 func (c *ClusterManager) joinCluster(
 	self *api.Node,
 ) error {
+	// Alert all listeners that we are joining the cluster.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).PreJoin(self)
+		if err != nil {
+			logrus.Warnf("Failed to execute PreJoin %s: %v",
+				e.Value.(cluster.ClusterListener).String(), err)
+			logrus.Errorln("Failed to join cluster.", err)
+			return err
+		}
+	}
+
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
 	// in between. Snapshot is created under cluster db lock to make
 	// sure cluster db updates do not happen during snapshot, otherwise
 	// there may be a mismatch between db updates from listeners and
 	// cluster db state.
+
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -677,9 +693,20 @@ func (c *ClusterManager) joinCluster(
 			return err
 		}
 	}
+
 	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		logrus.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+
+	prevNonQuorumMemberState := selfNodeEntry.NonQuorumMember
+	selfNodeEntry.NonQuorumMember =
+		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
+			!c.quorumMember()
+	if selfNodeEntry.NonQuorumMember != prevNonQuorumMemberState {
+		if !selfNodeEntry.NonQuorumMember {
+			logrus.Infof("This node now participates in quorum decisions")
+		}
 	}
 
 	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
@@ -744,12 +771,6 @@ func (c *ClusterManager) startHeartBeat(
 			// Do not add nodes with mismatched version
 			continue
 		}
-		nodeIp := nodeEntry.DataIp + ":" + c.gossipPort
-		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
-			KnownUrl:      nodeIp,
-			ClusterDomain: nodeEntry.ClusterDomain,
-		}
-
 		gossipPort := nodeEntry.GossipPort
 		if gossipPort == "" {
 			// The cluster DB does not have the gossip port value
@@ -759,6 +780,13 @@ func (c *ClusterManager) startHeartBeat(
 			// node pings us, gossip protocol will automatically update the port
 			gossipPort = c.gossipPort
 		}
+
+		nodeIp := nodeEntry.DataIp + ":" + gossipPort
+		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
+			KnownUrl:      nodeIp,
+			ClusterDomain: nodeEntry.ClusterDomain,
+		}
+
 		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {

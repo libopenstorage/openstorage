@@ -67,8 +67,12 @@ const (
 	// the VolumeSpec.force_unsupported_fs_type. When set to true it asks
 	// the driver to use an unsupported value of VolumeSpec.format if possible
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
-	SpecNodiscard              = "nodiscard"
-	StoragePolicy              = "storagepolicy"
+	// SpecMatchSrcVolProvision defaults to false. Applicable to cloudbackup restores only.
+	// If set to "true", cloudbackup restore volume gets provisioned on same pools as
+	// backup, allowing for inplace restore after.
+	SpecMatchSrcVolProvision = "match_src_vol_provision"
+	SpecNodiscard            = "nodiscard"
+	StoragePolicy            = "storagepolicy"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -322,6 +326,13 @@ type CloudBackupRestoreRequest struct {
 	// Name is optional unique id to be used for this restore op
 	// restore creates this by default
 	Name string
+	// Optional RestoreVolumeSpec allows some of the restoreVolume fields to be modified.
+	// These fields default to the volume spec stored with cloudbackup.
+	// The request fails if both RestoreVolSpec and NodeID are specified.
+	Spec *RestoreVolumeSpec
+	// Optional Locator for restoreVolume. Request fails if both Name and
+	// locator are specified
+	Locator *VolumeLocator
 }
 
 type CloudBackupGroupCreateResponse struct {
