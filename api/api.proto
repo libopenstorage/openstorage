@@ -1571,6 +1571,13 @@ service OpenStoragePool {
       };
     }
 
+  // UpdateIOPS updates IOPS on the given storage pool
+  rpc UpdateIOPS(SdkStoragePoolUpdateIOPSRequest)
+  returns (SdkStoragePoolUpdateIOPSResponse) {
+    option(google.api.http) = {
+        put: "/v1/storagepools/updateiops/{uuid}"
+      };
+  }
 }
 
 
@@ -3045,6 +3052,19 @@ message SdkStoragePoolResizeRequest {
 }
 
 
+// Defines a request when inspect a storage pool
+message SdkStoragePoolUpdateIOPSRequest {
+  // UUID of the storage pool to inspect
+  string uuid = 1;
+  // UpdateValue is the option to indiciate if you would like to update IOPS of the pool
+  // by a fixed size or by a percentage of current iops
+  oneof update_value {
+    // IOPS is the new IOPS for the storage pool
+    uint64 iops = 200;
+    // Percentage is the percentage of the current IOPS of the storage pool
+    uint64 percentage = 201;
+  }
+}
 
 message SdkStoragePool {
   // OperationStatus captures the various statuses of a storage pool operation
@@ -3063,6 +3083,8 @@ message SdkStoragePool {
   enum OperationType {
     // Resize operation
     OPERATION_RESIZE = 0;
+    // UpdateIOPS operation
+    OPERATION_UPDATE_IOPS = 1;
   }
 
   // Defines the operation types available to resize a storage pool
@@ -3078,6 +3100,9 @@ message SdkStoragePool {
 
 // Defines a response when resizing a storage pool
 message SdkStoragePoolResizeResponse {
+}
+
+message SdkStoragePoolUpdateIOPSResponse {
 }
 
 // Defines a response when inspecting a node

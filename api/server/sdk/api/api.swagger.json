@@ -2776,15 +2776,19 @@
       },
       "apiSdkStoragePoolOperationType": {
         "default": "OPERATION_RESIZE",
-        "description": "- OPERATION_RESIZE: Resize operation",
+        "description": "- OPERATION_RESIZE: Resize operation\n - OPERATION_UPDATE_IOPS: UpdateIOPS operation",
         "enum": [
-          "OPERATION_RESIZE"
+          "OPERATION_RESIZE",
+          "OPERATION_UPDATE_IOPS"
         ],
         "title": "OperationType defines the various operations that are performed on a storage pool",
         "type": "string"
       },
       "apiSdkStoragePoolResizeResponse": {
         "title": "Defines a response when resizing a storage pool",
+        "type": "object"
+      },
+      "apiSdkStoragePoolUpdateIOPSResponse": {
         "type": "object"
       },
       "apiSdkTimeWeekday": {
@@ -6469,6 +6473,37 @@
           }
         },
         "summary": "Resize resizes the specified storage pool based on the request parameters",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/storagepools/updateiops/{uuid}": {
+      "put": {
+        "operationId": "UpdateIOPS",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkStoragePoolUpdateIOPSResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "UpdateIOPS updates IOPS on the given storage pool",
         "tags": [
           "OpenStoragePool"
         ]
