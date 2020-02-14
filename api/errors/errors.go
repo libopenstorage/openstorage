@@ -38,21 +38,22 @@ func (e *ErrNotSupported) Error() string {
 	return fmt.Sprintf("Not Supported")
 }
 
-// ErrStoragePoolExpandInProgress error when an expand is already in progress
+// ErrStoragePoolOperationInProgress error when an operation is already in progress
 // on a storage pool
-type ErrStoragePoolResizeInProgress struct {
+type ErrStoragePoolOperationInProgress struct {
 	// Pool is the affected pool
 	Pool *api.StoragePool
 }
 
-func (e *ErrStoragePoolResizeInProgress) Error() string {
-	errMsg := fmt.Sprintf("resize for pool %s is already in progress.", e.Pool.GetUuid())
+func (e *ErrStoragePoolOperationInProgress) Error() string {
+	errMsg := fmt.Sprintf("another operation for pool %s is already in progress.", e.Pool.GetUuid())
 	if e.Pool.LastOperation != nil {
 		op := e.Pool.LastOperation
 		if op.Type == api.SdkStoragePool_OPERATION_RESIZE {
-			errMsg = fmt.Sprintf("%s %s %s", errMsg, op.Msg, parser.LabelsToString(op.Params))
+			errMsg = fmt.Sprintf("%s (resize) %s %s", errMsg, op.Msg, parser.LabelsToString(op.Params))
+		} else if op.Type == api.SdkStoragePool_OPERATION_UPDATE_IOPS {
+			errMsg = fmt.Sprintf("%s (update IOPS) %s %s", errMsg, op.Msg, parser.LabelsToString(op.Params))
 		}
 	}
-
 	return errMsg
 }
