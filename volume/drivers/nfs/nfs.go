@@ -578,3 +578,7 @@ func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, err
 func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
 	return nil, volume.ErrNotSupported
 }
+
+func (d *driver) BlockSparse(volumeID, seedID string) error {
+	return volume.ErrNotSupported
+}

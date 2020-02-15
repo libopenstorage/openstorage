@@ -33,7 +33,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		c:                     c}
+		c: c}
 }
 
 // String description of this driver.
@@ -251,6 +251,27 @@ func (v *volumeClient) UsedSize(
 	req := v.c.Get().Resource(volumePath + "/usedsize").Instance(volumeID)
 	err := req.Do().Unmarshal(&usedSize)
 	return usedSize, err
+}
+
+// BlockSparse Sparsify volume
+func (v *volumeClient) BlockSparse(
+	volumeID string,
+	seedID string,
+) error {
+	response := &api.VolumeResponse{}
+	request := &api.BlockSparseRequest{
+		Id:     volumeID,
+		SeedId: seedID,
+	}
+
+	req := v.c.Post().Resource(volumePath + "/sparse").Body(request)
+	res := req.Do()
+	err := res.Unmarshal(response)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // Active Requests on all volume.

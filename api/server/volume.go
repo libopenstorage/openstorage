@@ -1326,6 +1326,61 @@ func (vd *volAPI) requests(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(requests)
 }
 
+// swagger:operation POST /osd-volumes/sparse sparsify volume
+//
+// Make volume sparse BlockSparseRequest
+//
+// ---
+// produces:
+// - application/json
+// parameters:
+// - name: id
+//   in: query
+//   description: id of volume
+//   required: true
+//   type: integer
+// - name: seed
+//   in: query
+//   description: id to seed volume with
+//   required: true
+//   type: integer
+//   schema:
+//    "$ref": "#/definitions/BlockSparseRequest"
+// responses:
+//    '200':
+//      description: an array of volumes
+//      schema:
+//       "$ref": '#/definitions/BlockSparseRequest'
+//    default:
+//     description: unexpected error
+//     schema:
+//      "$ref": "#/definitions/VolumeResponse"
+func (vd *volAPI) sparse(w http.ResponseWriter, r *http.Request) {
+	method := "sparse"
+	volumeResponse := &api.VolumeResponse{}
+
+	var req api.BlockSparseRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		vd.logRequest(method, string(req.Id)).Infoln("")
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+	err = d.BlockSparse(req.Id, req.SeedId)
+	if err != nil {
+		e := fmt.Errorf("Failed to sparse volume: %s - %s - %s", req.Id, req.SeedId, err.Error())
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	volumeResponse.Error = responseStatus(fmt.Errorf("Error: %v", err))
+	json.NewEncoder(w).Encode(volumeResponse)
+}
+
 func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
 	var err error
 
@@ -1730,6 +1785,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
+		{verb: "POST", path: volPath("/sparse", volume.APIVersion), fn: vd.sparse},
 	}
 }
 

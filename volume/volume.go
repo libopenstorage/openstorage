@@ -265,6 +265,8 @@ type ProtoDriver interface {
 	Catalog(volumeid, subfolder string, depth string) (api.CatalogResponse, error)
 	// Does a Filesystem Trim operation to free unused space to block device(block discard)
 	VolService(volumeID string, vsreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error)
+	// BlockSparse sparcify volume
+	BlockSparse(volumeID, seedID string) error
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.

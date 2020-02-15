@@ -94,7 +94,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		kv:                    kv,
+		kv: kv,
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -960,4 +960,8 @@ func (d *driver) Catalog(volumeID, path, depth string) (api.CatalogResponse, err
 
 func (d *driver) VolService(volumeID string, vtreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error) {
 	return nil, volume.ErrNotSupported
+}
+
+func (d *driver) BlockSparse(volumeID, seedID string) error {
+	return volume.ErrNotSupported
 }

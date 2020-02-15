@@ -1150,6 +1150,12 @@ message ActiveRequests {
   repeated ActiveRequest ActiveRequest = 2;
 }
 
+// Volume sparse request
+message BlockSparseRequest {
+  string id = 1;
+  string seed_id = 2;
+}
+
 // GroupSnapCreateRequest specifies a request to create a snapshot of given group.
 message GroupSnapCreateRequest {
   string id = 1;

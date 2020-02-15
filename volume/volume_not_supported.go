@@ -102,6 +102,14 @@ func (s *statsNotSupported) CapacityUsage(
 	return nil, ErrNotSupported
 }
 
+// BlockSparse sparsify volume
+func (s *statsNotSupported) BlockSparse(
+	ID string,
+	seedID string,
+) error {
+	return ErrNotSupported
+}
+
 type quiesceNotSupported struct{}
 
 func (s *quiesceNotSupported) Quiesce(
