@@ -26,6 +26,7 @@ import (
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -70,6 +71,15 @@ func (s *OsdCsiServer) NodePublishVolume(
 		return nil, status.Error(codes.InvalidArgument, "Volume access mode must be provided")
 	}
 
+	// Verify target location is an existing directory
+	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
+		return nil, status.Errorf(
+			codes.Aborted,
+			"Failed to use target location %s: %s",
+			req.GetTargetPath(),
+			err.Error())
+	}
+
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
@@ -89,7 +99,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Gather volume attributes
-	spec, _, _, err := s.specHandler.SpecFromOpts(req.GetVolumeContext())
+	spec, locator, _, err := s.specHandler.SpecFromOpts(req.GetVolumeContext())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -105,36 +115,52 @@ func (s *OsdCsiServer) NodePublishVolume(
 	opts := &api.SdkVolumeAttachOptions{
 		SecretName: spec.GetPassphrase(),
 	}
+
+	// can use either spec.Ephemeral or VolumeContext label
+	volumeId := req.GetVolumeId()
+	if req.GetVolumeContext()["csi.storage.k8s.io/ephemeral"] == "true" || spec.Ephemeral {
+		spec.Ephemeral = true
+		volumes := api.NewOpenStorageVolumeClient(conn)
+		resp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+			Name:   req.GetVolumeId(),
+			Spec:   spec,
+			Labels: locator.GetVolumeLabels(),
+		})
+		if err != nil {
+			return nil, err
+		}
+		volumeId = resp.VolumeId
+	}
+
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
-			VolumeId:      req.GetVolumeId(),
+			VolumeId:      volumeId,
 			Options:       opts,
 			DriverOptions: driverOpts,
 		}); err != nil {
+			if spec.Ephemeral {
+				logrus.Errorf("Failed to attach ephemeral volume %s: %v", volumeId, err.Error())
+				s.cleanupEphemeral(ctx, conn, volumeId, false)
+			}
 			return nil, err
 		}
 	}
 
-	// Verify target location is an existing directory
-	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
-		return nil, status.Errorf(
-			codes.Aborted,
-			"Failed to use target location %s: %s",
-			req.GetTargetPath(),
-			err.Error())
-	}
-
 	// Mount volume onto the path
 	if _, err := mounts.Mount(ctx, &api.SdkVolumeMountRequest{
-		VolumeId:  req.GetVolumeId(),
+		VolumeId:  volumeId,
 		MountPath: req.GetTargetPath(),
 		Options:   opts,
 	}); err != nil {
+		if spec.Ephemeral {
+			logrus.Errorf("Failed to mount ephemeral volume %s: %v", volumeId, err.Error())
+			s.cleanupEphemeral(ctx, conn, volumeId, true)
+		}
 		return nil, err
 	}
 
 	logrus.Infof("Volume %s mounted on %s",
-		req.GetVolumeId(),
+		volumeId,
 		req.GetTargetPath())
 
 	return &csi.NodePublishVolumeResponse{}, nil
@@ -167,8 +193,8 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 				req.GetVolumeId(),
 				err.Error())
 		} else {
-			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: Inspect returned no volumes",
-				req.GetVolumeId())
+			logrus.Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
+			return &csi.NodeUnpublishVolumeResponse{}, nil
 		}
 	}
 
@@ -214,6 +240,25 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 			},
 		},
 	}, nil
+}
+
+// cleanupEphemeral detaches and deletes an ephemeral volume if either attach or mount fails
+func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientConn, volumeId string, detach bool) {
+	if detach {
+		mounts := api.NewOpenStorageMountAttachClient(conn)
+		if _, err := mounts.Detach(ctx, &api.SdkVolumeDetachRequest{
+			VolumeId: volumeId,
+		}); err != nil {
+			logrus.Errorf("Failed to detach ephemeral volume %s during cleanup: %v", volumeId, err.Error())
+			return
+		}
+	}
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	if _, err := volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+		VolumeId: volumeId,
+	}); err != nil {
+		logrus.Errorf("Failed to delete ephemeral volume %s during cleanup: %v", volumeId, err.Error())
+	}
 }
 
 func verifyTargetLocation(targetPath string) error {
