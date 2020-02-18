@@ -220,6 +220,8 @@ spec:
           securityContext:
             privileged: true
           volumeMounts:
+          - name: csi-driver-path
+            mountPath: /var/lib/kubelet/plugins/osd.openstorage.org
           - name: csi-kubelet-path
             mountPath: /var/lib/kubelet
         - name: csi-node-driver-registrar
@@ -253,4 +255,8 @@ spec:
         - name: csi-kubelet-path
           hostPath:
             path: /var/lib/kubelet
+            type: DirectoryOrCreate
+        - name: csi-driver-path
+          hostPath:
+            path: /var/lib/kubelet/plugins/osd.openstorage.org
             type: DirectoryOrCreate

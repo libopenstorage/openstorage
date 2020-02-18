@@ -284,7 +284,11 @@ func (r *Request) Do() *Response {
 			break
 		}
 		attemptNum++
-		handleServiceUnavailable(resp, attemptNum)
+
+		// If we don't receive a retry header we should exit.
+		if !retryHeaderReceived(resp, attemptNum) {
+			break
+		}
 	}
 
 	if resp.Body != nil {
@@ -302,17 +306,25 @@ func (r *Request) Do() *Response {
 	}
 }
 
-func handleServiceUnavailable(resp *http.Response, attemptNum int) {
+func retryHeaderReceived(resp *http.Response, attemptNum int) bool {
 	var duration = time.Duration(1 * time.Second)
+
+	// Close body so go-routines can spin down.
+	defer resp.Body.Close()
+
+	// Look for the retry header, if we find it set the retry sleep duration.
 	if len(resp.Header["Retry-After"]) > 0 {
 		if retryafter, err := strconv.Atoi(resp.Header["Retry-After"][0]); err == nil {
 			duration = time.Duration(retryafter*attemptNum) * time.Second
+
+			// Sleep for the newly calculated back-off and keep retrying.
+			time.Sleep(duration)
+			return true
 		}
 	}
-	// Close body so go-routines can spin down.
-	resp.Body.Close()
 
-	time.Sleep(duration)
+	// We didn't receive a retry header or we couldn't parse one. Exit and stop retry-ing.
+	return false
 }
 
 // Body return http body, valid only if there is no error
