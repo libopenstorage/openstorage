@@ -139,6 +139,8 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		Return(api.DriverType_DRIVER_TYPE_BLOCK).
 		Times(1)
 
+	os.Mkdir("mypath", 0750)
+	defer os.Remove("mypath")
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId:   name,
 		TargetPath: "mypath",
@@ -186,7 +188,7 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		EXPECT().
 		Type().
 		Return(api.DriverType_DRIVER_TYPE_NONE).
-		Times(len(testargs))
+		AnyTimes()
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId: name,
 		VolumeCapability: &csi.VolumeCapability{
