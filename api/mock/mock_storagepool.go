@@ -35,6 +35,21 @@ func (m *MockOpenStoragePoolServer) EXPECT() *MockOpenStoragePoolServerMockRecor
 	return m.recorder
 }
 
+// Delete mocks base method
+func (m *MockOpenStoragePoolServer) Delete(arg0 context.Context, arg1 *api.SdkStoragePoolDeleteRequest) (*api.SdkStoragePoolDeleteResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkStoragePoolDeleteResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockOpenStoragePoolServerMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).Delete), arg0, arg1)
+}
+
 // Resize mocks base method
 func (m *MockOpenStoragePoolServer) Resize(arg0 context.Context, arg1 *api.SdkStoragePoolResizeRequest) (*api.SdkStoragePoolResizeResponse, error) {
 	m.ctrl.T.Helper()
@@ -71,6 +86,26 @@ func NewMockOpenStoragePoolClient(ctrl *gomock.Controller) *MockOpenStoragePoolC
 // EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockOpenStoragePoolClient) EXPECT() *MockOpenStoragePoolClientMockRecorder {
 	return m.recorder
+}
+
+// Delete mocks base method
+func (m *MockOpenStoragePoolClient) Delete(arg0 context.Context, arg1 *api.SdkStoragePoolDeleteRequest, arg2 ...grpc.CallOption) (*api.SdkStoragePoolDeleteResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Delete", varargs...)
+	ret0, _ := ret[0].(*api.SdkStoragePoolDeleteResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Delete indicates an expected call of Delete
+func (mr *MockOpenStoragePoolClientMockRecorder) Delete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).Delete), varargs...)
 }
 
 // Resize mocks base method

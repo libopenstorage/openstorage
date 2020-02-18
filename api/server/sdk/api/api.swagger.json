@@ -943,7 +943,7 @@
         "type": "object"
       },
       "apiRestoreVolumeSpec": {
-        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will \ninherit corresponding field value from backup's spec.",
+        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will\ninherit corresponding field value from backup's spec.",
         "properties": {
           "aggregation_level": {
             "description": "Aggregation level Specifies the number of parts the volume can be aggregated from.",
@@ -2227,7 +2227,7 @@
         "type": "object"
       },
       "apiSdkFilesystemTrimStartResponse": {
-        "description": "SdkFilesystemTrimStartResponse defines the response for a \nSdkFilesystemTrimStartRequest.",
+        "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -2772,6 +2772,10 @@
           }
         },
         "title": "A SdkStoragePolicy represents minimum set of volume specs to be\nfollow while creating volumes.\nIf storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be\nused before creating volume to validate volume specs or ensure minimum volume creation\nrules followed",
+        "type": "object"
+      },
+      "apiSdkStoragePoolDeleteResponse": {
+        "title": "Defines a response when deleting a storage pool",
         "type": "object"
       },
       "apiSdkStoragePoolOperationType": {
@@ -6445,7 +6449,7 @@
     },
     "/v1/storagepools/resize/{uuid}": {
       "put": {
-        "operationId": "Resize",
+        "operationId": "Delete",
         "parameters": [
           {
             "in": "path",
@@ -6461,14 +6465,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkStoragePoolResizeResponse"
+                  "$ref": "#/components/schemas/apiSdkStoragePoolDeleteResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Resize resizes the specified storage pool based on the request parameters",
+        "summary": "Delete deletes the specified storage pool",
         "tags": [
           "OpenStoragePool"
         ]

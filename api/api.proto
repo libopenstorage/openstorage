@@ -1096,7 +1096,7 @@ message VolumeConsumer {
 }
 
 
-// VolumeServiceRequest provides details on what volume service command to 
+// VolumeServiceRequest provides details on what volume service command to
 // perform in background on the volume
 message VolumeServiceRequest {
   // User specified volume service command
@@ -1286,7 +1286,7 @@ service OpenStorageRole {
 
 // ## OpenStorageFilesystemTrim Service
 // This service provides methods to manage filesystem trim operation on a
-// volume. 
+// volume.
 //
 // This operation runs in the background on a **mounted volume**. If the volumes
 // are not mounted, these API return error.
@@ -1304,7 +1304,7 @@ service OpenStorageRole {
 //    `OpenStorageFilesystemTrimClient.Start()`
 //    This call returns immediately with a status code indicating if the
 //    operation was successfully started or not.
-// 4. To get the status of the Filesystem Trim operation, issue a grpc call to 
+// 4. To get the status of the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.GetStatus()`
 // 5. To stop the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.Stop()`
@@ -1340,7 +1340,7 @@ service OpenStorageFilesystemTrim {
 
 // ## OpenStorageFilesystemCheckService
 // This service provides methods to manage filesystem check operation on a
-// volume. 
+// volume.
 //
 // This operation is run in the background on an **unmounted volume**.
 // If the volume is mounted, then these APIs return error.
@@ -1360,7 +1360,7 @@ service OpenStorageFilesystemTrim {
 // 3. Status of the CheckHealth() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.CheckHealthGetStatus()`
 // 4. If the CheckHealth Operations status reports filesystem is in unhealthy
-//    state, then to fix all the problems issue a grpc call to 
+//    state, then to fix all the problems issue a grpc call to
 //    `OpenStorageFilesystemCheckClient.FixAll()`
 // 5. Status of the FixAll() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.FixAllGetStatus()`
@@ -1572,6 +1572,14 @@ service OpenStoragePool {
   // Resize resizes the specified storage pool based on the request parameters
   rpc Resize(SdkStoragePoolResizeRequest)
     returns (SdkStoragePoolResizeResponse) {
+      option(google.api.http) = {
+        put: "/v1/storagepools/resize/{uuid}"
+      };
+    }
+
+  // Delete deletes the specified storage pool
+  rpc Delete(SdkStoragePoolDeleteRequest)
+    returns (SdkStoragePoolDeleteResponse) {
       option(google.api.http) = {
         put: "/v1/storagepools/resize/{uuid}"
       };
@@ -3050,6 +3058,12 @@ message SdkStoragePoolResizeRequest {
   bool skip_wait_for_clean_volumes = 4;
 }
 
+// Defines a request to delete a storage pool
+message SdkStoragePoolDeleteRequest {
+  // UUID of the storage pool to delete
+  string uuid = 1;
+}
+
 
 
 message SdkStoragePool {
@@ -3084,6 +3098,10 @@ message SdkStoragePool {
 
 // Defines a response when resizing a storage pool
 message SdkStoragePoolResizeResponse {
+}
+
+// Defines a response when deleting a storage pool
+message SdkStoragePoolDeleteResponse {
 }
 
 // Defines a response when inspecting a node
@@ -3610,7 +3628,7 @@ message SdkCloudBackupSchedEnumerateResponse{
 //   - Services: ["*"]
 //     Apis: ["inspect*"]
 // ```
-// 
+//
 // * Allow all volume call except create
 //
 // ```yaml
@@ -3716,7 +3734,7 @@ message SdkFilesystemTrimStartRequest {
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimStartResponse defines the response for a 
+// SdkFilesystemTrimStartResponse defines the response for a
 // SdkFilesystemTrimStartRequest.
 message SdkFilesystemTrimStartResponse{
   // Status code representing the state of the filesystem trim operation
@@ -4482,7 +4500,7 @@ message RestoreVolStoragePolicy {
 	string policy = 1;
 }
 // RestoreSpec allows some of the restore volume properties of to be modified
-// while restoring the cloud baackup. All pointer fields with nil value will 
+// while restoring the cloud baackup. All pointer fields with nil value will
 // inherit corresponding field value from backup's spec.
 message RestoreVolumeSpec {
   // HaLevel specifies the number of copies of data.
