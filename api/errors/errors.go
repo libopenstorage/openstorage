@@ -2,6 +2,7 @@ package errors
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/parser"
@@ -55,4 +56,16 @@ func (e *ErrStoragePoolResizeInProgress) Error() string {
 	}
 
 	return errMsg
+}
+
+func IsAccessDenied(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	if strings.Contains(err.Error(), "Access denied") {
+		return true
+	}
+
+	return false
 }
