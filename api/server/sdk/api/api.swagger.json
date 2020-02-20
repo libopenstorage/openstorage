@@ -2780,16 +2780,21 @@
       },
       "apiSdkStoragePoolOperationType": {
         "default": "OPERATION_RESIZE",
-        "description": "- OPERATION_RESIZE: Resize operation\n - OPERATION_UPDATE_IOPS: UpdateIOPS operation",
+        "description": "- OPERATION_RESIZE: Resize operation\n - OPERATION_UPDATE_IOPS: UpdateIOPS operation\n - OPERATION_SHRINK: Shrink operation",
         "enum": [
           "OPERATION_RESIZE",
-          "OPERATION_UPDATE_IOPS"
+          "OPERATION_UPDATE_IOPS",
+          "OPERATION_SHRINK"
         ],
         "title": "OperationType defines the various operations that are performed on a storage pool",
         "type": "string"
       },
       "apiSdkStoragePoolResizeResponse": {
         "title": "Defines a response when resizing a storage pool",
+        "type": "object"
+      },
+      "apiSdkStoragePoolShrinkResponse": {
+        "title": "Defines a response when shrinking a storage pool",
         "type": "object"
       },
       "apiSdkStoragePoolUpdateIOPSResponse": {
@@ -6477,6 +6482,37 @@
           }
         },
         "summary": "Delete deletes the specified storage pool",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/storagepools/shrink/{uuid}": {
+      "put": {
+        "operationId": "Shrink",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "uuid",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkStoragePoolShrinkResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Shrink shrinks the given storage pool",
         "tags": [
           "OpenStoragePool"
         ]

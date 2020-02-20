@@ -1592,6 +1592,15 @@ service OpenStoragePool {
         put: "/v1/storagepools/updateiops/{uuid}"
       };
   }
+
+  // Shrink shrinks the given storage pool
+  rpc Shrink(SdkStoragePoolShrinkRequest)
+  returns (SdkStoragePoolShrinkResponse) {
+    option(google.api.http) = {
+        put: "/v1/storagepools/shrink/{uuid}"
+      };
+  }
+
 }
 
 
@@ -3071,6 +3080,12 @@ message SdkStoragePoolDeleteRequest {
   string uuid = 1;
 }
 
+// Defines a request to shrink a storage pool based on the configured storage driver policy
+message SdkStoragePoolShrinkRequest {
+  // UUID of the storage pool to shrink
+  string uuid = 1;
+}
+
 
 // Defines a request when inspect a storage pool
 message SdkStoragePoolUpdateIOPSRequest {
@@ -3105,6 +3120,8 @@ message SdkStoragePool {
     OPERATION_RESIZE = 0;
     // UpdateIOPS operation
     OPERATION_UPDATE_IOPS = 1;
+    // Shrink operation
+    OPERATION_SHRINK = 2;
   }
 
   // Defines the operation types available to resize a storage pool
@@ -3124,6 +3141,10 @@ message SdkStoragePoolResizeResponse {
 
 // Defines a response when deleting a storage pool
 message SdkStoragePoolDeleteResponse {
+}
+
+// Defines a response when shrinking a storage pool
+message SdkStoragePoolShrinkResponse {
 }
 
 message SdkStoragePoolUpdateIOPSResponse {

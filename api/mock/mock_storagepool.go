@@ -65,6 +65,21 @@ func (mr *MockOpenStoragePoolServerMockRecorder) Resize(arg0, arg1 interface{}) 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resize", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).Resize), arg0, arg1)
 }
 
+// Shrink mocks base method
+func (m *MockOpenStoragePoolServer) Shrink(arg0 context.Context, arg1 *api.SdkStoragePoolShrinkRequest) (*api.SdkStoragePoolShrinkResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Shrink", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkStoragePoolShrinkResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Shrink indicates an expected call of Shrink
+func (mr *MockOpenStoragePoolServerMockRecorder) Shrink(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shrink", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).Shrink), arg0, arg1)
+}
+
 // UpdateIOPS mocks base method
 func (m *MockOpenStoragePoolServer) UpdateIOPS(arg0 context.Context, arg1 *api.SdkStoragePoolUpdateIOPSRequest) (*api.SdkStoragePoolUpdateIOPSResponse, error) {
 	m.ctrl.T.Helper()
@@ -141,6 +156,26 @@ func (mr *MockOpenStoragePoolClientMockRecorder) Resize(arg0, arg1 interface{}, 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resize", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).Resize), varargs...)
+}
+
+// Shrink mocks base method
+func (m *MockOpenStoragePoolClient) Shrink(arg0 context.Context, arg1 *api.SdkStoragePoolShrinkRequest, arg2 ...grpc.CallOption) (*api.SdkStoragePoolShrinkResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Shrink", varargs...)
+	ret0, _ := ret[0].(*api.SdkStoragePoolShrinkResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Shrink indicates an expected call of Shrink
+func (mr *MockOpenStoragePoolClientMockRecorder) Shrink(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Shrink", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).Shrink), varargs...)
 }
 
 // UpdateIOPS mocks base method
