@@ -673,10 +673,12 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 
 	method := "delete"
 
-	err = json.NewDecoder(r.Body).Decode(&opts)
-	if err != nil {
-		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
-		return
+	if r.Body != http.NoBody {
+		err = json.NewDecoder(r.Body).Decode(&opts)
+		if err != nil {
+			vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+			return
+		}
 	}
 
 	if volumeID, err = vd.parseID(r); err != nil {
