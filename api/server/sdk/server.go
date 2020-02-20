@@ -25,6 +25,7 @@ import (
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
+	grpc_prometheus "github.com/grpc-ecosystem/go-grpc-prometheus"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
@@ -455,12 +456,14 @@ func (s *sdkGrpcServer) Start() error {
 				grpc_auth.UnaryServerInterceptor(s.auth),
 				s.authorizationServerInterceptor,
 				s.loggerServerInterceptor,
+				grpc_prometheus.UnaryServerInterceptor,
 			)))
 	} else {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockIntercepter,
 				s.loggerServerInterceptor,
+				grpc_prometheus.UnaryServerInterceptor,
 			)))
 	}
 
@@ -492,6 +495,9 @@ func (s *sdkGrpcServer) Start() error {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
 		}
 
+		// Register stats for all the services
+		s.registerPrometheusMetrics(grpcServer)
+
 		s.registerServerExtensions(grpcServer)
 
 		return grpcServer
@@ -501,6 +507,16 @@ func (s *sdkGrpcServer) Start() error {
 	}
 
 	return nil
+}
+
+func (s *sdkGrpcServer) registerPrometheusMetrics(grpcServer *grpc.Server) {
+	// Register the gRPCs and enable latency historgram
+	grpc_prometheus.Register(grpcServer)
+	grpc_prometheus.EnableHandlingTimeHistogram()
+
+	// Initialize the metrics
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+	grpcMetrics.InitializeMetrics(grpcServer)
 }
 
 func (s *sdkGrpcServer) registerServerExtensions(grpcServer *grpc.Server) {
