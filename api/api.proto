@@ -344,6 +344,7 @@ enum FastpathProtocol {
     FASTPATH_PROTO_UNKNOWN = 0;
     FASTPATH_PROTO_NVMEOF_TCP = 1;
     FASTPATH_PROTO_ISCSI = 2;
+    FASTPATH_PROTO_LOCAL = 3;
 }
 
 message FastpathReplState {
