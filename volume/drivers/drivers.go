@@ -7,7 +7,6 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/btrfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/buse"
-	"github.com/libopenstorage/openstorage/volume/drivers/coprhd"
 	"github.com/libopenstorage/openstorage/volume/drivers/fake"
 	"github.com/libopenstorage/openstorage/volume/drivers/nfs"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
@@ -28,8 +27,6 @@ var (
 		{DriverType: btrfs.Type, Name: btrfs.Name},
 		// BUSE driver provisions storage from local volumes and implements block in user space.
 		{DriverType: buse.Type, Name: buse.Name},
-		// COPRHD driver
-		{DriverType: coprhd.Type, Name: coprhd.Name},
 		// NFS driver provisions storage from an NFS server.
 		{DriverType: nfs.Type, Name: nfs.Name},
 		// PWX driver provisions storage from PWX cluster.
@@ -42,13 +39,12 @@ var (
 
 	volumeDriverRegistry = volume.NewVolumeDriverRegistry(
 		map[string]func(map[string]string) (volume.VolumeDriver, error){
-			btrfs.Name:  btrfs.Init,
-			buse.Name:   buse.Init,
-			coprhd.Name: coprhd.Init,
-			nfs.Name:    nfs.Init,
-			pwx.Name:    pwx.Init,
-			vfs.Name:    vfs.Init,
-			fake.Name:   fake.Init,
+			btrfs.Name: btrfs.Init,
+			buse.Name:  buse.Init,
+			nfs.Name:   nfs.Init,
+			pwx.Name:   pwx.Init,
+			vfs.Name:   vfs.Init,
+			fake.Name:  fake.Init,
 		},
 	)
 )
