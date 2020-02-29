@@ -305,6 +305,51 @@
         },
         "type": "object"
       },
+      "apiCatalog": {
+        "properties": {
+          "LastModified": {
+            "format": "date-time",
+            "title": "Last Modified",
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/apiCatalog"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name of the Directory/File",
+            "type": "string"
+          },
+          "path": {
+            "title": "Full Path of the Directory/File",
+            "type": "string"
+          },
+          "size": {
+            "format": "uint64",
+            "title": "File or Directory Size",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type Directory or File",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiCatalogResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/apiReport"
+          },
+          "root": {
+            "$ref": "#/components/schemas/apiCatalog"
+          }
+        },
+        "type": "object"
+      },
       "apiCloudMigrateCancelRequest": {
         "properties": {
           "task_id": {
@@ -907,6 +952,21 @@
         "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays",
         "type": "object"
       },
+      "apiReport": {
+        "properties": {
+          "directories": {
+            "format": "int64",
+            "title": "Directory count",
+            "type": "string"
+          },
+          "files": {
+            "format": "int64",
+            "title": "File count",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiResourceType": {
         "default": "RESOURCE_TYPE_NONE",
         "enum": [
@@ -945,7 +1005,7 @@
         "type": "object"
       },
       "apiRestoreVolumeSpec": {
-        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will \ninherit corresponding field value from backup's spec.",
+        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will\ninherit corresponding field value from backup's spec.",
         "properties": {
           "aggregation_level": {
             "description": "Aggregation level Specifies the number of parts the volume can be aggregated from.",
@@ -2229,7 +2289,7 @@
         "type": "object"
       },
       "apiSdkFilesystemTrimStartResponse": {
-        "description": "SdkFilesystemTrimStartResponse defines the response for a \nSdkFilesystemTrimStartRequest.",
+        "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -2888,6 +2948,30 @@
           }
         },
         "title": "Defines response containing volume/snapshot capacity usage details",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogRequest": {
+        "properties": {
+          "depth": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "Request message to get the volume catalog",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogResponse": {
+        "properties": {
+          "catalog": {
+            "$ref": "#/components/schemas/apiCatalogResponse"
+          }
+        },
+        "title": "Response message to get volume catalog",
         "type": "object"
       },
       "apiSdkVolumeCloneRequest": {
@@ -6462,6 +6546,36 @@
         "summary": "Resize resizes the specified storage pool based on the request parameters",
         "tags": [
           "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/volume/catalog": {
+      "post": {
+        "operationId": "VolumeCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeCatalogResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageVolume"
         ]
       }
     },
