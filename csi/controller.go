@@ -306,6 +306,15 @@ func getPVCMetadata(params map[string]string) (map[string]string, error) {
 	return metadata, nil
 }
 
+func cleanupVolumeLabels(labels map[string]string) map[string]string {
+	delete(labels, osdPvcNameKey)
+	delete(labels, osdPvcNamespaceKey)
+	delete(labels, osdPvcAnnotationsKey)
+	delete(labels, osdPvcLabelsKey)
+
+	return labels
+}
+
 // CreateVolume is a CSI API which creates a volume on OSD
 // This function supports snapshots if the parent volume id is supplied
 // in the parameters.
@@ -364,6 +373,9 @@ func (s *OsdCsiServer) CreateVolume(
 	} else {
 		spec.Size = defaultCSIVolumeSize
 	}
+
+	// cleanup duplicate information after pulling from req.GetParameters
+	locator.VolumeLabels = cleanupVolumeLabels(locator.VolumeLabels)
 
 	// Get grpc connection
 	conn, err := s.getConn()

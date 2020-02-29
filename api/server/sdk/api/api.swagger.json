@@ -657,7 +657,8 @@
         "enum": [
           "FASTPATH_PROTO_UNKNOWN",
           "FASTPATH_PROTO_NVMEOF_TCP",
-          "FASTPATH_PROTO_ISCSI"
+          "FASTPATH_PROTO_ISCSI",
+          "FASTPATH_PROTO_LOCAL"
         ],
         "type": "string"
       },
