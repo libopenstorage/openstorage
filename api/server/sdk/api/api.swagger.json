@@ -2953,12 +2953,15 @@
       "apiSdkVolumeCatalogRequest": {
         "properties": {
           "depth": {
+            "title": "Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)",
             "type": "string"
           },
           "path": {
+            "title": "Path which will be used as root (default is the actual root)",
             "type": "string"
           },
           "volume_id": {
+            "description": "VolumeId of the volume that is getting it's catalog retrieved.",
             "type": "string"
           }
         },
@@ -4395,7 +4398,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.73.0"
+    "version": "0.74.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6574,6 +6577,7 @@
             "description": ""
           }
         },
+        "summary": "Gets the volume catalog of an attached and mounted volume.\nReturns the entire tree up to \"n\"  depth (default is all of it)\nTakes a path that can be used as the new root for the catalog request.",
         "tags": [
           "OpenStorageVolume"
         ]

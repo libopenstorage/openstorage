@@ -1794,6 +1794,9 @@ service OpenStorageVolume {
       };
     }
 
+    // Gets the volume catalog of an attached and mounted volume.
+    // Returns the entire tree up to "n"  depth (default is all of it)
+    // Takes a path that can be used as the new root for the catalog request.
     rpc VolumeCatalog(SdkVolumeCatalogRequest)
     returns (SdkVolumeCatalogResponse) {
         option(google.api.http) = {
@@ -3965,7 +3968,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 73;
+    Minor = 74;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4529,12 +4532,16 @@ message RestoreVolumeSpec {
 
 // Request message to get the volume catalog
 message SdkVolumeCatalogRequest {
+  // VolumeId of the volume that is getting it's catalog retrieved.
   string volume_id =1;
+  // Path which will be used as root (default is the actual root)
   string path = 2;
+  // Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)
   string depth = 3;
 }
 
 // Response message to get volume catalog
 message SdkVolumeCatalogResponse {
+  // Catalog
   CatalogResponse catalog = 1;
 }
