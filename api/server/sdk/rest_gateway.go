@@ -24,6 +24,7 @@ import (
 
 	"github.com/gobuffalo/packr"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/cors"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -117,6 +118,8 @@ func (s *sdkRestGateway) restServerSetupHandlers() (http.Handler, error) {
 	prefix = "/sdk/"
 	mux.Handle(prefix,
 		http.StripPrefix(prefix, http.FileServer(swaggerUIBox)))
+
+	mux.Handle("/metrics", promhttp.Handler())
 
 	// Create a router just for HTTP REST gRPC Server Gateway
 	gmux := runtime.NewServeMux()
