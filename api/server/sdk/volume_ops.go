@@ -1067,6 +1067,32 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 	return spec, nil
 }
 
+// VolumeCatalog returns a list of volumes for the provided filters
+func (s *VolumeServer) VolumeCatalog(
+	ctx context.Context,
+	req *api.SdkVolumeCatalogRequest,
+) (*api.SdkVolumeCatalogResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	catalog, err := s.driver(ctx).Catalog(req.GetVolumeId(), req.GetPath(), req.GetDepth())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to get the catalog: %v",
+			err.Error())
+	}
+
+	return &api.SdkVolumeCatalogResponse{
+		Catalog: &catalog,
+	}, nil
+}
+
 func validateMinMaxParams(policy uint64, specified uint64, op api.VolumeSpecPolicy_PolicyOp) bool {
 	switch op {
 	case api.VolumeSpecPolicy_Maximum:
