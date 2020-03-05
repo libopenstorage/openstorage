@@ -260,6 +260,21 @@ func (mr *MockOpenStorageVolumeServerMockRecorder) Update(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).Update), arg0, arg1)
 }
 
+// VolumeCatalog mocks base method
+func (m *MockOpenStorageVolumeServer) VolumeCatalog(arg0 context.Context, arg1 *api.SdkVolumeCatalogRequest) (*api.SdkVolumeCatalogResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumeCatalog", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeCatalogResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeCatalog indicates an expected call of VolumeCatalog
+func (mr *MockOpenStorageVolumeServerMockRecorder) VolumeCatalog(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeCatalog", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).VolumeCatalog), arg0, arg1)
+}
+
 // MockOpenStorageVolumeClient is a mock of OpenStorageVolumeClient interface
 type MockOpenStorageVolumeClient struct {
 	ctrl     *gomock.Controller
@@ -581,4 +596,24 @@ func (mr *MockOpenStorageVolumeClientMockRecorder) Update(arg0, arg1 interface{}
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).Update), varargs...)
+}
+
+// VolumeCatalog mocks base method
+func (m *MockOpenStorageVolumeClient) VolumeCatalog(arg0 context.Context, arg1 *api.SdkVolumeCatalogRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeCatalogResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VolumeCatalog", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeCatalogResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeCatalog indicates an expected call of VolumeCatalog
+func (mr *MockOpenStorageVolumeClientMockRecorder) VolumeCatalog(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeCatalog", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).VolumeCatalog), varargs...)
 }
