@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/libopenstorage/secrets"
-	"github.com/portworx/sched-ops/k8s"
+	"github.com/portworx/sched-ops/k8s/core"
 )
 
 const (
@@ -33,7 +33,7 @@ func (s *k8sSecrets) GetSecret(
 		return nil, fmt.Errorf("Namespace cannot be empty.")
 	}
 
-	secret, err := k8s.Instance().GetSecret(secretName, namespace)
+	secret, err := core.Instance().GetSecret(secretName, namespace)
 	if err != nil {
 		return nil, fmt.Errorf("Failed to get secret [%s]. Err: %v",
 			secretName, err)
@@ -73,7 +73,7 @@ func (s *k8sSecrets) PutSecret(
 		}
 	}
 
-	_, err := k8s.Instance().UpdateSecretData(secretName, namespace, data)
+	_, err := core.Instance().UpdateSecretData(secretName, namespace, data)
 	return err
 }
 
@@ -86,7 +86,7 @@ func (s *k8sSecrets) DeleteSecret(
 		return fmt.Errorf("Namespace cannot be empty.")
 	}
 
-	return k8s.Instance().DeleteSecret(secretName, namespace)
+	return core.Instance().DeleteSecret(secretName, namespace)
 }
 
 func (s *k8sSecrets) ListSecrets() ([]string, error) {
