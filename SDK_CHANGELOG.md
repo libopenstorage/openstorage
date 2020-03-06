@@ -2,10 +2,18 @@
 
 ## Releases
 
-### v0.72.0 - Tech Preview (1/27/2020)
+### v0.74.0 - (3/4/2020)
+
+* Add VolumeCatalog api for volumes
+
+### v0.73.0 - Tech Preview (1/27/2020)
 
 * Add Restore volume spec for Cloud Backup restore api
-*
+
+### v0.72.0 - Tech Preview (1/27/2020)
+
+* Added documentation to SdkRule about new denial support
+
 ### v0.71.0 - Tech Preview (1/15/2020)
 
 * Add auto to IoProfile
