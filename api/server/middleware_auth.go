@@ -258,6 +258,61 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 	json.NewEncoder(w).Encode(dk)
 }
 
+func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	fn := "enumerate"
+
+	d, authRequired := a.isTokenProcessingRequired(r)
+	if !authRequired {
+		next(w, r)
+		return
+	}
+
+	volIDs, ok := r.URL.Query()[api.OptVolumeID]
+	if !ok || len(volIDs[0]) < 1 {
+		a.log("", fn).Error("Failed to parse VolumeID")
+		return
+	}
+	volumeID := volIDs[0]
+
+	vols, err := d.Inspect([]string{volumeID})
+	if err != nil || len(vols) == 0 || vols[0] == nil {
+		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
+		next(w, r)
+		return
+	}
+
+	volumeResponse := &api.VolumeResponse{}
+	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
+		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+	if tokenSecretContext.SecretName == "" {
+		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
+			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
+			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
+		a.log(volumeID, fn).Error(errorMessage)
+		volumeResponse = &api.VolumeResponse{Error: errorMessage}
+		json.NewEncoder(w).Encode(volumeResponse)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	token, err := osecrets.GetToken(tokenSecretContext)
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("failed to get token")
+		volumeResponse.Error = "failed to get token: " + err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	} else {
+		a.insertToken(r, token)
+	}
+
+	next(w, r)
+}
+
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
 	userAgent := r.Header.Get("User-Agent")
 	if len(userAgent) > 0 {
