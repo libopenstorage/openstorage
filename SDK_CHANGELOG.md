@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.25 - (3/4/2020)
+
+* Add VolumeCatalog api for volumes
+
 ### v0.42.24 - Tech Preview (11/01/2019)
 
 * Add ExportSpec to Volume object

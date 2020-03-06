@@ -1177,6 +1177,7 @@ service OpenStorageRole {
       };
     }
 }
+
 // OpenStorageIdentity service provides methods to obtain information
 // about the cluster
 service OpenStorageIdentity {
@@ -1562,6 +1563,17 @@ service OpenStorageVolume {
         post: "/v1/volumes/snapshot/schedules/{volume_id}"
         body: "*"
       };
+    }
+
+    // Gets the volume catalog of an attached and mounted volume.
+    // Returns the entire tree up to "n"  depth (default is all of it)
+    // Takes a path that can be used as the new root for the catalog request.
+    rpc VolumeCatalog(SdkVolumeCatalogRequest)
+    returns (SdkVolumeCatalogResponse) {
+        option(google.api.http) = {
+          post: "/v1/volume/catalog"
+          body: "*"
+        };
     }
 }
 
@@ -3355,6 +3367,14 @@ message SdkCloudBackupSchedEnumerateResponse{
 //     Apis: ["inspect*"]
 // ```
 //
+// * Allow all volume call except create
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*", "!create"]
+// ```
+//
 message SdkRule {
   // The gRPC service name in `OpenStorage<service name>` in lowercase
   repeated string services = 1;
@@ -3510,7 +3530,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 24;
+    Patch = 25;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4007,4 +4027,20 @@ enum EnforcementType {
   required = 0;
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
+}
+
+// Request message to get the volume catalog
+message SdkVolumeCatalogRequest {
+  // VolumeId of the volume that is getting it's catalog retrieved.
+  string volume_id =1;
+  // Path which will be used as root (default is the actual root)
+  string path = 2;
+  // Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)
+  string depth = 3;
+}
+
+// Response message to get volume catalog
+message SdkVolumeCatalogResponse {
+  // Catalog
+  CatalogResponse catalog = 1;
 }
