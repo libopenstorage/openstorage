@@ -2,36 +2,11 @@
 
 ## Releases
 
-<<<<<<< HEAD
-### v0.42.24 - Tech Preview (11/01/2019)
-=======
-### v0.74.0 - (3/4/2020)
+### v0.42.25 - (3/4/2020)
 
 * Add VolumeCatalog api for volumes
 
-### v0.73.0 - Tech Preview (1/27/2020)
-
-* Add Restore volume spec for Cloud Backup restore api
-*
-### v0.72.0 - (1/21/2020)
-
-* Added documentation to SdkRule about new denial support
-
-### v0.71.0 - Tech Preview (1/15/2020)
-
-* Add auto to IoProfile
-
-### v0.70.0 - Tech Preview (1/9/2020)
-
-* Add support for public user access
-
-### v0.69.0 - Tech Preview (10/12/2019)
-
-* Add support for filesystem trim background operation
-* Add support for filesystem check background operation
-
-### v0.68.0 - Tech Preview (11/01/2019)
->>>>>>> 24a22912... Add VolumeCatalog call to the SDK (#1446)
+### v0.42.24 - Tech Preview (11/01/2019)
 
 * Add ExportSpec to Volume object
 
