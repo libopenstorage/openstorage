@@ -1,7 +1,8 @@
 package task
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"log"
 	"time"
 )
@@ -9,45 +10,70 @@ import (
 //TODO: export the type: type Task func() (string, error)
 
 // ErrTimedOut is returned when an operation times out
-var ErrTimedOut = errors.New("timed out performing task")
+// Is this type used anywhere? If not we can get rid off it in favor context.DeadlineExceeded
+type ErrTimedOut struct {
+	// Reason is the reason for the timeout
+	Reason string
+}
+
+func (e *ErrTimedOut) Error() string {
+	errString := "timed out performing task."
+	if len(e.Reason) > 0 {
+		errString = fmt.Sprintf("%s, Error was: %s", errString, e.Reason)
+	}
+
+	return errString
+}
 
 // DoRetryWithTimeout performs given task with given timeout and timeBeforeRetry
+// TODO(stgleb): In future I would like to add context as a first param to this function
+// so calling code can cancel task.
 func DoRetryWithTimeout(t func() (interface{}, bool, error), timeout, timeBeforeRetry time.Duration) (interface{}, error) {
-	done := make(chan bool, 1)
-	quit := make(chan bool, 1)
-	var out interface{}
-	var err error
-	var retry bool
+	// Use context.Context as a standard go way of timeout and cancellation propagation amount goroutines.
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	resultChan := make(chan interface{})
+	errChan := make(chan error)
 
 	go func() {
-		count := 0
 		for {
 			select {
-			case q := <-quit:
-				if q {
-					return
+			case <-ctx.Done():
+
+				if ctx.Err() != nil {
+					errChan <- ctx.Err()
 				}
 
+				return
 			default:
-				out, retry, err = t()
-				if err == nil || !retry {
-					done <- true
+				out, retry, err := t()
+				if err == nil {
+					resultChan <- out
 					return
 				}
 
-				log.Printf("%v. Retry count: %v Next retry in: %v", err, count, timeBeforeRetry)
+				if err != nil && !retry {
+					errChan <- err
+					return
+				}
+
+				log.Printf("%v Next retry in: %v", err, timeBeforeRetry)
 				time.Sleep(timeBeforeRetry)
 			}
-
-			count++
 		}
 	}()
 
 	select {
-	case <-done:
-		return out, err
-	case <-time.After(timeout):
-		quit <- true
-		return out, ErrTimedOut
+	case result := <-resultChan:
+		return result, nil
+	case err := <-errChan:
+		if err == context.DeadlineExceeded {
+			return nil, &ErrTimedOut{
+				Reason: err.Error(),
+			}
+		}
+
+		return nil, err
 	}
 }
