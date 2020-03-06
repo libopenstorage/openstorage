@@ -16,7 +16,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	lsecrets "github.com/libopenstorage/secrets"
-	"github.com/portworx/sched-ops/k8s"
+	"github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -318,7 +318,7 @@ func (a *authMiddleware) parseSecret(
 			return parseSecretFromLabels(specLabels, locatorLabels)
 		}
 
-		pvc, err := k8s.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
+		pvc, err := core.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
 		if err != nil {
 			return nil, err
 		}
