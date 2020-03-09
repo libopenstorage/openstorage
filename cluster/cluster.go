@@ -109,6 +109,9 @@ type ClusterListener interface {
 	// Init is called when this node is joining an existing cluster for the first time.
 	Init(self *api.Node, state *ClusterInfo) (FinalizeInitCb, error)
 
+	// PreJoin is called before the node joins an existing cluster
+	PreJoin(self *api.Node) error
+
 	// Join is called when this node is joining an existing cluster.
 	Join(self *api.Node, state *ClusterInitState) error
 
@@ -412,6 +415,12 @@ func (nc *NullClusterListener) NodeInspect(node *api.Node) error {
 func (nc *NullClusterListener) Halt(
 	self *api.Node,
 	clusterInfo *ClusterInfo) error {
+	return nil
+}
+
+func (nc *NullClusterListener) PreJoin(
+	self *api.Node,
+) error {
 	return nil
 }
 
