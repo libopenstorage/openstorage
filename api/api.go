@@ -125,6 +125,8 @@ const (
 	OptCredOwnership = "CredOwnership"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
+	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
+	OptCloudBackupIgnoreCreds = "CloudBackupIgnoreCreds"
 	// OptSrcVolID is the source volume ID of the backup
 	OptSrcVolID = "SrcVolID"
 	// OptBkupOpState is the desired operational state
