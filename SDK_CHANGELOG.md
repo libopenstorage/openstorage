@@ -2,7 +2,11 @@
 
 ## Releases
 
-### v0.70.0 - Tech Preview (1/27/2020)
+### v0.69.5 - (3/4/2020)
+
+* Add VolumeCatalog api for volumes
+
+### v0.69.4 - Tech Preview (1/27/2020)
 
 * Add Restore volume spec for Cloud Backup restore api
 

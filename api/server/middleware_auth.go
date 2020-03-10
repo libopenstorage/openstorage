@@ -38,6 +38,100 @@ func NewAuthMiddleware() *authMiddleware {
 type authMiddleware struct {
 }
 
+// newSecurityMiddleware based on auth configuration returns SecurityHandler or just
+func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(next http.HandlerFunc) http.HandlerFunc {
+	if auth.Enabled() {
+		return func(next http.HandlerFunc) http.HandlerFunc {
+			return SecurityHandler(authenticators, next)
+		}
+	}
+
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return next
+	}
+}
+
+// SecurityHandler implements Authentication and Authorization check at the same time
+// this functionality where not moved to separate functions because of simplicity
+func SecurityHandler(authenticators map[string]auth.Authenticator, next http.HandlerFunc) http.HandlerFunc {
+	if authenticators == nil {
+		return next
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		tokenHeader := r.Header.Get("Authorization")
+		tokens := strings.Split(tokenHeader, " ")
+
+		if len(tokens) < 2 {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, token is malformed"),
+			})
+			return
+		}
+		token := tokens[1]
+
+		// Determine issuer
+		issuer, err := auth.TokenIssuer(token)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, %v", err),
+			})
+			return
+		}
+
+		// Use http.Request context for cancellation propagation
+		ctx := r.Context()
+
+		// Authenticate user
+		var claims *auth.Claims
+		if authenticator, exists := authenticators[issuer]; exists {
+			claims, err = authenticator.AuthenticateToken(ctx, token)
+
+			if err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(&api.ClusterResponse{
+					Error: fmt.Sprintf("Access denied, %s", err.Error()),
+				})
+				return
+			}
+			if claims == nil {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(&api.ClusterResponse{
+					Error: fmt.Sprintf("Access denied, wrong claims provided"),
+				})
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, no authenticator for issuer %s", issuer),
+			})
+			return
+		}
+		// Check if user has admin role to access that endpoint
+		isSystemAdmin := false
+
+		for _, role := range claims.Roles {
+			if role == "system.admin" {
+				isSystemAdmin = true
+				break
+			}
+		}
+
+		if !isSystemAdmin {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, user must have admin access"),
+			})
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+}
+
 func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "create"
 	_, authRequired := a.isTokenProcessingRequired(r)
