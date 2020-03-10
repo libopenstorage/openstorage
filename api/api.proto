@@ -1092,7 +1092,7 @@ message VolumeConsumer {
 }
 
 
-// VolumeServiceRequest provides details on what volume service command to 
+// VolumeServiceRequest provides details on what volume service command to
 // perform in background on the volume
 message VolumeServiceRequest {
   // User specified volume service command
@@ -1276,7 +1276,7 @@ service OpenStorageRole {
 
 // ## OpenStorageFilesystemTrim Service
 // This service provides methods to manage filesystem trim operation on a
-// volume. 
+// volume.
 //
 // This operation runs in the background on a **mounted volume**. If the volumes
 // are not mounted, these API return error.
@@ -1294,7 +1294,7 @@ service OpenStorageRole {
 //    `OpenStorageFilesystemTrimClient.Start()`
 //    This call returns immediately with a status code indicating if the
 //    operation was successfully started or not.
-// 4. To get the status of the Filesystem Trim operation, issue a grpc call to 
+// 4. To get the status of the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.GetStatus()`
 // 5. To stop the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.Stop()`
@@ -1330,7 +1330,7 @@ service OpenStorageFilesystemTrim {
 
 // ## OpenStorageFilesystemCheckService
 // This service provides methods to manage filesystem check operation on a
-// volume. 
+// volume.
 //
 // This operation is run in the background on an **unmounted volume**.
 // If the volume is mounted, then these APIs return error.
@@ -1350,7 +1350,7 @@ service OpenStorageFilesystemTrim {
 // 3. Status of the CheckHealth() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.CheckHealthGetStatus()`
 // 4. If the CheckHealth Operations status reports filesystem is in unhealthy
-//    state, then to fix all the problems issue a grpc call to 
+//    state, then to fix all the problems issue a grpc call to
 //    `OpenStorageFilesystemCheckClient.FixAll()`
 // 5. Status of the FixAll() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.FixAllGetStatus()`
@@ -1792,6 +1792,17 @@ service OpenStorageVolume {
         post: "/v1/volumes/snapshot/schedules/{volume_id}"
         body: "*"
       };
+    }
+
+    // Gets the volume catalog of an attached and mounted volume.
+    // Returns the entire tree up to "n"  depth (default is all of it)
+    // Takes a path that can be used as the new root for the catalog request.
+    rpc VolumeCatalog(SdkVolumeCatalogRequest)
+    returns (SdkVolumeCatalogResponse) {
+        option(google.api.http) = {
+          post: "/v1/volume/catalog"
+          body: "*"
+        };
     }
 }
 
@@ -3597,6 +3608,14 @@ message SdkCloudBackupSchedEnumerateResponse{
 //     Apis: ["inspect*"]
 // ```
 //
+// * Allow all volume call except create
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*", "!create"]
+// ```
+//
 message SdkRule {
   // The gRPC service name in `OpenStorage<service name>` in lowercase
   repeated string services = 1;
@@ -3694,7 +3713,7 @@ message SdkFilesystemTrimStartRequest {
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimStartResponse defines the response for a 
+// SdkFilesystemTrimStartResponse defines the response for a
 // SdkFilesystemTrimStartRequest.
 message SdkFilesystemTrimStartResponse{
   // Status code representing the state of the filesystem trim operation
@@ -3946,7 +3965,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 72;
+    Minor = 74;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4460,7 +4479,7 @@ message RestoreVolStoragePolicy {
 	string policy = 1;
 }
 // RestoreSpec allows some of the restore volume properties of to be modified
-// while restoring the cloud baackup. All pointer fields with nil value will 
+// while restoring the cloud baackup. All pointer fields with nil value will
 // inherit corresponding field value from backup's spec.
 message RestoreVolumeSpec {
   // HaLevel specifies the number of copies of data.
@@ -4506,4 +4525,20 @@ message RestoreVolumeSpec {
   ExportSpec export_spec = 20;
   // fastpath extensions
   RestoreParamBoolType fp_preference = 21;
+}
+
+// Request message to get the volume catalog
+message SdkVolumeCatalogRequest {
+  // VolumeId of the volume that is getting it's catalog retrieved.
+  string volume_id =1;
+  // Path which will be used as root (default is the actual root)
+  string path = 2;
+  // Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)
+  string depth = 3;
+}
+
+// Response message to get volume catalog
+message SdkVolumeCatalogResponse {
+  // Catalog
+  CatalogResponse catalog = 1;
 }
