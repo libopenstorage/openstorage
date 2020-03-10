@@ -612,12 +612,24 @@ func (c *ClusterManager) initNodeInCluster(
 func (c *ClusterManager) joinCluster(
 	self *api.Node,
 ) error {
+	// Alert all listeners that we are joining the cluster.
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).PreJoin(self)
+		if err != nil {
+			logrus.Warnf("Failed to execute PreJoin %s: %v",
+				e.Value.(cluster.ClusterListener).String(), err)
+			logrus.Errorln("Failed to join cluster.", err)
+			return err
+		}
+	}
+
 	// Listeners may update initial state, so snap again.
 	// The cluster db may have diverged since we waited for quorum
 	// in between. Snapshot is created under cluster db lock to make
 	// sure cluster db updates do not happen during snapshot, otherwise
 	// there may be a mismatch between db updates from listeners and
 	// cluster db state.
+
 	kvdb := kvdb.Instance()
 	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
 	if err != nil {
@@ -651,9 +663,20 @@ func (c *ClusterManager) joinCluster(
 			return err
 		}
 	}
+
 	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
 		logrus.Panicln("Fatal, Unable to find self node entry in local cache")
+	}
+
+	prevNonQuorumMemberState := selfNodeEntry.NonQuorumMember
+	selfNodeEntry.NonQuorumMember =
+		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
+			!c.quorumMember()
+	if selfNodeEntry.NonQuorumMember != prevNonQuorumMemberState {
+		if !selfNodeEntry.NonQuorumMember {
+			logrus.Infof("This node now participates in quorum decisions")
+		}
 	}
 
 	_, _, err = c.updateNodeEntryDB(selfNodeEntry, nil)

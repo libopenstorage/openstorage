@@ -239,6 +239,51 @@
         },
         "type": "object"
       },
+      "apiCatalog": {
+        "properties": {
+          "LastModified": {
+            "format": "date-time",
+            "title": "Last Modified",
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/apiCatalog"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name of the Directory/File",
+            "type": "string"
+          },
+          "path": {
+            "title": "Full Path of the Directory/File",
+            "type": "string"
+          },
+          "size": {
+            "format": "uint64",
+            "title": "File or Directory Size",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type Directory or File",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiCatalogResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/apiReport"
+          },
+          "root": {
+            "$ref": "#/components/schemas/apiCatalog"
+          }
+        },
+        "type": "object"
+      },
       "apiCloudMigrateCancelRequest": {
         "properties": {
           "task_id": {
@@ -743,6 +788,21 @@
           }
         },
         "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays",
+        "type": "object"
+      },
+      "apiReport": {
+        "properties": {
+          "directories": {
+            "format": "int64",
+            "title": "Directory count",
+            "type": "string"
+          },
+          "files": {
+            "format": "int64",
+            "title": "File count",
+            "type": "string"
+          }
+        },
         "type": "object"
       },
       "apiResourceType": {
@@ -2131,7 +2191,7 @@
         "type": "object"
       },
       "apiSdkRule": {
-        "description": "SdkRule is the message used to construct custom roles in the OpenStorage SDK.\n\n### Format\nThe following shows the supported format for SdkRule:\n\n* Services: Is the gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase\n* Apis: Is the API name in the service in lowercase\n\nValues can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.\n\n### Examples\n\n* Allow any call:\n\n```yaml\nSdkRule:\n  - Services: [\"*\"]\n    Apis: [\"*\"]\n```\n\n* Allow only cluster operations:\n\n```yaml\nSdkRule:\n  - services: [\"cluster\"]\n    apis: [\"*\"]\n```\n\n* Allow inspection of any object and listings of only volumes\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*enumerate*\"]\n  - Services: [\"*\"]\n    Apis: [\"inspect*\"]\n```",
+        "description": "SdkRule is the message used to construct custom roles in the OpenStorage SDK.\n\n### Format\nThe following shows the supported format for SdkRule:\n\n* Services: Is the gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase\n* Apis: Is the API name in the service in lowercase\n\nValues can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.\n\n### Examples\n\n* Allow any call:\n\n```yaml\nSdkRule:\n  - Services: [\"*\"]\n    Apis: [\"*\"]\n```\n\n* Allow only cluster operations:\n\n```yaml\nSdkRule:\n  - services: [\"cluster\"]\n    apis: [\"*\"]\n```\n\n* Allow inspection of any object and listings of only volumes\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*enumerate*\"]\n  - Services: [\"*\"]\n    Apis: [\"inspect*\"]\n```\n\n* Allow all volume call except create\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*\", \"!create\"]\n```",
         "properties": {
           "apis": {
             "items": {
@@ -2452,6 +2512,33 @@
           }
         },
         "title": "Defines response containing volume/snapshot capacity usage details",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogRequest": {
+        "properties": {
+          "depth": {
+            "title": "Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path which will be used as root (default is the actual root)",
+            "type": "string"
+          },
+          "volume_id": {
+            "description": "VolumeId of the volume that is getting it's catalog retrieved.",
+            "type": "string"
+          }
+        },
+        "title": "Request message to get the volume catalog",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogResponse": {
+        "properties": {
+          "catalog": {
+            "$ref": "#/components/schemas/apiCatalogResponse"
+          }
+        },
+        "title": "Response message to get volume catalog",
         "type": "object"
       },
       "apiSdkVolumeCloneRequest": {
@@ -3863,7 +3950,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.24"
+    "version": "0.42.25"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5754,6 +5841,37 @@
         "summary": "Resize resizes the specified storage pool based on the request parameters",
         "tags": [
           "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/volume/catalog": {
+      "post": {
+        "operationId": "VolumeCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeCatalogResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Gets the volume catalog of an attached and mounted volume.\nReturns the entire tree up to \"n\"  depth (default is all of it)\nTakes a path that can be used as the new root for the catalog request.",
+        "tags": [
+          "OpenStorageVolume"
         ]
       }
     },
