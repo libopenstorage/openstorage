@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/auth"
@@ -109,14 +110,25 @@ func (s *sdkGrpcServer) loggerServerInterceptor(
 		"reqid":  reqid,
 	})
 
-	logger.Info("Start")
+	buf, err := json.Marshal(req)
+	if err != nil {
+		buf = []byte("{}")
+	}
+
+	logger.WithFields(logrus.Fields{"request": string(buf)}).Info("Start")
 	ts := time.Now()
 	i, err := handler(ctx, req)
 	duration := time.Now().Sub(ts)
+
+	buf, err = json.Marshal(i)
+	if err != nil {
+		buf = []byte("{}")
+	}
+
 	if err != nil {
 		logger.WithFields(logrus.Fields{"duration": duration}).Infof("Failed: %v", err)
 	} else {
-		logger.WithFields(logrus.Fields{"duration": duration}).Info("Successful")
+		logger.WithFields(logrus.Fields{"response": string(buf), "duration": duration}).Info("Successful")
 	}
 
 	return i, err
