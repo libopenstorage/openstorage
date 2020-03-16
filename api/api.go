@@ -129,6 +129,8 @@ const (
 	OptCredOwnership = "CredOwnership"
 	// OptCredProxy proxy key in params
 	OptCredProxy = "CredProxy"
+	// OptCredIAMPolicy if set, indicates IAM credentials for s3
+	OptCredIAMPolicy = "CredIAMPolicy"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
