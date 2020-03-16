@@ -1704,9 +1704,12 @@ func (vd *volAPI) volumeInspectRoute() *Route {
 	return &Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect}
 }
 
+func (vd *volAPI) volumeEnumerateRoute() *Route {
+	return &Route{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate}
+}
+
 func (vd *volAPI) otherVolumeRoutes() []*Route {
 	return []*Route{
-		{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
 		{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
@@ -1770,7 +1773,7 @@ func (vd *volAPI) snapRoutes() []*Route {
 }
 
 func (vd *volAPI) Routes() []*Route {
-	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute()}
+	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute(), vd.volumeEnumerateRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
 	routes = append(routes, vd.backupRoutes()...)
@@ -1789,6 +1792,7 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	// - ATTACH/MOUNT
 	// - DETACH/UNMOUNT
 	// - DELETE
+	// - ENUMERATE
 	// For all other routes it is expected that the REST client uses an auth token
 
 	authM := NewAuthMiddleware()
@@ -1820,6 +1824,13 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	inspectRoute := vd.volumeInspectRoute()
 	nSet.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	// Setup middleware for enumerate
+	nEnumerate := negroni.New()
+	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	enumerateRoute := vd.volumeEnumerateRoute()
+	nSet.UseHandlerFunc(enumerateRoute.fn)
+	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
 
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
@@ -1924,6 +1935,13 @@ func GetVolumeAPIRoutesWithAuth(
 	inspectRoute := vd.volumeInspectRoute()
 	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
+
+	// Setup middleware for Enumerate
+	nEnumerate := negroni.New()
+	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	enumerateRoute := vd.volumeEnumerateRoute()
+	nEnumerate.UseHandlerFunc(serverRegisterRoute(enumerateRoute.fn, preRouteCheckFn))
+	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
 
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
