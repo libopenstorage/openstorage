@@ -24,6 +24,7 @@ func TestAll(t *testing.T) {
 	}
 	ctx := test.NewContext(d)
 	ctx.Filesystem = api.FSType_FS_TYPE_NFS
+	ctx.Shared = true
 
 	test.RunShort(t, ctx)
 }
