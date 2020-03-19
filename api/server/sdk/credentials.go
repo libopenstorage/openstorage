@@ -94,6 +94,8 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -134,6 +136,8 @@ func (s *CredentialServer) azureCreate(
 	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
 	params[api.OptCredAzureAccountName] = azure.GetAccountName()
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -174,6 +178,8 @@ func (s *CredentialServer) googleCreate(
 	params[api.OptCredBucket] = req.GetBucket()
 	params[api.OptCredGoogleProjectID] = google.GetProjectId()
 	params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
 
 	uuid, err := s.create(ctx, req, params)
 
@@ -368,24 +374,39 @@ func (s *CredentialServer) Inspect(
 		Bucket:       bucket,
 		Ownership:    ownership,
 	}
-
+	resp.UseProxy = false
+	val, ok := info[api.OptCredProxy]
+	if ok && val.(string) != "" {
+		resp.UseProxy = val.(string) == "true"
+	}
+	resp.IamPolicy = false
+	val, ok = info[api.OptCredIAMPolicy]
+	if ok && val.(string) != "" {
+		resp.IamPolicy = val.(string) == "true"
+	}
 	switch info[api.OptCredType] {
 	case "s3":
-		accessKey, ok := info[api.OptCredAccessKey].(string)
-		if !ok {
-			return nil, status.Error(codes.Internal, "Unable to parse accessKey")
-		}
-		endpoint, ok := info[api.OptCredEndpoint].(string)
-		if !ok {
-			return nil, status.Error(codes.Internal, "Unable to parse endpoint")
+		var accessKey, endpoint string
+		var ok bool
+		// no need to validate these if IAM is set
+		if !resp.IamPolicy {
+			accessKey, ok = info[api.OptCredAccessKey].(string)
+			if !ok {
+				return nil, status.Error(codes.Internal, "Unable to parse accessKey")
+			}
+			endpoint, ok = info[api.OptCredEndpoint].(string)
+			if !ok {
+				return nil, status.Error(codes.Internal, "Unable to parse endpoint")
+			}
 		}
 		region, ok := info[api.OptCredRegion].(string)
 		if !ok {
 			return nil, status.Error(codes.Internal, "Unable to parse region")
 		}
+		//assume defaults for these
 		disableSsl, ok := info[api.OptCredDisableSSL].(string)
 		if !ok {
-			return nil, status.Error(codes.Internal, "Unable to parse disabling ssl was requested")
+			disableSsl = "false"
 		}
 		disablePathStyle, ok := info[api.OptCredDisablePathStyle].(string)
 		if !ok {

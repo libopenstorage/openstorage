@@ -1815,12 +1815,22 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialRequest"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "use_proxy": {
+            "format": "boolean",
+            "title": "use_proxy indicates if a proxy must be used",
+            "type": "boolean"
           }
         },
         "title": "Defines a request to create credentials",
@@ -1873,12 +1883,22 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialResponse"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "use_proxy": {
+            "format": "boolean",
+            "title": "proxy flag for the credential",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -3950,7 +3970,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.25"
+    "version": "0.42.26"
   },
   "openapi": "3.0.0",
   "paths": {

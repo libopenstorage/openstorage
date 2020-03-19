@@ -2266,7 +2266,10 @@ message SdkCredentialCreateRequest {
   // Ownership of the credential. Collaborators and groups may be
   // added here with their appropriate ACLS.
   Ownership ownership = 4;
-
+  // use_proxy indicates if a proxy must be used
+  bool use_proxy = 5;
+  // iamPolicy indicates if IAM creds must be used for access
+  bool iam_policy = 6;
   // Start at field number 200 to allow for expansion
   oneof credential_type {
     // Credentials for AWS/S3
@@ -2370,6 +2373,10 @@ message SdkCredentialInspectResponse {
   string bucket = 3;
   // Ownership of the credential
   Ownership ownership = 4;
+  // proxy flag for the credential
+  bool use_proxy = 5;
+  // iamPolicy indicates if IAM creds must be used for access
+  bool iam_policy = 6;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -3530,7 +3537,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 25;
+    Patch = 26;
   }
 
   // The following cannot be set to use the enum Version because the REST
