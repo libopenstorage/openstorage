@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.75.0 - (3/18/2020)
+
+* Add IAM flag for credentials
+
 ### v0.74.0 - (3/4/2020)
 
 * Add VolumeCatalog api for volumes
