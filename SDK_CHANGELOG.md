@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.27 - Tech Preview (04/07/2020)
+
+* Add IAM flag for credentials
+
 ### v0.42.26 - Tech Preview (04/07/2020)
 
 * Add proxy flag for credentials
