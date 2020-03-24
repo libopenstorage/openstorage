@@ -431,7 +431,7 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Create response
 	volume := &csi.Volume{}
-	osdToCsiVolumeInfo(volume, inspectResp.GetVolume())
+	osdToCsiVolumeInfo(volume, inspectResp.GetVolume(), req)
 	return &csi.CreateVolumeResponse{
 		Volume: volume,
 	}, nil
@@ -532,10 +532,11 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	}, nil
 }
 
-func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume) {
+func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume, req *csi.CreateVolumeRequest) {
 	dest.VolumeId = src.GetId()
 	dest.CapacityBytes = int64(src.Spec.GetSize())
 	dest.VolumeContext = osdVolumeContext(src)
+	dest.ContentSource = req.GetVolumeContentSource()
 }
 
 func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
