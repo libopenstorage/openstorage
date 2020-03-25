@@ -2087,6 +2087,11 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialRequest"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
@@ -2149,6 +2154,11 @@
           },
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialResponse"
+          },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
           },
           "name": {
             "title": "Name of the credential",
@@ -4398,7 +4408,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.74.0"
+    "version": "0.75.0"
   },
   "openapi": "3.0.0",
   "paths": {
