@@ -414,7 +414,8 @@ func (nc *NullClusterListener) NodeInspect(node *api.Node) error {
 
 func (nc *NullClusterListener) Halt(
 	self *api.Node,
-	clusterInfo *ClusterInfo) error {
+	clusterInfo *ClusterInfo,
+) error {
 	return nil
 }
 
