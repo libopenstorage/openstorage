@@ -129,8 +129,12 @@ const (
 	OptCredOwnership = "CredOwnership"
 	// OptCredProxy proxy key in params
 	OptCredProxy = "CredProxy"
+	// OptCredIAMPolicy if "true", indicates IAM creds to be used
+	OptCredIAMPolicy = "CredIAMPolicy"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
+	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
+	OptCloudBackupIgnoreCreds = "CloudBackupIgnoreCreds"
 	// OptSrcVolID is the source volume ID of the backup
 	OptSrcVolID = "SrcVolID"
 	// OptBkupOpState is the desired operational state
