@@ -625,7 +625,7 @@ func (c *ClusterManager) initNodeInCluster(
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
-			logrus.Warnf("Failed to initialize Init %s: %v",
+			logrus.Warnf("Failed to initialize %s: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
 			c.cleanupInit(clusterInfo, self)
 			return nil, err
@@ -857,6 +857,14 @@ func (c *ClusterManager) updateClusterStatus() {
 					logrus.Warnf("Can't reach quorum no. of nodes. Suspecting out of quorum...")
 					c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
+					// Report to the listeners that this node's status has changed to NotInQuorum
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(cluster.ClusterListener).Update(&c.selfNode)
+						if err != nil {
+							logrus.Warnln("Failed to notify ",
+								e.Value.(cluster.ClusterListener).String())
+						}
+					}
 				} else if (c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
 					c.selfNode.Status == api.Status_STATUS_OK) &&
 					(gossipNodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
@@ -1186,7 +1194,7 @@ func (c *ClusterManager) initListeners(
 		// already in cluster, check with listeners if it is OK to join
 		// this cluster.
 		for e := c.listeners.Front(); e != nil; e = e.Next() {
-			err := e.Value.(cluster.ClusterListener).CanNodeJoin(&c.selfNode, clusterInfo, nodeInitialized)
+			err := e.Value.(cluster.ClusterListener).CanNodeJoin(&c.selfNode, db, nodeInitialized)
 			if err != nil {
 				logrus.Errorf("Failed finalizing init (can node join): %s", err.Error())
 				return false, err
@@ -1195,7 +1203,7 @@ func (c *ClusterManager) initListeners(
 		// Finalize inits from subsystems under cluster db lock.
 		// finalizeCbs can be empty if this node is already initialized
 		for _, finalizeCb := range finalizeCbs {
-			if err := finalizeCb(clusterInfo); err != nil {
+			if err := finalizeCb(db); err != nil {
 				logrus.Errorf("Failed finalizing init (finalize): %s", err.Error())
 				return false, err
 			}
@@ -1242,6 +1250,14 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	// Once we achieve quorum then we actually join the cluster
 	// and change the status to OK
 	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+	// Update the listeners that this node is starting with not in quorum state
+	for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).Update(&c.selfNode)
+		if err != nil {
+			logrus.Warnln("Failed to notify ",
+				e.Value.(cluster.ClusterListener).String())
+		}
+	}
 
 	// Get the cluster domain info
 	clusterDomainInfos, err := c.clusterDomainManager.EnumerateDomains()
