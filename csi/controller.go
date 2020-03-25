@@ -341,6 +341,15 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, e)
 	}
 
+	// when no filesystem is specified on storage class ext4 is used by default
+	// for raw block volume 'none' should be set as filesystem, next check is added to be aligned with CSI spec
+	for _, c := range req.VolumeCapabilities {
+		if c.GetBlock() != nil {
+			spec.Format = api.FSType_FS_TYPE_NONE
+			break
+		}
+	}
+
 	// Get PVC Metadata and add to locator.VolumeLabels
 	// This will override any storage class secrets added above.
 	pvcMetadata, err := getPVCMetadata(req.GetParameters())

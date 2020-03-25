@@ -20,15 +20,17 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/portworx/kvdb"
-
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/pkg/errors"
+	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/mount"
 )
 
 func (s *OsdCsiServer) NodeGetInfo(
@@ -67,17 +69,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 	if len(req.GetTargetPath()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
-	if req.GetVolumeCapability() == nil || req.GetVolumeCapability().GetAccessMode() == nil {
+	if req.GetVolumeCapability() == nil || req.GetVolumeCapability().GetAccessMode() == nil ||
+		req.GetVolumeCapability().GetAccessMode().Mode == csi.VolumeCapability_AccessMode_UNKNOWN {
 		return nil, status.Error(codes.InvalidArgument, "Volume access mode must be provided")
-	}
-
-	// Verify target location is an existing directory
-	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
-		return nil, status.Errorf(
-			codes.Aborted,
-			"Failed to use target location %s: %s",
-			req.GetTargetPath(),
-			err.Error())
 	}
 
 	// Get grpc connection
@@ -110,8 +104,6 @@ func (s *OsdCsiServer) NodePublishVolume(
 	// Get volume encryption info from req.Secrets
 	driverOpts := s.addEncryptionInfoToLabels(make(map[string]string), req.GetSecrets())
 
-	// prepare for mount/attaching
-	mounts := api.NewOpenStorageMountAttachClient(conn)
 	opts := &api.SdkVolumeAttachOptions{
 		SecretName: spec.GetPassphrase(),
 	}
@@ -132,8 +124,14 @@ func (s *OsdCsiServer) NodePublishVolume(
 		volumeId = resp.VolumeId
 	}
 
+	// prepare for mount/attaching
+	mountAttachClient := api.NewOpenStorageMountAttachClient(conn)
+	var attachedVolDevice string
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
-		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
+		var attachResp *api.SdkVolumeAttachResponse
+		// attach is assumed to be idempotent
+		// attach is assumed to return the same DevicePath on each call
+		if attachResp, err = mountAttachClient.Attach(ctx, &api.SdkVolumeAttachRequest{
 			VolumeId:      volumeId,
 			Options:       opts,
 			DriverOptions: driverOpts,
@@ -144,12 +142,124 @@ func (s *OsdCsiServer) NodePublishVolume(
 			}
 			return nil, err
 		}
+
+		if attachResp == nil || attachResp.DevicePath == "" {
+			if spec.Ephemeral {
+				logrus.Errorf("Failed to attach ephemeral volume, attach resp is empty %s", volumeId)
+				s.cleanupEphemeral(ctx, conn, volumeId, false)
+			}
+			return nil, status.Error(
+				codes.Internal,
+				"failed to attach device, got empty attach response")
+		}
+		attachedVolDevice = attachResp.DevicePath
 	}
 
-	// Mount volume onto the path
-	if _, err := mounts.Mount(ctx, &api.SdkVolumeMountRequest{
+	// implement idempotency for nodePublish calls
+	//https://github.com/container-storage-interface/spec/blob/master/spec.md#nodeunpublishvolume
+	targetPath := req.GetTargetPath()
+	isBlockAccessType := false
+	if req.GetVolumeCapability().GetBlock() != nil {
+		isBlockAccessType = true
+	}
+
+	isSingleNodeAccessMode := false
+
+	accessMode := req.GetVolumeCapability().GetAccessMode()
+	if accessMode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER ||
+		accessMode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY {
+		isSingleNodeAccessMode = true
+	}
+
+	isMounted := false
+	isMountedToRequestedTargetPath := false
+
+	var mounter mount.Manager
+	if isBlockAccessType {
+		mounter, err = mount.NewRawBindMounter([]string{""}, nil, []string{}, "")
+	} else {
+		mounter, err = mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{}, "")
+	}
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to instantiate mounter: %s",
+			err.Error())
+	}
+
+	err = mounter.Reload(attachedVolDevice)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to read mounts for device %s: %s",
+			attachedVolDevice,
+			err.Error())
+	}
+
+	deviceMountsNumber := mounter.HasMounts(attachedVolDevice)
+	if deviceMountsNumber > 0 {
+		isMounted = true
+	}
+
+	isMountedToRequestedTargetPath, err = mounter.Exists(attachedVolDevice, targetPath)
+	if err != nil {
+		if err == mount.ErrEnoent {
+			isMountedToRequestedTargetPath = false
+		} else {
+			return nil, status.Errorf(
+				codes.Internal,
+				"failed to check mounts for device %s: %s",
+				attachedVolDevice,
+				err.Error())
+		}
+	}
+
+	logrus.Infof(
+		"isMounted %v, targetPath: %v, isSingleNodeAccessMode %v, isMountedToRequestedTargetPath %v,"+
+			" attachedVolDevice: %v, isBlockAccessType %v",
+		isMounted,
+		targetPath,
+		isSingleNodeAccessMode,
+		isMountedToRequestedTargetPath,
+		attachedVolDevice,
+		isBlockAccessType,
+	)
+
+	// this scenario is common for all access modes
+	// T1=T2, requested target path and volume mount path are equal
+	if isMounted && isMountedToRequestedTargetPath {
+		return &csi.NodePublishVolumeResponse{}, nil
+	}
+
+	//currently we do not compare req parameters, e. g. cases like T1=T2 && P1!=P2 are not implemented
+	// that means for MULTI_NODE cases
+	// when requested target path and volume mount path are NOT equal volume shall be mounted one more time
+
+	// NON MULTI_NODE cases
+	if isSingleNodeAccessMode {
+		// T1!=T2
+		if isMounted && !isMountedToRequestedTargetPath {
+			return nil, status.Errorf(
+				codes.FailedPrecondition,
+				"failed to ensure target location %s: %s",
+				targetPath,
+				err.Error())
+		}
+	}
+
+	//ensureTargetLocation verifies target location and creates the one if it doesn't exist
+	if err = ensureTargetLocation(targetPath, isBlockAccessType); err != nil {
+		return nil, status.Errorf(
+			codes.Aborted,
+			"failed to ensure target location %s: %s",
+			targetPath,
+			err.Error())
+	}
+
+	// for volumes with mount access type just mount volume onto the path
+	if _, err := mountAttachClient.Mount(ctx, &api.SdkVolumeMountRequest{
 		VolumeId:  volumeId,
-		MountPath: req.GetTargetPath(),
+		MountPath: targetPath,
 		Options:   opts,
 	}); err != nil {
 		if spec.Ephemeral {
@@ -159,16 +269,14 @@ func (s *OsdCsiServer) NodePublishVolume(
 		return nil, err
 	}
 
-	logrus.Infof("Volume %s mounted on %s",
-		volumeId,
-		req.GetTargetPath())
+	logrus.Infof("Volume %s mounted on %s", volumeId, targetPath)
 
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
 // NodeUnpublishVolume is a CSI API call which unmounts the volume.
 func (s *OsdCsiServer) NodeUnpublishVolume(
-	ctx context.Context,
+	_ context.Context,
 	req *csi.NodeUnpublishVolumeRequest,
 ) (*csi.NodeUnpublishVolumeResponse, error) {
 
@@ -182,30 +290,88 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
 
+	volumeID := req.GetVolumeId()
+	targetPath := req.GetTargetPath()
 	// Get volume information
-	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
-	if err != nil || len(vols) < 1 {
-		if err == kvdb.ErrNotFound {
-			logrus.Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
-			return &csi.NodeUnpublishVolumeResponse{}, nil
-		} else if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
-				req.GetVolumeId(),
-				err.Error())
-		} else {
-			logrus.Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
-			return &csi.NodeUnpublishVolumeResponse{}, nil
-		}
+	vols, err := s.driver.Inspect([]string{volumeID})
+	if err == kvdb.ErrNotFound || len(vols) < 1 {
+		return nil, status.Errorf(codes.NotFound, "volume id %s not found: %s",
+			volumeID,
+			kvdb.ErrNotFound.Error())
 	}
-
-	// Mount volume onto the path
-	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-		logrus.Infof("Unable to unmount volume %s onto %s: %s",
-			req.GetVolumeId(),
-			req.GetTargetPath(),
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"failed to inspect volume %s: %s",
+			volumeID,
 			err.Error())
 	}
 
+	v := vols[0]
+	isBlockAccessType := v.Format == api.FSType_FS_TYPE_NONE
+	var mounter mount.Manager
+
+	if isBlockAccessType {
+		mounter, err = mount.NewRawBindMounter([]string{""}, nil, []string{}, "")
+	} else {
+		mounter, err = mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{}, "")
+	}
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to instantiate mounter: %s",
+			err.Error())
+	}
+
+	err = mounter.Reload(v.DevicePath)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to read mounts for device %s: %s",
+			v.DevicePath,
+			err.Error())
+	}
+
+	// it is not mounted to this targetPath
+	_, err = mounter.GetSourcePath(targetPath)
+	if err != nil {
+		if err == mount.ErrEnoent {
+			return &csi.NodeUnpublishVolumeResponse{}, nil
+		}
+		return nil, status.Errorf(codes.Internal,
+			"cannot get sourcePath for targetPath %s for volume %s, err: %s",
+			targetPath,
+			volumeID,
+			err.Error())
+	}
+
+	if err = s.driver.Unmount(volumeID, targetPath, nil); err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"unable to unmount volume %s onto %s: %s",
+			volumeID,
+			targetPath,
+			err.Error())
+	}
+
+	err = mounter.Reload(v.DevicePath)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to read mounts for device %s: %s",
+			v.DevicePath,
+			err.Error())
+	}
+
+	// Delete the mount point
+	err = mounter.RemoveMountPath(targetPath, nil)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"cannot clean targetPath %s for volume %s, err: %s",
+			targetPath,
+			volumeID,
+			err.Error())
+	}
+
+	// TODO: should be deattached only in case when there are no mountpoints
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
 			return nil, status.Errorf(
@@ -261,18 +427,49 @@ func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientCo
 	}
 }
 
-func verifyTargetLocation(targetPath string) error {
-	fileInfo, err := os.Lstat(targetPath)
-	if err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Target location %s does not exist", targetPath)
-	} else if err != nil {
-		return fmt.Errorf(
-			"Unknown error while verifying target location %s: %s",
-			targetPath,
-			err.Error())
+func ensureTargetLocation(targetPath string, isBlock bool) error {
+	_, err := os.Lstat(targetPath)
+	if os.IsNotExist(err) {
+		if isBlock {
+			if err = makeFile(targetPath); err != nil {
+				return fmt.Errorf("cannot create target location %s for block volume, err: %s", targetPath, err.Error())
+			}
+
+			return nil
+		}
+
+		if err = makeDir(targetPath); err != nil {
+			return fmt.Errorf("cannot create target location %s for mount volume, err: %s", targetPath, err.Error())
+		}
+
+		return nil
 	}
-	if !fileInfo.IsDir() {
-		return fmt.Errorf("Target location %s is not a directory", targetPath)
+
+	return errors.Wrap(err, "unknown error while verifying target location")
+}
+
+func makeFile(pathname string) error {
+	f, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0644))
+	defer f.Close()
+	if err != nil {
+		if !os.IsExist(err) {
+			return err
+		}
+	}
+	_, err = f.Stat()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func makeDir(pathname string) error {
+	err := os.MkdirAll(pathname, os.FileMode(0755))
+	if err != nil {
+		if !os.IsExist(err) {
+			return err
+		}
 	}
 
 	return nil

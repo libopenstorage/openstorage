@@ -111,7 +111,9 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "/",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -145,7 +147,9 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "mypath",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 
 		// This will cause an error
@@ -257,7 +261,9 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "/mnt",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -315,7 +321,9 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -392,7 +400,9 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 			AccessType: &csi.VolumeCapability_Block{
 				Block: &csi.VolumeCapability_BlockVolume{},
 			},
@@ -456,7 +466,9 @@ func TestNodePublishVolumeMount(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -521,6 +533,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 					Spec: &api.VolumeSpec{
 						Size: size,
 					},
+					Format:        api.FSType_FS_TYPE_EXT4,
 					AttachPath:    []string{targetPath},
 					AttachedOn:    "node1",
 					State:         api.VolumeState_VOLUME_STATE_ATTACHED,

@@ -8582,8 +8582,10 @@ type SdkOpenStoragePolicyDefaultInspectRequest struct {
 func (m *SdkOpenStoragePolicyDefaultInspectRequest) Reset() {
 	*m = SdkOpenStoragePolicyDefaultInspectRequest{}
 }
-func (m *SdkOpenStoragePolicyDefaultInspectRequest) String() string { return proto.CompactTextString(m) }
-func (*SdkOpenStoragePolicyDefaultInspectRequest) ProtoMessage()    {}
+func (m *SdkOpenStoragePolicyDefaultInspectRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*SdkOpenStoragePolicyDefaultInspectRequest) ProtoMessage() {}
 func (*SdkOpenStoragePolicyDefaultInspectRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_api_4fa71f2b69918dd2, []int{71}
 }
@@ -10271,8 +10273,9 @@ type SdkCredentialInspectResponse_GoogleCredential struct {
 	GoogleCredential *SdkGoogleCredentialResponse `protobuf:"bytes,202,opt,name=google_credential,json=googleCredential,oneof"`
 }
 
-func (*SdkCredentialInspectResponse_AwsCredential) isSdkCredentialInspectResponse_CredentialType()   {}
-func (*SdkCredentialInspectResponse_AzureCredential) isSdkCredentialInspectResponse_CredentialType() {}
+func (*SdkCredentialInspectResponse_AwsCredential) isSdkCredentialInspectResponse_CredentialType() {}
+func (*SdkCredentialInspectResponse_AzureCredential) isSdkCredentialInspectResponse_CredentialType() {
+}
 func (*SdkCredentialInspectResponse_GoogleCredential) isSdkCredentialInspectResponse_CredentialType() {
 }
 
@@ -14345,8 +14348,10 @@ type SdkCloudBackupEnumerateWithFiltersRequest struct {
 func (m *SdkCloudBackupEnumerateWithFiltersRequest) Reset() {
 	*m = SdkCloudBackupEnumerateWithFiltersRequest{}
 }
-func (m *SdkCloudBackupEnumerateWithFiltersRequest) String() string { return proto.CompactTextString(m) }
-func (*SdkCloudBackupEnumerateWithFiltersRequest) ProtoMessage()    {}
+func (m *SdkCloudBackupEnumerateWithFiltersRequest) String() string {
+	return proto.CompactTextString(m)
+}
+func (*SdkCloudBackupEnumerateWithFiltersRequest) ProtoMessage() {}
 func (*SdkCloudBackupEnumerateWithFiltersRequest) Descriptor() ([]byte, []int) {
 	return fileDescriptor_api_4fa71f2b69918dd2, []int{185}
 }
@@ -16760,8 +16765,10 @@ type SdkFilesystemCheckFixAllGetStatusResponse struct {
 func (m *SdkFilesystemCheckFixAllGetStatusResponse) Reset() {
 	*m = SdkFilesystemCheckFixAllGetStatusResponse{}
 }
-func (m *SdkFilesystemCheckFixAllGetStatusResponse) String() string { return proto.CompactTextString(m) }
-func (*SdkFilesystemCheckFixAllGetStatusResponse) ProtoMessage()    {}
+func (m *SdkFilesystemCheckFixAllGetStatusResponse) String() string {
+	return proto.CompactTextString(m)
+}
+func (*SdkFilesystemCheckFixAllGetStatusResponse) ProtoMessage() {}
 func (*SdkFilesystemCheckFixAllGetStatusResponse) Descriptor() ([]byte, []int) {
 	return fileDescriptor_api_4fa71f2b69918dd2, []int{234}
 }
@@ -17615,8 +17622,10 @@ type SdkCloudMigrateStartRequest_MigrateVolume struct {
 func (m *SdkCloudMigrateStartRequest_MigrateVolume) Reset() {
 	*m = SdkCloudMigrateStartRequest_MigrateVolume{}
 }
-func (m *SdkCloudMigrateStartRequest_MigrateVolume) String() string { return proto.CompactTextString(m) }
-func (*SdkCloudMigrateStartRequest_MigrateVolume) ProtoMessage()    {}
+func (m *SdkCloudMigrateStartRequest_MigrateVolume) String() string {
+	return proto.CompactTextString(m)
+}
+func (*SdkCloudMigrateStartRequest_MigrateVolume) ProtoMessage() {}
 func (*SdkCloudMigrateStartRequest_MigrateVolume) Descriptor() ([]byte, []int) {
 	return fileDescriptor_api_4fa71f2b69918dd2, []int{246, 0}
 }
