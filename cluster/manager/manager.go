@@ -595,7 +595,7 @@ func (c *ClusterManager) initNodeInCluster(
 			if self.Status != api.Status_STATUS_MAINTENANCE {
 				self.Status = api.Status_STATUS_ERROR
 			}
-			logrus.Warnf("Failed to initialize Init %s: %v",
+			logrus.Warnf("Failed to initialize %s: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
 			c.cleanupInit(clusterInfo, self)
 			return nil, err
@@ -827,6 +827,14 @@ func (c *ClusterManager) updateClusterStatus() {
 					logrus.Warnf("Can't reach quorum no. of nodes. Suspecting out of quorum...")
 					c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
 					c.status = api.Status_STATUS_NOT_IN_QUORUM
+					// Report to the listeners that this node's status has changed to NotInQuorum
+					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+						err := e.Value.(cluster.ClusterListener).Update(&c.selfNode)
+						if err != nil {
+							logrus.Warnln("Failed to notify ",
+								e.Value.(cluster.ClusterListener).String())
+						}
+					}
 				} else if (c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM ||
 					c.selfNode.Status == api.Status_STATUS_OK) &&
 					(gossipNodeInfo.Status == types.NODE_STATUS_NOT_IN_QUORUM ||
@@ -1221,6 +1229,14 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	// Once we achieve quorum then we actually join the cluster
 	// and change the status to OK
 	c.selfNode.Status = api.Status_STATUS_NOT_IN_QUORUM
+	// Update the listeners that this node is starting with not in quorum state
+	for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
+		err := e.Value.(cluster.ClusterListener).Update(&c.selfNode)
+		if err != nil {
+			logrus.Warnln("Failed to notify ",
+				e.Value.(cluster.ClusterListener).String())
+		}
+	}
 
 	// Get the cluster domain info
 	clusterDomainInfos, err := c.clusterDomainManager.EnumerateDomains()
