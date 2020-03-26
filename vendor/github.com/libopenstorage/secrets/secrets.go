@@ -51,6 +51,11 @@ const (
 	TypeVault  = "vault"
 )
 
+const (
+	// KeyVaultNamespace is a keyContext parameter for vault secrets.
+	KeyVaultNamespace = "vault-namespace"
+)
+
 // Secrets interface implemented by backend Key Management Systems (KMS)
 type Secrets interface {
 	// String representation of the backend KMS
