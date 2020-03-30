@@ -51,7 +51,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
@@ -130,8 +129,8 @@ func newTestServer(t *testing.T) *testServer {
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 		},
 	})
@@ -139,11 +138,16 @@ func newTestServer(t *testing.T) *testServer {
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -201,8 +205,8 @@ func newTestServerAuth(t *testing.T) *testServer {
 		Security: &SecurityConfig{
 			Role: rm,
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 			Authenticators: map[string]auth.Authenticator{
 				"testcode": selfsignedJwt,
@@ -213,11 +217,16 @@ func newTestServerAuth(t *testing.T) *testServer {
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -406,8 +415,8 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 		},
 	})
@@ -418,11 +427,17 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		server.Stop()
 	}()
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial("localhost:"+tester.port, grpc.WithTransportCredentials(grpccreds))
+	conn, err := grpc.Dial("localhost:"+tester.port, dopts...)
+	assert.Nil(t, err)
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke
