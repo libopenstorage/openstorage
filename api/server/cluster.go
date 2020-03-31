@@ -982,7 +982,6 @@ func (c *clusterApi) SecureRoutes() []*Route {
 		{verb: http.MethodGet, path: clusterPath("/enumerate", cluster.APIVersion), fn: c.enumerate},
 		{verb: http.MethodGet, path: clusterPath("/gossipstate", cluster.APIVersion), fn: c.gossipState},
 		{verb: http.MethodGet, path: clusterPath("/nodestatus", cluster.APIVersion), fn: c.nodeStatus},
-		{verb: http.MethodGet, path: clusterPath("/nodehealth", cluster.APIVersion), fn: c.nodeHealth},
 		{verb: http.MethodGet, path: clusterPath("/status", cluster.APIVersion), fn: c.status},
 		{verb: http.MethodGet, path: clusterPath("/peerstatus", cluster.APIVersion), fn: c.peerStatus},
 		{verb: http.MethodGet, path: clusterPath("/inspect/{id}", cluster.APIVersion), fn: c.inspect},
