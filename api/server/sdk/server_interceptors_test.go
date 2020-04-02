@@ -50,7 +50,7 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 			RequestAuthenticated:         false,
 
 			ExpectSuccess: false,
-			ExpectedError: "rpc error: code = PermissionDenied desc = Access to /openstorage.api.OpenStorageVolume/Create denied: rpc error: code = PermissionDenied desc = Access denied to roles: [system.public]",
+			ExpectedError: "rpc error: code = PermissionDenied desc = Access denied without authentication token",
 		},
 		{
 			TestName:                     "2-1: Authenticated volume creation should succeed with public vol creation enabled",
