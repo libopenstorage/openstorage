@@ -27,6 +27,7 @@ import (
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 )
 
 const (
@@ -387,18 +388,8 @@ func (r *SdkRoleManager) Verify(ctx context.Context, roles []string, fullmethod 
 
 // verifyRules checks if the rules authorize use of the API called `fullmethod`
 func (r *SdkRoleManager) verifyRules(rules []*api.SdkRule, fullmethod string) error {
-	var reqService, reqApi string
 
-	// String: "/openstorage.api.OpenStorage<service>/<method>"
-	parts := strings.Split(fullmethod, "/")
-
-	if len(parts) > 1 {
-		reqService = strings.TrimPrefix(strings.ToLower(parts[1]), "openstorage.api.openstorage")
-	}
-
-	if len(parts) > 2 {
-		reqApi = strings.ToLower(parts[2])
-	}
+	reqService, reqApi := grpcserver.GetMethodInformation(api.SdkRootPath, fullmethod)
 
 	// Look for denials first
 	for _, rule := range rules {

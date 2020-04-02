@@ -22,10 +22,13 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/volume"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/sirupsen/logrus"
 )
 
 // VolumeServer is an implementation of the gRPC OpenStorageVolume interface
@@ -40,6 +43,29 @@ func (s *VolumeServer) cluster() cluster.Cluster {
 
 func (s *VolumeServer) driver(ctx context.Context) volume.VolumeDriver {
 	return s.server.driver(ctx)
+}
+
+func (s *VolumeServer) auditLog(ctx context.Context, method, format string, a ...interface{}) {
+	if s.server.auditLogWriter() != nil {
+		userinfo, ok := auth.NewUserInfoFromContext(ctx)
+		if !ok {
+			return
+		}
+		claims := &userinfo.Claims
+
+		log := logrus.New()
+		log.Out = s.server.auditLogWriter()
+		logger := log.WithFields(logrus.Fields{
+			"username": userinfo.Username,
+			"subject":  claims.Subject,
+			"name":     claims.Name,
+			"email":    claims.Email,
+			"roles":    claims.Roles,
+			"groups":   claims.Groups,
+			"method":   method,
+		})
+		logger.Infof(format, a...)
+	}
 }
 
 // checkAccessForVolumeId checks if the given volumeId has the required accessType
