@@ -152,6 +152,12 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
 		logger.Warning("Access denied")
+		if auth.IsPublic(ctx) {
+			return nil, status.Errorf(
+				codes.PermissionDenied,
+				"Access denied without authentication token")
+		}
+
 		return nil, status.Errorf(
 			codes.PermissionDenied,
 			"Access to %s denied: %v",
