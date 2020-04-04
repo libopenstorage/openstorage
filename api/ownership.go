@@ -37,6 +37,10 @@ func OwnershipSetUsernameFromContext(ctx context.Context, srcOwnership *Ownershi
 	// Check if the context has information about the user. If not,
 	// then security is not enabled.
 	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
+		// Public users cannot provide ownership
+		if userinfo.IsPublic() {
+			return nil
+		}
 
 		// Merge the previous acls which may have been set by the user
 		var acls *Ownership_AccessControl
@@ -82,7 +86,7 @@ func (o *Ownership) IsPermitted(
 	accessType Ownership_AccessType,
 ) bool {
 	// There is no owner, so it is a public resource
-	if o.IsPublic() {
+	if o.IsPublic(accessType) {
 		return true
 	}
 
@@ -180,9 +184,16 @@ func (o *Ownership) HasAnOwner() bool {
 	return len(o.Owner) != 0
 }
 
-// IsPublic returns true if there is no ownership in this resource
-func (o *Ownership) IsPublic() bool {
-	return !o.HasAnOwner()
+// IsAccessPermittedByPublic returns true if access is permitted for public user
+func (o *Ownership) IsAccessPermittedByPublic(accessType Ownership_AccessType) bool {
+	return (o.Acls != nil && o.Acls.Public != nil &&
+		o.Acls.Public.Type.isAccessPermitted(accessType))
+}
+
+// IsPublic returns true if public access is set or
+// there is no ownership in this resource
+func (o *Ownership) IsPublic(accessType Ownership_AccessType) bool {
+	return o.IsAccessPermittedByPublic(accessType) || !o.HasAnOwner()
 }
 
 // IsOwner returns if the user is the owner of the resource

@@ -104,6 +104,9 @@
             },
             "description": "Group access to resource which must match the group set in the\nauthorization token.\nCan be set by the owner or the system administrator only.\nPossible values are:\n1. no groups: Means no groups are given access.\n2. `[\"*\"]`: All groups are allowed.\n3. `[\"group1\", \"group2\"]`: Only certain groups are allowed. In this example only\n_group1_ and _group2_ are allowed.",
             "type": "object"
+          },
+          "public": {
+            "$ref": "#/components/schemas/OwnershipPublicAccessControl"
           }
         },
         "type": "object"
@@ -117,6 +120,15 @@
           "Admin"
         ],
         "type": "string"
+      },
+      "OwnershipPublicAccessControl": {
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/OwnershipAccessType"
+          }
+        },
+        "title": "PublicAccessControl allows assigning public ownership",
+        "type": "object"
       },
       "SdkCloudMigrateStartRequestMigrateAllVolumes": {
         "title": "Defines a migration request for all volumes in a cluster",
@@ -289,6 +301,51 @@
             "format": "int64",
             "title": "TotalBytes used by this volume",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiCatalog": {
+        "properties": {
+          "LastModified": {
+            "format": "date-time",
+            "title": "Last Modified",
+            "type": "string"
+          },
+          "children": {
+            "items": {
+              "$ref": "#/components/schemas/apiCatalog"
+            },
+            "title": "Children",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name of the Directory/File",
+            "type": "string"
+          },
+          "path": {
+            "title": "Full Path of the Directory/File",
+            "type": "string"
+          },
+          "size": {
+            "format": "uint64",
+            "title": "File or Directory Size",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type Directory or File",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiCatalogResponse": {
+        "properties": {
+          "report": {
+            "$ref": "#/components/schemas/apiReport"
+          },
+          "root": {
+            "$ref": "#/components/schemas/apiCatalog"
           }
         },
         "type": "object"
@@ -734,8 +791,10 @@
           "IO_PROFILE_DB",
           "IO_PROFILE_DB_REMOTE",
           "IO_PROFILE_CMS",
-          "IO_PROFILE_SYNC_SHARED"
+          "IO_PROFILE_SYNC_SHARED",
+          "IO_PROFILE_BKUPSRC"
         ],
+        "title": "- IO_PROFILE_BKUPSRC: IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile",
         "type": "string"
       },
       "apiIoStrategy": {
@@ -891,6 +950,21 @@
         "title": "ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure\ncoded - for clustered storage arrays",
         "type": "object"
       },
+      "apiReport": {
+        "properties": {
+          "directories": {
+            "format": "int64",
+            "title": "Directory count",
+            "type": "string"
+          },
+          "files": {
+            "format": "int64",
+            "title": "File count",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiResourceType": {
         "default": "RESOURCE_TYPE_NONE",
         "enum": [
@@ -902,6 +976,110 @@
           "RESOURCE_TYPE_POOL"
         ],
         "type": "string"
+      },
+      "apiRestoreParamBoolType": {
+        "default": "PARAM_BKUPSRC",
+        "enum": [
+          "PARAM_BKUPSRC",
+          "PARAM_FALSE",
+          "PARAM_TRUE"
+        ],
+        "type": "string"
+      },
+      "apiRestoreVolSnashotSchedule": {
+        "properties": {
+          "schedule": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiRestoreVolStoragePolicy": {
+        "properties": {
+          "policy": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiRestoreVolumeSpec": {
+        "description": "RestoreSpec allows some of the restore volume properties of to be modified\nwhile restoring the cloud baackup. All pointer fields with nil value will\ninherit corresponding field value from backup's spec.",
+        "properties": {
+          "aggregation_level": {
+            "description": "Aggregation level Specifies the number of parts the volume can be aggregated from.",
+            "format": "int64",
+            "type": "integer"
+          },
+          "cos": {
+            "$ref": "#/components/schemas/apiCosType"
+          },
+          "export_spec": {
+            "$ref": "#/components/schemas/apiExportSpec"
+          },
+          "fp_preference": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "group": {
+            "$ref": "#/components/schemas/apiGroup"
+          },
+          "group_enforced": {
+            "description": "GroupEnforced is true if consistency group creation is enforced.",
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "ha_level": {
+            "description": "HaLevel specifies the number of copies of data.",
+            "format": "int64",
+            "type": "string"
+          },
+          "io_profile": {
+            "$ref": "#/components/schemas/apiIoProfile"
+          },
+          "io_strategy": {
+            "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "journal": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "nodiscard": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "ownership": {
+            "$ref": "#/components/schemas/apiOwnership"
+          },
+          "placement_strategy": {
+            "$ref": "#/components/schemas/apiVolumePlacementStrategy"
+          },
+          "queue_depth": {
+            "format": "int64",
+            "title": "QueueDepth defines the desired block device queue depth",
+            "type": "integer"
+          },
+          "replica_set": {
+            "$ref": "#/components/schemas/apiReplicaSet"
+          },
+          "shared": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "sharedv4": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "snapshot_interval": {
+            "format": "int64",
+            "title": "SnapshotInterval in minutes, set to 0 to disable snapshots",
+            "type": "integer"
+          },
+          "snapshot_schedule": {
+            "$ref": "#/components/schemas/apiRestoreVolSnashotSchedule"
+          },
+          "sticky": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "storage_policy": {
+            "$ref": "#/components/schemas/apiRestoreVolStoragePolicy"
+          }
+        },
+        "type": "object"
       },
       "apiRuntimeStateMap": {
         "description": "RuntimeStateMap is a list of name value mapping of driver specific runtime\ninformation.",
@@ -1461,6 +1639,9 @@
             "title": "The credential to be used for restore operation",
             "type": "string"
           },
+          "locator": {
+            "$ref": "#/components/schemas/apiVolumeLocator"
+          },
           "node_id": {
             "title": "Optional for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
             "type": "string"
@@ -1468,6 +1649,9 @@
           "restore_volume_name": {
             "title": "Optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup",
             "type": "string"
+          },
+          "spec": {
+            "$ref": "#/components/schemas/apiRestoreVolumeSpec"
           },
           "task_id": {
             "title": "TaskId of the task performing this restore",
@@ -1901,6 +2085,11 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialRequest"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
@@ -1963,6 +2152,11 @@
           },
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialResponse"
+          },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
           },
           "name": {
             "title": "Name of the credential",
@@ -2103,7 +2297,7 @@
         "type": "object"
       },
       "apiSdkFilesystemTrimStartResponse": {
-        "description": "SdkFilesystemTrimStartResponse defines the response for a \nSdkFilesystemTrimStartRequest.",
+        "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -2437,7 +2631,7 @@
         "type": "object"
       },
       "apiSdkRule": {
-        "description": "SdkRule is the message used to construct custom roles in the OpenStorage SDK.\n\n### Format\nThe following shows the supported format for SdkRule:\n\n* Services: Is the gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase\n* Apis: Is the API name in the service in lowercase\n\nValues can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.\n\n### Examples\n\n* Allow any call:\n\n```yaml\nSdkRule:\n  - Services: [\"*\"]\n    Apis: [\"*\"]\n```\n\n* Allow only cluster operations:\n\n```yaml\nSdkRule:\n  - services: [\"cluster\"]\n    apis: [\"*\"]\n```\n\n* Allow inspection of any object and listings of only volumes\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*enumerate*\"]\n  - Services: [\"*\"]\n    Apis: [\"inspect*\"]\n```",
+        "description": "SdkRule is the message used to construct custom roles in the OpenStorage SDK.\n\n### Format\nThe following shows the supported format for SdkRule:\n\n* Services: Is the gRPC service name in `OpenStorage\u003cservice name\u003e` in lowercase\n* Apis: Is the API name in the service in lowercase\n\nValues can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.\n\nServices and APIs can also be denied by prefixing the value with a `!`. Note that on rule conflicts,\ndenial will always be chosen.\n\n### Examples\n\n* Allow any call:\n\n```yaml\nSdkRule:\n  - Services: [\"*\"]\n    Apis: [\"*\"]\n```\n\n* Allow only cluster operations:\n\n```yaml\nSdkRule:\n  - services: [\"cluster\"]\n    apis: [\"*\"]\n```\n\n* Allow inspection of any object and listings of only volumes\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*enumerate*\"]\n  - Services: [\"*\"]\n    Apis: [\"inspect*\"]\n```\n\n* Allow all volume call except create\n\n```yaml\nSdkRule:\n  - Services: [\"volumes\"]\n    Apis: [\"*\", \"!create\"]\n```",
         "properties": {
           "apis": {
             "items": {
@@ -2762,6 +2956,33 @@
           }
         },
         "title": "Defines response containing volume/snapshot capacity usage details",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogRequest": {
+        "properties": {
+          "depth": {
+            "title": "Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path which will be used as root (default is the actual root)",
+            "type": "string"
+          },
+          "volume_id": {
+            "description": "VolumeId of the volume that is getting it's catalog retrieved.",
+            "type": "string"
+          }
+        },
+        "title": "Request message to get the volume catalog",
+        "type": "object"
+      },
+      "apiSdkVolumeCatalogResponse": {
+        "properties": {
+          "catalog": {
+            "$ref": "#/components/schemas/apiCatalogResponse"
+          }
+        },
+        "title": "Response message to get volume catalog",
         "type": "object"
       },
       "apiSdkVolumeCloneRequest": {
@@ -4185,7 +4406,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.0"
+    "version": "0.69.6"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6336,6 +6557,37 @@
         "summary": "Resize resizes the specified storage pool based on the request parameters",
         "tags": [
           "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/volume/catalog": {
+      "post": {
+        "operationId": "VolumeCatalog",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeCatalogRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeCatalogResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Gets the volume catalog of an attached and mounted volume.\nReturns the entire tree up to \"n\"  depth (default is all of it)\nTakes a path that can be used as the new root for the catalog request.",
+        "tags": [
+          "OpenStorageVolume"
         ]
       }
     },

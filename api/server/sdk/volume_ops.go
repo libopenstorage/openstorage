@@ -101,7 +101,6 @@ func (s *VolumeServer) create(
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
 	v, err := util.VolumeFromName(s.driver(ctx), volName)
-
 	// If the volume is still there but it is being delete, then wait until it is removed
 	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
 		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
@@ -1072,6 +1071,32 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 	}
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
+}
+
+// VolumeCatalog returns a list of volumes for the provided filters
+func (s *VolumeServer) VolumeCatalog(
+	ctx context.Context,
+	req *api.SdkVolumeCatalogRequest,
+) (*api.SdkVolumeCatalogResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	catalog, err := s.driver(ctx).Catalog(req.GetVolumeId(), req.GetPath(), req.GetDepth())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to get the catalog: %v",
+			err.Error())
+	}
+
+	return &api.SdkVolumeCatalogResponse{
+		Catalog: &catalog,
+	}, nil
 }
 
 func validateMinMaxParams(policy uint64, specified uint64, op api.VolumeSpecPolicy_PolicyOp) bool {

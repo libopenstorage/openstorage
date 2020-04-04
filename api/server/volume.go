@@ -12,17 +12,20 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/libopenstorage/openstorage/api"
-	sdk "github.com/libopenstorage/openstorage/api/server/sdk"
-	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
-	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/volume"
-	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+
 	"github.com/urfave/negroni"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
+	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/volume"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 const (
@@ -1701,9 +1704,12 @@ func (vd *volAPI) volumeInspectRoute() *Route {
 	return &Route{verb: "GET", path: volPath("/{id}", volume.APIVersion), fn: vd.inspect}
 }
 
+func (vd *volAPI) volumeEnumerateRoute() *Route {
+	return &Route{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate}
+}
+
 func (vd *volAPI) otherVolumeRoutes() []*Route {
 	return []*Route{
-		{verb: "GET", path: volPath("", volume.APIVersion), fn: vd.enumerate},
 		{verb: "GET", path: volPath("/stats", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/stats/{id}", volume.APIVersion), fn: vd.stats},
 		{verb: "GET", path: volPath("/usedsize", volume.APIVersion), fn: vd.usedsize},
@@ -1767,7 +1773,7 @@ func (vd *volAPI) snapRoutes() []*Route {
 }
 
 func (vd *volAPI) Routes() []*Route {
-	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute()}
+	routes := []*Route{vd.versionRoute(), vd.volumeCreateRoute(), vd.volumeSetRoute(), vd.volumeDeleteRoute(), vd.volumeInspectRoute(), vd.volumeEnumerateRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
 	routes = append(routes, vd.backupRoutes()...)
@@ -1778,6 +1784,7 @@ func (vd *volAPI) Routes() []*Route {
 
 func (vd *volAPI) SetupRoutesWithAuth(
 	router *mux.Router,
+	authenticators map[string]auth.Authenticator,
 ) (*mux.Router, error) {
 	// We setup auth middlewares for all the APIs that get invoked
 	// from a Container Orchestrator.
@@ -1785,6 +1792,7 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	// - ATTACH/MOUNT
 	// - DETACH/UNMOUNT
 	// - DELETE
+	// - ENUMERATE
 	// For all other routes it is expected that the REST client uses an auth token
 
 	authM := NewAuthMiddleware()
@@ -1817,16 +1825,34 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	nSet.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
+	// Setup middleware for enumerate
+	nEnumerate := negroni.New()
+	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	enumerateRoute := vd.volumeEnumerateRoute()
+	nSet.UseHandlerFunc(enumerateRoute.fn)
+	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
+
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
 	routes = append(routes, vd.backupRoutes()...)
-	routes = append(routes, vd.credsRoutes()...)
 	routes = append(routes, vd.migrateRoutes()...)
 	for _, v := range routes {
 		router.Methods(v.verb).Path(v.path).HandlerFunc(v.fn)
 	}
+
 	return router, nil
+}
+
+func (vd *volAPI) decorateCredRoutes(authenticators map[string]auth.Authenticator, router *mux.Router) *mux.Router {
+	// Decorate creds endpoints with authentication
+	credRoutes := vd.credsRoutes()
+	securityMiddleware := newSecurityMiddleware(authenticators)
+	for _, route := range credRoutes {
+		router.Methods(route.GetVerb()).Path(route.GetPath()).HandlerFunc(securityMiddleware(route.fn))
+	}
+
+	return router
 }
 
 // GetVolumeAPIRoutes returns all the volume routes.
@@ -1836,6 +1862,16 @@ func (vd *volAPI) SetupRoutesWithAuth(
 func GetVolumeAPIRoutes(name, sdkUds string) []*Route {
 	volMgmtApi := newVolumeAPI(name, sdkUds)
 	return volMgmtApi.Routes()
+}
+
+func GetCredAPIRoutes() []*Route {
+	volAPI := &volAPI{}
+	return volAPI.credsRoutes()
+}
+
+func SetCredsAPIRoutesWithAuth(router *mux.Router, authenticators map[string]auth.Authenticator) *mux.Router {
+	volAPI := &volAPI{}
+	return volAPI.decorateCredRoutes(authenticators, router)
 }
 
 // ServerRegisterRoute is a callback function used by drivers to run their
@@ -1900,11 +1936,17 @@ func GetVolumeAPIRoutesWithAuth(
 	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
+	// Setup middleware for Enumerate
+	nEnumerate := negroni.New()
+	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	enumerateRoute := vd.volumeEnumerateRoute()
+	nEnumerate.UseHandlerFunc(serverRegisterRoute(enumerateRoute.fn, preRouteCheckFn))
+	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
+
 	routes := []*Route{vd.versionRoute()}
 	routes = append(routes, vd.otherVolumeRoutes()...)
 	routes = append(routes, vd.snapRoutes()...)
 	routes = append(routes, vd.backupRoutes()...)
-	routes = append(routes, vd.credsRoutes()...)
 	routes = append(routes, vd.migrateRoutes()...)
 	for _, v := range routes {
 		router.Methods(v.verb).Path(v.path).HandlerFunc(serverRegisterRoute(v.fn, preRouteCheckFn))

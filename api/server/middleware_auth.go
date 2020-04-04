@@ -16,7 +16,7 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	lsecrets "github.com/libopenstorage/secrets"
-	"github.com/portworx/sched-ops/k8s"
+	"github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -36,6 +36,100 @@ func NewAuthMiddleware() *authMiddleware {
 }
 
 type authMiddleware struct {
+}
+
+// newSecurityMiddleware based on auth configuration returns SecurityHandler or just
+func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(next http.HandlerFunc) http.HandlerFunc {
+	if auth.Enabled() {
+		return func(next http.HandlerFunc) http.HandlerFunc {
+			return SecurityHandler(authenticators, next)
+		}
+	}
+
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return next
+	}
+}
+
+// SecurityHandler implements Authentication and Authorization check at the same time
+// this functionality where not moved to separate functions because of simplicity
+func SecurityHandler(authenticators map[string]auth.Authenticator, next http.HandlerFunc) http.HandlerFunc {
+	if authenticators == nil {
+		return next
+	}
+
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		tokenHeader := r.Header.Get("Authorization")
+		tokens := strings.Split(tokenHeader, " ")
+
+		if len(tokens) < 2 {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, token is malformed"),
+			})
+			return
+		}
+		token := tokens[1]
+
+		// Determine issuer
+		issuer, err := auth.TokenIssuer(token)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, %v", err),
+			})
+			return
+		}
+
+		// Use http.Request context for cancellation propagation
+		ctx := r.Context()
+
+		// Authenticate user
+		var claims *auth.Claims
+		if authenticator, exists := authenticators[issuer]; exists {
+			claims, err = authenticator.AuthenticateToken(ctx, token)
+
+			if err != nil {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(&api.ClusterResponse{
+					Error: fmt.Sprintf("Access denied, %s", err.Error()),
+				})
+				return
+			}
+			if claims == nil {
+				w.WriteHeader(http.StatusForbidden)
+				json.NewEncoder(w).Encode(&api.ClusterResponse{
+					Error: fmt.Sprintf("Access denied, wrong claims provided"),
+				})
+			}
+		} else {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, no authenticator for issuer %s", issuer),
+			})
+			return
+		}
+		// Check if user has admin role to access that endpoint
+		isSystemAdmin := false
+
+		for _, role := range claims.Roles {
+			if role == "system.admin" {
+				isSystemAdmin = true
+				break
+			}
+		}
+
+		if !isSystemAdmin {
+			w.WriteHeader(http.StatusForbidden)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied, user must have admin access"),
+			})
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
 }
 
 func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -258,6 +352,61 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 	json.NewEncoder(w).Encode(dk)
 }
 
+func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	fn := "enumerate"
+
+	d, authRequired := a.isTokenProcessingRequired(r)
+	if !authRequired {
+		next(w, r)
+		return
+	}
+
+	volIDs, ok := r.URL.Query()[api.OptVolumeID]
+	if !ok || len(volIDs[0]) < 1 {
+		a.log("", fn).Error("Failed to parse VolumeID")
+		return
+	}
+	volumeID := volIDs[0]
+
+	vols, err := d.Inspect([]string{volumeID})
+	if err != nil || len(vols) == 0 || vols[0] == nil {
+		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
+		next(w, r)
+		return
+	}
+
+	volumeResponse := &api.VolumeResponse{}
+	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
+		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	}
+	if tokenSecretContext.SecretName == "" {
+		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
+			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
+			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
+		a.log(volumeID, fn).Error(errorMessage)
+		volumeResponse = &api.VolumeResponse{Error: errorMessage}
+		json.NewEncoder(w).Encode(volumeResponse)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	token, err := osecrets.GetToken(tokenSecretContext)
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("failed to get token")
+		volumeResponse.Error = "failed to get token: " + err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
+		return
+	} else {
+		a.insertToken(r, token)
+	}
+
+	next(w, r)
+}
+
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
 	userAgent := r.Header.Get("User-Agent")
 	if len(userAgent) > 0 {
@@ -318,7 +467,7 @@ func (a *authMiddleware) parseSecret(
 			return parseSecretFromLabels(specLabels, locatorLabels)
 		}
 
-		pvc, err := k8s.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
+		pvc, err := core.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
 		if err != nil {
 			return nil, err
 		}

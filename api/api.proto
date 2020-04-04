@@ -111,6 +111,8 @@ enum IoProfile {
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
+  // IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile
+  IO_PROFILE_BKUPSRC = 6;
 }
 
 // VolumeState represents the state of a volume.
@@ -596,6 +598,11 @@ message Ownership {
     // This type automatically provides Read and Write access also.
     Admin = 2;
   }
+  // PublicAccessControl allows assigning public ownership
+  message PublicAccessControl {
+    // AccessType declares which level of public access is allowed
+    AccessType type = 1;
+  }
 
   message AccessControl {
     // Group access to resource which must match the group set in the
@@ -615,6 +622,8 @@ message Ownership {
     // 3. `["username1", "username2"]`: Only certain usernames are allowed. In this example only
     // _username1_ and _username2_ are allowed.
     map <string, AccessType> collaborators = 2;
+    // Public access to resource may be assigned for access by the public userd
+    PublicAccessControl public = 3;
   }
 
   // Username of owner.
@@ -1081,7 +1090,7 @@ message VolumeConsumer {
 }
 
 
-// VolumeServiceRequest provides details on what volume service command to 
+// VolumeServiceRequest provides details on what volume service command to
 // perform in background on the volume
 message VolumeServiceRequest {
   // User specified volume service command
@@ -1265,7 +1274,7 @@ service OpenStorageRole {
 
 // ## OpenStorageFilesystemTrim Service
 // This service provides methods to manage filesystem trim operation on a
-// volume. 
+// volume.
 //
 // This operation runs in the background on a **mounted volume**. If the volumes
 // are not mounted, these API return error.
@@ -1283,7 +1292,7 @@ service OpenStorageRole {
 //    `OpenStorageFilesystemTrimClient.Start()`
 //    This call returns immediately with a status code indicating if the
 //    operation was successfully started or not.
-// 4. To get the status of the Filesystem Trim operation, issue a grpc call to 
+// 4. To get the status of the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.GetStatus()`
 // 5. To stop the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.Stop()`
@@ -1319,7 +1328,7 @@ service OpenStorageFilesystemTrim {
 
 // ## OpenStorageFilesystemCheckService
 // This service provides methods to manage filesystem check operation on a
-// volume. 
+// volume.
 //
 // This operation is run in the background on an **unmounted volume**.
 // If the volume is mounted, then these APIs return error.
@@ -1339,7 +1348,7 @@ service OpenStorageFilesystemTrim {
 // 3. Status of the CheckHealth() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.CheckHealthGetStatus()`
 // 4. If the CheckHealth Operations status reports filesystem is in unhealthy
-//    state, then to fix all the problems issue a grpc call to 
+//    state, then to fix all the problems issue a grpc call to
 //    `OpenStorageFilesystemCheckClient.FixAll()`
 // 5. Status of the FixAll() operation can be retrieved by polling for the
 //    status using `OpenStorageFilesystemCheck.FixAllGetStatus()`
@@ -1781,6 +1790,17 @@ service OpenStorageVolume {
         post: "/v1/volumes/snapshot/schedules/{volume_id}"
         body: "*"
       };
+    }
+
+    // Gets the volume catalog of an attached and mounted volume.
+    // Returns the entire tree up to "n"  depth (default is all of it)
+    // Takes a path that can be used as the new root for the catalog request.
+    rpc VolumeCatalog(SdkVolumeCatalogRequest)
+    returns (SdkVolumeCatalogResponse) {
+        option(google.api.http) = {
+          post: "/v1/volume/catalog"
+          body: "*"
+        };
     }
 }
 
@@ -2476,7 +2496,8 @@ message SdkCredentialCreateRequest {
   Ownership ownership = 4;
   // use_proxy indicates if a proxy must be used
   bool use_proxy = 5;
-
+  // iamPolicy indicates if IAM creds must be used for access
+  bool iam_policy = 6;
   // Start at field number 200 to allow for expansion
   oneof credential_type {
     // Credentials for AWS/S3
@@ -2582,6 +2603,8 @@ message SdkCredentialInspectResponse {
   Ownership ownership = 4;
   // proxy flag for the credential
   bool use_proxy = 5;
+  // iamPolicy indicates if IAM creds must be used for access
+  bool iam_policy = 6;
 
   // Start at field number 200 for expansion support
   oneof credential_type {
@@ -3216,6 +3239,10 @@ message SdkCloudBackupRestoreRequest {
   string node_id = 4;
   // TaskId of the task performing this restore
   string task_id = 5;
+  // Modifiable Restore volume spec
+  RestoreVolumeSpec spec = 6;
+  // RestoreVolume locator
+  VolumeLocator locator = 7;
 }
 
 // Defines a response when restoring a volume from a backup stored by
@@ -3553,6 +3580,9 @@ message SdkCloudBackupSchedEnumerateResponse{
 //
 // Values can also be set to `*`, or start or end with `*` to allow multiple matches in services or apis.
 //
+// Services and APIs can also be denied by prefixing the value with a `!`. Note that on rule conflicts,
+// denial will always be chosen.
+//
 // ### Examples
 //
 // * Allow any call:
@@ -3579,6 +3609,14 @@ message SdkCloudBackupSchedEnumerateResponse{
 //     Apis: ["*enumerate*"]
 //   - Services: ["*"]
 //     Apis: ["inspect*"]
+// ```
+//
+// * Allow all volume call except create
+//
+// ```yaml
+// SdkRule:
+//   - Services: ["volumes"]
+//     Apis: ["*", "!create"]
 // ```
 //
 message SdkRule {
@@ -3678,7 +3716,7 @@ message SdkFilesystemTrimStartRequest {
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimStartResponse defines the response for a 
+// SdkFilesystemTrimStartResponse defines the response for a
 // SdkFilesystemTrimStartRequest.
 message SdkFilesystemTrimStartResponse{
   // Status code representing the state of the filesystem trim operation
@@ -3932,7 +3970,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 6;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4429,4 +4467,81 @@ enum EnforcementType {
   required = 0;
   // This specifies that the rule is preferred and can be best effort
   preferred = 1;
+}
+
+enum RestoreParamBoolType {
+	PARAM_BKUPSRC = 0; // Default: whateever was cloudbakup's option for the parameter
+	PARAM_FALSE = 1;
+	PARAM_TRUE = 2;
+}
+
+message RestoreVolSnashotSchedule {
+	string schedule= 1;
+}
+message RestoreVolStoragePolicy {
+	string policy = 1;
+}
+// RestoreSpec allows some of the restore volume properties of to be modified
+// while restoring the cloud baackup. All pointer fields with nil value will
+// inherit corresponding field value from backup's spec.
+message RestoreVolumeSpec {
+  // HaLevel specifies the number of copies of data.
+  int64 ha_level = 1;
+  // Cos specifies the relative class of service.
+  CosType cos = 2;
+  // IoProfile provides a hint about application using this volume.
+  IoProfile io_profile = 3;
+  // SnapshotInterval in minutes, set to 0 to disable snapshots
+  uint32 snapshot_interval = 4;
+  // Shared is true if this volume can be concurrently accessed by multiple users.
+  RestoreParamBoolType shared = 5;
+  // ReplicaSet is the desired set of nodes for the volume data.
+  ReplicaSet replica_set = 6;
+  // Aggregation level Specifies the number of parts the volume can be aggregated from.
+  uint32 aggregation_level = 7;
+  // SnapshotSchedule a well known string that specifies when snapshots should be taken.
+  RestoreVolSnashotSchedule snapshot_schedule = 8;
+  // Sticky volumes cannot be deleted until the flag is removed.
+  RestoreParamBoolType sticky = 9;
+  // Group identifies a consistency group
+  Group group = 10;
+  // GroupEnforced is true if consistency group creation is enforced.
+  bool group_enforced = 11;
+  // Journal is true if data for the volume goes into the journal.
+  RestoreParamBoolType journal = 12;
+  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  RestoreParamBoolType sharedv4 = 13;
+  // QueueDepth defines the desired block device queue depth
+  uint32 queue_depth = 14;
+  // Nodiscard specifies if the volume will be mounted with discard support disabled.
+  // i.e. FS will not release allocated blocks back to the backing storage pool.
+  RestoreParamBoolType nodiscard = 15;
+  // IoStrategy preferred strategy for I/O.
+  IoStrategy io_strategy = 16;
+  // PlacementStrategy specifies a spec to indicate where to place the volume.
+  VolumePlacementStrategy placement_strategy = 17;
+  // StoragePolicy if applied/specified while creating volume
+  RestoreVolStoragePolicy storage_policy = 18;
+  // Ownership
+  Ownership ownership = 19;
+  // ExportSpec defines how the volume should be exported.
+  ExportSpec export_spec = 20;
+  // fastpath extensions
+  RestoreParamBoolType fp_preference = 21;
+}
+
+// Request message to get the volume catalog
+message SdkVolumeCatalogRequest {
+  // VolumeId of the volume that is getting it's catalog retrieved.
+  string volume_id =1;
+  // Path which will be used as root (default is the actual root)
+  string path = 2;
+  // Depth of folders/files retrieved (default is all of it, 1 would only return 1 layer)
+  string depth = 3;
+}
+
+// Response message to get volume catalog
+message SdkVolumeCatalogResponse {
+  // Catalog
+  CatalogResponse catalog = 1;
 }

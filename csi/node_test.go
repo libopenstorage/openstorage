@@ -139,6 +139,8 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		Return(api.DriverType_DRIVER_TYPE_BLOCK).
 		Times(1)
 
+	os.Mkdir("mypath", 0750)
+	defer os.Remove("mypath")
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId:   name,
 		TargetPath: "mypath",
@@ -186,7 +188,7 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		EXPECT().
 		Type().
 		Return(api.DriverType_DRIVER_TYPE_NONE).
-		Times(len(testargs))
+		AnyTimes()
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId: name,
 		VolumeCapability: &csi.VolumeCapability{
@@ -495,53 +497,6 @@ func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "not found")
 }
 
-func TestNodeUnpublishVolumeInvalidTargetLocation(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	testargs := []struct {
-		expectedErrorContains string
-		targetPath            string
-	}{
-		{
-			expectedErrorContains: "not a directory",
-			targetPath:            "/etc/hosts",
-		},
-	}
-
-	c := csi.NewNodeClient(s.Conn())
-	name := "myvol"
-
-	req := &csi.NodeUnpublishVolumeRequest{
-		VolumeId: name,
-	}
-
-	for _, testarg := range testargs {
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{name}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id:            name,
-					AttachPath:    []string{testarg.targetPath},
-					AttachedOn:    "node1",
-					State:         api.VolumeState_VOLUME_STATE_ATTACHED,
-					AttachedState: api.AttachState_ATTACH_STATE_EXTERNAL,
-				},
-			}, nil).
-			Times(1)
-
-		req.TargetPath = testarg.targetPath
-		_, err := c.NodeUnpublishVolume(context.Background(), req)
-		assert.NotNil(t, err)
-		serverError, ok := status.FromError(err)
-		assert.True(t, ok)
-		assert.Equal(t, serverError.Code(), codes.NotFound)
-		assert.Contains(t, serverError.Message(), testarg.expectedErrorContains)
-	}
-}
-
 func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -706,49 +661,6 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			EXPECT().
 			Detach(name, gomock.Any()).
 			Return(nil).
-			Times(1),
-	)
-
-	req := &csi.NodeUnpublishVolumeRequest{
-		VolumeId:   name,
-		TargetPath: targetPath,
-	}
-
-	r, err := c.NodeUnpublishVolume(context.Background(), req)
-	assert.Nil(t, err)
-	assert.NotNil(t, r)
-}
-
-func TestNodeUnpublishVolumeUnmountIdempotent(t *testing.T) {
-	// Create server and client connection
-	s := newTestServer(t)
-	defer s.Stop()
-
-	// Make a call
-	c := csi.NewNodeClient(s.Conn())
-
-	name := "myvolMounted"
-	size := uint64(10)
-	targetPath := "/mnt"
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Inspect([]string{name}).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: name,
-					Locator: &api.VolumeLocator{
-						Name: name,
-					},
-					Spec: &api.VolumeSpec{
-						Size: size,
-					},
-					// Already unmounted and detached:
-					AttachPath: []string{},
-					AttachedOn: "",
-					State:      api.VolumeState_VOLUME_STATE_DETACHED,
-				},
-			}, nil).
 			Times(1),
 	)
 

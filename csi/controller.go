@@ -306,6 +306,15 @@ func getPVCMetadata(params map[string]string) (map[string]string, error) {
 	return metadata, nil
 }
 
+func cleanupVolumeLabels(labels map[string]string) map[string]string {
+	delete(labels, osdPvcNameKey)
+	delete(labels, osdPvcNamespaceKey)
+	delete(labels, osdPvcAnnotationsKey)
+	delete(labels, osdPvcLabelsKey)
+
+	return labels
+}
+
 // CreateVolume is a CSI API which creates a volume on OSD
 // This function supports snapshots if the parent volume id is supplied
 // in the parameters.
@@ -365,6 +374,9 @@ func (s *OsdCsiServer) CreateVolume(
 		spec.Size = defaultCSIVolumeSize
 	}
 
+	// cleanup duplicate information after pulling from req.GetParameters
+	locator.VolumeLabels = cleanupVolumeLabels(locator.VolumeLabels)
+
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
@@ -419,7 +431,7 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Create response
 	volume := &csi.Volume{}
-	osdToCsiVolumeInfo(volume, inspectResp.GetVolume())
+	osdToCsiVolumeInfo(volume, inspectResp.GetVolume(), req)
 	return &csi.CreateVolumeResponse{
 		Volume: volume,
 	}, nil
@@ -520,10 +532,11 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	}, nil
 }
 
-func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume) {
+func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume, req *csi.CreateVolumeRequest) {
 	dest.VolumeId = src.GetId()
 	dest.CapacityBytes = int64(src.Spec.GetSize())
 	dest.VolumeContext = osdVolumeContext(src)
+	dest.ContentSource = req.GetVolumeContentSource()
 }
 
 func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {

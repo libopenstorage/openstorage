@@ -2,6 +2,30 @@
 
 ## Releases
 
+### v0.69.6 - (3/19/2020)
+
+* Add IAM flag for credentials
+
+### v0.69.5 - (3/4/2020)
+
+* Add VolumeCatalog api for volumes
+
+### v0.69.4 - Tech Preview (1/27/2020)
+
+* Add Restore volume spec for Cloud Backup restore api
+
+### v0.69.3 - (1/21/2020)
+
+* Added documentation to SdkRule about new denial support
+
+### v0.69.2 - Tech Preview (1/15/2020)
+
+* Add auto to IoProfile
+
+### v0.69.1 - Tech Preview (1/9/2020)
+
+* Add support for public user access
+
 ### v0.69.0 - Tech Preview (10/12/2019)
 
 * Add support for filesystem trim background operation
