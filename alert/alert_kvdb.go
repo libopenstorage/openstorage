@@ -212,7 +212,6 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 // it is authorized for.
 // Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
-
 	kv := kvdb.Instance()
 
 	alertWatcher := &watcher{status: watchReady, cb: alertWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
