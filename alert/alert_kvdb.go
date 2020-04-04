@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -39,10 +38,8 @@ const (
 )
 
 var (
-	kvdbMap     = make(map[string]kvdb.Kvdb)
 	watcherMap  = make(map[string]*watcher)
 	watchErrors int
-	kvdbLock    sync.RWMutex
 )
 
 func init() {
@@ -75,19 +72,12 @@ func getLockId(resourceId, uniqueTag string) string {
 // GetKvdbInstance returns a kvdb instance associated with this alert client and clusterID combination.
 // Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) GetKvdbInstance() kvdb.Kvdb {
-	kvdbLock.RLock()
-	defer kvdbLock.RUnlock()
-	return kvdbMap[kva.clusterID]
+	return kvdb.Instance()
 }
 
 // Init initializes a AlertClient interface implementation.
 // Deprecated: Kept temporarily for backward compatibility.
 func Init(kv kvdb.Kvdb, clusterID string) (Alert, error) {
-	kvdbLock.Lock()
-	defer kvdbLock.Unlock()
-	if _, ok := kvdbMap[clusterID]; !ok {
-		kvdbMap[clusterID] = kv
-	}
 	return &KvAlert{clusterID}, nil
 }
 
@@ -222,11 +212,7 @@ func (kva *KvAlert) EnumerateWithinTimeRange(
 // it is authorized for.
 // Deprecated: Kept temporarily for backward compatibility.
 func (kva *KvAlert) Watch(clusterID string, alertWatcherFunc AlertWatcherFunc) error {
-
-	kv, err := kva.getKvdbForCluster(clusterID)
-	if err != nil {
-		return err
-	}
+	kv := kvdb.Instance()
 
 	alertWatcher := &watcher{status: watchReady, cb: alertWatcherFunc, kvcb: kvdbWatch, kvdb: kv}
 	watcherKey := clusterID
@@ -474,17 +460,6 @@ func (kva *KvAlert) enumerate(kv kvdb.Kvdb, filter *api.Alert) ([]*api.Alert, er
 	}
 
 	return allAlerts, err
-}
-
-func (kva *KvAlert) getKvdbForCluster(clusterID string) (kvdb.Kvdb, error) {
-	kvdbLock.Lock()
-	defer kvdbLock.Unlock()
-
-	kv, ok := kvdbMap[clusterID]
-	if !ok {
-		return nil, fmt.Errorf("Unknown cluster ID %v", clusterID)
-	}
-	return kv, nil
 }
 
 func processWatchError(err error, watcherKey string, prefix string) error {
