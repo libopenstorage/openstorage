@@ -302,7 +302,7 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
-// VolumeXattr defines implementation specific volume attribute
+// Xattr defines implementation specific volume attribute
 message Xattr {
 	enum XattrValues {
 		// Value is uninitialized or unknown

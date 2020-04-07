@@ -4379,7 +4379,7 @@
         "type": "string"
       },
       "apiXattr": {
-        "title": "VolumeXattr defines implementation specific volume attribute",
+        "title": "Xattr defines implementation specific volume attribute",
         "type": "object"
       },
       "openstorageapiStatus": {
