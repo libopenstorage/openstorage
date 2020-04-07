@@ -4160,6 +4160,9 @@
             },
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/apiXattr"
           }
         },
         "type": "object"
@@ -4375,6 +4378,10 @@
         ],
         "type": "string"
       },
+      "apiXattr": {
+        "title": "Xattr defines implementation specific volume attribute",
+        "type": "object"
+      },
       "openstorageapiStatus": {
         "default": "STATUS_NONE",
         "enum": [
@@ -4408,7 +4415,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.75.0"
+    "version": "0.76.0"
   },
   "openapi": "3.0.0",
   "paths": {
