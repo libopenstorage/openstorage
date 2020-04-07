@@ -12,30 +12,30 @@ import (
 	reflect "reflect"
 )
 
-// MockOpenStoragePoolServer is a mock of OpenStoragePoolServer interface
+// MockOpenStoragePoolServer is a mock of OpenStoragePoolServer interface.
 type MockOpenStoragePoolServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStoragePoolServerMockRecorder
 }
 
-// MockOpenStoragePoolServerMockRecorder is the mock recorder for MockOpenStoragePoolServer
+// MockOpenStoragePoolServerMockRecorder is the mock recorder for MockOpenStoragePoolServer.
 type MockOpenStoragePoolServerMockRecorder struct {
 	mock *MockOpenStoragePoolServer
 }
 
-// NewMockOpenStoragePoolServer creates a new mock instance
+// NewMockOpenStoragePoolServer creates a new mock instance.
 func NewMockOpenStoragePoolServer(ctrl *gomock.Controller) *MockOpenStoragePoolServer {
 	mock := &MockOpenStoragePoolServer{ctrl: ctrl}
 	mock.recorder = &MockOpenStoragePoolServerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStoragePoolServer) EXPECT() *MockOpenStoragePoolServerMockRecorder {
 	return m.recorder
 }
 
-// Resize mocks base method
+// Resize mocks base method.
 func (m *MockOpenStoragePoolServer) Resize(arg0 context.Context, arg1 *api.SdkStoragePoolResizeRequest) (*api.SdkStoragePoolResizeResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Resize", arg0, arg1)
@@ -44,36 +44,36 @@ func (m *MockOpenStoragePoolServer) Resize(arg0 context.Context, arg1 *api.SdkSt
 	return ret0, ret1
 }
 
-// Resize indicates an expected call of Resize
+// Resize indicates an expected call of Resize.
 func (mr *MockOpenStoragePoolServerMockRecorder) Resize(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Resize", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).Resize), arg0, arg1)
 }
 
-// MockOpenStoragePoolClient is a mock of OpenStoragePoolClient interface
+// MockOpenStoragePoolClient is a mock of OpenStoragePoolClient interface.
 type MockOpenStoragePoolClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStoragePoolClientMockRecorder
 }
 
-// MockOpenStoragePoolClientMockRecorder is the mock recorder for MockOpenStoragePoolClient
+// MockOpenStoragePoolClientMockRecorder is the mock recorder for MockOpenStoragePoolClient.
 type MockOpenStoragePoolClientMockRecorder struct {
 	mock *MockOpenStoragePoolClient
 }
 
-// NewMockOpenStoragePoolClient creates a new mock instance
+// NewMockOpenStoragePoolClient creates a new mock instance.
 func NewMockOpenStoragePoolClient(ctrl *gomock.Controller) *MockOpenStoragePoolClient {
 	mock := &MockOpenStoragePoolClient{ctrl: ctrl}
 	mock.recorder = &MockOpenStoragePoolClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStoragePoolClient) EXPECT() *MockOpenStoragePoolClientMockRecorder {
 	return m.recorder
 }
 
-// Resize mocks base method
+// Resize mocks base method.
 func (m *MockOpenStoragePoolClient) Resize(arg0 context.Context, arg1 *api.SdkStoragePoolResizeRequest, arg2 ...grpc.CallOption) (*api.SdkStoragePoolResizeResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -86,7 +86,7 @@ func (m *MockOpenStoragePoolClient) Resize(arg0 context.Context, arg1 *api.SdkSt
 	return ret0, ret1
 }
 
-// Resize indicates an expected call of Resize
+// Resize indicates an expected call of Resize.
 func (mr *MockOpenStoragePoolClientMockRecorder) Resize(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)

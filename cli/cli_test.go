@@ -41,7 +41,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "force_unsupported_fs_type": false,
  "nodiscard": false,
  "storage_policy": "",
- "fp_preference": false
+ "fp_preference": false,
+ "xattr": "XATTR_NONE"
 }`,
 		data,
 	)

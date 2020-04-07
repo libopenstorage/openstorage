@@ -4160,6 +4160,9 @@
             },
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/apiXattr"
           }
         },
         "type": "object"
@@ -4373,6 +4376,16 @@
           "VOLUME_STATUS_DOWN",
           "VOLUME_STATUS_DEGRADED"
         ],
+        "type": "string"
+      },
+      "apiXattr": {
+        "default": "XATTR_NONE",
+        "description": "- XATTR_COW_ON_DEMAND: Enable on-demand copy-on-write",
+        "enum": [
+          "XATTR_NONE",
+          "XATTR_COW_ON_DEMAND"
+        ],
+        "title": "Xattr defines implementation specific volume attribute",
         "type": "string"
       },
       "openstorageapiStatus": {

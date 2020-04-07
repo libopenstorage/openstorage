@@ -302,6 +302,13 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
+// Xattr defines implementation specific volume attribute
+enum Xattr {
+	XATTR_NONE = 0;
+	// Enable on-demand copy-on-write 
+	XATTR_COW_ON_DEMAND = 1;
+}
+
 // ExportProtocol defines how the device is exported..
 enum ExportProtocol  {
   // Invalid uninitialized value
@@ -447,6 +454,8 @@ message VolumeSpec {
   ExportSpec export_spec = 34;
   // fastpath extensions
   bool fp_preference = 35;
+  // Xattr specifies implementation specific volume attributes
+  Xattr xattr = 36;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
