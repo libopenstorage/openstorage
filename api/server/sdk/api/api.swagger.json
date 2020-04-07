@@ -4379,14 +4379,8 @@
         "type": "string"
       },
       "apiXattr": {
-        "default": "XATTR_NONE",
-        "description": "- XATTR_COW_ON_DEMAND: Enable on-demand copy-on-write",
-        "enum": [
-          "XATTR_NONE",
-          "XATTR_COW_ON_DEMAND"
-        ],
-        "title": "Xattr defines implementation specific volume attribute",
-        "type": "string"
+        "title": "VolumeXattr defines implementation specific volume attribute",
+        "type": "object"
       },
       "openstorageapiStatus": {
         "default": "STATUS_NONE",

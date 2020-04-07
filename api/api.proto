@@ -302,11 +302,14 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
-// Xattr defines implementation specific volume attribute
-enum Xattr {
-	XATTR_NONE = 0;
-	// Enable on-demand copy-on-write 
-	XATTR_COW_ON_DEMAND = 1;
+// VolumeXattr defines implementation specific volume attribute
+message Xattr {
+	enum XattrValues {
+		// Value is uninitialized or unknown
+		UNSPECIFIED = 0;
+		// Enable on-demand copy-on-write on the volume
+		COW_ON_DEMAND = 1;
+	}
 }
 
 // ExportProtocol defines how the device is exported..
