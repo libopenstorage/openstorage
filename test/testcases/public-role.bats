@@ -1,14 +1,36 @@
 load ../lib/detik
 load ../lib/osd
 load ../node_modules/bats-assert/load
+load ../node_modules/bats-support/load
 
-DETIK_CLIENT_NAME="kubectl -n kube-system"
+ASSETS=testcases/assets
 
 @test "Verify openstorage running" {
-	verify "there is 1 pod named 'openstorage'"
+    DETIK_CLIENT_NAME="kubectl -n kube-system"
+    verify "there is 1 pod named 'openstorage'"
 }
 
 @test "Verify SDK GW is accessible" {
-	run curl http://$(osd::getSdkRestGWEndpoint)/v1/identities/version
-	assert_success
+    run curl http://$(osd::getSdkRestGWEndpoint)/v1/identities/version
+    assert_success
+}
+
+@test "Verify a user can create a public volume" {
+    local user="user$$"
+    local kubeconfig="${BATS_TMPDIR}/${user}-kubeconfig.conf"
+    run osd::createUserKubeconfig "${user}" "$BATS_TMPDIR"
+    assert_success
+
+    # Tell DETIK what command to use to verify
+    DETIK_CLIENT_NAME="kubectl -n ${user}"
+
+    # create pvc
+    run kubectl --kubeconfig=${kubeconfig} create -f ${ASSETS}/pvc-noncsi.yml
+    assert_success
+
+    # assert it is there
+    run try "at most 100 times every 1s to get pvc named 'mypvctest' and verify that 'status' is 'bound'"
+
+    # cleanup
+    run kubectl --kubeconfig=${kubeconfig} delete -f ${ASSETS}/pvc-noncsi.yml
 }
