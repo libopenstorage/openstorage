@@ -35,6 +35,7 @@ func setupExpectedCredentialsPassing(s *testServer, credid string) {
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
 		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
 	}
 	creds := map[string]interface{}{
 		credid: enumAzure,

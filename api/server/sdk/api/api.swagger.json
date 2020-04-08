@@ -1815,12 +1815,22 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialRequest"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "use_proxy": {
+            "format": "boolean",
+            "title": "use_proxy indicates if a proxy must be used",
+            "type": "boolean"
           }
         },
         "title": "Defines a request to create credentials",
@@ -1873,12 +1883,22 @@
           "google_credential": {
             "$ref": "#/components/schemas/apiSdkGoogleCredentialResponse"
           },
+          "iam_policy": {
+            "format": "boolean",
+            "title": "iamPolicy indicates if IAM creds must be used for access",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the credential",
             "type": "string"
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "use_proxy": {
+            "format": "boolean",
+            "title": "proxy flag for the credential",
+            "type": "boolean"
           }
         },
         "type": "object"
@@ -3950,7 +3970,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.25"
+    "version": "0.42.27"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -4778,7 +4798,7 @@
         ]
       },
       "post": {
-        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    Name: \"awscred\",\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  name='awscred',\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
+        "description": "##### Example\n{% codetabs name=\"Golang\", type=\"go\" -%}\nid, err := client.Create(context.Background(), \u0026api.SdkCredentialCreateRequest{\n    Name: \"awscred\",\n    UseProxy: false,\n    CredentialType: \u0026api.SdkCredentialCreateRequest_AwsCredential{\n      AwsCredential: \u0026api.SdkAwsCredentialRequest{\n      AccessKey: \"dummy-access\",\n      SecretKey: \"dummy-secret\",\n      Endpoint:  \"dummy-endpoint\",\n      Region:    \"dummy-region\",\n    },\n  },\n})\n{%- language name=\"Python\", type=\"py\" -%}\nen_resp = client.Create(api_pb2.SdkCredentialCreateRequest(\n  name='awscred',\n  aws_credential=api_pb2.SdkAwsCredentialRequest(\n    access_key='dummy-access',\n    secret_key='dumm-secret',\n    endpoint='dummy-endpoint',\n    region='dummy-region')))\n{%- endcodetabs %}",
         "operationId": "Create",
         "requestBody": {
           "content": {
