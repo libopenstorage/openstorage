@@ -20,6 +20,7 @@ script:
   - make vet
   - bash hack/docker-integration-test.sh
   - make docker-test
+  - make bats
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
       make push-mock-sdk-server;

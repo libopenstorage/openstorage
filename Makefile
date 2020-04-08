@@ -82,6 +82,7 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	clean \
 	generate \
 	generate-mockfiles \
+	bats \
 	sdk-check-version
 
 
@@ -412,3 +413,6 @@ mockgen:
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
+
+bats:
+	cd test && ./run.bash
