@@ -304,7 +304,7 @@ message IoStrategy {
 
 // Xattr defines implementation specific volume attribute
 message Xattr {
-	enum XattrValues {
+	enum Value {
 		// Value is uninitialized or unknown
 		UNSPECIFIED = 0;
 		// Enable on-demand copy-on-write on the volume
@@ -458,7 +458,7 @@ message VolumeSpec {
   // fastpath extensions
   bool fp_preference = 35;
   // Xattr specifies implementation specific volume attributes
-  Xattr xattr = 36;
+  Xattr.Value xattr = 36;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume

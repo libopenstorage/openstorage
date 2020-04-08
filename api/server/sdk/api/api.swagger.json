@@ -215,6 +215,15 @@
         "title": "This defines an operator for the policy comparisons",
         "type": "string"
       },
+      "XattrValue": {
+        "default": "UNSPECIFIED",
+        "enum": [
+          "UNSPECIFIED",
+          "COW_ON_DEMAND"
+        ],
+        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume",
+        "type": "string"
+      },
       "apiAlert": {
         "properties": {
           "alert_type": {
@@ -4162,7 +4171,7 @@
             "type": "object"
           },
           "xattr": {
-            "$ref": "#/components/schemas/apiXattr"
+            "$ref": "#/components/schemas/XattrValue"
           }
         },
         "type": "object"
@@ -4377,10 +4386,6 @@
           "VOLUME_STATUS_DEGRADED"
         ],
         "type": "string"
-      },
-      "apiXattr": {
-        "title": "Xattr defines implementation specific volume attribute",
-        "type": "object"
       },
       "openstorageapiStatus": {
         "default": "STATUS_NONE",
