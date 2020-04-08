@@ -5,16 +5,6 @@ load ../node_modules/bats-support/load
 
 ASSETS=testcases/assets
 
-@test "Verify openstorage running" {
-    DETIK_CLIENT_NAME="kubectl -n kube-system"
-    verify "there is 1 pod named 'openstorage'"
-}
-
-@test "Verify SDK GW is accessible" {
-    run curl http://$(osd::getSdkRestGWEndpoint)/v1/identities/version
-    assert_success
-}
-
 @test "Verify a user can create a public volume" {
     local user="user$$"
     local kubeconfig="${BATS_TMPDIR}/${user}-kubeconfig.conf"
