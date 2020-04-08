@@ -299,6 +299,16 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
+// Xattr defines implementation specific volume attribute
+message Xattr {
+	enum Value {
+		// Value is uninitialized or unknown
+		UNSPECIFIED = 0;
+		// Enable on-demand copy-on-write on the volume
+		COW_ON_DEMAND = 1;
+	}
+}
+
 // ExportProtocol defines how the device is exported..
 enum ExportProtocol  {
   // Invalid uninitialized value
@@ -389,6 +399,8 @@ message VolumeSpec {
   Ownership ownership = 33;
   // ExportSpec defines how the volume should be exported.
   ExportSpec export_spec = 34;
+  // Xattr specifies implementation specific volume attributes
+  Xattr.Value xattr = 35;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -3538,7 +3550,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 42;
     // SDK version patch value of this specification
-    Patch = 27;
+    Patch = 28;
   }
 
   // The following cannot be set to use the enum Version because the REST

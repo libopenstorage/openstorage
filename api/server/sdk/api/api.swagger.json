@@ -149,6 +149,15 @@
         "title": "This defines an operator for the policy comparisons",
         "type": "string"
       },
+      "XattrValue": {
+        "default": "UNSPECIFIED",
+        "enum": [
+          "UNSPECIFIED",
+          "COW_ON_DEMAND"
+        ],
+        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume",
+        "type": "string"
+      },
       "apiAlert": {
         "properties": {
           "alert_type": {
@@ -3726,6 +3735,9 @@
             },
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/XattrValue"
           }
         },
         "type": "object"
@@ -3970,7 +3982,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.42.27"
+    "version": "0.42.28"
   },
   "openapi": "3.0.0",
   "paths": {
