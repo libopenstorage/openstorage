@@ -1,4 +1,5 @@
 load ../lib/detik
+load ../lib/osd
 load ../node_modules/bats-assert/load
 
 DETIK_CLIENT_NAME="kubectl -n kube-system"
