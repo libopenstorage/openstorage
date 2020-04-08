@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.76.0 - (4/7/2020)
+
+* Add implementation specific additional attributes for volume
+
 ### v0.75.0 - (3/18/2020)
 
 * Add IAM flag for credentials
