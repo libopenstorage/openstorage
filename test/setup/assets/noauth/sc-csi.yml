@@ -1,0 +1,8 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: csi-noauth
+provisioner: pxd.portworx.com
+parameters:
+  repl: "1"
+allowVolumeExpansion: true

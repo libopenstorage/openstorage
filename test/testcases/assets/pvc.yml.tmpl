@@ -1,11 +1,11 @@
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-    name: mypvctest
+    name: %%PVCNAME%%
 spec:
     accessModes:
-        - ReadWriteMany
+        - ReadWriteOnce
     resources:
         requests:
             storage: 10Gi
-    storageClassName: portworx-sc
+    storageClassName: %%STORAGECLASS%%

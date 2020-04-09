@@ -28,10 +28,13 @@ function buildOsdContainer() {
         --image ${KIND_IMAGE}
     assert_success
 
-    run kubectl apply -f ${ASSETS}/sc-csi.yml
+    run kubectl apply -f ${ASSETS}/noauth
     assert_success
 
-    run kubectl apply -f ${ASSETS}/sc-noncsi.yml
+    run kubectl apply -f ${ASSETS}/auth
+    assert_success
+
+    run kubectl apply -f ${ASSETS}/multitenant
     assert_success
 
     run kubectl create namespace openstorage
