@@ -7,13 +7,15 @@ KIND_IMAGE=kindest/node:v1.17.0
 ASSETS="setup/assets"
 
 function buildOsdContainer() {
-    cd $GOPATH/src/github.com/libopenstorage/openstorage
+   (
+        cd $GOPATH/src/github.com/libopenstorage/openstorage
 
-    # Build OSD
-    make docker-build-osd
+        # Build OSD
+        make docker-build-osd
 
-    # Load local OSD image into KinD
-    kind load docker-image quay.io/openstorage/osd:latest --name ${KIND_CLUSTER}
+        # Load local OSD image into KinD
+        kind load docker-image quay.io/openstorage/osd:latest --name ${KIND_CLUSTER}
+    )
 }
 
 @test "Setup kind cluster ${KIND_CLUSTER}" {

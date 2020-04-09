@@ -2,7 +2,7 @@ apiVersion: storage.k8s.io/v1
 kind: StorageClass
 metadata:
   name: csi-multitenant
-provisioner: pxd.portworx.com
+provisioner: osd.openstorage.org
 parameters:
   repl: "1"
   csi.storage.k8s.io/provisioner-secret-name: k8s-user

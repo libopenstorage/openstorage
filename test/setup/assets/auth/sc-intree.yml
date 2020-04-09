@@ -6,4 +6,4 @@ provisioner: kubernetes.io/portworx-volume
 parameters:
   repl: "1"
   openstorage.io/auth-secret-name: k8s-user
-  openstorage.io/auth-secret-namespace: portworx
+  openstorage.io/auth-secret-namespace: openstorage
