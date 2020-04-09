@@ -1,4 +1,4 @@
-load ../lib/detik
+load ../vendor/k8s
 load ../lib/osd
 load ../node_modules/bats-assert/load
 load ../node_modules/bats-support/load
@@ -61,12 +61,11 @@ function buildOsdContainer() {
     DETIK_CLIENT_NAME="kubectl -n kube-system"
 
     # Wait for openstorage to come up
-    run try "at most 10 times every 1s to get pods named '^openstorage' and verify that 'status' is 'running'"
+    run try "at most 120 times every 1s to get pods named '^openstorage' and verify that 'status' is 'running'"
     assert_success
 
 }
 
 @test "Verify SDK GW is accessible" {
-    run curl http://$(osd::getSdkRestGWEndpoint)/v1/identities/version
-    assert_success
+    timeout 60 sh -c "until curl --silent -H \"Authorization:bearer $ADMIN_TOKEN\" -X GET -d {} http://$(osd::getSdkRestGWEndpoint)/v1/clusters/inspectcurrent | grep STATUS_OK; do sleep 1; done"
 }

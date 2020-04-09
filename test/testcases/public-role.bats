@@ -1,4 +1,4 @@
-load ../lib/detik
+load ../vendor/k8s
 load ../lib/osd
 load ../node_modules/bats-assert/load
 load ../node_modules/bats-support/load

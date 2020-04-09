@@ -1,4 +1,4 @@
-load ../lib/detik
+load ../vendor/k8s
 load ../'node_modules/bats-assert/load'
 
 @test "This is a sample" {
