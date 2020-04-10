@@ -140,14 +140,15 @@ func (d *driver) Status() [][2]string {
 }
 
 func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
+	empty := make([]*api.Volume, 0, len(volumeIDs))
 	volumes, err := d.StoreEnumerator.Inspect(volumeIDs)
 	if err != nil {
-		return nil, err
+		return empty, err
 	} else if err == nil && len(volumes) == 0 {
-		return nil, kvdb.ErrNotFound
+		return empty, kvdb.ErrNotFound
 	}
 
-	return volumes, err
+	return volumes, nil
 }
 
 //

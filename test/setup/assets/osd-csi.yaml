@@ -317,7 +317,8 @@ spec:
               "--jwt-issuer", "openstorage.io",
               "--jwt-shared-secret", "mysecret",
               "--sdkport", "9020",
-              "--sdkrestport", "9021"]
+              "--sdkrestport", "9021",
+              "--secrets-type", "k8s"]
           env:
             - name: "CSI_ENDPOINT"
               value: "/var/lib/kubelet/plugins/osd.openstorage.org/csi.sock"

@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"github.com/sirupsen/logrus"
 
 	"github.com/urfave/negroni"
 	"google.golang.org/grpc"
@@ -190,10 +191,17 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
 	method := "create"
+	logrus.Info("in create()")
 
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
 		fmt.Println("returning error here")
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+	}
+	if dcReq.GetSpec() == nil {
+		vd.sendError(vd.name, method, w, "Must supply a volume specification", http.StatusBadRequest)
+		return
+	} else if dcReq.GetLocator() == nil {
+		vd.sendError(vd.name, method, w, "Must supply a volume locator", http.StatusBadRequest)
 		return
 	}
 
@@ -1518,6 +1526,7 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 //         items:
 //            type: string
 func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
+	logrus.Info("verions called")
 	versions := []string{
 		volume.APIVersion,
 		// Update supported versions by adding them here
