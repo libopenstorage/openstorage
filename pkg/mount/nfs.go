@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,13 +56,17 @@ func (m *nfsMounter) Reload(source string) error {
 	if err != nil {
 		return err
 	}
+	m.LogDevices()
+
 	newNFSmounter, ok := newNFSm.(*nfsMounter)
 	if !ok {
 		return fmt.Errorf("Internal error failed to convert %T",
 			newNFSmounter)
 	}
 
-	return m.reload(source, newNFSmounter.mounts[source])
+	err = m.reload(source, newNFSmounter.mounts[source])
+	m.LogDevices()
+	return err
 }
 
 //serverExists utility function to test if a server is part of driver config
@@ -134,4 +139,16 @@ MountLoop:
 		)
 	}
 	return nil
+}
+
+func (m *nfsMounter) LogDevices() {
+	mnts := make(map[string]string)
+	logrus.Info("Logging NFS device mounts")
+	for _, device := range m.mounts {
+		mnts = map[string]string{}
+		for _, mntPoint := range device.Mountpoint {
+			mnts[mntPoint.Root] = mntPoint.Root
+		}
+		logrus.Infof("Device: %s MountPoints: [%v]", device.Device, mnts)
+	}
 }

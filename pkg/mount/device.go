@@ -58,6 +58,7 @@ func (m *deviceMounter) Reload(device string) error {
 	if err != nil {
 		return err
 	}
+
 	return m.reload(device, newDm.mounts[device])
 }
 
