@@ -153,7 +153,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 	spec := dcReq.GetSpec()
 	locator := dcReq.GetLocator()
 	logrus.Infof("creatWithAuth: spec[[%v]] locator[[%v]]", spec, locator)
-	tokenSecretContext, err := a.parseSecret(spec.VolumeLabels, locator.VolumeLabels, true)
+	tokenSecretContext, err := a.parseSecret(spec.VolumeLabels, locator.VolumeLabels)
 	if err != nil {
 		a.log(locator.Name, fn).WithError(err).Error("failed to parse secret")
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to parse secret: " + err.Error()}
@@ -297,7 +297,7 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 	}
 
 	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
 		volumeResponse.Error = "failed to parse secret: " + err.Error()
@@ -375,7 +375,7 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	}
 
 	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
 		volumeResponse.Error = "failed to parse secret: " + err.Error()
@@ -513,11 +513,10 @@ func (a *authMiddleware) getSecretInformationInKubernetes(
 
 func (a *authMiddleware) parseSecret(
 	specLabels, locatorLabels map[string]string,
-	fetchCOLabels bool,
 ) (*api.TokenSecretContext, error) {
 
 	// Check if it is Kubernetes
-	if lsecrets.Instance().String() == lsecrets.TypeK8s && fetchCOLabels {
+	if lsecrets.Instance().String() == lsecrets.TypeK8s {
 		return a.getSecretInformationInKubernetes(specLabels, locatorLabels)
 	}
 

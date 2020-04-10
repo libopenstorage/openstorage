@@ -65,3 +65,29 @@ function osd::createUserKubeconfig() {
     kubectl --kubeconfig=${kubeconfig} config use-context ${user}
     kubectl create rolebinding ${user}-admin --namespace=${user} --clusterrole=admin --user=${user}
 }
+
+# must be executed from `run`
+function osd::kubeDeleteObjectAndWait() {
+    local secs="$1"
+    local kubeargs="$2"
+    local object="$3"
+    local name="$4"
+
+    kubectl ${kubeargs} delete ${object} ${name}
+
+    max=0
+#    until [ $max -eq $secs ] || kubectl ${kubeargs} get ${object} ${name} ; do
+    while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1 ; do
+        echo "waiting -- loop $max"
+        sleep 1
+        $(( max++ ))
+        if [ $max -ge $secs ] ; then
+            echo "timed out"
+            exit 1
+        fi
+    done
+
+#    $([ $max -ge $secs ])
+
+#    timeout $secs sh -c "while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1; do sleep 1; done "
+}

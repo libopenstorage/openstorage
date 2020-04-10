@@ -25,7 +25,8 @@ ASSETS=testcases/assets
         assert_success
 
         # cleanup
-        kubectl --kubeconfig=${kubeconfig} delete pvc ${pvcname}
+        run osd::kubeDeleteObjectAndWait 120 "--kubeconfig=${kubeconfig}" "pvc" "${pvcname}"
+        assert_success
     done
 }
 

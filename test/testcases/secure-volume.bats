@@ -28,16 +28,27 @@ ASSETS=testcases/assets
         # token is: support@mycompany.com, so this *must* be the owner of the volume.
         # Since we have created only one, there must be exactly only 1 volume owned
         # by this account
+        local owner="support@mycompany.com"
         nvols=$(curl -s -X POST \
             "http://$(osd::getSdkRestGWEndpoint)/v1/volumes/inspectwithfilters" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
             -H "Authorization: bearer $K8S_TOKEN" \
-            -d "{\"ownership\":{\"owner\":\"support@mycompany.com\"}}" | jq '.volumes | length')
+            -d "{\"labels\":{\"namespace\":\"${user}\",\"pvc\":\"${pvcname}\"},\"ownership\":{\"owner\":\"${owner}\"}}" | jq '.volumes | length')
         [[ $nvols -eq 1 ]]
 
         # cleanup
-        kubectl --kubeconfig=${kubeconfig} delete pvc ${pvcname}
+        run osd::kubeDeleteObjectAndWait 120 "--kubeconfig=${kubeconfig}" "pvc" "${pvcname}"
+        assert_success
+
+        # Check that the volume is no longer there
+        nvols=$(curl -s -X POST \
+            "http://$(osd::getSdkRestGWEndpoint)/v1/volumes/inspectwithfilters" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: bearer $K8S_TOKEN" \
+            -d "{\"labels\":{\"namespace\":\"${user}\",\"pvc\":\"${pvcname}\"},\"ownership\":{\"owner\":\"${owner}\"}}" | jq '.volumes | length')
+        [[ $nvols -eq 0 ]]
     done
 }
 
@@ -69,15 +80,30 @@ ASSETS=testcases/assets
         # token is: support@tenant-one.com, so this *must* be the owner of the volume.
         # Since we have created only one, there must be exactly only 1 volume owned
         # by this account
+        local owner="support@tenant-one.com"
         nvols=$(curl -s -X POST \
             "http://$(osd::getSdkRestGWEndpoint)/v1/volumes/inspectwithfilters" \
             -H "accept: application/json" \
             -H "Content-Type: application/json" \
             -H "Authorization: bearer $TENANT1_TOKEN" \
-            -d "{\"ownership\":{\"owner\":\"support@tenant-one.com\"}}" | jq '.volumes | length')
+            -d "{\"labels\":{\"namespace\":\"${user}\",\"pvc\":\"${pvcname}\"},\"ownership\":{\"owner\":\"${owner}\"}}" | jq '.volumes | length')
+        echo "Value $nvols"
         [[ $nvols -eq 1 ]]
 
         # cleanup
-        kubectl --kubeconfig=${kubeconfig} delete pvc ${pvcname}
+        run osd::kubeDeleteObjectAndWait 120 "--kubeconfig=${kubeconfig}" "pvc" "${pvcname}"
+        assert_success
+
+        # Check that the volume is no longer there
+        nvols=$(curl -s -X POST \
+            "http://$(osd::getSdkRestGWEndpoint)/v1/volumes/inspectwithfilters" \
+            -H "accept: application/json" \
+            -H "Content-Type: application/json" \
+            -H "Authorization: bearer $TENANT1_TOKEN" \
+            -d "{\"labels\":{\"namespace\":\"${user}\",\"pvc\":\"${pvcname}\"},\"ownership\":{\"owner\":\"${owner}\"}}" | jq '.volumes | length')
+        echo "Value $nvols"
+        [[ $nvols -eq 0 ]]
+
     done
+# -d "{\"labels\":{\"additionalProp1\":\"string\",\"additionalProp2\":\"string\"},\"ownership\":{\"owner\":\"asd\"}}"
 }
