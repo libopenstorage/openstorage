@@ -12,6 +12,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
@@ -172,6 +173,16 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 			json.NewEncoder(w).Encode(&dcRes)
 			return
 		}
+
+		// Save a reference to the secret
+		// These values will be stored in the header for the create() server handler
+		// to take and place in the labels for the volume since we do not want to adjust
+		// the body of the request in this middleware. When create() gets these values
+		// from the headers, it will copy them to the labels of the volume so that
+		// we can track the secret in the rest of the middleware calls.
+		r.Header.Set(secrets.SecretNameKey, tokenSecretContext.SecretName)
+		r.Header.Set(secrets.SecretNamespaceKey, tokenSecretContext.SecretNamespace)
+
 		logrus.Infof("createWithAuth: Token: %s", token)
 		a.insertToken(r, token)
 	} else {
@@ -289,33 +300,22 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
+	// Idempotency
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
 		next(w, r)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
-	} else if tokenSecretContext == nil {
-		tokenSecretContext = &api.TokenSecretContext{}
 	}
-
-	// If no secret is provided, then the caller is accessing publicly
-	if tokenSecretContext.SecretName != "" {
-		token, err := osecrets.GetToken(tokenSecretContext)
-		if err != nil {
-			a.log(volumeID, fn).WithError(err).Error("failed to get token")
-			volumeResponse.Error = "failed to get token: " + err.Error()
-			json.NewEncoder(w).Encode(volumeResponse)
-			return
-		}
+	if len(token) != 0 {
 		a.insertToken(r, token)
 	}
 
@@ -415,6 +415,15 @@ func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volu
 		}
 	}
 	return nil, false
+}
+
+func (a *authMiddleware) insertSecretRef(r *http.Request, token string) {
+	// Set the token in header
+	if auth.IsJwtToken(token) {
+		r.Header.Set("Authorization", "bearer "+token)
+	} else {
+		r.Header.Set("Authorization", "Basic "+token)
+	}
 }
 
 func (a *authMiddleware) insertToken(r *http.Request, token string) {
@@ -569,4 +578,36 @@ func getVolumeLabel(key string, specLabels, locatorLabels map[string]string) (st
 	}
 	v, ok := specLabels[key]
 	return v, ok
+}
+
+func (a *authMiddleware) fetchSecretForVolume(d volume.VolumeDriver, id string) (string, error) {
+	vols, err := d.Inspect([]string{id})
+	if err != nil || len(vols) == 0 || vols[0] == nil {
+		return "", fmt.Errorf("Volume %s does not exist")
+	}
+
+	v := vols[0]
+	if v.GetLocator().GetVolumeLabels() == nil {
+		return "", nil
+	}
+
+	tokenSecretContext := &api.TokenSecretContext{
+		SecretName:      v.GetLocator().GetVolumeLabels()[secrets.SecretNameKey],
+		SecretNamespace: v.GetLocator().GetVolumeLabels()[secrets.SecretNamespaceKey],
+	}
+
+	// If no secret is provided, then the caller is accessing publicly
+	if tokenSecretContext.SecretName == "" || tokenSecretContext.SecretNamespace == "" {
+		return "", nil
+	}
+
+	// Retrieve secret
+	token, err := osecrets.GetToken(tokenSecretContext)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get token from secret %s/%s: %v",
+			tokenSecretContext.SecretNamespace,
+			tokenSecretContext.SecretName,
+			err)
+	}
+	return token, nil
 }

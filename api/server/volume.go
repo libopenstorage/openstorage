@@ -23,6 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
@@ -210,6 +211,17 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	// Check labels for secret reference
+	secretName := r.Header.Get(secrets.SecretNameKey)
+	secretNamespace := r.Header.Get(secrets.SecretNamespaceKey)
+	if len(secretName) != 0 && len(secretNamespace) != 0 {
+		if dcReq.GetLocator().GetVolumeLabels() == nil {
+			dcReq.GetLocator().VolumeLabels = make(map[string]string)
+		}
+		dcReq.GetLocator().GetVolumeLabels()[secrets.SecretNameKey] = secretName
+		dcReq.GetLocator().GetVolumeLabels()[secrets.SecretNamespaceKey] = secretNamespace
 	}
 
 	// Get gRPC connection

@@ -25,12 +25,17 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+)
+
+var (
+	AdminOwnedLabelKeys = []string{secrets.SecretNameKey, secrets.SecretNamespaceKey}
 )
 
 // When create is called for an existing volume, this function is called to make sure
@@ -561,6 +566,15 @@ func (s *VolumeServer) Update(
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	// Only the administrator can change admin-only labels
+	if !api.IsAdminByContext(ctx) {
+		for _, adminKey := range AdminOwnedLabelKeys {
+			if _, ok := req.GetLabels()[adminKey]; ok {
+				return nil, status.Errorf(codes.PermissionDenied, "Only the administrator can update label %s", adminKey)
+			}
+		}
 	}
 
 	// Check if the caller can update the volume
