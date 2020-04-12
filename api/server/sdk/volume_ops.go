@@ -569,7 +569,7 @@ func (s *VolumeServer) Update(
 	}
 
 	// Only the administrator can change admin-only labels
-	if !api.IsAdminByContext(ctx) {
+	if !api.IsAdminByContext(ctx) && req.GetLabels() != nil {
 		for _, adminKey := range AdminOwnedLabelKeys {
 			if _, ok := req.GetLabels()[adminKey]; ok {
 				return nil, status.Errorf(codes.PermissionDenied, "Only the administrator can update label %s", adminKey)

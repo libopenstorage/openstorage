@@ -417,15 +417,6 @@ func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volu
 	return nil, false
 }
 
-func (a *authMiddleware) insertSecretRef(r *http.Request, token string) {
-	// Set the token in header
-	if auth.IsJwtToken(token) {
-		r.Header.Set("Authorization", "bearer "+token)
-	} else {
-		r.Header.Set("Authorization", "Basic "+token)
-	}
-}
-
 func (a *authMiddleware) insertToken(r *http.Request, token string) {
 	// Set the token in header
 	if auth.IsJwtToken(token) {
@@ -534,7 +525,7 @@ func (a *authMiddleware) parseSecret(
 }
 
 func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.TokenSecretContext, error) {
-	// Locator labels take precendence
+	// Locator labels take precedence
 	secretName := locatorLabels[osecrets.SecretNameKey]
 	secretNamespace := locatorLabels[osecrets.SecretNamespaceKey]
 	if secretName == "" {
@@ -583,7 +574,7 @@ func getVolumeLabel(key string, specLabels, locatorLabels map[string]string) (st
 func (a *authMiddleware) fetchSecretForVolume(d volume.VolumeDriver, id string) (string, error) {
 	vols, err := d.Inspect([]string{id})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
-		return "", fmt.Errorf("Volume %s does not exist")
+		return "", fmt.Errorf("Volume %s does not exist", id)
 	}
 
 	v := vols[0]
