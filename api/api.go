@@ -69,6 +69,7 @@ const (
 	SpecForceUnsupportedFsType = "force_unsupported_fs_type"
 	SpecNodiscard              = "nodiscard"
 	StoragePolicy              = "storagepolicy"
+	SpecCowOnDemand            = "cow_ondemand"
 )
 
 // OptionKey specifies a set of recognized query params.
