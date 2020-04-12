@@ -126,6 +126,7 @@ var (
 	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
 	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
 	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
+	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -369,7 +370,6 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 		case api.StoragePolicy:
 			spec.StoragePolicy = v
 		case api.SpecExportProtocol:
-			fmt.Println("here")
 			if spec.ExportSpec == nil {
 				spec.ExportSpec = &api.ExportSpec{}
 			}
@@ -389,6 +389,14 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ExportSpec = &api.ExportSpec{}
 			}
 			spec.ExportSpec.ExportOptions = v
+		case api.SpecCowOnDemand:
+			if cowOnDemand, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				if cowOnDemand {
+					spec.Xattr = api.Xattr_COW_ON_DEMAND
+				}
+			}
 		default:
 			locator.VolumeLabels[k] = v
 		}
@@ -537,6 +545,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, exportOptions := d.getVal(exportOptionsRegex, str); ok {
 		opts[api.SpecExportOptions] = exportOptions
+	}
+	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
+		opts[api.SpecCowOnDemand] = cowOnDemand
 	}
 
 	return true, opts, name

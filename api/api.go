@@ -73,6 +73,7 @@ const (
 	SpecMatchSrcVolProvision = "match_src_vol_provision"
 	SpecNodiscard            = "nodiscard"
 	StoragePolicy            = "storagepolicy"
+	SpecCowOnDemand          = "cow_ondemand"
 )
 
 // OptionKey specifies a set of recognized query params.

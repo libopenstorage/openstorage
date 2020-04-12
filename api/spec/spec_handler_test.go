@@ -345,3 +345,17 @@ func TestExportSpec(t *testing.T) {
 	require.NotNil(t, exportSpec)
 	require.Equal(t, "exportOptions", exportSpec.ExportOptions)
 }
+
+func TestXattr(t *testing.T) {
+	testSpecOptString(t, api.SpecCowOnDemand, "true")
+
+	spec := testSpecFromString(t, api.SpecRack, "ignore")
+	require.Equal(t, api.Xattr_UNSPECIFIED, spec.Xattr)
+
+	spec = testSpecFromString(t, api.SpecCowOnDemand, "false")
+	require.Equal(t, api.Xattr_UNSPECIFIED, spec.Xattr)
+
+	spec = testSpecFromString(t, api.SpecCowOnDemand, "true")
+	require.Equal(t, api.Xattr_COW_ON_DEMAND, spec.Xattr)
+
+}
