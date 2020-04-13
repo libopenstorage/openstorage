@@ -2,7 +2,12 @@ package core
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes/scheme"
+	typedcorev1 "k8s.io/client-go/kubernetes/typed/core/v1"
+	"k8s.io/client-go/tools/record"
 )
 
 // EventOps is an interface to put and get k8s events
@@ -27,4 +32,38 @@ func (c *Client) ListEvents(namespace string, opts metav1.ListOptions) (*corev1.
 		return nil, err
 	}
 	return c.kubernetes.CoreV1().Events(namespace).List(opts)
+}
+
+// RecorderOps is an interface to record k8s events
+type RecorderOps interface {
+	// RecordEvent records an event into k8s using client-go's EventRecorder inteface
+	// It takes the event source and the object on which the event is being raised.
+	RecordEvent(source v1.EventSource, object runtime.Object, eventtype, reason, message string)
+}
+
+func (c *Client) RecordEvent(source v1.EventSource, object runtime.Object, eventtype, reason, message string) {
+	if err := c.initClient(); err != nil {
+		return
+	}
+	c.eventRecordersLock.Lock()
+	if len(c.eventRecorders) == 0 {
+		c.eventRecorders = make(map[string]record.EventRecorder)
+		c.eventBroadcaster = record.NewBroadcaster()
+		c.eventBroadcaster.StartRecordingToSink(
+			&typedcorev1.EventSinkImpl{
+				Interface: c.kubernetes.CoreV1().Events(""), // use the namespace from the object
+			},
+		)
+	}
+	key := source.Component + "-" + source.Host
+	eventRecorder, exists := c.eventRecorders[key]
+	if !exists {
+		eventRecorder = c.eventBroadcaster.NewRecorder(
+			scheme.Scheme,
+			source,
+		)
+		c.eventRecorders[key] = eventRecorder
+	}
+	c.eventRecordersLock.Unlock()
+	eventRecorder.Event(object, eventtype, reason, message)
 }
