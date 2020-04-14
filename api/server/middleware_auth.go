@@ -29,6 +29,11 @@ const (
 	PVCNamespaceLabelKey = "namespace"
 )
 
+var (
+	// OverrideSchedDriverName is set by osd program to override the schedule driver
+	OverrideSchedDriverName = ""
+)
+
 // NewAuthMiddleware returns a negroni implementation of an http middleware
 // which will intercept the management APIs
 func NewAuthMiddleware() *authMiddleware {
@@ -315,7 +320,11 @@ func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volu
 		clientName := strings.Split(userAgent, "/")
 		if len(clientName) > 0 {
 			if strings.HasSuffix(clientName[0], schedDriverPostFix) {
-				d, err := volumedrivers.Get("fake" /* clientName[0] */)
+				driverName := clientName[0]
+				if len(OverrideSchedDriverName) != 0 {
+					driverName = OverrideSchedDriverName
+				}
+				d, err := volumedrivers.Get(driverName)
 				if err != nil {
 					return nil, false
 				}

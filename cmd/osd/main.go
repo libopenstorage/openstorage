@@ -407,6 +407,9 @@ func start(c *cli.Context) error {
 	isDefaultSet := false
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
+		// Override sched driver with the current one
+		server.OverrideSchedDriverName = d
+
 		logrus.Infof("Starting volume driver: %v", d)
 		if err := volumedrivers.Register(d, v); err != nil {
 			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
