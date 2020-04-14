@@ -134,7 +134,6 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 
 func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "create"
-	logrus.Infof("In createWithAuth")
 	_, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -151,7 +150,6 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 
 	spec := dcReq.GetSpec()
 	locator := dcReq.GetLocator()
-	logrus.Infof("creatWithAuth: spec[[%v]] locator[[%v]]", spec, locator)
 	tokenSecretContext, err := a.parseSecret(spec.VolumeLabels, locator.VolumeLabels)
 	if err != nil {
 		a.log(locator.Name, fn).WithError(err).Error("failed to parse secret")
@@ -181,17 +179,13 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		r.Header.Set(secrets.SecretNameKey, tokenSecretContext.SecretName)
 		r.Header.Set(secrets.SecretNamespaceKey, tokenSecretContext.SecretNamespace)
 
-		logrus.Infof("createWithAuth: Token: %s", token)
 		a.insertToken(r, token)
-	} else {
-		logrus.Infof("createWitrAuth No token")
 	}
 	next(w, r)
 }
 
 func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "set"
-	logrus.Info("setWithAuth called")
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -219,89 +213,10 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 
 	next(w, r)
 
-	/*
-		requestBody := a.getBody(r)
-		var (
-			req      api.VolumeSetRequest
-			resp     api.VolumeSetResponse
-			isOpDone bool
-		)
-		err = json.NewDecoder(requestBody).Decode(&req)
-		if err != nil {
-			a.log(volumeID, fn).WithError(err).Error("Failed to parse the request")
-			next(w, r)
-			return
-		}
-
-		// Not checking tokens for the following APIs
-		// - Resize
-		// - Attach/Detach
-		// - Mount/Unmount
-
-		if req.Spec != nil && req.Spec.Size > 0 {
-			isOpDone = true
-			err = d.Set(volumeID, req.Locator, req.Spec)
-		}
-
-		for err == nil && req.Action != nil {
-			if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-				isOpDone = true
-				if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-					_, err = d.Attach(volumeID, req.Options)
-				} else {
-					err = d.Detach(volumeID, req.Options)
-				}
-				if err != nil {
-					break
-				}
-			}
-
-			if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-				isOpDone = true
-				if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-					if req.Action.MountPath == "" {
-						err = fmt.Errorf("Invalid mount path")
-						break
-					}
-					err = d.Mount(volumeID, req.Action.MountPath, req.Options)
-				} else {
-					err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
-				}
-				if err != nil {
-					break
-				}
-			}
-			break
-		}
-
-		if isOpDone {
-			if err != nil {
-				processErrorForVolSetResponse(req.Action, err, &resp)
-			} else {
-				v, err := d.Inspect([]string{volumeID})
-				if err != nil {
-					processErrorForVolSetResponse(req.Action, err, &resp)
-				} else if v == nil || len(v) != 1 {
-					processErrorForVolSetResponse(
-						req.Action,
-						status.Errorf(codes.NotFound, "Volume with ID: %s is not found", volumeID),
-						&resp)
-				} else {
-					v0 := v[0]
-					resp.Volume = v0
-				}
-			}
-			json.NewEncoder(w).Encode(resp)
-			// Not calling the next handler
-			return
-		}
-		next(w, r)
-	*/
 }
 
 func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "delete"
-	logrus.Info("deleteWithAuth called")
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -339,7 +254,6 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 
 func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "inspect"
-	logrus.Info("inspectWithAuth called")
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -353,21 +267,18 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	dk, _ := d.Inspect([]string{volumeID})
-	/*
-		if err != nil {
-			a.log(volumeID, fn).WithError(err).Error("Failed to inspect volume")
-			http.Error(w, err.Error(), http.StatusNotFound)
-			return
-		}
-	*/
+	dk, err := d.Inspect([]string{volumeID})
+	if err != nil {
+		a.log(volumeID, fn).WithError(err).Error("Failed to inspect volume")
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
+	}
 
 	json.NewEncoder(w).Encode(dk)
 }
 
 func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "enumerate"
-	logrus.Info("enumerateWithAuth called")
 
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
@@ -395,40 +306,6 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	}
 
 	next(w, r)
-
-	/*
-
-		vols, err := d.Inspect([]string{volumeID})
-		if err != nil || len(vols) == 0 || vols[0] == nil {
-			a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
-			next(w, r)
-			return
-		}
-
-		volumeResponse := &api.VolumeResponse{}
-		tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
-		if err != nil {
-			a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-			volumeResponse.Error = "failed to parse secret: " + err.Error()
-			json.NewEncoder(w).Encode(volumeResponse)
-			return
-		} else if tokenSecretContext == nil {
-			tokenSecretContext = &api.TokenSecretContext{}
-		}
-
-		if tokenSecretContext.SecretName != "" {
-			token, err := osecrets.GetToken(tokenSecretContext)
-			if err != nil {
-				a.log(volumeID, fn).WithError(err).Error("failed to get token")
-				volumeResponse.Error = "failed to get token: " + err.Error()
-				json.NewEncoder(w).Encode(volumeResponse)
-				return
-			}
-			a.insertToken(r, token)
-		}
-
-		next(w, r)
-	*/
 }
 
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
@@ -489,31 +366,23 @@ func (a *authMiddleware) getSecretInformationInKubernetes(
 	if !ok {
 		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine namespace of secret for pvc")
 	}
-	logrus.Infof("pvc name=%s namespace=%s", pvcName, pvcNamespace)
 
 	// Get pvc object
 	pvc, err := core.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get PVC information from Kubernetes: %v", err)
 	}
-	logrus.Infof("retrieved pvc object")
-	bytes, err := json.Marshal(pvc)
-	logrus.Info(string(bytes))
 
 	// Get storageclass for pvc object
 	sc, err := core.Instance().GetStorageClassForPVC(pvc)
 	if err != nil {
 		return nil, fmt.Errorf("Unable to get StorageClass information from Kubernetes: %v", err)
 	}
-	logrus.Infof("retrieved storage class")
-	bytes, err = json.Marshal(sc)
-	logrus.Info(string(bytes))
 
 	// Get secret namespace
 	secretNamespaceValue := sc.Parameters[osecrets.SecretNamespaceKey]
 	secretNameValue := sc.Parameters[osecrets.SecretNameKey]
 	if len(secretNameValue) == 0 && len(secretNamespaceValue) == 0 {
-		logrus.Infof("no authentication set in storage class %s", sc.GetName())
 		return &api.TokenSecretContext{}, nil
 	}
 
@@ -534,8 +403,6 @@ func (a *authMiddleware) getSecretInformationInKubernetes(
 	if err != nil {
 		return nil, err
 	}
-	logrus.Infof("sc: name=%s ns=%s", secretNameValue, secretNamespaceValue)
-	logrus.Infof("secretName=%s secretNamespace=%s", secretName, secretNamespace)
 
 	return &api.TokenSecretContext{
 		SecretName:      secretName,

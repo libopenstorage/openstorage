@@ -25,8 +25,6 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-
-	"github.com/sirupsen/logrus"
 )
 
 // Attach volume to given node
@@ -34,7 +32,6 @@ func (s *VolumeServer) Attach(
 	ctx context.Context,
 	req *api.SdkVolumeAttachRequest,
 ) (*api.SdkVolumeAttachResponse, error) {
-	logrus.Info("In SDK:Attach()")
 	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
@@ -78,7 +75,6 @@ func (s *VolumeServer) Attach(
 			err.Error())
 	}
 
-	logrus.Infof("SDK:Attach to %s", devPath)
 	return &api.SdkVolumeAttachResponse{DevicePath: devPath}, nil
 }
 
@@ -130,8 +126,6 @@ func (s *VolumeServer) Mount(
 	req *api.SdkVolumeMountRequest,
 ) (*api.SdkVolumeMountResponse, error) {
 
-	logrus.Info("In SDK:Mount")
-
 	if s.cluster() == nil || s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
@@ -157,7 +151,6 @@ func (s *VolumeServer) Mount(
 			req.GetVolumeId(),
 			err.Error())
 	}
-	logrus.Info("SDK:Mount volume=%v to path=%s", req.GetVolumeId(), req.GetMountPath())
 	return &api.SdkVolumeMountResponse{}, err
 }
 

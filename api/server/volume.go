@@ -12,7 +12,6 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	"github.com/sirupsen/logrus"
 
 	"github.com/urfave/negroni"
 	"google.golang.org/grpc"
@@ -192,7 +191,6 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	var dcRes api.VolumeCreateResponse
 	var dcReq api.VolumeCreateRequest
 	method := "create"
-	logrus.Info("in create()")
 
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
 		fmt.Println("returning error here")
@@ -213,7 +211,7 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check labels for secret reference
+	// Check headers for secret reference. These are set by the Kubernetes auth middleware
 	secretName := r.Header.Get(secrets.SecretNameKey)
 	secretNamespace := r.Header.Get(secrets.SecretNamespaceKey)
 	if len(secretName) != 0 && len(secretNamespace) != 0 {
@@ -310,7 +308,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		resp     api.VolumeSetResponse
 	)
 	method := "volumeSet"
-	logrus.Info("In (set) volumeSet in the server")
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -1538,7 +1535,6 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 //         items:
 //            type: string
 func (vd *volAPI) versions(w http.ResponseWriter, r *http.Request) {
-	logrus.Info("verions called")
 	versions := []string{
 		volume.APIVersion,
 		// Update supported versions by adding them here
