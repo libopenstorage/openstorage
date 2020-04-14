@@ -68,6 +68,8 @@ ASSETS=testcases/assets
 
     storageclasses="intree-multitenant csi-multitenant"
     for sc in $storageclasses ; do
+        osd::by "deploying using storageclass ${sc}"
+
         sed -e "s#%%PVCNAME%%#${pvcname}#" \
         -e "s#%%STORAGECLASS%%#${sc}#" \
         ${ASSETS}/pvc.yml.tmpl | kubectl --kubeconfig=${kubeconfig} create -f -
@@ -105,5 +107,50 @@ ASSETS=testcases/assets
         [[ $nvols -eq 0 ]]
 
     done
-# -d "{\"labels\":{\"additionalProp1\":\"string\",\"additionalProp2\":\"string\"},\"ownership\":{\"owner\":\"asd\"}}"
+}
+
+@test "Volume can be mounted securely" {
+    local pvcname="pvc-auth"
+    local user="tenant-1-$$"
+    local kubeconfig="${BATS_TMPDIR}/${user}-kubeconfig.conf"
+
+    run osd::createUserKubeconfig "${user}" "$BATS_TMPDIR"
+    assert_success
+
+    # Insert token as admin
+    run kubectl -n ${user} create secret \
+        generic k8s-user --from-literal=auth-token=${TENANT1_TOKEN}
+    assert_success
+
+    for drivertype in "intree" "csi" ; do
+        for sc in "noauth" "auth" "multitenant" ; do
+            osd::by "testing with ${drivertype}-${sc} on namespace ${user}"
+
+            run mountAttach ${drivertype}-${sc} ${kubeconfig} ${user}
+            assert_success
+        done
+    done
+}
+
+function mountAttach() {
+    local sc="$1"
+    local kubeconfig="$2"
+    local namespace="$3"
+    osd::echo "mountAttach sc=${sc} kubeconfig=${kubeconfig} ns=${namespace}"
+
+    DETIK_CLIENT_NAME="kubectl -n ${namespace}"
+    sed -e "s#%%STORAGECLASS%%#${sc}#" \
+        ${ASSETS}/nginx-ss.yml.tmpl | kubectl --kubeconfig=${kubeconfig} apply -f -
+
+    run try "at most 120 times every 1s to get pvc named 'www-web-0' and verify that 'status' is 'bound'"
+    assert_success
+
+    run try "at most 120 times every 1s to get pod named 'web-0' and verify that 'status' is 'running'"
+    assert_success
+
+    sed -e "s#%%STORAGECLASS%%#${sc}#" \
+        ${ASSETS}/nginx-ss.yml.tmpl | kubectl --kubeconfig=${kubeconfig} delete -f -
+
+    run kubectl --kubeconfig=${kubeconfig} delete pvc --all
+    assert_success
 }

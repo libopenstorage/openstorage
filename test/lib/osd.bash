@@ -3,6 +3,14 @@ TMPDIR="${BATS_TMPDIR:-/tmp}"
 KIND_CLUSTER="${KIND_CLUSTER:-lpabon-kind-csi}"
 
 
+function osd::echo() {
+    echo "# ${1}" >&3
+}
+
+function osd::by() {
+    echo "# STEP: ${1}" >&3
+}
+
 function osd::clusterip() {
     docker inspect ${CLUSTER_CONTROL_PLANE_CONTAINER} | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress'
 }

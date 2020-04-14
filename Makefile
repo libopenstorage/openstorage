@@ -158,7 +158,7 @@ build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
 
 install: packr $(OSDSANITY)-install
-	go install -tags "$(TAGS)" $(PKGS)
+	go install -gcflags="all=-N -l" -tags "$(TAGS)" $(PKGS)
 	go install github.com/libopenstorage/openstorage/cmd/osd-token-generator
 
 $(OSDSANITY):

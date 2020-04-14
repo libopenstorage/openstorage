@@ -133,6 +133,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
+		logrus.Infof("csi: Calling attach for volume %s", volumeId)
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
 			VolumeId:      volumeId,
 			Options:       opts,
@@ -158,6 +159,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 		return nil, err
 	}
+	logrus.Infof("csi: Called mount for volume %s", volumeId)
 
 	logrus.Infof("Volume %s mounted on %s",
 		volumeId,

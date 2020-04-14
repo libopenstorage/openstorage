@@ -1,5 +1,30 @@
 #!/bin/sh
 
+function suppress { 
+    (
+        local output=/tmp/output.$$
+        rm --force ${output} 2> /dev/null
+        ${1+"$@"} > ${output} 2>&1
+        result=$?
+        if [ $result -ne 0 ] ; then
+            cat ${output}
+        fi
+        rm ${output}
+        exit $result
+    )
+}
+
+function buildOsdContainer() {
+    prev=$(pwd)
+        cd $GOPATH/src/github.com/libopenstorage/openstorage
+
+        # Build OSD
+        suppress make docker-build-osd || exit 1
+
+    cd $prev
+}
+
+
 BART=./node_modules/bats/bin/bats
 
 # generate 10y tokens
@@ -13,5 +38,6 @@ export CLUSTER_CONTROL_PLANE_CONTAINER=${KIND_CLUSTER}-control-plane
 export TMPDIR=/tmp/bats-test-$$
 mkdir -p ${TMPDIR}
 
-${BART} --tap setup testcases
+buildOsdContainer
 
+${BART} setup testcases

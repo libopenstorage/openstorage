@@ -20,8 +20,6 @@ import (
 	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -193,6 +191,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 
 func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "set"
+	logrus.Info("setWithAuth called")
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -206,82 +205,98 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 		return
 	}
 
-	requestBody := a.getBody(r)
-	var (
-		req      api.VolumeSetRequest
-		resp     api.VolumeSetResponse
-		isOpDone bool
-	)
-	err = json.NewDecoder(requestBody).Decode(&req)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to parse the request")
-		next(w, r)
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
-
-	// Not checking tokens for the following APIs
-	// - Resize
-	// - Attach/Detach
-	// - Mount/Unmount
-
-	if req.Spec != nil && req.Spec.Size > 0 {
-		isOpDone = true
-		err = d.Set(volumeID, req.Locator, req.Spec)
+	if len(token) != 0 {
+		a.insertToken(r, token)
 	}
 
-	for err == nil && req.Action != nil {
-		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			isOpDone = true
-			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, req.Options)
-			} else {
-				err = d.Detach(volumeID, req.Options)
-			}
-			if err != nil {
-				break
-			}
+	next(w, r)
+
+	/*
+		requestBody := a.getBody(r)
+		var (
+			req      api.VolumeSetRequest
+			resp     api.VolumeSetResponse
+			isOpDone bool
+		)
+		err = json.NewDecoder(requestBody).Decode(&req)
+		if err != nil {
+			a.log(volumeID, fn).WithError(err).Error("Failed to parse the request")
+			next(w, r)
+			return
 		}
 
-		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
+		// Not checking tokens for the following APIs
+		// - Resize
+		// - Attach/Detach
+		// - Mount/Unmount
+
+		if req.Spec != nil && req.Spec.Size > 0 {
 			isOpDone = true
-			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				if req.Action.MountPath == "" {
-					err = fmt.Errorf("Invalid mount path")
+			err = d.Set(volumeID, req.Locator, req.Spec)
+		}
+
+		for err == nil && req.Action != nil {
+			if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
+				isOpDone = true
+				if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
+					_, err = d.Attach(volumeID, req.Options)
+				} else {
+					err = d.Detach(volumeID, req.Options)
+				}
+				if err != nil {
 					break
 				}
-				err = d.Mount(volumeID, req.Action.MountPath, req.Options)
-			} else {
-				err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
 			}
-			if err != nil {
-				break
-			}
-		}
-		break
-	}
 
-	if isOpDone {
-		if err != nil {
-			processErrorForVolSetResponse(req.Action, err, &resp)
-		} else {
-			v, err := d.Inspect([]string{volumeID})
+			if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
+				isOpDone = true
+				if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
+					if req.Action.MountPath == "" {
+						err = fmt.Errorf("Invalid mount path")
+						break
+					}
+					err = d.Mount(volumeID, req.Action.MountPath, req.Options)
+				} else {
+					err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
+				}
+				if err != nil {
+					break
+				}
+			}
+			break
+		}
+
+		if isOpDone {
 			if err != nil {
 				processErrorForVolSetResponse(req.Action, err, &resp)
-			} else if v == nil || len(v) != 1 {
-				processErrorForVolSetResponse(
-					req.Action,
-					status.Errorf(codes.NotFound, "Volume with ID: %s is not found", volumeID),
-					&resp)
 			} else {
-				v0 := v[0]
-				resp.Volume = v0
+				v, err := d.Inspect([]string{volumeID})
+				if err != nil {
+					processErrorForVolSetResponse(req.Action, err, &resp)
+				} else if v == nil || len(v) != 1 {
+					processErrorForVolSetResponse(
+						req.Action,
+						status.Errorf(codes.NotFound, "Volume with ID: %s is not found", volumeID),
+						&resp)
+				} else {
+					v0 := v[0]
+					resp.Volume = v0
+				}
 			}
+			json.NewEncoder(w).Encode(resp)
+			// Not calling the next handler
+			return
 		}
-		json.NewEncoder(w).Encode(resp)
-		// Not calling the next handler
-		return
-	}
-	next(w, r)
+		next(w, r)
+	*/
 }
 
 func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -367,36 +382,53 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	}
 	volumeID := volIDs[0]
 
-	vols, err := d.Inspect([]string{volumeID})
-	if err != nil || len(vols) == 0 || vols[0] == nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
-		next(w, r)
-		return
-	}
-
-	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
-	} else if tokenSecretContext == nil {
-		tokenSecretContext = &api.TokenSecretContext{}
 	}
-
-	if tokenSecretContext.SecretName != "" {
-		token, err := osecrets.GetToken(tokenSecretContext)
-		if err != nil {
-			a.log(volumeID, fn).WithError(err).Error("failed to get token")
-			volumeResponse.Error = "failed to get token: " + err.Error()
-			json.NewEncoder(w).Encode(volumeResponse)
-			return
-		}
+	if len(token) != 0 {
 		a.insertToken(r, token)
 	}
 
 	next(w, r)
+
+	/*
+
+		vols, err := d.Inspect([]string{volumeID})
+		if err != nil || len(vols) == 0 || vols[0] == nil {
+			a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
+			next(w, r)
+			return
+		}
+
+		volumeResponse := &api.VolumeResponse{}
+		tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels)
+		if err != nil {
+			a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
+			volumeResponse.Error = "failed to parse secret: " + err.Error()
+			json.NewEncoder(w).Encode(volumeResponse)
+			return
+		} else if tokenSecretContext == nil {
+			tokenSecretContext = &api.TokenSecretContext{}
+		}
+
+		if tokenSecretContext.SecretName != "" {
+			token, err := osecrets.GetToken(tokenSecretContext)
+			if err != nil {
+				a.log(volumeID, fn).WithError(err).Error("failed to get token")
+				volumeResponse.Error = "failed to get token: " + err.Error()
+				json.NewEncoder(w).Encode(volumeResponse)
+				return
+			}
+			a.insertToken(r, token)
+		}
+
+		next(w, r)
+	*/
 }
 
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {

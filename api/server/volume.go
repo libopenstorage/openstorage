@@ -310,6 +310,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		resp     api.VolumeSetResponse
 	)
 	method := "volumeSet"
+	logrus.Info("In (set) volumeSet in the server")
 
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
@@ -472,7 +473,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	json.NewEncoder(w).Encode(resp)
-
 }
 
 func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
@@ -1843,14 +1843,14 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	nInspect := negroni.New()
 	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
 	inspectRoute := vd.volumeInspectRoute()
-	nSet.UseHandlerFunc(inspectRoute.fn)
+	nInspect.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	// Setup middleware for enumerate
 	nEnumerate := negroni.New()
 	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
 	enumerateRoute := vd.volumeEnumerateRoute()
-	nSet.UseHandlerFunc(enumerateRoute.fn)
+	nEnumerate.UseHandlerFunc(enumerateRoute.fn)
 	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
 
 	routes := []*Route{vd.versionRoute()}
