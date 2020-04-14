@@ -3,6 +3,7 @@ TMPDIR="${BATS_TMPDIR:-/tmp}"
 KIND_CLUSTER="${KIND_CLUSTER:-lpabon-kind-csi}"
 
 
+# Only show output of the program on failure
 function osd::suppress() {
     (
         local output=/tmp/output.$$
@@ -17,34 +18,41 @@ function osd::suppress() {
     )
 }
 
+# TAP message
 function osd::echo() {
     if [ $DEBUG -eq 1 ] ; then
         echo "# ${1}" >&3
     fi
 }
 
+# TAP compliant steps which can be printed out
 function osd::by() {
     if [ $DEBUG -eq 1 ] ; then
         echo "# STEP: ${1}" >&3
     fi
 }
 
+# Get the Kind cluster IP from docker
 function osd::clusterip() {
     docker inspect ${CLUSTER_CONTROL_PLANE_CONTAINER} | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress'
 }
 
+# Return the SDK REST Gateway address
 function osd::getSdkRestGWEndpoint() {
     local clusterip=$(osd::clusterip)
     local nodeport=$(kubectl -n kube-system get svc portworx-api -o json | jq '.spec.ports[2].nodePort')
     echo ${clusterip}:${nodeport}
 }
 
+# Return the SDK gRPC endpoint
 function osd::getSdkEndpoint() {
     local clusterip=$(osd::clusterip)
     local nodeport=$(kubectl -n kube-system get svc portworx-api -o json | jq '.spec.ports[1].nodePort')
     echo ${clusterip}:${nodeport}
 }
 
+# Creats a user in Kubernetes only. Use osd::createUserKubeconfig() instead to create a full
+# kubeconfig for the new user.
 function osd::createUser() {
     local username="$1"
     local location="$2"
@@ -69,6 +77,8 @@ EOF
         -o jsonpath='{.status.certificate}' | base64 --decode > ${location}/${username}-kubeconfig.crt
 }
 
+# Creates a new Kubernetes user only able to access their namespace with the
+# same name. The kubeconfig for this user must be passed in.
 function osd::createUserKubeconfig() {
     local user="$1"
     local location="$2"
@@ -92,7 +102,7 @@ function osd::createUserKubeconfig() {
     kubectl create rolebinding ${user}-admin --namespace=${user} --clusterrole=admin --user=${user}
 }
 
-# must be executed from `run`
+# Delete an object in Kubernetes and wait until fully removed
 function osd::kubeDeleteObjectAndWait() {
     local secs="$1"
     local kubeargs="$2"
@@ -100,16 +110,6 @@ function osd::kubeDeleteObjectAndWait() {
     local name="$4"
 
     kubectl ${kubeargs} delete ${object} ${name}
-
-#    max=0
-#    while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1 ; do
-#        sleep 1
-#        $(( max++ ))
-#        if [ $max -ge $secs ] ; then
-#            echo "timed out"
-#            exit 1
-#        fi
-#    done
 
     timeout $secs sh -c "while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1; do sleep 1; done "
 }
