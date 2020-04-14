@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Check dependencies
-dependecies="kubectl jq curl"
+dependecies="kind kubectl jq curl"
 for d in $dependecies ; do
     if [[ -z "$(type -t $d)" ]] ; then
         echo "Missing $d" >&2
