@@ -6,19 +6,6 @@ load ../node_modules/bats-support/load
 KIND_IMAGE=kindest/node:v1.17.0
 ASSETS="setup/assets"
 
-function buildOsdContainer() {
-    #jprev=$(pwd)
-        #cd $GOPATH/src/github.com/libopenstorage/openstorage
-
-        # Build OSD
-        #make docker-build-osd || exit 1
-
-        # Load local OSD image into KinD
-        kind load docker-image quay.io/openstorage/osd:latest --name ${KIND_CLUSTER} || exit 1
-
-    #cd $prev
-}
-
 @test "Setup kind cluster ${KIND_CLUSTER}" {
     local name=${KIND_CLUSTER}
     if kind get clusters | grep ${KIND_CLUSTER} > /dev/null 2>&1 ; then
@@ -53,7 +40,7 @@ function buildOsdContainer() {
 }
 
 @test "Install openstorage in ${KIND_CLUSTER}" {
-    run buildOsdContainer
+    run kind load docker-image quay.io/openstorage/osd:latest --name ${KIND_CLUSTER} || exit 1
     assert_success
 
     # Start OSD

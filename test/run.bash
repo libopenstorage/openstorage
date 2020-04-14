@@ -1,31 +1,26 @@
-#!/bin/sh
+#!/bin/bash
 
-function suppress { 
-    (
-        local output=/tmp/output.$$
-        rm --force ${output} 2> /dev/null
-        ${1+"$@"} > ${output} 2>&1
-        result=$?
-        if [ $result -ne 0 ] ; then
-            cat ${output}
-        fi
-        rm ${output}
-        exit $result
-    )
-}
+source ./lib/osd.bash
 
 function buildOsdContainer() {
     prev=$(pwd)
-        cd $GOPATH/src/github.com/libopenstorage/openstorage
+    cd $GOPATH/src/github.com/libopenstorage/openstorage
 
-        # Build OSD
-        suppress make docker-build-osd || exit 1
+    # Build OSD
+    osd::suppress make docker-build-osd || exit 1
 
     cd $prev
 }
 
 
+# Location of bart
 BART=./node_modules/bats/bin/bats
+
+# Setup
+export KIND_CLUSTER=${USER}-kind-openstorage-test
+export CLUSTER_CONTROL_PLANE_CONTAINER=${KIND_CLUSTER}-control-plane
+export TMPDIR=/tmp/bats-test-$$
+mkdir -p ${TMPDIR}
 
 # generate 10y tokens
 export ADMIN_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcnQtYWRtaW5AbXljb21wYW55LmNvbSIsImV4cCI6MTkwMTczMDQwNywiZ3JvdXBzIjpbIioiXSwiaWF0IjoxNTg2MzcwNDA3LCJpc3MiOiJvcGVuc3RvcmFnZS5pbyIsIm5hbWUiOiJBZG1pbiIsInJvbGVzIjpbInN5c3RlbS5hZG1pbiJdLCJzdWIiOiJzdXBwb3J0LWFkbWluQG15Y29tcGFueS5jb20ifQ.RR0hduw2x4aQPLUFzwXRMp3g0Qg1Uq-gGkIY-vCMxRE
@@ -33,11 +28,8 @@ export K8S_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcnRAbX
 export TENANT1_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcnRAdGVuYW50LW9uZS5jb20iLCJleHAiOjE5MDE3MzA1MDUsImdyb3VwcyI6WyJ0ZW5hbnQtb25lIl0sImlhdCI6MTU4NjM3MDUwNSwiaXNzIjoib3BlbnN0b3JhZ2UuaW8iLCJuYW1lIjoiVGVuYW50IE9uZSIsInJvbGVzIjpbInN5c3RlbS51c2VyIl0sInN1YiI6InN1cHBvcnRAdGVuYW50LW9uZS5jb20ifQ.56ruILoD_r-RpE_r9317nWq8gZ7PbjnMY5JMzQrPuhI
 export TENANT2_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcnRAdGVuYW50LXR3by5jb20iLCJleHAiOjE5MDE3MzA1NDksImdyb3VwcyI6WyJ0ZW5hbnQtdHdvIl0sImlhdCI6MTU4NjM3MDU0OSwiaXNzIjoib3BlbnN0b3JhZ2UuaW8iLCJuYW1lIjoiVGVuYW50IFR3byIsInJvbGVzIjpbInN5c3RlbS51c2VyIl0sInN1YiI6InN1cHBvcnRAdGVuYW50LXR3by5jb20ifQ.6t3DiToB5ttTKZ9IuSoM4XTKKltpBq84kz7HseehjFc
 
-export KIND_CLUSTER=${USER}-kind-openstorage-test
-export CLUSTER_CONTROL_PLANE_CONTAINER=${KIND_CLUSTER}-control-plane
-export TMPDIR=/tmp/bats-test-$$
-mkdir -p ${TMPDIR}
-
+# Build osd before starting bart to make sure we have a good build
 buildOsdContainer
 
-${BART} setup testcases
+# Set env DEBUG=1 to show output of osd::echo and osd::by
+${BART} setup testcases && rm -rf ${TMPDIR}

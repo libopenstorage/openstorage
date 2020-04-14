@@ -109,7 +109,7 @@ ASSETS=testcases/assets
     done
 }
 
-@test "Volume can be mounted securely" {
+@test "Verify pvc can be mounted securely by deploying an application" {
     local pvcname="pvc-auth"
     local user="tenant-1-$$"
     local kubeconfig="${BATS_TMPDIR}/${user}-kubeconfig.conf"

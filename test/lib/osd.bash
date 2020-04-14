@@ -3,12 +3,30 @@ TMPDIR="${BATS_TMPDIR:-/tmp}"
 KIND_CLUSTER="${KIND_CLUSTER:-lpabon-kind-csi}"
 
 
+function osd::suppress() {
+    (
+        local output=/tmp/output.$$
+        rm --force ${output} 2> /dev/null
+        ${1+"$@"} > ${output} 2>&1
+        result=$?
+        if [ $result -ne 0 ] ; then
+            cat ${output}
+        fi
+        rm ${output}
+        exit $result
+    )
+}
+
 function osd::echo() {
-    echo "# ${1}" >&3
+    if [ $DEBUG -eq 1 ] ; then
+        echo "# ${1}" >&3
+    fi
 }
 
 function osd::by() {
-    echo "# STEP: ${1}" >&3
+    if [ $DEBUG -eq 1 ] ; then
+        echo "# STEP: ${1}" >&3
+    fi
 }
 
 function osd::clusterip() {
@@ -83,19 +101,15 @@ function osd::kubeDeleteObjectAndWait() {
 
     kubectl ${kubeargs} delete ${object} ${name}
 
-    max=0
-#    until [ $max -eq $secs ] || kubectl ${kubeargs} get ${object} ${name} ; do
-    while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1 ; do
-        echo "waiting -- loop $max"
-        sleep 1
-        $(( max++ ))
-        if [ $max -ge $secs ] ; then
-            echo "timed out"
-            exit 1
-        fi
-    done
+#    max=0
+#    while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1 ; do
+#        sleep 1
+#        $(( max++ ))
+#        if [ $max -ge $secs ] ; then
+#            echo "timed out"
+#            exit 1
+#        fi
+#    done
 
-#    $([ $max -ge $secs ])
-
-#    timeout $secs sh -c "while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1; do sleep 1; done "
+    timeout $secs sh -c "while kubectl ${kubeargs} get ${object} ${name} > /dev/null 2>&1; do sleep 1; done "
 }
