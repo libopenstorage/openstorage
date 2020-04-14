@@ -7,6 +7,9 @@ go:
   - 1.13.x
 install:
   - go get -u github.com/vbatts/git-validation
+  - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+  - chmod +x kubectl
+  - mv kubectl ${GOPATH}/bin
 script:
   - git-validation -run DCO,short-subject
   - if [[ $(go version) == *"1.13"* ]]; then
@@ -20,7 +23,7 @@ script:
   - make vet
   - bash hack/docker-integration-test.sh
   - make docker-test
-  - make bats
+  - make e2e
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
       make push-mock-sdk-server;

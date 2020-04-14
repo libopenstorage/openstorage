@@ -414,5 +414,5 @@ mockgen:
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
 
-bats:
+e2e: docker-build-osd
 	cd test && ./run.bash
