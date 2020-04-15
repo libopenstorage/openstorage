@@ -17,6 +17,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func TestVolumeNoAuth(t *testing.T) {
@@ -2525,18 +2529,38 @@ func testMiddlewareCreateVolume(
 	size := uint64(1234)
 	secretName := "secret-name"
 	namespace := "ns"
-	tokenKey := "token-key"
+	pvcName := "mypvc"
+	storageClassName := "storageclass1"
 	// get token
 	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
+
+	pvc := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &storageClassName,
+		},
+	}
+
+	storageClass := storagev1.StorageClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: storageClassName,
+		},
+		Parameters: map[string]string{
+			secrets.SecretNameKey:      secretName,
+			secrets.SecretNamespaceKey: "${pvc.namespace}",
+		},
+	}
 
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{
 			Name: name,
 			VolumeLabels: map[string]string{
-				secrets.SecretNameKey:      secretName,
-				secrets.SecretTokenKey:     tokenKey,
-				secrets.SecretNamespaceKey: namespace,
+				PVCNameLabelKey:      pvcName,
+				PVCNamespaceLabelKey: namespace,
 			},
 		},
 		Source: &api.Source{},
@@ -2547,6 +2571,11 @@ func testMiddlewareCreateVolume(
 			Shared:  true,
 		},
 	}
+	testVolDriver.MockK8sOps().EXPECT().
+		GetPersistentVolumeClaim(pvcName, namespace).Return(&pvc, nil)
+	testVolDriver.MockK8sOps().EXPECT().
+		GetStorageClassForPVC(&pvc).Return(&storageClass, nil)
+
 	mockSecret.EXPECT().
 		String().
 		Return(lsecrets.TypeK8s).

@@ -369,11 +369,11 @@ func (a *authMiddleware) getSecretInformationInKubernetes(
 	// For k8s fetch the actual annotations
 	pvcName, ok := getVolumeLabel(PVCNameLabelKey, specLabels, locatorLabels)
 	if !ok {
-		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine name of secret for pvc")
+		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine name of the pvc from the volume")
 	}
 	pvcNamespace, ok := getVolumeLabel(PVCNamespaceLabelKey, specLabels, locatorLabels)
 	if !ok {
-		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine namespace of secret for pvc")
+		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine namespace of the pvc from the volume")
 	}
 
 	// Get pvc object
