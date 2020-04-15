@@ -1,0 +1,1000 @@
+  668  git grep NewDefaultPluginHandler
+  669  \
+  670  sudo systemctl status docker
+  671  cd git/golang/
+  672  ls
+  673  cd porx/
+  674  ls
+  675  source go.source 
+  676  ls
+  677  cd src/github.com/libopenstorage/openstorage
+  678  ls
+  679  sudo $GOPATH/bin/osd -d --driver=name=fake
+  680  sudo $GOPATH/bin/osd -d --driver=name=fake --help
+  681  git grep flex
+  682  vim cmd/osd/main.go 
+  683  make install
+  684  git checkout .
+  685  git status
+  686  cd ../../portworx/porx
+  687  git diff
+  688  make docker-grpc-proto
+  689  go version
+  690  vim Makefile 
+  691  make docker-grpc-proto
+  692  vim Makefile 
+  693  make docker-grpc-proto
+  694  ls
+  695  docker run         --privileged         -v /home/lpabon/git/golang/porx/src/github.com/portworx/porx:/go/src/github.com/portworx/porx         -e "GOPATH=/go"         -e "DOCKER_GRPC_PROTO=yes"         -e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin"         quay.io/porx/px-grpc-proto                 /bin/sh
+  696  docker run         --privileged         -v /home/lpabon/git/golang/porx/src/github.com/portworx/porx:/go/src/github.com/portworx/porx         -e "GOPATH=/go"         -e "DOCKER_GRPC_PROTO=yes"         -e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin"         -ti quay.io/porx/px-grpc-proto                 /bin/sh
+  697  vim Makefile 
+  698  make docker-grpc-proto
+  699  git diff
+  700  cd ../../libopenstorage/openstorage-sdk-auth/
+  701  ls
+  702  cd tools/
+  703  ls
+  704  ls -al
+  705  get rsa_sample_public.pem 
+  706  cat rsa_sample_public.pem 
+  707  cd ../..
+  708  ls
+  709  cd openstorage
+  710  ls
+  711  git branch
+  712  git pull
+  713  ls
+  714  vim Makefile 
+  715  make generate
+  716  make generate-mockfiles
+  717  ls
+  718  cd volume/
+  719  ls
+  720  cd drivers/
+  721  ls
+  722  cd mock/
+  723  ls
+  724  ls -al
+  725  cd ..
+  726  ls
+  727  ls -al
+  728  vim drivers.go 
+  729  go generate
+  730  go get github.com/golang/mock
+  731  go get github.com/golang/mock/mockgen
+  732  go generate
+  733  cd ../..
+  734  cd ..
+  735  ls
+  736  cd openstorage-sdk-clients/
+  737  git pull
+  738  git diff
+  739  git checkout .
+  740  git pull
+  741  ls
+  742  pwd
+  743  cd ..
+  744  cd openstorage
+  745  ls
+  746  git checkout master
+  747  git pull
+  748  ls -al
+  749  git checkout release-7.0
+  750  git pull
+  751  git lg
+  752  vim api/api.proto 
+  753  git checkout -b release-api-freeze
+  754  vim Makefile 
+  755  make sdk-check-version
+  756  git status
+  757  git commit -as 
+  758  git push github release-api-freeze 
+  759  git checkout master
+  760  git pull
+  761  git checkout master
+  762  git pull
+  763  git lg
+  764  ls
+  765  git fetch github
+  766  git checkout nfs-csi-4
+  767  git rebase master
+  768  git log
+  769  git branch
+  770  git checkout -b nfs-csi-5
+  771  ls
+  772  ls -al
+  773  git diff master
+  774  git diff master | grep diff
+  775  ps -ef | grep nfs
+  776  cat /etc/exports
+  777  ls /nfs
+  778  git diff master | grep diff
+  779  git diff master
+  780  free -h
+  781  git diff master | grep diff
+  782  vim volume/drivers/nfs/nfs.go
+  783  git diff master > NFSRAWBLOCK.diff
+  784  vim volume/drivers/nfs/nfs.go
+  785  git status
+  786  make install
+  787  vim volume/drivers/nfs/nfs.go
+  788  git diff master | grep diff
+  789  cat /etc/specs/csi/demo/DEMO.sh
+  790  cat /tc/specs/csi/demo/DEMO.sh
+  791  cat etc/specs/csi/demo/DEMO.sh
+  792  git diff master | grep diff
+  793  cat etc/specs/csi/csi-nfs.yaml
+  794  git diff master | grep diff
+  795  cat etc/config/config.yaml
+  796  sudo $GOPATH/bin/osd -d --driver=name=nfs
+  797  sudo $GOPATH/bin/osd -d --driver=name=nfs -f etc/config/config.yaml
+  798  sudo $GOPATH/bin/osd --help
+  799  sudo $GOPATH/bin/osd -d --driver=name=nfs -f etc/config/config.yaml
+  800  vim volume/drivers/nfs/nfs.go
+  801  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs
+  802  sudo $GOPATH/bin/osd --help
+  803  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  804  vim cmd/osd/main.go 
+  805  make install
+  806  vim cmd/osd/main.go 
+  807  make install
+  808  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  809  vim volume/drivers/nfs/nfs.go
+  810  python
+  811  vim volume/drivers/nfs/nfs.go
+  812  make install
+  813  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  814  losetup -l
+  815  losetup -d /dev/loop4
+  816  suod losetup -d /dev/loop4
+  817  sudo losetup -d /dev/loop4
+  818  suod losetup -d /dev/loop4
+  819  losetup -d /dev/loop4
+  820  sudo losetup -l
+  821  losetup -d /dev/loop3
+  822  sudo losetup -d /dev/loop3
+  823  sudo losetup -d /dev/loop2
+  824  ls
+  825  vim volume/drivers/nfs/nfs.go
+  826  make install
+  827  vim volume/drivers/nfs/nfs.go
+  828  make install
+  829  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  830  sudo losetup -l
+  831  vim volume/drivers/nfs/nfs.go
+  832  make install
+  833  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  834  vim volume/drivers/nfs/nfs.go
+  835  make install
+  836  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs -m 9901 --sdkport=9900 --sdkrestport=9910 
+  837  git status
+  838  git add volume/drivers/nfs/nfs.go
+  839  git commit -m 'save'
+  840  git checkout -b nfs-csi-just-driver-6
+  841  git diff master | grep diff
+  842  git diff master
+  843  ls -al
+  844  git status
+  845  git diff master | grep diff
+  846  git rm a/etc/specs/csi/csi-nfs.yaml  a/etc/specs/csi/demo/DEMO.sh  a/etc/specs/csi/demo/pvc-secrets.yaml  a/etc/specs/csi/demo/sc-secrets.yaml  a/etc/specs/csi/pvc.yaml  a/etc/specs/csi/sc.yaml  a/Dockerfile.csi-nfs  
+  847  git rm etc/specs/csi/csi-nfs.yaml  etc/specs/csi/demo/DEMO.sh  etc/specs/csi/demo/pvc-secrets.yaml  etc/specs/csi/demo/sc-secrets.yaml  etc/specs/csi/pvc.yaml  etc/specs/csi/sc.yaml  Dockerfile.csi-nfs  
+  848  git diff master | grep diff
+  849  git checkout origin/master -- cmd/osd/main.go
+  850  git diff master | grep diff
+  851  git checkout origin/master -- Makefile
+  852  git checkout origin/master -- etc/config/config.yaml
+  853  git checkout origin/master -- Dockerfile.sdk
+  854  git status
+  855  git diff master | grep diff
+  856  git commit -am 'save'
+  857  git rebase -i master
+  858  git diff master | grep diff
+  859  git lg
+  860  git commit --amend
+  861  git commit -s --amend
+  862  git push github nfs-csi-just-driver-6
+  863  git checkout master
+  864  git pull
+  865  git checkout nfs-csi-just-driver-6
+  866  git rebase master
+  867  git push github nfs-csi-just-driver-6 -f
+  868  ls /nfs
+  869  make docker-test
+  870  vim volume/drivers/nfs/nfs_test.go 
+  871  make docker-test
+  872  git status
+  873  git commit -as --amend
+  874  git push github nfs-csi-just-driver-6 -f
+  875  git checkout master
+  876  git pull
+  877  ls
+  878  cd pkg/
+  879  ls
+  880  cd role/
+  881  ls
+  882  vim sdkserviceapi.go 
+  883  go test -v
+  884  git diff
+  885  git branch
+  886  git pull
+  887  cd ../..
+  888  ls
+  889  git branch | grep nfs
+  890  git checkout nfs-csi-just-driver-6 
+  891  git diff
+  892  git checkout .
+  893  ls
+  894  git status
+  895  vim volume/drivers/nfs/nfs.go 
+  896  make install
+  897  ls
+  898  go version
+  899  echo $GOROOT
+  900  echo $GOPATH
+  901  ls /nfs
+  902  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  903  vim cmd/osd/main.go 
+  904  make install
+  905  vim cmd/osd/main.go 
+  906  make install
+  907  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  908  git status
+  909  git checkout cmd/osd/main.go
+  910  git commit -as --amend
+  911  git push github nfs-csi-just-driver-6 -f
+  912  git checkout master
+  913  git pull
+  914  git checkout nfs-csi-just-driver-6 
+  915  git rebase master
+  916  git push github nfs-csi-just-driver-6 -f
+  917  sudo losetup -l
+  918  ls
+  919  git branch
+  920  git status
+  921  vim cmd/osd/main.go 
+  922  vim volume/drivers/nfs/nfs.go 
+  923  make install
+  924  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  925  git status
+  926  git checkout cmd/osd/main.go
+  927  git commit -as --amend
+  928  git status
+  929  git push github nfs-csi-just-driver-6 -f
+  930  vim volume/drivers/nfs/nfs.go 
+  931  git status
+  932  git diff
+  933  ls
+  934  make install
+  935  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  936  git checkout cmd/osd/main.go
+  937  vim cmd/osd/main.go 
+  938  make install
+  939  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  940  git status
+  941  git checkout cmd/osd/main.go
+  942  git commit -a --amend
+  943  git push github nfs-csi-just-driver-6 -f
+  944  vim pkg/mount/
+  945  make install
+  946  vim volume/drivers/nfs/nfs.go 
+  947  make install
+  948  git checkout cmd/osd/main.go
+  949  vim cmd/osd/main.go 
+  950  make install
+  951  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  952  vim volume/drivers/nfs/nfs.go 
+  953  fg
+  954  make install
+  955  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  956  vim volume/drivers/nfs/nfs.go 
+  957  make install
+  958  sudo $GOPATH/bin/osd -d --driver=name=nfs,server=127.0.0.1,path=/nfs --sdkrestport=9910
+  959  git status
+  960  git checkout cmd/osd/main.go
+  961  vim volume/drivers/nfs/nfs.go
+  962  git diff
+  963  git status
+  964  git commit -a --amend
+  965  git push github nfs-csi-just-driver-6 -f
+  966  git checkout master
+  967  git pull
+  968  git checkout nfs-csi-just-driver-6 
+  969  git rebase master
+  970  git push github nfs-csi-just-driver-6 -f
+  971  cd vendor/
+  972  cd ../volume/
+  973  go vet ./...
+  974  go fmt ./...
+  975  cd ..
+  976  make docker-test
+  977  ls
+  978  vim volume/drivers/nfs/nfs.go
+  979  cp etc/config/config.yaml nfsdir.yaml
+  980  vim nfsdir.yaml 
+  981  sudo $GOPATH/bin/osd -d --driver=name=nfs,path=/nfs --sdkrestport=9910
+  982  vim volume/drivers/nfs/nfs.go
+  983  git status -am 'back to syscall'
+  984  git commit -am 'back to syscall'
+  985  git push github nfs-csi-just-driver-6 
+  986  git commit -s --amend
+  987  git push github nfs-csi-just-driver-6 -f
+  988  git status
+  989  git rebase -i master
+  990  git commit -s --amend
+  991  git rebase --continue
+  992  git commit -s --amend
+  993  git rebase --continue
+  994  git commit -s --amend
+  995  git rebase --continue
+  996  git push github nfs-csi-just-driver-6 -f
+  997  cd /tmp
+  998  ls
+  999  rm -rf go-build*
+ 1000  u
+ 1001  cd git
+ 1002  ls
+ 1003  cd golang/
+ 1004  ls
+ 1005  cd porx/
+ 1006  ls
+ 1007  source go.source 
+ 1008  ls
+ 1009  cd src/github.com/libopenstorage/openstoragep
+ 1010* l
+ 1011  cd src/github.com/libopenstorage/openstorage
+ 1012  ls
+ 1013  git checkout master
+ 1014  git pull
+ 1015  vim api/server/sdk
+ 1016  git checkout -b debug_interceptor
+ 1017  vim api/server/sdk/server_interceptors.go 
+ 1018  make install
+ 1019  vim cmd/osd/main.go 
+ 1020  make install
+ 1021  $GOPATH/bin/osd --help
+ 1022  sudo $GOPATH/bin/osd -d --driver=name=nfs,path=/nfs --sdkrestport=9910
+ 1023  sudo $GOPATH/bin/osd -d --driver=name=fake --sdkrestport=9910
+ 1024  vim cmd/osd/main.go 
+ 1025  sudo $GOPATH/bin/osd -d --driver=name=fake --sdkrestport=9910
+ 1026  vim api/server/sdk/server_interceptors.go 
+ 1027  make install
+ 1028  sudo $GOPATH/bin/osd -d --driver=name=fake --sdkrestport=9910
+ 1029  vim api/server/sdk/server_interceptors.go 
+ 1030  make install
+ 1031  vim api/server/sdk/server_interceptors.go 
+ 1032  make install
+ 1033  sudo $GOPATH/bin/osd -d --driver=name=fake --sdkrestport=9910
+ 1034  git status
+ 1035  git commit -am 'save'
+ 1036  git push github debug_interceptor
+ 1037  git checkout master
+ 1038  git pull
+ 1039  git checkout nfs-csi-just-driver-6 
+ 1040  git rebase master
+ 1041  git status
+ 1042  vim vendor/vendor.json
+ 1043  git diff
+ 1044  git add vendor/vendor.json
+ 1045  git status
+ 1046  git rebase --continue
+ 1047  git push github nfs-csi-just-driver-6 -f
+ 1048  git checkout master
+ 1049  git pull
+ 1050  vim api/server/sdk/volume_ops.go 
+ 1051  cd ../..
+ 1052  cd libopenstorage/openstorage
+ 1053  ls
+ 1054  ls -al
+ 1055  vim api/server/sdk/
+ 1056  git checkout master
+ 1057  git pull
+ 1058  git checkout release-7.0
+ 1059  git pull
+ 1060  git lg
+ 1061  vim api/server/
+ 1062  cd ../openstorage-sdk-auth/
+ 1063  ls
+ 1064  git checkout master
+ 1065  git pull
+ 1066  ls
+ 1067  ls -al
+ 1068  cd pkg
+ 1069  ls
+ 1070  ls -al
+ 1071  cd auth/
+ 1072  ls
+ 1073  ls -al
+ 1074  cd ../..
+ 1075  ls
+ 1076  ls tools/
+ 1077  ls -al
+ 1078  cd ../openstorage
+ 1079  ls
+ 1080  git grep "osd.sock"
+ 1081  sudo $GOPATH/bin/osd -d --driver=name=fake --sdkrestport=9910
+ 1082  git checkout master
+ 1083  git pull
+ 1084  git checkout -b release-6.4 origin/release-6.3
+ 1085  git remote -v
+ 1086  git push originssh release-6.4
+ 1087  git checkout master
+ 1088  git pull
+ 1089  vim pkg/grpcserver/
+ 1090  git status
+ 1091  git checkuot -b add-tls-client
+ 1092  git checkout -b add-tls-client
+ 1093  git commit -a
+ 1094  git commit -as --amend
+ 1095  git push github add-tls-client
+ 1096  ls -al
+ 1097  vim api/server/sdk/
+ 1098  cd api/server/sdk/test_certs/
+ 1099  ls
+ 1100  cat README.md 
+ 1101  cp ~/kubeup.2/roles/nodes/files/insecure_ca.* .
+ 1102  ls
+ 1103  ls -al
+ 1104  openssl req -new -sha256 -key mydomain.com.key -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=mydomain.com" -out mydomain.com.csr
+ 1105  openssl req -new -sha256 -key insecure_ca.key -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=localhost" -out mydomain.com.csr
+ 1106  ls -al
+ 1107  openssl req -new -sha256 -key insecure_ca.key -subj "/C=US/ST=CA/O=MyOrg, Inc./CN=localhost" -out server.csr
+ 1108  ls -al
+ 1109  openssl req -in server.csr -noout -text
+ 1110  ls -al
+ 1111  vim refresh.sh
+ 1112  ls
+ 1113  history
+ 1114  vim refresh.sh
+ 1115  bash -x refresh.sh 
+ 1116  ls -al
+ 1117  cat insecure_ca.srl 
+ 1118  cat README.md 
+ 1119  cat refresh.sh 
+ 1120  cat server.crt 
+ 1121  openssl x509 -req -in server.csr -CA insecure_ca.crt -CAkey insecure_ca.key -CAcreateserial -out server.crt -newkey -days 500 -sha256
+ 1122  ls -al
+ 1123  ls -alrt
+ 1124  vim refresh.sh 
+ 1125  ls -al
+ 1126  bash -x refresh.sh 
+ 1127  ls -al
+ 1128  git rm server-cert.pem server-key.pem
+ 1129  ls -al
+ 1130  rm mydomain.com.csr insecure_ca.srl
+ 1131  ls -al
+ 1132  cat README.md 
+ 1133  vim refresh.sh 
+ 1134  ls -al
+ 1135  chmod +x refresh.sh 
+ 1136  ls -al
+ 1137  ./refresh.sh 
+ 1138  ls -al
+ 1139  vim refresh.sh 
+ 1140  ls -al
+ 1141  ./refresh.sh 
+ 1142  ls -al
+ 1143  ./refresh.sh 
+ 1144  vim refresh.sh 
+ 1145  ./refresh.sh 
+ 1146  ls -al
+ 1147  vim refresh.sh 
+ 1148  ls -al
+ 1149  ./refresh.sh 
+ 1150  ls -al
+ 1151  cd ..
+ 1152  vim sdk_test.go 
+ 1153  go test -v
+ 1154  vim github.com/libopenstorage/openstorage/pkg/grpcserver 
+ 1155  vim ../../../pkg/grpcserver/grpcutil.go 
+ 1156  go test -v
+ 1157  grep server-cert.pem *
+ 1158  vim sdk_test.go 
+ 1159  go test -v
+ 1160  vim sdk_test.go 
+ 1161  go test -v
+ 1162  vim sdk_test.go 
+ 1163  go test -v
+ 1164  git status
+ 1165  git commit -as --amend
+ 1166  cd test_certs/
+ 1167  ls
+ 1168  ls -al
+ 1169  git rm README.md
+ 1170  git status
+ 1171  ls -al
+ 1172  git add .
+ 1173  git status
+ 1174  git commit -as --amend
+ 1175  git push github add-tls-client -f
+ 1176  cd ../..
+ 1177  cd ..
+ 1178  git checkout master
+ 1179  git pull
+ 1180  git lg
+ 1181  git branch -r | grep release
+ 1182  git checkout -b cp-1481-release-8.0 origin/release-8.0
+ 1183  git cherry-pick 8cd723ea 
+ 1184  git push github cp-1481-release-8.0
+ 1185  git checkout -b cp-1481-release-7.0 origin/release-7.0
+ 1186  git cherry-pick 8cd723ea 
+ 1187  git push github cp-1481-release-7.0
+ 1188  git checkout master
+ 1189  git pull
+ 1190  git checkout -b audit-enh
+ 1191  vim api/server/sdk/server_interceptors
+ 1192  vim api/server/sdk/server_interceptors.go 
+ 1193  make
+ 1194  vim api/server/sdk/server_interceptors.go 
+ 1195  make
+ 1196  vim api/server/sdk/server_interceptors.go 
+ 1197  git commit -am 'save'
+ 1198  git push github audit-enh
+ 1199  ls -al
+ 1200  git checkout master
+ 1201  git pull
+ 1202  git checkout -b intree-multitenant
+ 1203  vim api/server/
+ 1204  ls -al
+ 1205  git status
+ 1206  git log
+ 1207  !
+ 1208  git status
+ 1209  bats
+ 1210  bats --help
+ 1211  mkdir bats
+ 1212  l
+ 1213  ls -al
+ 1214  cd bats/
+ 1215  ls
+ 1216  ls -al
+ 1217  mkdir lib
+ 1218  ls
+ 1219  cd lib
+ 1220  ls
+ 1221  ls -al
+ 1222  cat > README.md
+ 1223  vim README.md 
+ 1224  mkdir detik
+ 1225  ls
+ 1226  cd detik/
+ 1227  cd ..
+ 1228  ls
+ 1229  mkdir support
+ 1230  ls
+ 1231  cd support/
+ 1232  wget https://raw.githubusercontent.com/ztombol/bats-support/master/src/error.bash .
+ 1233  ls
+ 1234  wget https://raw.githubusercontent.com/ztombol/bats-support/master/src/lang.bash
+ 1235  ls
+ 1236  wget https://raw.githubusercontent.com/ztombol/bats-support/master/src/output.bash
+ 1237  ls
+ 1238  cd ..
+ 1239  cd support/
+ 1240  ls
+ 1241  cat > README.md
+ 1242  ls
+ 1243  cd ..
+ 1244  ls
+ 1245  ls -al
+ 1246  mv README.md > detik/
+ 1247  ls
+ 1248  mv README.md  detik/
+ 1249  ls
+ 1250  cd detik/
+ 1251  ls
+ 1252  ls -al
+ 1253  vim README.md 
+ 1254  ls -al
+ 1255  wget https://raw.githubusercontent.com/bats-core/bats-detik/master/lib/detik.bash
+ 1256  wget https://raw.githubusercontent.com/bats-core/bats-detik/master/lib/linter.bash
+ 1257  wget https://raw.githubusercontent.com/bats-core/bats-detik/master/lib/utils.bash
+ 1258  ls -al
+ 1259  chmod *.bash
+ 1260  chmod +x *.bash
+ 1261  ls -al
+ 1262  cd ..
+ 1263  cd support/
+ 1264  ls
+ 1265  chmod +x *.bash
+ 1266  ls -al
+ 1267  cd ..
+ 1268  ls -al
+ 1269  mkdir assert
+ 1270  ls -al
+ 1271  cd assert
+ 1272  ls
+ 1273  ls -al
+ 1274  cat > README.md
+ 1275  ls -al
+ 1276  cd ..
+ 1277  ls
+ 1278  sudo npm install -g bats bats-assert bats-support
+ 1279  npm search bats
+ 1280  ls -al
+ 1281  mv detik/* .
+ 1282  ls
+ 1283  rm -rf assert/ support/
+ 1284  ls
+ 1285  ls -al
+ 1286  rm detik
+ 1287  ls
+ 1288  rm -rf detik
+ 1289  ls
+ 1290  ls -al
+ 1291  cd ..
+ 1292  ls
+ 1293  ls -al
+ 1294  vim sample.bats
+ 1295  ls -al
+ 1296  bats --help
+ 1297  bats sample.bats 
+ 1298  ls
+ 1299  vim sample.bats
+ 1300  bats sample.bats 
+ 1301  vim sample.bats
+ 1302  bats sample.bats 
+ 1303  vim sample.bats
+ 1304  bats sample.bats 
+ 1305  npm install --save-dev https://github.com/ztombol/bats-support
+ 1306  npm install --save-dev https://github.com/ztombol/bats-assert
+ 1307  ls
+ 1308  ls node_modules/
+ 1309  ls node_modules/bats-assert/
+ 1310  ls node_modules/bats-assert/src/
+ 1311  ls -al
+ 1312  ls
+ 1313  vim sample.bats 
+ 1314  ls
+ 1315  ls -al
+ 1316  bats sample.bats 
+ 1317  npm search bats
+ 1318  ls
+ 1319  vim sample.bats 
+ 1320  bats sample.bats 
+ 1321  vim sample.bats 
+ 1322  bats sample.bats 
+ 1323  vim sample.bats 
+ 1324  bats sample.bats 
+ 1325  vim lib/detik.bash 
+ 1326  ls -al
+ 1327  cat sample.bats 
+ 1328  kubectl get nodes
+ 1329  kubectl -n kube-system get pods
+ 1330  kn get pods
+ 1331  ls
+ 1332  cat sample.bats 
+ 1333  bats sample.bats 
+ 1334  bats --tap sample.bats 
+ 1335  ls -al
+ 1336  cd ..
+ 1337  ls
+ 1338  bats --tap bats
+ 1339  ls
+ 1340  ls -al
+ 1341  ls test
+ 1342  mv bats test
+ 1343  ls
+ 1344  ls -al
+ 1345  vim ~/.vimrc
+ 1346  ls
+ 1347  ls -al
+ 1348  ls
+ 1349  cd t
+ 1350  cd test/
+ 1351  ls
+ 1352  ls -al
+ 1353  mkdir testscases
+ 1354  ls
+ 1355  ls -al
+ 1356  cd testscases/
+ 1357  ls
+ 1358  ls -al
+ 1359  vim public-role.bats
+ 1360  ls -a
+ 1361  ls -al
+ 1362  cd ..
+ 1363  ls
+ 1364  ls -al
+ 1365  mv sample.bats testscases/
+ 1366  ls
+ 1367  ls -al
+ 1368  bats --tap testcases
+ 1369  ls -al
+ 1370  mv testscases/ testcases
+ 1371  bats --tap testcases
+ 1372  vim testcases/sample.bats 
+ 1373  bats --tap testcases
+ 1374  ls -al
+ 1375  vim run.bash
+ 1376  ls -al
+ 1377  mv node_modules/ ____node_modules
+ 1378  ls
+ 1379  ls -al
+ 1380  npm init
+ 1381  ls -al
+ 1382  vim package.json 
+ 1383  ls -al
+ 1384  npm search bats
+ 1385  npm install --save-dev bats bats-assert bats-support
+ 1386  ls -al
+ 1387  ls node_modules/
+ 1388  ls node_modules/bats
+ 1389  ls node_modules/bats/bin/
+ 1390  file node_modules/bats/bin/bats 
+ 1391  vim README.md
+ 1392  history
+ 1393  cat > README.md 
+ 1394  vim README.md 
+ 1395  ls -al
+ 1396  vim run.bash 
+ 1397  ls -al
+ 1398  ls -al node_modules/bats
+ 1399  ls -al node_modules/bats/bin/
+ 1400  cat package.json 
+ 1401  vim run.bash 
+ 1402  bash run.bash 
+ 1403  l s-al
+ 1404  ls -al
+ 1405  chmod +x run.bash 
+ 1406  ls -al
+ 1407  rm -rf ____node_modules/
+ 1408  ls
+ 1409  ls -al
+ 1410  cat README.md 
+ 1411  ls -al
+ 1412  cd testcases/
+ 1413  ls
+ 1414  ls -al
+ 1415  vim sample.bats 
+ 1416  cd ..
+ 1417  ./run.bash 
+ 1418  echo $?
+ 1419  ./run.bash 
+ 1420  vim testcases/sample.bats 
+ 1421  ./run.bash 
+ 1422  vim testcases/sample.bats 
+ 1423  ls
+ 1424  ls -al
+ 1425  kubectl get sc
+ 1426  ls ../hack/
+ 1427  vim ../hack/kind.yaml 
+ 1428  ls
+ 1429  cd testcases/
+ 1430  ls
+ 1431  mkdir assets
+ 1432  ls
+ 1433  cd assets/
+ 1434  ls
+ 1435  cat > sc-noncsi.yml
+ 1436  vim sc-noncsi.yml 
+ 1437  ls -al
+ 1438  kubectl apply -f sc-noncsi.yml 
+ 1439  kubectl get sc
+ 1440  cp ~/kubeup/./9502/nginx-ss.yml .
+ 1441  ls
+ 1442  vim nginx-ss.yml 
+ 1443  ls
+ 1444  mv nginx-ss.yml nginx-noncsi.yml
+ 1445  ls
+ 1446  ls -al
+ 1447  kubectl apply -f nginx-noncsi.yml 
+ 1448  kubectl get pv
+ 1449  kubectl get pvc
+ 1450  kubectl get pv
+ 1451  kubectl delete -f nginx-noncsi.yml 
+ 1452  kn get pods
+ 1453  kn logs openstorage-8n4c7 osd
+ 1454  cp ../../../hack/osd-csi.yaml .
+ 1455  ls
+ 1456  vim osd-csi.yaml 
+ 1457  kk apply -f osd-csi.yaml 
+ 1458  vim osd-csi.yaml 
+ 1459  kk apply -f osd-csi.yaml 
+ 1460  kn get pods
+ 1461  kn logs osd-api-6blv9
+ 1462  kn get sc
+ 1463  netstats
+ 1464  netstat
+ 1465  netstat | grep 9001
+ 1466  ps
+ 1467  vim osd-csi.yaml 
+ 1468  kk apply -f osd-csi.yaml 
+ 1469  kn get pods
+ 1470  curl http://localhost:9011/
+ 1471  curl http://localhost:9001/
+ 1472  curl http://localhost:9001/status
+ 1473  curl http://localhost:9001/v1/volumes
+ 1474  curl http://localhost:9001/v1/osd-volumes
+ 1475  curl http://localhost:9001/v1/osd-volume
+ 1476  curl http://localhost:9001/v1/osd-volumes
+ 1477  kn get pods
+ 1478  kn pods openstorage-9nf52
+ 1479  kn logs openstorage-9nf52 osd
+ 1480  ls
+ 1481  kubectl apply -f nginx-noncsi.yml 
+ 1482  kn get pvc
+ 1483  kk get pvc
+ 1484  kk describe www-web-0
+ 1485  kk describe pvc www-web-0
+ 1486  kubectl delete -f nginx-noncsi.yml 
+ 1487  kn get vc
+ 1488  kn get svc
+ 1489  kn get pods
+ 1490  kn exec -ti kube-apiserver-lpabon-kind-csi-control-plane /bin/sh
+ 1491  kn exec -ti openstorage-9nf52 /bin/sh
+ 1492  kn exec -ti openstorage-9nf52 -c osd /bin/sh
+ 1493  ls
+ 1494  vim osd-csi.yaml 
+ 1495  kubectl apply -f nginx-noncsi.yml 
+ 1496  kk apply -f osd-csi.yaml 
+ 1497  kn get pods
+ 1498  kn delete pod osd-api-6blv9  openstorage-9nf52
+ 1499  kn get pods
+ 1500  kn exec -ti openstorage-4qg6n -c osd /bin/sh
+ 1501  kk get povc
+ 1502  kk get pvc
+ 1503  kk get pv
+ 1504  kn logs openstorage-4qg6n osd
+ 1505  kubectl pxc cluster describe
+ 1506  kubectl pxc config --help
+ 1507  kubectl pxc config cluster --help
+ 1508  kubectl pxc config cluster set --help
+ 1509  kn get svc
+ 1510  kubectl pxc cluster describe
+ 1511  ls
+ 1512  cp osd-csi.yaml osd-csi.yaml.works
+ 1513  vim osd-csi.yaml
+ 1514  kk apply -f osd-csi.yaml 
+ 1515  kn get pods
+ 1516  kn get svc
+ 1517  kubectl pxc cluster describe
+ 1518  kubectl pxc volume list
+ 1519  ls
+ 1520  kubectl delete nginx-noncsi.yml 
+ 1521  kubectl delete -f nginx-noncsi.yml 
+ 1522  kubectl pxc volume list
+ 1523  kubectl get pvc
+ 1524  kubectl delete pvc www-web-0
+ 1525  kubectl pxc volume list
+ 1526  ls
+ 1527  ls -al
+ 1528  rm osd-csi.yaml.works 
+ 1529  ls
+ 1530  ls -al
+ 1531  cd ..
+ 1532  ls
+ 1533  ls -al
+ 1534  cd ..
+ 1535  ls
+ 1536  ls -al
+ 1537  git add .
+ 1538  git status
+ 1539  git commit -m 'save'
+ 1540  git push github intree-multitenant 
+ 1541  ls -al
+ 1542  cd testcases/
+ 1543  ls
+ 1544  vim public-role.bats 
+ 1545  ls -al
+ 1546  ls
+ 1547  cp ~/kubeup/save/pvc.yaml assets/
+ 1548  cd assets/
+ 1549  ls
+ 1550  mv pvc-nocsi.yml
+ 1551  mv pvc.yaml pvc-nocsi.yml
+ 1552  ls
+ 1553  ls -al
+ 1554  mv pvc-nocsi.yml pvc-noncsi.yml
+ 1555  ls
+ 1556  ls -al
+ 1557  cd ..
+ 1558  curl http://localhost:9021/v1/volumes
+ 1559  kn get pods
+ 1560  curl http://localhost:9020/v1/volumes
+ 1561  kn logs openstorage-4qg6n osd
+ 1562  docker ps
+ 1563  ps -ef | grep osd
+ 1564  curl http://127.0.0.1:9020/v1/volumes
+ 1565  curl http://127.0.0.1:9021/v1/volumes
+ 1566  kn exec -ti openstorage-4qg6n -c osd /bin/sh
+ 1567  kubectl get svc
+ 1568  kn get svc
+ 1569  curl http://localhost:32468/v1/volumes
+ 1570  kubectl config view
+ 1571  kn get svc
+ 1572  kubectl config view
+ 1573  kn get svc
+ 1574  kn get svc --all-namespaces
+ 1575  kk describe svc kubernetes         
+ 1576  ps -ef | grep kind
+ 1577  cat /var/lib/kube-proxy/config.conf
+ 1578  kind --help
+ 1579  kind get cluster --help
+ 1580  kind get clusters
+ 1581  kind --cluster 
+ 1582  kind service
+ 1583  CONTROL_PLANE_IP=$(docker inspect <lpabon-kind-1-control-plane> | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress')
+ 1584  docker images
+ 1585  docker ps
+ 1586  CONTROL_PLANE_IP=$(docker inspect <lpabon-kind-control-plane> | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress')
+ 1587  CONTROL_PLANE_IP=$(docker inspect lpabon-kind-control-plane | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress')
+ 1588  docker inspect lpabon-kind-control-plane
+ 1589  CONTROL_PLANE_IP=$(docker inspect lpabon-kind-csi-control-plane | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress')
+ 1590  docker inspect lpabon-kind-csi-control-plane
+ 1591  echo $CONTROL_PLANE_IP
+ 1592  docker ps
+ 1593  curl ${CONTROL_PLANE_IP}:9021
+ 1594  kn get svc
+ 1595  curl ${CONTROL_PLANE_IP}:32468
+ 1596  curl ${CONTROL_PLANE_IP}:32468/sdk
+ 1597  np=$(kubectl -n kube-system portworx-api -o json | jq '.spec.ports[].nodePort')
+ 1598  np=$(kubectl -n kube-system get svc portworx-api -o json | jq '.spec.ports[].nodePort')
+ 1599  echo $np
+ 1600  kubectl -n kube-system get svc portworx-api -o json
+ 1601  np=$(kubectl -n kube-system get svc portworx-api -o json | jq '.spec.ports[2].nodePort')
+ 1602  echo $np
+ 1603  history | tail
+ 1604  history | tail -49
+ 1605  ls
+ 1606  ls -al
+ 1607  vim public-role.bats
+ 1608  git status
+ 1609  git add public-role.bats  assets/pvc-noncsi.yml  ../lib/osd.bash  
+ 1610  git commit -m 'save'
+ 1611  git push github intree-multitenant 
+ 1612  ls -al
+ 1613  cd ..
+ 1614  ls
+ 1615  vim run.bash lib/osd.bash 
+ 1616  ./run.bash 
+ 1617  git status
+ 1618  git add  run.bash  testcases/public-role.bats
+ 1619  git status
+ 1620  git commit -m 'save'
+ 1621  git push github intree-multitenant 
+ 1622  ls -al
+ 1623  ./run.bash 
+ 1624  ls
+ 1625  cat lib/
+ 1626  cat lib/osd.bash 
+ 1627  ls -al
+ 1628  openstorage-sdk-auth 
+ 1629  openstorage-sdk-auth --help
+ 1630  kubectl get node
+ 1631  kubectl create namespace bats
+ 1632  kubectl get certificatesigningrequest
+ 1633  kn get certificatesigningrequest
+ 1634  kn get certificatesigningrequestasdf
+ 1635  openssl req -new -newkey rsa:4096 -nodes -keyout bob-k8s.key -out bob-k8s.csr -subj "/CN=bob/O=devops"
+ 1636  ls
+ 1637  cat bob-k8s.csr
+ 1638  vim lib/osd.bash 
+ 1639  source lib/osd.bash 
+ 1640  osd::createUser lpabon
+ 1641  cat /tmp/lpabon-kubeconfig.crt 
+ 1642  kubectl config view
+ 1643  kubectl config set-cluster $(kubectl config view -o jsonpath='{.clusters[0].name}') --server=$(kubectl config view -o jsonpath='{.clusters[0].cluster.server}') --certificate-authority=k8s-ca.crt --kubeconfig=bob-k8s-config --embed-certs
+ 1644  kind 
+ 1645  kind export 
+ 1646  kind export  kubeconfig
+ 1647  kind export kubeconfig --help
+ 1648  kind clusters
+ 1649  kind get clusters
+ 1650  kind export kubeconfig --kubeconfig=k.conf --name lpabon-kind-csi
+ 1651  ls
+ 1652  vim k.conf 
+ 1653  kind export kubeconfig --kubeconfig=k.conf --name lpabon-kind-csi
+ 1654  kubectl config set-credentials bob --client-certificate=bob-k8s-access.crt --client-key=bob-k8s.key --embed-certs --kubeconfig=bob-k8s-config
+ 1655  ls /tmp/lpabon*
+ 1656  kubectl config set-credentials lpabon --client-certificate=/tmp/lpabon-kubeconfig.crt --client-key=/tmp/lpabon-k8s.key --embed-certs --kubeconfig=k.conf
+ 1657  kubectl get namespaces
+ 1658  kubectl create namespace lpabon
+ 1659  kubectl --kubeconfig=k.conf set-context lpabon --cluster=kind-lpabon-kind-csi --user=lpabon --namespace=lpabon
+ 1660  kubectl --kubeconfig=k.conf config set-context lpabon --cluster=kind-lpabon-kind-csi --user=lpabon --namespace=lpabon
+ 1661  kubectl --kubeconfig=k.conf use-context lpabon
+ 1662  kubectl --kubeconfig=k.conf config use-context lpabon
+ 1663  kubectl create rolebinding lpabon-admin --namespace=lpabon --clusterrole=admin --user=lpabon
+ 1664  kubectl --kubeconfig=k.conf get namespaces
+ 1665  kubectl --kubeconfig=k.conf get pods
+ 1666  kubectl --kubeconfig=k.conf get sc
+ 1667  history > createuser.txt
