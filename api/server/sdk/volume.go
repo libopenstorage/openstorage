@@ -53,6 +53,10 @@ func (s *VolumeServer) checkAccessForVolumeId(
 	// Inspect will check access for us
 	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: volumeId,
+		// We must do a deep inspect here, in case a volume set has just occurred.
+		Options: &api.VolumeInspectOptions{
+			Deep: true,
+		},
 	})
 	if err != nil {
 		return err
