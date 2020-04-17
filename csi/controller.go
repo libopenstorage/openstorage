@@ -394,11 +394,9 @@ func (s *OsdCsiServer) CreateVolume(
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
-		// Get Capabilities and Size
-		if spec.Shared && !spec.Sharedv4 {
-			spec.Shared = csiRequestsSharedVolume(req)
-		} else {
-			spec.Sharedv4 = csiRequestsSharedVolume(req)
+		spec, err := getSpecFromCSI(spec, req)
+		if err != nil {
+			return nil, err
 		}
 
 		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
@@ -539,17 +537,50 @@ func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume, req *csi.CreateVolume
 	dest.ContentSource = req.GetVolumeContentSource()
 }
 
-func csiRequestsSharedVolume(req *csi.CreateVolumeRequest) bool {
+func getSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
+	var shared bool
+	var fsType string
+
+	// Get spec additions from CSI request
 	for _, cap := range req.GetVolumeCapabilities() {
 		// Check access mode is setup correctly
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
-			return true
+			shared = true
+		}
+
+		// Get FsType according to CSI spec
+		if mount := cap.GetMount(); mount != nil {
+			// as defined in openstorage volume API
+			fsType = mount.FsType
+		}
+
+		if block := cap.GetBlock(); block != nil {
+			return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
 		}
 	}
-	return false
+
+	// Legacy support for shared
+	if spec.Shared && !spec.Sharedv4 {
+		spec.Shared = shared
+	} else {
+		// assume sharedv4 by default
+		spec.Sharedv4 = shared
+	}
+
+	// Override any FsType parameter in the storage class parameter
+	// only if an FsType was was provided by CSI
+	if fsType != "" {
+		format, err := api.FSTypeSimpleValueOf(fsType)
+		if err != nil {
+			return spec, err
+		}
+		spec.Format = format
+	}
+
+	return spec, nil
 }
 
 // CreateSnapshot is a CSI implementation to create a snapshot from the volume
