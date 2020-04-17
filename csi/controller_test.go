@@ -2280,3 +2280,151 @@ func TestGetPVCMetadata(t *testing.T) {
 	assert.Equal(t, md["testkey_labels"], "testval_1")
 	assert.Equal(t, md["testkey_annotations"], "testval_2")
 }
+
+func TestGetSpecFromCSI(t *testing.T) {
+	tt := []struct {
+		name string
+
+		req          *csi.CreateVolumeRequest
+		existingSpec *api.VolumeSpec
+
+		expectedSpec  *api.VolumeSpec
+		expectedError string
+	}{
+		{
+			name: "Should accept supported non-default FsType and Sharedv4",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{
+								FsType: "xfs",
+							},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{},
+
+			expectedSpec: &api.VolumeSpec{
+				Format:   api.FSType_FS_TYPE_XFS,
+				Sharedv4: true,
+			},
+		},
+		{
+			name: "Should override with the CSI parameter if both are provided",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{
+								FsType: "xfs",
+							},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			// for cases when the storage class parameter has fsType: EXT4 and this is already parsed out.
+			existingSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_EXT4,
+			},
+
+			// We should override with CSI provided parameter.
+			expectedSpec: &api.VolumeSpec{
+				Format:   api.FSType_FS_TYPE_XFS,
+				Sharedv4: true,
+			},
+		},
+
+		{
+			name: "Should accept shared instead of sharedv4 if explicitly provided already",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{
+								FsType: "ext4",
+							},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				Shared: true,
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_EXT4,
+				Shared: true,
+			},
+		},
+		{
+			name: "Should not accept bad FsType",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{
+								FsType: "badfs",
+							},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{},
+
+			expectedError: "no openstorage.FS_TYPE for badfs",
+		},
+		{
+			name: "Should not accept block volume",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Block{
+							Block: &csi.VolumeCapability_BlockVolume{},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{},
+
+			expectedError: "rpc error: code = Unimplemented desc = CSI raw block is not supported",
+		},
+	}
+
+	for _, tc := range tt {
+		actualSpec, err := getSpecFromCSI(tc.existingSpec, tc.req)
+		if tc.expectedError == "" {
+			assert.NoError(t, err)
+			assert.Equal(t, tc.expectedSpec, actualSpec)
+		} else {
+			assert.EqualError(t, err, tc.expectedError)
+		}
+	}
+
+}
