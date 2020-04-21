@@ -2309,7 +2309,9 @@ func TestGetSpecFromCSI(t *testing.T) {
 					},
 				},
 			},
-			existingSpec: &api.VolumeSpec{},
+			existingSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_EXT4,
+			},
 
 			expectedSpec: &api.VolumeSpec{
 				Format:   api.FSType_FS_TYPE_XFS,
@@ -2317,7 +2319,7 @@ func TestGetSpecFromCSI(t *testing.T) {
 			},
 		},
 		{
-			name: "Should override with the CSI parameter if both are provided",
+			name: "Should override with the PX parameter if both are provided",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
 					&csi.VolumeCapability{
@@ -2336,16 +2338,44 @@ func TestGetSpecFromCSI(t *testing.T) {
 			},
 			// for cases when the storage class parameter has fsType: EXT4 and this is already parsed out.
 			existingSpec: &api.VolumeSpec{
-				Format: api.FSType_FS_TYPE_EXT4,
+				Format: api.FSType_FS_TYPE_BTRFS,
 			},
 
-			// We should override with CSI provided parameter.
+			// We should override with PX provided parameter.
 			expectedSpec: &api.VolumeSpec{
-				Format:   api.FSType_FS_TYPE_XFS,
+				Format:   api.FSType_FS_TYPE_BTRFS,
 				Sharedv4: true,
 			},
 		},
+		{
+			name: "Should use the PX parameter if CSI has the default fsType",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessType: &csi.VolumeCapability_Mount{
+							Mount: &csi.VolumeCapability_MountVolume{
+								FsType: "ext4",
+							},
+						},
+					},
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			// for cases when the storage class parameter has fsType: EXT4 and this is already parsed out.
+			existingSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_BTRFS,
+			},
 
+			// We should override with PX provided parameter.
+			expectedSpec: &api.VolumeSpec{
+				Format:   api.FSType_FS_TYPE_BTRFS,
+				Sharedv4: true,
+			},
+		},
 		{
 			name: "Should accept shared instead of sharedv4 if explicitly provided already",
 			req: &csi.CreateVolumeRequest{
@@ -2365,6 +2395,7 @@ func TestGetSpecFromCSI(t *testing.T) {
 				},
 			},
 			existingSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_EXT4,
 				Shared: true,
 			},
 
@@ -2391,7 +2422,9 @@ func TestGetSpecFromCSI(t *testing.T) {
 					},
 				},
 			},
-			existingSpec: &api.VolumeSpec{},
+			existingSpec: &api.VolumeSpec{
+				Format: api.FSType_FS_TYPE_EXT4,
+			},
 
 			expectedError: "no openstorage.FS_TYPE for badfs",
 		},
