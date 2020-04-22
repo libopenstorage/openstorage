@@ -4,9 +4,7 @@ import (
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/fields"
 )
 
 // SecretOps is an interface to perform k8s Secret operations
@@ -21,8 +19,6 @@ type SecretOps interface {
 	UpdateSecretData(string, string, map[string][]byte) (*corev1.Secret, error)
 	// DeleteSecret deletes the given secret
 	DeleteSecret(name, namespace string) error
-	// WatchSecret changes and callback fn
-	WatchSecret(*corev1.Secret, WatchFunc) error
 }
 
 // GetSecret gets the secrets object given its name and namespace
@@ -89,24 +85,4 @@ func (c *Client) DeleteSecret(name, namespace string) error {
 	return c.kubernetes.CoreV1().Secrets(namespace).Delete(name, &metav1.DeleteOptions{
 		PropagationPolicy: &deleteForegroundPolicy,
 	})
-}
-
-func (c *Client) WatchSecret(secret *v1.Secret, fn WatchFunc) error {
-	if err := c.initClient(); err != nil {
-		return err
-	}
-
-	listOptions := metav1.ListOptions{
-		FieldSelector: fields.OneTermEqualSelector("metadata.name", secret.Name).String(),
-		Watch:         true,
-	}
-
-	watchInterface, err := c.kubernetes.CoreV1().Secrets(secret.Namespace).Watch(listOptions)
-	if err != nil {
-		return err
-	}
-
-	// fire off watch function
-	go c.handleWatch(watchInterface, secret, "", fn, listOptions)
-	return nil
 }
