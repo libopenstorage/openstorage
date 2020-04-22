@@ -49,9 +49,6 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(1024 * 1024 * 1024)
-
-	// csi-external-provisioner defaults to ext4
-	defaultFsType = "ext4"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -573,10 +570,9 @@ func getSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.Vo
 		spec.Sharedv4 = shared
 	}
 
-	// PX and CSI both default to ext4 FsType. We only honor the CSI parameter if it
-	// is a non-default value and PX is the default value.
-	if fsType != "" && fsType != defaultFsType && spec.Format == api.FSType_FS_TYPE_EXT4 {
-		// If CSI is provided, but PX is the default, use CSI
+	// Override any FsType parameter in the storage class parameter
+	// only if an FsType was was provided by CSI
+	if fsType != "" {
 		format, err := api.FSTypeSimpleValueOf(fsType)
 		if err != nil {
 			return spec, err
