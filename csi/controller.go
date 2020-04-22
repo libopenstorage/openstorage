@@ -397,7 +397,7 @@ func (s *OsdCsiServer) CreateVolume(
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
-		spec, err := getSpecFromCSI(spec, req)
+		spec, err := resolveSpecFromCSI(spec, req)
 		if err != nil {
 			return nil, err
 		}
@@ -540,32 +540,40 @@ func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume, req *csi.CreateVolume
 	dest.ContentSource = req.GetVolumeContentSource()
 }
 
-func getSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
-	var shared bool
-	var fsType string
+// isFilesystemSpecSet checks if the fs parameter has been declared
+func isFilesystemSpecSet(params map[string]string) bool {
+	_, fsSet := params[api.SpecFilesystem]
+	return fsSet
+}
 
-	// Get spec additions from CSI request
+// resolveBlockSpec makes the following assumptions:
+// 1. This CSI driver does not yet support raw block
+// 2. CSI Drivers that do not support raw block should not allow raw block requests
+func resolveBlockSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
 	for _, cap := range req.GetVolumeCapabilities() {
-		// Check access mode is setup correctly
+		if block := cap.GetBlock(); block != nil {
+			return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
+		}
+	}
+
+	return spec, nil
+}
+
+// resolveFSTypeSpec makes the following assumptions:
+// 1. When a volume is set to RWX or a similar multi-node access mode, we default to Sharedv4
+// 2. If a user prefers shared over sharedv4, they may still use it by explicity declaring "shared": true
+func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
+	var shared bool
+	for _, cap := range req.GetVolumeCapabilities() {
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
 			shared = true
 		}
-
-		// Get FsType according to CSI spec
-		if mount := cap.GetMount(); mount != nil {
-			// as defined in openstorage volume API
-			fsType = mount.FsType
-		}
-
-		if block := cap.GetBlock(); block != nil {
-			return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
-		}
 	}
 
-	// Legacy support for shared
+	// Handle legacy support for shared
 	if spec.Shared && !spec.Sharedv4 {
 		spec.Shared = shared
 	} else {
@@ -573,15 +581,58 @@ func getSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.Vo
 		spec.Sharedv4 = shared
 	}
 
-	// PX and CSI both default to ext4 FsType. We only honor the CSI parameter if it
-	// is a non-default value and PX is the default value.
-	if fsType != "" && fsType != defaultFsType && spec.Format == api.FSType_FS_TYPE_EXT4 {
-		// If CSI is provided, but PX is the default, use CSI
-		format, err := api.FSTypeSimpleValueOf(fsType)
+	return spec, nil
+}
+
+// resolveFSTypeSpec makes the following assumptions:
+// 1. If provided, the PX "fstype" parameter should always override corresponding the CSI parameter.
+// 2. The default value for spec.Format is determined upstream by SpecFromOpts(req.GetParameters())
+func resolveFSTypeSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
+	var csiFsType string
+
+	for _, cap := range req.GetVolumeCapabilities() {
+		// Get FsType according to CSI spec
+		if mount := cap.GetMount(); mount != nil {
+			csiFsType = mount.FsType
+		}
+	}
+
+	// if we have the FileSystemSpec option not set, this means the user didn't intend to
+	// set the filesystem type based on the "PX way". In this case, we can safely
+	// apply the fsType from the CSI request.
+	if !isFilesystemSpecSet(req.GetParameters()) && csiFsType != "" {
+		format, err := api.FSTypeSimpleValueOf(csiFsType)
 		if err != nil {
 			return spec, err
 		}
 		spec.Format = format
+	}
+
+	return spec, nil
+}
+
+// resolveSpecFromCSI alters the api.VolumeSpec based on any CSI parameters passed in.
+// Various volume spec fields have CSI equivalents. This function resolves each one.
+func resolveSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
+	// Handles whether or not we support CSI raw block
+	spec, err := resolveBlockSpec(spec, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handles shared vs. sharedv4 resolution. We default to Sharedv4
+	spec, err = resolveSharedSpec(spec, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Handle FsType resolution. There are two methods of setting the FsType: PX and CSI.
+	// We default to the PX parameter if it is provided.
+	// If CSI parameter is provided, but PX is not, use CSI.
+	// If neither is provided, use the PX parameter default.
+	spec, err = resolveFSTypeSpec(spec, req)
+	if err != nil {
+		return nil, err
 	}
 
 	return spec, nil

@@ -45,6 +45,18 @@ func containsCap(c csi.ControllerServiceCapability_RPC_Type, resp *csi.Controlle
 	return false
 }
 
+func getDefaultVolumeCapabilities(t *testing.T) []*csi.VolumeCapability {
+	return []*csi.VolumeCapability{
+		&csi.VolumeCapability{
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{
+					FsType: "ext4",
+				},
+			},
+		},
+	}
+}
+
 func TestControllerGetCapabilities(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -833,10 +845,8 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 		{
 			name: "size",
 			req: &csi.CreateVolumeRequest{
-				Name: "size",
-				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{},
-				},
+				Name:               "size",
+				VolumeCapabilities: getDefaultVolumeCapabilities(t),
 				CapacityRange: &csi.CapacityRange{
 
 					// Requested size does not match volume size
@@ -2281,7 +2291,7 @@ func TestGetPVCMetadata(t *testing.T) {
 	assert.Equal(t, md["testkey_annotations"], "testval_2")
 }
 
-func TestGetSpecFromCSI(t *testing.T) {
+func TestResolveSpecFromCSI(t *testing.T) {
 	tt := []struct {
 		name string
 
@@ -2451,7 +2461,7 @@ func TestGetSpecFromCSI(t *testing.T) {
 	}
 
 	for _, tc := range tt {
-		actualSpec, err := getSpecFromCSI(tc.existingSpec, tc.req)
+		actualSpec, err := resolveSpecFromCSI(tc.existingSpec, tc.req)
 		if tc.expectedError == "" {
 			assert.NoError(t, err)
 			assert.Equal(t, tc.expectedSpec, actualSpec)
