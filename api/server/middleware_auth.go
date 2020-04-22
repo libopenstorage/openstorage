@@ -12,14 +12,14 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -27,6 +27,11 @@ const (
 	PVCNameLabelKey = "pvc"
 	// PVCNamespaceLabelKey is used for kubernetes auth provider indicating the namespace of the PVC
 	PVCNamespaceLabelKey = "namespace"
+)
+
+var (
+	// OverrideSchedDriverName is set by osd program to override the schedule driver
+	OverrideSchedDriverName = ""
 )
 
 // NewAuthMiddleware returns a negroni implementation of an http middleware
@@ -150,31 +155,35 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 
 	spec := dcReq.GetSpec()
 	locator := dcReq.GetLocator()
-	tokenSecretContext, err := a.parseSecret(spec.VolumeLabels, locator.VolumeLabels, true)
+	tokenSecretContext, err := a.parseSecret(spec.VolumeLabels, locator.VolumeLabels)
 	if err != nil {
 		a.log(locator.Name, fn).WithError(err).Error("failed to parse secret")
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to parse secret: " + err.Error()}
 		json.NewEncoder(w).Encode(&dcRes)
 		return
-	}
-	if tokenSecretContext.SecretName == "" {
-		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim" +
-			" or storage class parameters"
-		a.log(locator.Name, fn).Error(errorMessage)
-		dcRes.VolumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(&dcRes)
-		w.WriteHeader(http.StatusUnauthorized)
-		return
+	} else if tokenSecretContext == nil {
+		tokenSecretContext = &api.TokenSecretContext{}
 	}
 
-	token, err := osecrets.GetToken(tokenSecretContext)
-	if err != nil {
-		a.log(locator.Name, fn).WithError(err).Error("failed to get token")
-		dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to get token: " + err.Error()}
-		json.NewEncoder(w).Encode(&dcRes)
-		return
+	// If no secret is provided, then the caller is accessing publicly
+	if tokenSecretContext.SecretName != "" {
+		token, err := osecrets.GetToken(tokenSecretContext)
+		if err != nil {
+			a.log(locator.Name, fn).WithError(err).Error("failed to get token")
+			dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to get token: " + err.Error()}
+			json.NewEncoder(w).Encode(&dcRes)
+			return
+		}
 
-	} else {
+		// Save a reference to the secret
+		// These values will be stored in the header for the create() server handler
+		// to take and place in the labels for the volume since we do not want to adjust
+		// the body of the request in this middleware. When create() gets these values
+		// from the headers, it will copy them to the labels of the volume so that
+		// we can track the secret in the rest of the middleware calls.
+		r.Header.Set(secrets.SecretNameKey, tokenSecretContext.SecretName)
+		r.Header.Set(secrets.SecretNamespaceKey, tokenSecretContext.SecretNamespace)
+
 		a.insertToken(r, token)
 	}
 	next(w, r)
@@ -195,82 +204,20 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 		return
 	}
 
-	requestBody := a.getBody(r)
-	var (
-		req      api.VolumeSetRequest
-		resp     api.VolumeSetResponse
-		isOpDone bool
-	)
-	err = json.NewDecoder(requestBody).Decode(&req)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to parse the request")
-		next(w, r)
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
+		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
-
-	// Not checking tokens for the following APIs
-	// - Resize
-	// - Attach/Detach
-	// - Mount/Unmount
-
-	if req.Spec != nil && req.Spec.Size > 0 {
-		isOpDone = true
-		err = d.Set(volumeID, req.Locator, req.Spec)
+	if len(token) != 0 {
+		a.insertToken(r, token)
 	}
 
-	for err == nil && req.Action != nil {
-		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			isOpDone = true
-			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, req.Options)
-			} else {
-				err = d.Detach(volumeID, req.Options)
-			}
-			if err != nil {
-				break
-			}
-		}
-
-		if req.Action.Mount != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
-			isOpDone = true
-			if req.Action.Mount == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				if req.Action.MountPath == "" {
-					err = fmt.Errorf("Invalid mount path")
-					break
-				}
-				err = d.Mount(volumeID, req.Action.MountPath, req.Options)
-			} else {
-				err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
-			}
-			if err != nil {
-				break
-			}
-		}
-		break
-	}
-
-	if isOpDone {
-		if err != nil {
-			processErrorForVolSetResponse(req.Action, err, &resp)
-		} else {
-			v, err := d.Inspect([]string{volumeID})
-			if err != nil {
-				processErrorForVolSetResponse(req.Action, err, &resp)
-			} else if v == nil || len(v) != 1 {
-				processErrorForVolSetResponse(
-					req.Action,
-					status.Errorf(codes.NotFound, "Volume with ID: %s is not found", volumeID),
-					&resp)
-			} else {
-				v0 := v[0]
-				resp.Volume = v0
-			}
-		}
-		json.NewEncoder(w).Encode(resp)
-		// Not calling the next handler
-		return
-	}
 	next(w, r)
+
 }
 
 func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -288,39 +235,22 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
+	// Idempotency
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
 		next(w, r)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
-	if tokenSecretContext.SecretName == "" {
-		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
-			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
-			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
-		a.log(volumeID, fn).Error(errorMessage)
-		volumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(volumeResponse)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	token, err := osecrets.GetToken(tokenSecretContext)
-	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to get token")
-		volumeResponse.Error = "failed to get token: " + err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	} else {
+	if len(token) != 0 {
 		a.insertToken(r, token)
 	}
 
@@ -368,39 +298,15 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	}
 	volumeID := volIDs[0]
 
-	vols, err := d.Inspect([]string{volumeID})
-	if err != nil || len(vols) == 0 || vols[0] == nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
-		next(w, r)
-		return
-	}
-
-	volumeResponse := &api.VolumeResponse{}
-	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
+	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-		volumeResponse.Error = "failed to parse secret: " + err.Error()
+		volumeResponse := &api.VolumeResponse{}
+		a.log(volumeID, fn).WithError(err).Error("Failed to fetch secret")
+		volumeResponse.Error = err.Error()
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
-	if tokenSecretContext.SecretName == "" {
-		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
-			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
-			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
-		a.log(volumeID, fn).Error(errorMessage)
-		volumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(volumeResponse)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	token, err := osecrets.GetToken(tokenSecretContext)
-	if err != nil {
-		a.log(volumeID, fn).WithError(err).Error("failed to get token")
-		volumeResponse.Error = "failed to get token: " + err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	} else {
+	if len(token) != 0 {
 		a.insertToken(r, token)
 	}
 
@@ -414,7 +320,11 @@ func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volu
 		clientName := strings.Split(userAgent, "/")
 		if len(clientName) > 0 {
 			if strings.HasSuffix(clientName[0], schedDriverPostFix) {
-				d, err := volumedrivers.Get(clientName[0])
+				driverName := clientName[0]
+				if len(OverrideSchedDriverName) != 0 {
+					driverName = OverrideSchedDriverName
+				}
+				d, err := volumedrivers.Get(driverName)
 				if err != nil {
 					return nil, false
 				}
@@ -450,44 +360,80 @@ func (a *authMiddleware) parseParam(r *http.Request, param string) (string, erro
 	return "", fmt.Errorf("could not parse %s", param)
 }
 
+// This functions makes it possible to secure the model of accessing the secret by allowing
+// the definition of secret access to come from the storage class, as done by CSI.
+func (a *authMiddleware) getSecretInformationInKubernetes(
+	specLabels, locatorLabels map[string]string,
+) (*api.TokenSecretContext, error) {
+	// Get pvc location and name
+	// For k8s fetch the actual annotations
+	pvcName, ok := getVolumeLabel(PVCNameLabelKey, specLabels, locatorLabels)
+	if !ok {
+		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine name of the pvc from the volume")
+	}
+	pvcNamespace, ok := getVolumeLabel(PVCNamespaceLabelKey, specLabels, locatorLabels)
+	if !ok {
+		return nil, fmt.Errorf("Unable to authenticate request due to not able to determine namespace of the pvc from the volume")
+	}
+
+	// Get pvc object
+	pvc, err := core.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get PVC information from Kubernetes: %v", err)
+	}
+
+	// Get storageclass for pvc object
+	sc, err := core.Instance().GetStorageClassForPVC(pvc)
+	if err != nil {
+		return nil, fmt.Errorf("Unable to get StorageClass information from Kubernetes: %v", err)
+	}
+
+	// Get secret namespace
+	secretNamespaceValue := sc.Parameters[osecrets.SecretNamespaceKey]
+	secretNameValue := sc.Parameters[osecrets.SecretNameKey]
+	if len(secretNameValue) == 0 && len(secretNamespaceValue) == 0 {
+		return &api.TokenSecretContext{}, nil
+	}
+
+	// Allow ${pvc.namespace} to be set in the storage class
+	namespaceParams := map[string]string{"pvc.namespace": pvc.GetNamespace()}
+	secretNamespace, err := util.ResolveTemplate(secretNamespaceValue, namespaceParams)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get secret name
+	nameParams := make(map[string]string)
+	// Allow ${pvc.annotations['pvcNameKey']} to be set in the storage class
+	for k, v := range pvc.Annotations {
+		nameParams["pvc.annotations['"+k+"']"] = v
+	}
+	secretName, err := util.ResolveTemplate(secretNameValue, nameParams)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.TokenSecretContext{
+		SecretName:      secretName,
+		SecretNamespace: secretNamespace,
+	}, nil
+}
+
 func (a *authMiddleware) parseSecret(
 	specLabels, locatorLabels map[string]string,
-	fetchCOLabels bool,
 ) (*api.TokenSecretContext, error) {
-	if lsecrets.Instance().String() == lsecrets.TypeK8s && fetchCOLabels {
-		// For k8s fetch the actual annotations
-		pvcName, ok := locatorLabels[PVCNameLabelKey]
-		if !ok {
-			// best effort to fetch the secret
-			return parseSecretFromLabels(specLabels, locatorLabels)
-		}
-		pvcNamespace, ok := locatorLabels[PVCNamespaceLabelKey]
-		if !ok {
-			// best effort to fetch the secret
-			return parseSecretFromLabels(specLabels, locatorLabels)
-		}
 
-		pvc, err := core.Instance().GetPersistentVolumeClaim(pvcName, pvcNamespace)
-		if err != nil {
-			return nil, err
-		}
-		secretName := pvc.ObjectMeta.Annotations[osecrets.SecretNameKey]
-
-		if len(secretName) == 0 {
-			return parseSecretFromLabels(specLabels, locatorLabels)
-		}
-		secretNamespace := pvc.ObjectMeta.Annotations[osecrets.SecretNamespaceKey]
-
-		return &api.TokenSecretContext{
-			SecretName:      secretName,
-			SecretNamespace: secretNamespace,
-		}, nil
+	// Check if it is Kubernetes
+	if lsecrets.Instance().String() == lsecrets.TypeK8s {
+		return a.getSecretInformationInKubernetes(specLabels, locatorLabels)
 	}
+
+	// Not Kubernetes, try to get secret information from labels
 	return parseSecretFromLabels(specLabels, locatorLabels)
 }
 
 func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.TokenSecretContext, error) {
-	// Locator labels take precendence
+	// Locator labels take precedence
 	secretName := locatorLabels[osecrets.SecretNameKey]
 	secretNamespace := locatorLabels[osecrets.SecretNamespaceKey]
 	if secretName == "" {
@@ -523,4 +469,44 @@ func (a *authMiddleware) getBody(r *http.Request) io.ReadCloser {
 
 	r.Body = rdr2
 	return rdr1
+}
+
+func getVolumeLabel(key string, specLabels, locatorLabels map[string]string) (string, bool) {
+	if v, ok := locatorLabels[key]; ok {
+		return v, true
+	}
+	v, ok := specLabels[key]
+	return v, ok
+}
+
+func (a *authMiddleware) fetchSecretForVolume(d volume.VolumeDriver, id string) (string, error) {
+	vols, err := d.Inspect([]string{id})
+	if err != nil || len(vols) == 0 || vols[0] == nil {
+		return "", fmt.Errorf("Volume %s does not exist", id)
+	}
+
+	v := vols[0]
+	if v.GetLocator().GetVolumeLabels() == nil {
+		return "", nil
+	}
+
+	tokenSecretContext := &api.TokenSecretContext{
+		SecretName:      v.GetLocator().GetVolumeLabels()[secrets.SecretNameKey],
+		SecretNamespace: v.GetLocator().GetVolumeLabels()[secrets.SecretNamespaceKey],
+	}
+
+	// If no secret is provided, then the caller is accessing publicly
+	if tokenSecretContext.SecretName == "" || tokenSecretContext.SecretNamespace == "" {
+		return "", nil
+	}
+
+	// Retrieve secret
+	token, err := osecrets.GetToken(tokenSecretContext)
+	if err != nil {
+		return "", fmt.Errorf("Failed to get token from secret %s/%s: %v",
+			tokenSecretContext.SecretNamespace,
+			tokenSecretContext.SecretName,
+			err)
+	}
+	return token, nil
 }
