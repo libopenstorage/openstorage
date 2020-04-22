@@ -17,7 +17,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/tools/record"
 )
 
 const (
@@ -36,9 +35,7 @@ var (
 // Ops is an interface to perform kubernetes related operations on the core resources.
 type Ops interface {
 	ConfigMapOps
-	EndpointsOps
 	EventOps
-	RecorderOps
 	NamespaceOps
 	NodeOps
 	PersistentVolumeClaimOps
@@ -104,10 +101,6 @@ func NewInstanceFromConfigFile(config string) (Ops, error) {
 type Client struct {
 	config     *rest.Config
 	kubernetes kubernetes.Interface
-	// eventRecorders is a map of component to event recorders
-	eventRecorders     map[string]record.EventRecorder
-	eventRecordersLock sync.Mutex
-	eventBroadcaster   record.EventBroadcaster
 }
 
 // SetConfig sets the config and resets the client.
@@ -125,7 +118,6 @@ func (c *Client) GetVersion() (*version.Info, error) {
 	return c.kubernetes.Discovery().ServerVersion()
 }
 
-// ResourceExists checks if resource already exists
 func (c *Client) ResourceExists(gvk schema.GroupVersionKind) (bool, error) {
 	if err := c.initClient(); err != nil {
 		return false, err
@@ -170,6 +162,7 @@ func (c *Client) setClient() error {
 		}
 
 	}
+
 	return err
 }
 
@@ -235,8 +228,6 @@ func (c *Client) handleWatch(
 						err = c.WatchConfigMap(cm, fn)
 					} else if _, ok := object.(*corev1.Pod); ok {
 						err = c.WatchPods(namespace, fn, listOptions)
-					} else if sc, ok := object.(*corev1.Secret); ok {
-						err = c.WatchSecret(sc, fn)
 					} else {
 						return "", false, fmt.Errorf("unsupported object: %v given to handle watch", object)
 					}

@@ -46,8 +46,6 @@ type PersistentVolumeClaimOps interface {
 	GetPVCsUsingStorageClass(scName string) ([]corev1.PersistentVolumeClaim, error)
 	// GetStorageProvisionerForPVC returns storage provisioner for given PVC if it exists
 	GetStorageProvisionerForPVC(pvc *corev1.PersistentVolumeClaim) (string, error)
-	// GetStorageClassForPVC returns the appropriate storage class object for a certain pvc
-	GetStorageClassForPVC(pvc *corev1.PersistentVolumeClaim) (*storagev1.StorageClass, error)
 }
 
 // CreatePersistentVolumeClaim creates the given persistent volume claim
@@ -261,7 +259,7 @@ func (c *Client) GetPersistentVolumeClaimParams(pvc *corev1.PersistentVolumeClai
 	requestGB := uint64(roundUpSize(capacity.Value(), 1024*1024*1024))
 	params["size"] = fmt.Sprintf("%dG", requestGB)
 
-	sc, err := c.GetStorageClassForPVC(result)
+	sc, err := c.getStorageClassForPVC(result)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get storage class for pvc: %v", result.Name)
 	}
@@ -286,7 +284,7 @@ func (c *Client) GetPVCsUsingStorageClass(scName string) ([]corev1.PersistentVol
 	}
 
 	for _, pvc := range pvcs.Items {
-		sc, err := c.GetStorageClassForPVC(&pvc)
+		sc, err := c.getStorageClassForPVC(&pvc)
 		if err == nil && sc.Name == scName {
 			retList = append(retList, pvc)
 		}
@@ -303,7 +301,7 @@ func (c *Client) GetStorageProvisionerForPVC(pvc *corev1.PersistentVolumeClaim) 
 		return provisionerName, nil
 	}
 
-	sc, err := c.GetStorageClassForPVC(pvc)
+	sc, err := c.getStorageClassForPVC(pvc)
 	if err != nil {
 		return "", err
 	}
@@ -323,7 +321,6 @@ func (c *Client) isPVCShared(pvc *corev1.PersistentVolumeClaim) bool {
 	return false
 }
 
-// GetStorageClassForPVC returns the appropriate storage class object for a certain pvc
-func (c *Client) GetStorageClassForPVC(pvc *corev1.PersistentVolumeClaim) (*storagev1.StorageClass, error) {
+func (c *Client) getStorageClassForPVC(pvc *corev1.PersistentVolumeClaim) (*storagev1.StorageClass, error) {
 	return common.GetStorageClassForPVC(c.kubernetes.StorageV1(), pvc)
 }
