@@ -27,11 +27,11 @@ type PodOps interface {
 	// GetPodsByNode returns all pods in given namespace and given k8s node name.
 	//  If namespace is empty, it will return pods from all namespaces.
 	GetPodsByNode(nodeName, namespace string) (*corev1.PodList, error)
-	// GetPodsByNodeByLabels returns all pods in given namespace and given k8s node name
+	// GetPodsByNodeAndLabels returns all pods in given namespace and given k8s node name
 	// with a given label selector.
 	//  If namespace is empty, it will return pods from all namespaces.
-	GetPodsByNodeByLabels(nodeName, namespace string, labelSelector map[string]string) (*corev1.PodList, error)
-	// GetPodsByOwner returns pods for the given owner and namespaces
+	GetPodsByNodeAndLabels(nodeName, namespace string, labelSelector map[string]string) (*corev1.PodList, error)
+	// GetPodsByOwner returns pods for the given owner and namespace
 	GetPodsByOwner(types.UID, string) ([]corev1.Pod, error)
 	// GetPodsUsingPV returns all pods in cluster using given pv
 	GetPodsUsingPV(pvName string) ([]corev1.Pod, error)
@@ -134,9 +134,9 @@ func (c *Client) GetPodsByNode(nodeName, namespace string) (*corev1.PodList, err
 	return c.getPodsWithListOptions(namespace, listOptions)
 }
 
-// GetPodsByNodeByLabels returns all pods in given namespace and given k8s node name for the given labels
+// GetPodsByNodeAndLabels returns all pods in given namespace and given k8s node name for the given labels
 //  If namespace is empty, it will return pods from all namespaces
-func (c *Client) GetPodsByNodeByLabels(nodeName, namespace string, labels map[string]string) (*corev1.PodList, error) {
+func (c *Client) GetPodsByNodeAndLabels(nodeName, namespace string, labels map[string]string) (*corev1.PodList, error) {
 	if len(nodeName) == 0 {
 		return nil, fmt.Errorf("node name is required for this API")
 	}

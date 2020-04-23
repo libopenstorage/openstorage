@@ -49,9 +49,6 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(1024 * 1024 * 1024)
-
-	// csi-external-provisioner defaults to ext4
-	defaultFsType = "ext4"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller

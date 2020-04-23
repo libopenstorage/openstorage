@@ -118,7 +118,7 @@ func TestFakeInspect(t *testing.T) {
 	assert.NotNil(t, err)
 	assert.Error(t, err)
 	assert.Equal(t, err, kvdb.ErrNotFound)
-	assert.Nil(t, v)
+	assert.NotNil(t, v)
 }
 
 func TestFakeCapacityUsage(t *testing.T) {
