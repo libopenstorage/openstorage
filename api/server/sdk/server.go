@@ -107,8 +107,6 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
-	// StoragePoolServer is the interface to manage storage pools in the cluster
-	StoragePoolServer api.OpenStoragePoolServer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -378,9 +376,8 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
-		alertHandler:      config.AlertsFilterDeleter,
-		policyServer:      config.StoragePolicy,
-		storagePoolServer: config.StoragePoolServer,
+		alertHandler: config.AlertsFilterDeleter,
+		policyServer: config.StoragePolicy,
 	}
 	s.identityServer = &IdentityServer{
 		server: s,
@@ -423,9 +420,12 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		server: s,
 	}
 
+	s.storagePoolServer = &StoragePoolServer{
+		server: s,
+	}
+
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
-	s.storagePoolServer = config.StoragePoolServer
 	return s, nil
 }
 
