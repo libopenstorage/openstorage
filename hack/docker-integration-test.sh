@@ -91,6 +91,17 @@ sudo docker stop $app_name
 assert_success
 assert_attached false
 
+# Run app based on volume ID
+sudo docker rm $app_name
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_id}:/app nginx:latest
+assert_success
+assert_attached true
+
+# Unmount, remove
+sudo docker stop $app_name
+assert_success
+assert_attached false
+
 # Remove volume
 sudo docker rm $app_name
 assert_success
