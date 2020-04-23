@@ -3145,6 +3145,9 @@ message SdkStorageRebalanceRequest {
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
   uint64 max_duration_minutes = 5;
+  // RunOnce if true will run the rebalance only once using the given schedule. The field only has meaning if
+  // schedule is provided
+  bool run_once = 6;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -3232,7 +3235,6 @@ message StorageRebalanceAudit {
   google.protobuf.Timestamp end_time = 7;
   // WorkSummary summarizes the work done
   repeated StorageRebalanceWorkSummary work_summary = 8;
-
   // StorageRebalanceAction describes type of rebalance action
   enum StorageRebalanceAction {
     // Indicates new replica was added
@@ -3240,6 +3242,9 @@ message StorageRebalanceAudit {
     // Indicates existing replica was removed
     REMOVE_REPLICA = 1;
   }
+
+  // ReplicationSetId is the ID of the replication set
+  string replication_set_id = 9;
 }
 
 message SdkUpdateRebalanceJobRequest {
@@ -4179,7 +4184,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 77;
+    Minor = 78;
     // SDK version patch value of this specification
     Patch = 0;
   }

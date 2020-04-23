@@ -8,6 +8,11 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/parser"
 )
 
+var (
+	// ErrResourceNotInitialized is error string to return when SDK resources are not yet initialized
+	ErrResourceNotInitialized = fmt.Errorf("resource has not been initialized")
+)
+
 // ErrNotFound error type for objects not found
 type ErrNotFound struct {
 	// ID unique object identifier.
