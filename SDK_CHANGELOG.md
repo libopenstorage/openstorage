@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.77.0 - (4/22/2020)
+
+* Add "deleteOnFailure" flag for snapshotGroup api
+
 ### v0.76.0 - (4/7/2020)
 
 * Add implementation specific additional attributes for volume
