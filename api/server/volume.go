@@ -1520,7 +1520,7 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds)
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds, snapReq.DeleteOnFailure)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
