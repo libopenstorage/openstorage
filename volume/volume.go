@@ -112,7 +112,8 @@ type SnapshotDriver interface {
 	//	1. group ID
 	//	2. labels
 	//	3. volumeIDs
-	SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error)
+	//	deleteOnFailure indicates whether to delete the successful snaps if some of the snapshots failed
+	SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string, deleteOnFailure bool) (*api.GroupSnapCreateResponse, error)
 }
 
 // StatsDriver interface provides stats features
