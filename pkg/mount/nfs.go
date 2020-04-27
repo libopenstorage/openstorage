@@ -9,6 +9,7 @@ import (
 
 	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -55,13 +56,17 @@ func (m *nfsMounter) Reload(source string) error {
 	if err != nil {
 		return err
 	}
+	m.LogDevices()
+
 	newNFSmounter, ok := newNFSm.(*nfsMounter)
 	if !ok {
 		return fmt.Errorf("Internal error failed to convert %T",
 			newNFSmounter)
 	}
 
-	return m.reload(source, newNFSmounter.mounts[source])
+	err = m.reload(source, newNFSmounter.mounts[source])
+	m.LogDevices()
+	return err
 }
 
 //serverExists utility function to test if a server is part of driver config
@@ -88,29 +93,34 @@ func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
 
 // Load mount table
 func (m *nfsMounter) Load(source []string) error {
+	logrus.Trace("Entered Load()")
 	info, err := mount.GetMounts()
 	if err != nil {
 		return err
 	}
 	re := regexp.MustCompile(`,addr=(.*)`)
 MountLoop:
-	for _, v := range info {
+	for i, v := range info {
+		logrus.Tracef("Info[%d] = %v", i, *v)
 		host := "localhost"
 		if len(m.servers) != 0 {
 			if !strings.HasPrefix(v.Fstype, "nfs") {
 				continue
 			}
 			matches := re.FindStringSubmatch(v.VfsOpts)
+			logrus.Tracef("RegEx match[%d] = %v", i, matches)
 			if len(matches) != 2 {
 				continue
 			}
 
 			if exists := m.serverExists(matches[1]); !exists {
+				logrus.Tracef("Server does not exists [%d]", i)
 				continue
 			}
 			host = matches[1]
 		}
 		m.normalizeSource(v, host)
+		logrus.Tracef("Normalized info[%d] = %v", i, *v)
 		mount, ok := m.mounts[v.Source]
 		if !ok {
 			mount = &Info{
@@ -120,18 +130,34 @@ MountLoop:
 				Mountpoint: make([]*PathInfo, 0),
 			}
 			m.mounts[v.Source] = mount
+			logrus.Tracef("Could not get mount. Assigned: m.mounts[%s] = %v, %v, %v, %v", v.Source, mount.Device, mount.Fs, mount.Minor, mount.Mountpoint)
 		}
 		// Allow Load to be called multiple times.
 		for _, p := range mount.Mountpoint {
 			if p.Path == v.Mountpoint {
+				logrus.Tracef("Continue to MountLoop %s == %s", p.Path, v.Mountpoint)
 				continue MountLoop
 			}
 		}
+		pi := &PathInfo{
+			Path: normalizeMountPath(v.Mountpoint),
+		}
+		logrus.Tracef("Adding pathInfo to MountPoints: %v", *pi)
 		mount.Mountpoint = append(mount.Mountpoint,
-			&PathInfo{
-				Path: normalizeMountPath(v.Mountpoint),
-			},
+			pi,
 		)
 	}
 	return nil
+}
+
+func (m *nfsMounter) LogDevices() {
+	mnts := make(map[string]string)
+	logrus.Tracef("Logging NFS device mounts")
+	for _, device := range m.mounts {
+		mnts = map[string]string{}
+		for _, mntPoint := range device.Mountpoint {
+			mnts[mntPoint.Root] = mntPoint.Root
+		}
+		logrus.Tracef("Device: %s MountPoints: [%v]", device.Device, mnts)
+	}
 }
