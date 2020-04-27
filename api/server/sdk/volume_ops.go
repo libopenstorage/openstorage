@@ -727,6 +727,12 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.IoStrategy = vol.GetIoStrategy()
 	}
 
+	if req.GetQos() != nil {
+		spec.Qos = req.GetQos()
+	} else {
+		spec.Qos = vol.GetQos()
+	}
+
 	// Cos
 	if req.GetCosOpt() != nil {
 		spec.Cos = req.GetCos()
@@ -1065,6 +1071,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.IoStrategy = req.GetIoStrategy()
+	}
+
+	// Qos
+	if req.GetQos() != nil {
+		if isValidate && vol.GetQos() != req.GetQos() {
+			return vol, errMsg
+		}
+		spec.Qos = req.GetQos()
 	}
 
 	// ExportSpec

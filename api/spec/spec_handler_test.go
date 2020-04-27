@@ -359,3 +359,50 @@ func TestXattr(t *testing.T) {
 	require.Equal(t, api.Xattr_COW_ON_DEMAND, spec.Xattr)
 
 }
+
+func testQos(t *testing.T, qosString string, f func(qos *api.Qos) uint64) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		qosString: "1",
+	})
+	require.NoError(t, err)
+	qos := spec.GetQos()
+	require.NotNil(t, qos)
+	require.Equal(t, f(qos), uint64(1))
+
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		qosString: "blah",
+	})
+	require.Error(t, err)
+}
+
+func TestQos(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecQosWriteGuaranteed: "1",
+		api.SpecQosWriteLimit:      "2",
+		api.SpecQosReadGuaranteed:  "3",
+		api.SpecQosReadLimit:       "4",
+		api.SpecQosWeight:          "5",
+	})
+
+	require.NoError(t, err)
+	qos := spec.GetQos()
+	require.NotNil(t, qos)
+	require.Equal(t, qos.Guaranteed.WriteBytesPerSecond, uint64(1))
+	require.Equal(t, qos.Limit.WriteBytesPerSecond, uint64(2))
+	require.Equal(t, qos.Guaranteed.ReadBytesPerSecond, uint64(3))
+	require.Equal(t, qos.Limit.ReadBytesPerSecond, uint64(4))
+	require.Equal(t, qos.Weight, uint32(5))
+
+	testQos(t, api.SpecQosWriteGuaranteed,
+		func(q *api.Qos) uint64 { return q.Guaranteed.WriteBytesPerSecond })
+	testQos(t, api.SpecQosWriteLimit,
+		func(q *api.Qos) uint64 { return q.Limit.WriteBytesPerSecond })
+	testQos(t, api.SpecQosReadGuaranteed,
+		func(q *api.Qos) uint64 { return q.Guaranteed.ReadBytesPerSecond })
+	testQos(t, api.SpecQosReadLimit,
+		func(q *api.Qos) uint64 { return q.Limit.ReadBytesPerSecond })
+	testQos(t, api.SpecQosWeight,
+		func(q *api.Qos) uint64 { return uint64(q.Weight) })
+}

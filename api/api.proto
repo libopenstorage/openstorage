@@ -188,6 +188,28 @@ enum HardwareType {
   BareMetalMachine = 2;
 }
 
+// IOLimits per device IOLimits.
+message IOLimits {
+  // ReadBytesPerSecond read bytes per second.
+  uint64 read_bytes_per_second = 1;
+  // ReadIOPS read IOPS
+  uint64 read_iops = 2;
+  // WriteBytesPerSecond write bytes per second.
+  uint64 write_bytes_per_second = 3;
+  // WriteIOPS write IOPS
+  uint64 write_iops = 4;
+}
+
+// Qos per device Qos
+message Qos {
+  // Guaranteed IO limits.
+  IOLimits guaranteed = 1; 
+  // Limit throttles performance to these limits.
+  IOLimits limit = 2;
+  // Weight fair share weight in the range of [1..10]
+  uint32 weight = 3;
+}
+
 // StorageResource groups properties of a storage device.
 message StorageResource {
   // Id is the LUN identifier.
@@ -459,6 +481,8 @@ message VolumeSpec {
   bool fp_preference = 35;
   // Xattr specifies implementation specific volume attributes
   Xattr.Value xattr = 36;
+  // Qos for this volume.
+  Qos qos = 37;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -508,6 +532,8 @@ message VolumeSpecUpdate {
   oneof export_spec_opt { ExportSpec export_spec = 29; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 30; }
+  // Qos desired volume Qos.
+  oneof qos_opt { Qos qos = 31; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -577,6 +603,8 @@ message VolumeSpecPolicy {
   IoStrategy io_strategy = 55;
   // ExportSpec preferred volume export options.
   oneof export_spec_opt { ExportSpec export_spec = 56; }
+  // Qos desired volume Qos.
+  oneof qos_opt { Qos qos = 57; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure

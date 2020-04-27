@@ -603,6 +603,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
+	if vol.Spec.Qos == nil || !vol.Spec.Qos.Equals(spec.Qos) {
+		newSpec.QosOpt = &api.VolumeSpecUpdate_Qos{
+			Qos: spec.Qos,
+		}
+	}
+
 	return newSpec
 }
 

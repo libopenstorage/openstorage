@@ -369,6 +369,63 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			// skip, if not it would be added to the labels
 		case api.StoragePolicy:
 			spec.StoragePolicy = v
+		case api.SpecQosReadLimit:
+			if readLimit, err := strconv.ParseUint(v, 10, 64); err == nil {
+				if spec.Qos == nil {
+					spec.Qos = &api.Qos{}
+				}
+				if spec.Qos.Limit == nil {
+					spec.Qos.Limit = &api.IOLimits{}
+				}
+				spec.Qos.Limit.ReadBytesPerSecond = readLimit
+			} else {
+				return nil, nil, nil, err
+			}
+		case api.SpecQosReadGuaranteed:
+			if readGuaranteed, err := strconv.ParseUint(v, 10, 64); err == nil {
+				if spec.Qos == nil {
+					spec.Qos = &api.Qos{}
+				}
+				if spec.Qos.Guaranteed == nil {
+					spec.Qos.Guaranteed = &api.IOLimits{}
+				}
+				spec.Qos.Guaranteed.ReadBytesPerSecond = readGuaranteed
+			} else {
+				return nil, nil, nil, err
+			}
+		case api.SpecQosWriteLimit:
+			if writeLimit, err := strconv.ParseUint(v, 10, 64); err == nil {
+				if spec.Qos == nil {
+					spec.Qos = &api.Qos{}
+				}
+				if spec.Qos.Limit == nil {
+					spec.Qos.Limit = &api.IOLimits{}
+				}
+				spec.Qos.Limit.WriteBytesPerSecond = writeLimit
+			} else {
+				return nil, nil, nil, err
+			}
+		case api.SpecQosWriteGuaranteed:
+			if writeGuaranteed, err := strconv.ParseUint(v, 10, 64); err == nil {
+				if spec.Qos == nil {
+					spec.Qos = &api.Qos{}
+				}
+				if spec.Qos.Guaranteed == nil {
+					spec.Qos.Guaranteed = &api.IOLimits{}
+				}
+				spec.Qos.Guaranteed.WriteBytesPerSecond = writeGuaranteed
+			} else {
+				return nil, nil, nil, err
+			}
+		case api.SpecQosWeight:
+			if qosWeight, err := strconv.ParseUint(v, 10, 32); err == nil {
+				if spec.Qos == nil {
+					spec.Qos = &api.Qos{}
+				}
+				spec.Qos.Weight = uint32(qosWeight)
+			} else {
+				return nil, nil, nil, err
+			}
 		case api.SpecExportProtocol:
 			if spec.ExportSpec == nil {
 				spec.ExportSpec = &api.ExportSpec{}

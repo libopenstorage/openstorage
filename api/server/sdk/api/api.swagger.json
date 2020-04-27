@@ -793,6 +793,32 @@
         "title": "- UnknownMachine: When we do not know the machine type alsp the default\n - VirtualMachine: when we are running on virtual machine\n - BareMetalMachine: when we are running on physical hardware",
         "type": "string"
       },
+      "apiIOLimits": {
+        "description": "IOLimits per device IOLimits.",
+        "properties": {
+          "read_bytes_per_second": {
+            "description": "ReadBytesPerSecond read bytes per second.",
+            "format": "uint64",
+            "type": "string"
+          },
+          "read_iops": {
+            "format": "uint64",
+            "title": "ReadIOPS read IOPS",
+            "type": "string"
+          },
+          "write_bytes_per_second": {
+            "description": "WriteBytesPerSecond write bytes per second.",
+            "format": "uint64",
+            "type": "string"
+          },
+          "write_iops": {
+            "format": "uint64",
+            "title": "WriteIOPS write IOPS",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiIoProfile": {
         "default": "IO_PROFILE_SEQUENTIAL",
         "enum": [
@@ -911,6 +937,23 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "apiQos": {
+        "properties": {
+          "guaranteed": {
+            "$ref": "#/components/schemas/apiIOLimits"
+          },
+          "limit": {
+            "$ref": "#/components/schemas/apiIOLimits"
+          },
+          "weight": {
+            "format": "int64",
+            "title": "Weight fair share weight in the range of [1..10]",
+            "type": "integer"
+          }
+        },
+        "title": "Qos per device Qos",
         "type": "object"
       },
       "apiReplicaPlacementSpec": {
@@ -4117,6 +4160,9 @@
           "placement_strategy": {
             "$ref": "#/components/schemas/apiVolumePlacementStrategy"
           },
+          "qos": {
+            "$ref": "#/components/schemas/apiQos"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
@@ -4223,6 +4269,9 @@
           "passphrase": {
             "type": "string"
           },
+          "qos": {
+            "$ref": "#/components/schemas/apiQos"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
@@ -4319,6 +4368,9 @@
           },
           "passphrase": {
             "type": "string"
+          },
+          "qos": {
+            "$ref": "#/components/schemas/apiQos"
           },
           "queue_depth": {
             "format": "int64",

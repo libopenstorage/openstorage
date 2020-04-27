@@ -60,6 +60,16 @@ const (
 	SpecExportProtocolCustom = "custom"
 	SpecExportOptions        = "export_options"
 	SpecExportOptionsEmpty   = "empty_export_options"
+	// SpecQosReadLimit specify read bw throttle in bytes per second.
+	SpecQosReadLimit = "read_limit"
+	// SpecQosReadGuaranteed specify desired bw in bytes per second.
+	SpecQosReadGuaranteed = "read_guaranteed"
+	// SpecQosWriteLimit specify write bw throttle in bytes per second.
+	SpecQosWriteLimit = "write_limit"
+	// SpecQosReadGuaranteed specify desired bw in bytes per second.
+	SpecQosWriteGuaranteed = "write_guaranteed"
+	// SpecQosWeight relative weight specified as a number between 1..10.
+	SpecQosWeight = "qos_weight"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
@@ -1219,4 +1229,26 @@ type TokenSecretContext struct {
 	SecretNamespace string
 	PvcName         string
 	PvcNamespace    string
+}
+
+// Equals equality function for IOLimits.
+func (ioLimits *IOLimits) Equals(other *IOLimits) bool {
+	return other != nil &&
+		other.GetReadIops() == ioLimits.GetReadIops() &&
+		other.GetReadBytesPerSecond() == ioLimits.GetReadBytesPerSecond() &&
+		other.GetWriteIops() == ioLimits.GetWriteIops() &&
+		other.GetWriteBytesPerSecond() == ioLimits.GetWriteBytesPerSecond()
+}
+
+// equalIOLimits return true if ioL1 and ioL2 are equal.
+func equalIOLimits(ioL1 *IOLimits, ioL2 *IOLimits) bool {
+	return ioL1 == ioL2 || (ioL1 != nil && ioL1.Equals(ioL2))
+}
+
+// Equals equality function for Qos.
+func (qos *Qos) Equals(other *Qos) bool {
+	return other != nil &&
+		equalIOLimits(qos.Guaranteed, other.Guaranteed) &&
+		equalIOLimits(qos.Limit, other.Limit) &&
+		qos.Weight == other.Weight
 }
