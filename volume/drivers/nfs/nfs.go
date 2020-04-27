@@ -687,7 +687,7 @@ func (d *driver) Restore(volumeID string, snapID string) error {
 	return nil
 }
 
-func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
+func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string, deleteOnFailure bool) (*api.GroupSnapCreateResponse, error) {
 
 	return nil, volume.ErrNotSupported
 }
