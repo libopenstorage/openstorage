@@ -56,7 +56,7 @@ func (s *snapshotNotSupported) Restore(volumeID, snapshotID string) error {
 	return ErrNotSupported
 }
 
-func (s *snapshotNotSupported) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string) (*api.GroupSnapCreateResponse, error) {
+func (s *snapshotNotSupported) SnapshotGroup(groupID string, labels map[string]string, volumeIDs []string, deleteOnFailure bool) (*api.GroupSnapCreateResponse, error) {
 	return nil, ErrNotSupported
 }
 
