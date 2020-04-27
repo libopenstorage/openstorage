@@ -1923,10 +1923,10 @@
 			"revisionTime": "2016-03-24T11:22:44Z"
 		},
 		{
-			"checksumSHA1": "ByFN6xh/YGP/D3DM9c8p0D9D1XM=",
+			"checksumSHA1": "eGPdzOLKBHU1+q8NxeDdOsHT7Sk=",
 			"path": "github.com/sirupsen/logrus",
-			"revision": "90150a8ed11b6ce285e77e8af2b0109559ce4777",
-			"revisionTime": "2018-03-15T01:07:03Z"
+			"revision": "91ef3ab5d512bff80650991a0291c9ad8ebe2219",
+			"revisionTime": "2020-04-16T15:24:31Z"
 		},
 		{
 			"checksumSHA1": "hIqjKFj2xCIhm89ccyrIezt5h7g=",
