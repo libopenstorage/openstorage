@@ -5,6 +5,7 @@ package manager
 
 import (
 	"container/list"
+	"context"
 	"encoding/gob"
 	"errors"
 	"fmt"
@@ -14,6 +15,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/libopenstorage/openstorage/pkg/storagepool"
 
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
@@ -75,6 +78,7 @@ type ClusterManager struct {
 	secretsManager       secrets.Secrets
 	systemTokenManager   auth.TokenGenerator
 	clusterDomainManager clusterdomain.ClusterDomainProvider
+	storagePoolProvider  api.OpenStoragePoolServer
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1305,6 +1309,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 	} else {
 		c.clusterDomainManager = config.ConfigClusterDomainProvider
 	}
+
+	if config.ConfigStoragePoolProvider == nil {
+		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
+	} else {
+		c.storagePoolProvider = config.ConfigStoragePoolProvider
+	}
 }
 
 // Start initiates the cluster manager and the cluster state machine
@@ -1998,4 +2008,28 @@ func (c *ClusterManager) Uuid() string {
 		return c.config.ClusterId
 	}
 	return c.config.ClusterUuid
+}
+
+func (c *ClusterManager) Resize(
+	context context.Context, request *api.SdkStoragePoolResizeRequest) (
+	*api.SdkStoragePoolResizeResponse, error) {
+	return c.storagePoolProvider.Resize(context, request)
+}
+
+func (c *ClusterManager) Rebalance(
+	context context.Context, request *api.SdkStorageRebalanceRequest) (
+	*api.SdkStorageRebalanceResponse, error) {
+	return c.storagePoolProvider.Rebalance(context, request)
+}
+
+func (c *ClusterManager) UpdateRebalanceJobState(
+	context context.Context, request *api.SdkUpdateRebalanceJobRequest) (
+	*api.SdkUpdateRebalanceJobResponse, error) {
+	return c.storagePoolProvider.UpdateRebalanceJobState(context, request)
+}
+
+func (c *ClusterManager) GetRebalanceJobStatus(
+	context context.Context, request *api.SdkGetRebalanceJobStatusRequest) (
+	*api.SdkGetRebalanceJobStatusResponse, error) {
+	return c.storagePoolProvider.GetRebalanceJobStatus(context, request)
 }
