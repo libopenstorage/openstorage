@@ -3244,7 +3244,7 @@ message StorageRebalanceAudit {
   }
 
   // ReplicationSetId is the ID of the replication set
-  string replication_set_id = 9;
+  uint64 replication_set_id = 9;
 }
 
 message SdkUpdateRebalanceJobRequest {

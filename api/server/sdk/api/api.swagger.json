@@ -3798,6 +3798,7 @@
             "type": "string"
           },
           "replication_set_id": {
+            "format": "uint64",
             "title": "ReplicationSetId is the ID of the replication set",
             "type": "string"
           },
