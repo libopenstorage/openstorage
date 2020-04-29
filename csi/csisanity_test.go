@@ -24,7 +24,6 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
-	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
@@ -42,7 +41,6 @@ import (
 func TestCSISanity(t *testing.T) {
 	tester := &testServer{}
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 	tester.setPorts()
 
 	clustermanager.Init(config.ClusterConfig{
@@ -77,16 +75,15 @@ func TestCSISanity(t *testing.T) {
 
 	// setup sdk server
 	sdk, err := sdk.New(&sdk.ServerConfig{
-		DriverName:        "fake",
-		Net:               "tcp",
-		Address:           ":" + tester.port,
-		RestPort:          tester.gwport,
-		Cluster:           cm,
-		Socket:            tester.uds,
-		StoragePolicy:     stp,
-		StoragePoolServer: tester.s,
-		AccessOutput:      ioutil.Discard,
-		AuditOutput:       ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":" + tester.port,
+		RestPort:      tester.gwport,
+		Cluster:       cm,
+		Socket:        tester.uds,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 		// Auth disabled for now.
 		// We're only sanity testing Client -> CSI -> SDK (No Auth)
 		/*Security: &sdk.SecurityConfig{
