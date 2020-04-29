@@ -1,14 +1,15 @@
 package cluster
 
 import (
-	time "time"
+	"time"
 
 	"github.com/libopenstorage/gossip/types"
-	api "github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
-	schedpolicy "github.com/libopenstorage/openstorage/schedpolicy"
+	"github.com/libopenstorage/openstorage/pkg/storagepool"
+	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
 
@@ -26,6 +27,7 @@ type NullClusterManager struct {
 	schedpolicy.NullSchedMgr
 	objectstore.NullObjectStoreMgr
 	clusterdomain.NullClusterDomainManager
+	storagepool.UnsupportedPoolProvider
 }
 
 func NewDefaultClusterManager() Cluster {

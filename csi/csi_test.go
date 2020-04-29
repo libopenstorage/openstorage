@@ -28,7 +28,6 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -72,7 +71,6 @@ type testServer struct {
 	server grpcserver.Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
-	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	sdk    *sdk.Server
 	port   string
@@ -149,7 +147,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	if config.Cluster == nil {
 		config.Cluster = tester.c
@@ -180,16 +177,15 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 
 	// setup sdk server
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:        "fake",
-		Net:               "tcp",
-		Address:           ":" + tester.port,
-		RestPort:          tester.gwport,
-		Cluster:           tester.c,
-		Socket:            tester.uds,
-		StoragePolicy:     stp,
-		StoragePoolServer: tester.s,
-		AccessOutput:      ioutil.Discard,
-		AuditOutput:       ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":" + tester.port,
+		RestPort:      tester.gwport,
+		Cluster:       tester.c,
+		Socket:        tester.uds,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{
