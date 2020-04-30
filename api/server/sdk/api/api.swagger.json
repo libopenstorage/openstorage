@@ -3807,6 +3807,9 @@
             "title": "StartTime is the time at which action was started",
             "type": "string"
           },
+          "state": {
+            "$ref": "#/components/schemas/apiStorageRebalanceJobState"
+          },
           "volume_id": {
             "title": "VolumeID is the id of the volume which was rebalanced",
             "type": "string"
@@ -3848,9 +3851,10 @@
         "type": "object"
       },
       "apiStorageRebalanceJobState": {
-        "default": "RUNNING",
-        "description": "- RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled",
+        "default": "PENDING",
+        "description": "- PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled",
         "enum": [
+          "PENDING",
           "RUNNING",
           "DONE",
           "PAUSED",
