@@ -3176,14 +3176,16 @@ message StorageRebalanceJob {
 
 // StorageRebalanceJobState is an enum for state of the current rebalance operation
 enum StorageRebalanceJobState {
+    // Pending indicates job is still pending and has not started work
+  PENDING = 0;
   // Running indicates job is actively running
-  RUNNING = 0;
+  RUNNING = 1;
   // Done indicates job has finished processing
-  DONE = 1;
+  DONE = 2;
   // Paused indicates job is paused
-  PAUSED = 2;
+  PAUSED = 3;
   // Cancelled indicates job is cancelled
-  CANCELLED = 3;
+  CANCELLED = 4;
 }
 // StorageRebalanceSummary describes summary for the job
 message StorageRebalanceSummary  {
@@ -3244,7 +3246,9 @@ message StorageRebalanceAudit {
   }
 
   // ReplicationSetId is the ID of the replication set
-  string replication_set_id = 9;
+  uint64 replication_set_id = 9;
+  // State is the current state of the rebalance action
+  StorageRebalanceJobState state = 10;
 }
 
 message SdkUpdateRebalanceJobRequest {
