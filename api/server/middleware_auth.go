@@ -77,6 +77,13 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 		}
 		token := tokens[1]
 
+		if token == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			json.NewEncoder(w).Encode(&api.ClusterResponse{
+				Error: fmt.Sprintf("Access denied token is empty"),
+			})
+			return
+		}
 		// Determine issuer
 		issuer, err := auth.TokenIssuer(token)
 		if err != nil {
