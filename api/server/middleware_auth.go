@@ -321,6 +321,13 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 }
 
 func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
+	// If a token has been passed, then return here
+	if len(r.Header.Get("Authorization")) > 0 {
+		return nil, false
+	}
+
+	// No token has been passed in the request. Determine
+	// if the request is from Kubernetes
 	userAgent := r.Header.Get("User-Agent")
 	if len(userAgent) > 0 {
 		// Check if the request is coming from a container orchestrator
