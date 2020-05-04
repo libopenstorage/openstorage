@@ -37,11 +37,15 @@ import (
 func GetTlsDialOptions(caCertData []byte) ([]grpc.DialOption, error) {
 	// Read the provided CA cert from the user
 	capool, err := x509.SystemCertPool()
+	if err != nil || capool == nil {
+		logrus.Warnf("cannot load system root certificates: %v", err)
+		capool = x509.NewCertPool()
+	}
 
 	// If user provided CA cert, then append it to systemCertPool.
 	if len(caCertData) != 0 {
-		if !capool.AppendCertsFromPEM([]byte(caCertData)) {
-			return nil, err
+		if !capool.AppendCertsFromPEM(caCertData) {
+			return nil, fmt.Errorf("cannot parse CA certificate")
 		}
 	}
 
