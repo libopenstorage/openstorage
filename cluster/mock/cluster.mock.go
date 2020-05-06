@@ -421,6 +421,21 @@ func (mr *MockClusterMockRecorder) InspectDomain(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectDomain", reflect.TypeOf((*MockCluster)(nil).InspectDomain), arg0)
 }
 
+// ListRebalanceJobs mocks base method.
+func (m *MockCluster) ListRebalanceJobs(arg0 context.Context, arg1 *api.SdkListRebalanceJobsRequest) (*api.SdkListRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRebalanceJobs", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkListRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRebalanceJobs indicates an expected call of ListRebalanceJobs.
+func (mr *MockClusterMockRecorder) ListRebalanceJobs(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRebalanceJobs", reflect.TypeOf((*MockCluster)(nil).ListRebalanceJobs), arg0, arg1)
+}
+
 // NodeRemoveDone mocks base method.
 func (m *MockCluster) NodeRemoveDone(arg0 string, arg1 error) {
 	m.ctrl.T.Helper()

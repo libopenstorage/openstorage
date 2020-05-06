@@ -50,6 +50,21 @@ func (mr *MockOpenStoragePoolServerMockRecorder) GetRebalanceJobStatus(arg0, arg
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceJobStatus", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).GetRebalanceJobStatus), arg0, arg1)
 }
 
+// ListRebalanceJobs mocks base method.
+func (m *MockOpenStoragePoolServer) ListRebalanceJobs(arg0 context.Context, arg1 *api.SdkListRebalanceJobsRequest) (*api.SdkListRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListRebalanceJobs", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkListRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRebalanceJobs indicates an expected call of ListRebalanceJobs.
+func (mr *MockOpenStoragePoolServerMockRecorder) ListRebalanceJobs(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRebalanceJobs", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).ListRebalanceJobs), arg0, arg1)
+}
+
 // Rebalance mocks base method.
 func (m *MockOpenStoragePoolServer) Rebalance(arg0 context.Context, arg1 *api.SdkStorageRebalanceRequest) (*api.SdkStorageRebalanceResponse, error) {
 	m.ctrl.T.Helper()
@@ -136,6 +151,26 @@ func (mr *MockOpenStoragePoolClientMockRecorder) GetRebalanceJobStatus(arg0, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceJobStatus", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).GetRebalanceJobStatus), varargs...)
+}
+
+// ListRebalanceJobs mocks base method.
+func (m *MockOpenStoragePoolClient) ListRebalanceJobs(arg0 context.Context, arg1 *api.SdkListRebalanceJobsRequest, arg2 ...grpc.CallOption) (*api.SdkListRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListRebalanceJobs", varargs...)
+	ret0, _ := ret[0].(*api.SdkListRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListRebalanceJobs indicates an expected call of ListRebalanceJobs.
+func (mr *MockOpenStoragePoolClientMockRecorder) ListRebalanceJobs(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRebalanceJobs", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).ListRebalanceJobs), varargs...)
 }
 
 // Rebalance mocks base method.

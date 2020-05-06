@@ -50,3 +50,11 @@ func (sp *StoragePoolServer) Resize(
 	}
 	return sp.cluster().Resize(c, req)
 }
+
+func (sp *StoragePoolServer) ListRebalanceJobs(
+	c context.Context, req *api.SdkListRebalanceJobsRequest) (*api.SdkListRebalanceJobsResponse, error) {
+	if sp.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+	return sp.cluster().ListRebalanceJobs(c, req)
+}
