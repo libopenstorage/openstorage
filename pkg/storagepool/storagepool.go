@@ -16,6 +16,11 @@ func NewDefaultStoragePoolProvider() api.OpenStoragePoolServer {
 type UnsupportedPoolProvider struct {
 }
 
+func (n *UnsupportedPoolProvider) ListRebalanceJobs(
+	c context.Context, request *api.SdkListRebalanceJobsRequest) (*api.SdkListRebalanceJobsResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
 func (n *UnsupportedPoolProvider) Resize(
 	c context.Context, request *api.SdkStoragePoolResizeRequest) (*api.SdkStoragePoolResizeResponse, error) {
 	return nil, &errors.ErrNotSupported{}
