@@ -360,13 +360,11 @@ func (m *Mounter) reload(device string, newM *Info) error {
 }
 
 func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
-	logrus.Trace("Entered mounter.Load()")
 	info, err := GetMounts()
 	if err != nil {
 		return err
 	}
-	for i, v := range info {
-		logrus.Tracef("Info[%d] = %v", i, *v)
+	for _, v := range info {
 		var (
 			sourcePath, devicePath, targetDevice string
 			foundPrefix, foundTarget             bool
@@ -381,16 +379,13 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 				// as fmp might have returned an incorrect or empty sourcePath
 				sourcePath = devPrefix
 				devicePath = devPrefix
-				logrus.Tracef("Could not find prefix or target device. Assigning sourcePath/devicePath to %v", devPrefix)
 			}
 
 			if foundPrefix || foundTarget {
-				logrus.Tracef("Found prefix: %v, found target: %v", foundPrefix, foundTarget)
 				break
 			}
 		}
 		if !foundPrefix && !foundTarget {
-			logrus.Trace("Did not find prefix or target")
 			continue
 		}
 
@@ -404,27 +399,23 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 					Mountpoint: make([]*PathInfo, 0),
 				}
 				m.mounts[mountSourcePath] = mount
-				logrus.Tracef("Mounts table did not contain %s. Assigning mount: %v, %v, %v", mountSourcePath, mount.Device, mount.Fs, mount.Minor)
 			}
 			// Allow Load to be called multiple times.
 			for _, p := range mount.Mountpoint {
-				logrus.Tracef("Mounts table did not contain %s. Assigning mount: %v, %v, %v", mountSourcePath, mount.Device, mount.Fs, mount.Minor)
-
 				if p.Path == v.Mountpoint {
-					logrus.Tracef("Path equals mount, no need to update mountpoint")
 					// No need of updating Mountpoint
 					return
 				}
 			}
-			pi := &PathInfo{
-				Root: normalizeMountPath(v.Root),
-				Path: normalizeMountPath(v.Mountpoint),
-			}
-			mount.Mountpoint = append(mount.Mountpoint, pi)
-			logrus.Tracef("Appended mount to table: Root: %v, Path: %v", pi.Root, pi.Path)
+			mount.Mountpoint = append(
+				mount.Mountpoint,
+				&PathInfo{
+					Root: normalizeMountPath(v.Root),
+					Path: normalizeMountPath(v.Mountpoint),
+				},
+			)
 			if updatePaths {
 				m.paths[v.Mountpoint] = mountSourcePath
-				logrus.Tracef("Updating paths[%v] = %s", v.Mountpoint, mountSourcePath)
 			}
 		}
 		// Only update the paths map with the device with which load was called.
@@ -432,7 +423,6 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 
 		// Add a mountpoint entry for the target device as well.
 		if targetDevice == "" {
-			logrus.Tracef("Target device empty, skip mount table entry add for target device")
 			continue
 		}
 		addMountTableEntry(targetDevice, targetDevice, false /*updatePaths*/)
