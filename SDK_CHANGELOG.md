@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.9 - (4/28/2020)
+
+* Add SDK APIs for storage rebalance
+
 ### v0.69.8 - (4/22/2020)
 
 * Add "deleteOnFailure" flag for snapshotGroup api
