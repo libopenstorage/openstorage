@@ -35,6 +35,21 @@ func (m *MockOpenStoragePoolServer) EXPECT() *MockOpenStoragePoolServerMockRecor
 	return m.recorder
 }
 
+// EnumerateRebalanceJobs mocks base method.
+func (m *MockOpenStoragePoolServer) EnumerateRebalanceJobs(arg0 context.Context, arg1 *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateRebalanceJobs", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateRebalanceJobs indicates an expected call of EnumerateRebalanceJobs.
+func (mr *MockOpenStoragePoolServerMockRecorder) EnumerateRebalanceJobs(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateRebalanceJobs", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).EnumerateRebalanceJobs), arg0, arg1)
+}
+
 // GetRebalanceJobStatus mocks base method.
 func (m *MockOpenStoragePoolServer) GetRebalanceJobStatus(arg0 context.Context, arg1 *api.SdkGetRebalanceJobStatusRequest) (*api.SdkGetRebalanceJobStatusResponse, error) {
 	m.ctrl.T.Helper()
@@ -116,6 +131,26 @@ func NewMockOpenStoragePoolClient(ctrl *gomock.Controller) *MockOpenStoragePoolC
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStoragePoolClient) EXPECT() *MockOpenStoragePoolClientMockRecorder {
 	return m.recorder
+}
+
+// EnumerateRebalanceJobs mocks base method.
+func (m *MockOpenStoragePoolClient) EnumerateRebalanceJobs(arg0 context.Context, arg1 *api.SdkEnumerateRebalanceJobsRequest, arg2 ...grpc.CallOption) (*api.SdkEnumerateRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "EnumerateRebalanceJobs", varargs...)
+	ret0, _ := ret[0].(*api.SdkEnumerateRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateRebalanceJobs indicates an expected call of EnumerateRebalanceJobs.
+func (mr *MockOpenStoragePoolClientMockRecorder) EnumerateRebalanceJobs(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateRebalanceJobs", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).EnumerateRebalanceJobs), varargs...)
 }
 
 // GetRebalanceJobStatus mocks base method.

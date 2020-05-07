@@ -1606,6 +1606,13 @@ service OpenStoragePool {
       };
   }
 
+  // EnumerateRebalanceJobs returns all rebalance jobs currently known to the system
+  rpc EnumerateRebalanceJobs(SdkEnumerateRebalanceJobsRequest)
+  returns (SdkEnumerateRebalanceJobsResponse) {
+    option(google.api.http) = {
+        get: "/v1/storagepools/rebalance/job"
+      };
+  }
 }
 
 
@@ -3270,6 +3277,15 @@ message SdkGetRebalanceJobStatusResponse {
   StorageRebalanceSummary summary = 2;
   // Actions describe all the actions taken during this rebalance
   repeated StorageRebalanceAudit actions = 3;
+}
+
+
+message SdkEnumerateRebalanceJobsRequest  {
+}
+
+message SdkEnumerateRebalanceJobsResponse {
+  // Jobs is the list of rebalance jobs in the response
+  repeated StorageRebalanceJob jobs = 1;
 }
 
 message SdkStoragePool {
