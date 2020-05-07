@@ -2208,6 +2208,18 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkEnumerateRebalanceJobsResponse": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/apiStorageRebalanceJob"
+            },
+            "title": "Jobs is the list of rebalance jobs in the response",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
         "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
         "properties": {
@@ -2423,18 +2435,6 @@
           }
         },
         "title": "Defines a response containing version information",
-        "type": "object"
-      },
-      "apiSdkListRebalanceJobsResponse": {
-        "properties": {
-          "jobs": {
-            "items": {
-              "$ref": "#/components/schemas/apiStorageRebalanceJob"
-            },
-            "title": "Jobs is the list of rebalance jobs in the response",
-            "type": "array"
-          }
-        },
         "type": "object"
       },
       "apiSdkNodeEnumerateResponse": {
@@ -6848,20 +6848,20 @@
     },
     "/v1/storagepools/rebalance/job": {
       "get": {
-        "operationId": "ListRebalanceJobs",
+        "operationId": "EnumerateRebalanceJobs",
         "responses": {
           "200": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkListRebalanceJobsResponse"
+                  "$ref": "#/components/schemas/apiSdkEnumerateRebalanceJobsResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "ListRebalanceJobs returns all rebalance jobs currently known to the system",
+        "summary": "EnumerateRebalanceJobs returns all rebalance jobs currently known to the system",
         "tags": [
           "OpenStoragePool"
         ]

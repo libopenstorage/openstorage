@@ -243,6 +243,21 @@ func (mr *MockClusterMockRecorder) EnumeratePairs() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumeratePairs", reflect.TypeOf((*MockCluster)(nil).EnumeratePairs))
 }
 
+// EnumerateRebalanceJobs mocks base method.
+func (m *MockCluster) EnumerateRebalanceJobs(arg0 context.Context, arg1 *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateRebalanceJobs", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateRebalanceJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateRebalanceJobs indicates an expected call of EnumerateRebalanceJobs.
+func (mr *MockClusterMockRecorder) EnumerateRebalanceJobs(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateRebalanceJobs", reflect.TypeOf((*MockCluster)(nil).EnumerateRebalanceJobs), arg0, arg1)
+}
+
 // EraseAlert mocks base method.
 func (m *MockCluster) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -419,21 +434,6 @@ func (m *MockCluster) InspectDomain(arg0 string) (*clusterdomain.ClusterDomainIn
 func (mr *MockClusterMockRecorder) InspectDomain(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectDomain", reflect.TypeOf((*MockCluster)(nil).InspectDomain), arg0)
-}
-
-// ListRebalanceJobs mocks base method.
-func (m *MockCluster) ListRebalanceJobs(arg0 context.Context, arg1 *api.SdkListRebalanceJobsRequest) (*api.SdkListRebalanceJobsResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListRebalanceJobs", arg0, arg1)
-	ret0, _ := ret[0].(*api.SdkListRebalanceJobsResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListRebalanceJobs indicates an expected call of ListRebalanceJobs.
-func (mr *MockClusterMockRecorder) ListRebalanceJobs(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListRebalanceJobs", reflect.TypeOf((*MockCluster)(nil).ListRebalanceJobs), arg0, arg1)
 }
 
 // NodeRemoveDone mocks base method.
