@@ -2208,6 +2208,18 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkEnumerateRebalanceJobsResponse": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/apiStorageRebalanceJob"
+            },
+            "title": "Jobs is the list of rebalance jobs in the response",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
         "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
         "properties": {
@@ -6829,6 +6841,27 @@
           }
         },
         "summary": "Rebalance creates a new rebalance task",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/storagepools/rebalance/job": {
+      "get": {
+        "operationId": "EnumerateRebalanceJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkEnumerateRebalanceJobsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateRebalanceJobs returns all rebalance jobs currently known to the system",
         "tags": [
           "OpenStoragePool"
         ]
