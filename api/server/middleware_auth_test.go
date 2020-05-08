@@ -47,31 +47,44 @@ func (n *noTokenGenerator) GetAuthenticator() (auth.Authenticator, error) {
 
 func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 	table := []struct {
-		description    string
-		isAuthEnabled  bool
-		authenticators map[string]auth.Authenticator
+		description     string
+		isAuthEnabled   bool
+		authenticators  map[string]auth.Authenticator
+		expectDecorated bool
 	}{
 		{
-			description:   "auth enabled authenticator not null",
-			isAuthEnabled: true,
+			expectDecorated: true,
+			description:     "auth enabled authenticator not null",
+			isAuthEnabled:   true,
 			authenticators: map[string]auth.Authenticator{
 				"no-authenticators": &mockAuthenticator{},
 			},
-		}, {
-			description:    "auth enabled authenticator is null",
-			isAuthEnabled:  true,
-			authenticators: nil,
 		},
 		{
-			description:   "auth not enabled authenticator is not null",
-			isAuthEnabled: false,
+			expectDecorated: false,
+			description:     "auth enabled authenticator is null",
+			isAuthEnabled:   true,
+			authenticators:  nil,
+		},
+		{
+			expectDecorated: true,
+			description:     "auth not enabled authenticator is not null",
+			isAuthEnabled:   false,
 			authenticators: map[string]auth.Authenticator{
 				"no-authenticators": &mockAuthenticator{},
 			},
-		}, {
-			description:    "auth is not enabled authenticator is null",
-			authenticators: nil,
-			isAuthEnabled:  false,
+		},
+		{
+			expectDecorated: false,
+			description:     "auth is not enabled authenticator is null",
+			authenticators:  nil,
+			isAuthEnabled:   false,
+		},
+		{
+			expectDecorated: false,
+			description:     "auth enabled authenticator is empty",
+			isAuthEnabled:   true,
+			authenticators:  map[string]auth.Authenticator{},
 		},
 	}
 
@@ -80,7 +93,6 @@ func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 	handlerFunc = func(w http.ResponseWriter, r *http.Request) {}
 
 	for _, testCase := range table {
-		t.Log(testCase.description)
 
 		var (
 			stm auth.TokenGenerator
@@ -106,12 +118,14 @@ func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 
 		decorator := newSecurityMiddleware(testCase.authenticators)
 
-		if testCase.isAuthEnabled && testCase.authenticators != nil {
+		if testCase.expectDecorated {
 			if reflect.ValueOf(decorator(handlerFunc)) == reflect.ValueOf(handlerFunc) {
+				t.Log(testCase.description)
 				t.Errorf("func must be decorated")
 			}
 		} else {
 			if reflect.ValueOf(decorator(handlerFunc)) != reflect.ValueOf(handlerFunc) {
+				t.Log(testCase.description)
 				t.Errorf("func must not be decorated")
 			}
 		}
