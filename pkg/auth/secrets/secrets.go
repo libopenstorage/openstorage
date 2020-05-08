@@ -2,6 +2,7 @@ package secrets
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/libopenstorage/openstorage/api"
 	lsecrets "github.com/libopenstorage/secrets"
@@ -44,6 +45,10 @@ func GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
 	var outputSecretKey string
 	secretName := tokenSecretContext.SecretName
 	secretsInst := lsecrets.Instance()
+
+	if secretsInst == nil {
+		return "", fmt.Errorf("Unable to get token from secret since it is not initialized")
+	}
 
 	// Handle edge cases for different providers.
 	switch secretsInst.String() {
