@@ -45,7 +45,7 @@ type authMiddleware struct {
 
 // newSecurityMiddleware based on auth configuration returns SecurityHandler or just
 func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(next http.HandlerFunc) http.HandlerFunc {
-	if auth.Enabled() {
+	if len(authenticators) > 0 {
 		return func(next http.HandlerFunc) http.HandlerFunc {
 			return SecurityHandler(authenticators, next)
 		}
@@ -59,7 +59,7 @@ func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(ne
 // SecurityHandler implements Authentication and Authorization check at the same time
 // this functionality where not moved to separate functions because of simplicity
 func SecurityHandler(authenticators map[string]auth.Authenticator, next http.HandlerFunc) http.HandlerFunc {
-	if authenticators == nil {
+	if len(authenticators) == 0 {
 		return next
 	}
 
