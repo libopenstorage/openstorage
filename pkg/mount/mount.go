@@ -501,7 +501,7 @@ func (m *Mounter) Mount(
 	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
-			logrus.Warnf("%q mountpoint for device %q already exists",
+			logrus.Infof("%q mountpoint for device %q already exists",
 				device, path)
 			return nil
 		}
