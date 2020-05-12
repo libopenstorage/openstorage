@@ -3915,6 +3915,9 @@
           "sticky": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/XattrValue"
           }
         },
         "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",

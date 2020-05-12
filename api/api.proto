@@ -448,6 +448,8 @@ message VolumeSpecUpdate {
   IoStrategy io_strategy = 28;
   // ExportSpec volume export spec
   oneof export_spec_opt { ExportSpec export_spec = 29; }
+  // Xattr specifies implementation specific volume attributes
+  oneof xattr_opt { Xattr.Value xattr = 30; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
