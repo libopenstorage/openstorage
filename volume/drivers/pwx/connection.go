@@ -31,11 +31,22 @@ type ConnectionParamsBuilderConfig struct {
 	DefaultSDKPortName string
 
 	// Environment variables names to get  values config properties
-	EnableTLSEnv       string
-	NamespaceNameEnv   string
-	ServiceNameEnv     string
+	EnableTLSEnv string
+	// NamespaceNameEnv is used to set environment variable name which should be read to fetch Porx namespace
+	NamespaceNameEnv string
+	// ServiceNameEnv is used to set environment variable name which should be read to fetch Porx service
+	ServiceNameEnv string
+	// ServiceNameEnv is used to set environment variable name which should be read to fetch secret
+	// containing certificate used for protecting Porx APIs
 	CaCertSecretEnv    string
 	CaCertSecretKeyEnv string
+
+	// StaticEndpointEnv can be used to overwrite Porx endpoint
+	StaticEndpointEnv string
+	// StaticSDKPortEnv can be used to overwrite Porx SDK port
+	StaticSDKPortEnv string
+	// StaticRestPortEnv can be used to overwrite Porx Legacy Rest API port
+	StaticRestPortEnv string
 }
 
 // NewConnectionParamsBuilderDefaultConfig returns ConnectionParamsBuilderConfig with default values set
@@ -50,6 +61,9 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		ServiceNameEnv:              "PX_SERVICE_NAME",
 		CaCertSecretEnv:             "PX_CA_CERT_SECRET",
 		CaCertSecretKeyEnv:          "PX_CA_CERT_SECRET_KEY",
+		StaticEndpointEnv:           "PX_ENDPOINT",
+		StaticSDKPortEnv:            "PX_API_PORT",
+		StaticRestPortEnv:           "PX_SDK_PORT",
 	}
 }
 
@@ -66,8 +80,19 @@ func NewConnectionParamsBuilder(ops core.Ops, params *ConnectionParamsBuilderCon
 }
 
 // BuildClientsEndpoints returns two endpoints for PX MGMT API and gRPC SDK/iSDL API
-func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (pxMgmtEndpoint string, sdkEndpoint string, err error) {
+func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, error) {
 	var endpoint string
+
+	pxMgmtEndpoint, sdkEndpoint, err := cpb.checkStaticEndpoints()
+	if err != nil && !os.IsNotExist(err) {
+		return "", "", err
+	}
+	if err == nil {
+		logrus.Infof("Using static %s endpoint for portworx REST API", pxMgmtEndpoint)
+		logrus.Infof("Using static %s endpoint for portworx gRPC API", sdkEndpoint)
+
+		return pxMgmtEndpoint, sdkEndpoint, nil
+	}
 
 	// Check if service name and namespace is provided
 	// as environment variables
@@ -78,11 +103,8 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (pxMgmtEndpoint stri
 	if err != nil {
 		return "", "", fmt.Errorf("failed to get k8s service specification: %v", err)
 	}
-	if len(svc.Spec.ClusterIP) == 0 {
-		return "", "", fmt.Errorf("failed to get endpoint for portworx volume driver, service ClusterIP is not found")
-	}
 
-	endpoint = svc.Spec.ClusterIP
+	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
 
 	var restPort int
 	var sdkPort int
@@ -106,11 +128,11 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (pxMgmtEndpoint stri
 	}
 
 	// PX mgmt API was decided not to be protected with TLS
-	pxMgmtEndpoint = fmt.Sprintf("http://%v:%v", endpoint, restPort)
+	pxMgmtEndpoint = fmt.Sprintf("http://%s:%d", endpoint, restPort)
 	sdkEndpoint = fmt.Sprintf("%s:%d", endpoint, sdkPort)
 
-	logrus.Infof("Using %s as endpoint for portworx REST endpoint", pxMgmtEndpoint)
-	logrus.Infof("Using %s as endpoint for portworx gRPC endpoint", sdkEndpoint)
+	logrus.Infof("Using %s as endpoint for portworx REST API", pxMgmtEndpoint)
+	logrus.Infof("Using %s as endpoint for portworx gRPC API", sdkEndpoint)
 
 	return pxMgmtEndpoint, sdkEndpoint, nil
 }
@@ -152,6 +174,38 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 	}
 
 	return dialOptions, nil
+}
+
+func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, error) {
+	if cpb.Config.StaticEndpointEnv == "" || cpb.Config.StaticRestPortEnv == "" || cpb.Config.StaticSDKPortEnv == "" {
+		return "", "", os.ErrNotExist
+	}
+
+	endpoint, staticRESTPort, staticSDKPort := os.Getenv(cpb.Config.StaticEndpointEnv), os.Getenv(cpb.Config.StaticRestPortEnv), os.Getenv(cpb.Config.StaticSDKPortEnv)
+	if endpoint == "" || staticRESTPort == "" || staticSDKPort == "" {
+		return "", "", os.ErrNotExist
+	}
+
+	restPort, err := strconv.Atoi(staticRESTPort)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot parse static REST port value, err: %s", err.Error())
+	}
+	sdkPort, err := strconv.Atoi(staticSDKPort)
+	if err != nil {
+		return "", "", fmt.Errorf("cannot parse static SDK port value, err: %s", err.Error())
+	}
+
+	if sdkPort < 1 {
+		return "", "", fmt.Errorf("static SDK port value sould be greater than 0")
+	}
+
+	if restPort < 1 {
+		return "", "", fmt.Errorf("static REST port value sould be greater than 0")
+	}
+
+	pxMgmtEndpoint, sdkEndpoint := fmt.Sprintf("http://%s:%d", endpoint, restPort), fmt.Sprintf("%s:%d", endpoint, sdkPort)
+
+	return pxMgmtEndpoint, sdkEndpoint, nil
 }
 
 func isTLSEnabled(pxEnableTLSEnv string) bool {
