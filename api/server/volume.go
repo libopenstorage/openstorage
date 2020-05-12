@@ -564,6 +564,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			ExportSpec: spec.ExportSpec,
 		}
 	}
+
+	newSpec.XattrOpt = &api.VolumeSpecUpdate_Xattr{
+		Xattr: spec.Xattr,
+	}
+
 	return newSpec
 }
 
