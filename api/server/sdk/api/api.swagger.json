@@ -2930,15 +2930,6 @@
             "title": "PoolSelectorLabels allows selecting pools to which trigger thresholds will apply",
             "type": "object"
           },
-          "run_once": {
-            "format": "boolean",
-            "title": "RunOnce if true will run the rebalance only once using the given schedule. The field only has meaning if\nschedule is provided",
-            "type": "boolean"
-          },
-          "schedule": {
-            "title": "Schedule defines when to run rebalance operation. Empty value indicates run now",
-            "type": "string"
-          },
           "trial_run": {
             "format": "boolean",
             "title": "TrialRun if true the job only produces steps that would be taken without making any changes",
