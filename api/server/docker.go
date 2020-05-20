@@ -429,11 +429,23 @@ func (d *driver) remove(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&volumeResponse{})
 }
 
+func (d *driver) updateSpecForScaleCreate(outSpec, inSpec *api.VolumeSpec) {
+	// Copy over the labels from the input spec
+	// to the output spec which will be used for volume creation
+	for k, v := range inSpec.VolumeLabels {
+		outSpec.VolumeLabels[k] = v
+	}
+	// The storage driver is expected to not store the passphrase in the Spec
+	// Get the passphrase recevied in the request / input spec
+	outSpec.Passphrase = inSpec.Passphrase
+}
+
 func (d *driver) scaleUp(
 	ctx context.Context,
 	conn *grpc.ClientConn,
 	method string,
 	vd volume.VolumeDriver,
+	inSpec *api.VolumeSpec,
 	inVol *api.Volume,
 	allVols []*api.Volume,
 	attachOptions map[string]string,
@@ -448,6 +460,7 @@ func (d *driver) scaleUp(
 	// Create new volume if existing volumes are not available.
 	spec := inVol.Spec.Copy()
 	spec.Scale = 1
+	d.updateSpecForScaleCreate(spec, inSpec)
 	spec.ReplicaSet = nil
 	volCount := len(allVols)
 	for i := len(allVols); volCount < int(inVol.Spec.Scale); i++ {
@@ -482,6 +495,7 @@ func (d *driver) attachScale(
 	conn *grpc.ClientConn,
 	method string,
 	vd volume.VolumeDriver,
+	inSpec *api.VolumeSpec,
 	inVol *api.Volume,
 	attachOptions map[string]string,
 ) (
@@ -537,12 +551,13 @@ func (d *driver) attachScale(
 		spec := inVol.Spec.Copy()
 		spec.ReplicaSet = &api.ReplicaSet{Nodes: []string{volume.LocalNode}}
 		spec.Scale = 1
+		d.updateSpecForScaleCreate(spec, inSpec)
 		resp, err := volumeclient.Create(ctx, &api.SdkVolumeCreateRequest{
 			Name: name,
 			Spec: spec,
 		})
 		if err != nil {
-			return d.scaleUp(ctx, conn, method, vd, inVol, allVols, attachOptions)
+			return d.scaleUp(ctx, conn, method, vd, inSpec, inVol, allVols, attachOptions)
 		}
 		id := resp.GetVolumeId()
 		outVol, err := d.volFromName(id)
@@ -559,7 +574,7 @@ func (d *driver) attachScale(
 		// We failed to attach, scaleUp.
 		allVols = append(allVols, outVol)
 	}
-	return d.scaleUp(ctx, conn, method, vd, inVol, allVols, attachOptions)
+	return d.scaleUp(ctx, conn, method, vd, inSpec, inVol, allVols, attachOptions)
 }
 
 func (d *driver) attachVol(
@@ -700,7 +715,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 		// If volume is scaled up, a new volume is created and
 		// vol will change.
 		if vol.Scaled() {
-			vol, err = d.attachScale(ctx, conn, method, v, vol, attachOptions)
+			vol, err = d.attachScale(ctx, conn, method, v, spec, vol, attachOptions)
 		} else {
 			vol, err = d.attachVol(ctx, conn, method, v, vol, attachOptions)
 		}
