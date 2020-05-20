@@ -45,7 +45,7 @@ type authMiddleware struct {
 
 // newSecurityMiddleware based on auth configuration returns SecurityHandler or just
 func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(next http.HandlerFunc) http.HandlerFunc {
-	if auth.Enabled() {
+	if len(authenticators) > 0 {
 		return func(next http.HandlerFunc) http.HandlerFunc {
 			return SecurityHandler(authenticators, next)
 		}
@@ -59,20 +59,17 @@ func newSecurityMiddleware(authenticators map[string]auth.Authenticator) func(ne
 // SecurityHandler implements Authentication and Authorization check at the same time
 // this functionality where not moved to separate functions because of simplicity
 func SecurityHandler(authenticators map[string]auth.Authenticator, next http.HandlerFunc) http.HandlerFunc {
-	if authenticators == nil {
+	if len(authenticators) == 0 {
 		return next
 	}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		tokenHeader := r.Header.Get("Authorization")
 		tokens := strings.Split(tokenHeader, " ")
 
 		if len(tokens) < 2 {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(&api.ClusterResponse{
-				Error: fmt.Sprintf("Access denied, token is malformed"),
-			})
+			fmt.Fprintf(w, "Access denied token is empty")
 			return
 		}
 		token := tokens[1]
@@ -81,9 +78,7 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 		issuer, err := auth.TokenIssuer(token)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(&api.ClusterResponse{
-				Error: fmt.Sprintf("Access denied, %v", err),
-			})
+			fmt.Fprintf(w, "Access denied, %v", err)
 			return
 		}
 
@@ -97,22 +92,17 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 
 			if err != nil {
 				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(&api.ClusterResponse{
-					Error: fmt.Sprintf("Access denied, %s", err.Error()),
-				})
+				fmt.Fprintf(w, "Access denied, %v", err)
 				return
 			}
 			if claims == nil {
 				w.WriteHeader(http.StatusForbidden)
-				json.NewEncoder(w).Encode(&api.ClusterResponse{
-					Error: fmt.Sprintf("Access denied, wrong claims provided"),
-				})
+				fmt.Fprintf(w, "Access denied, wrong claims provided")
+				return
 			}
 		} else {
 			w.WriteHeader(http.StatusUnauthorized)
-			json.NewEncoder(w).Encode(&api.ClusterResponse{
-				Error: fmt.Sprintf("Access denied, no authenticator for issuer %s", issuer),
-			})
+			fmt.Fprintf(w, "Access denied, no authenticator for issuer %s", issuer)
 			return
 		}
 		// Check if user has admin role to access that endpoint
@@ -127,9 +117,7 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 
 		if !isSystemAdmin {
 			w.WriteHeader(http.StatusForbidden)
-			json.NewEncoder(w).Encode(&api.ClusterResponse{
-				Error: fmt.Sprintf("Access denied, user must have admin access"),
-			})
+			fmt.Fprintf(w, "Access denied, user must have admin access")
 			return
 		}
 

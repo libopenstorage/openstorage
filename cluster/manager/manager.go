@@ -2033,3 +2033,8 @@ func (c *ClusterManager) GetRebalanceJobStatus(
 	*api.SdkGetRebalanceJobStatusResponse, error) {
 	return c.storagePoolProvider.GetRebalanceJobStatus(context, request)
 }
+
+func (c *ClusterManager) EnumerateRebalanceJobs(
+	context context.Context, request *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
+	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
+}
