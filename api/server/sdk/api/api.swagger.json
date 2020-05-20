@@ -2208,6 +2208,18 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkEnumerateRebalanceJobsResponse": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/apiStorageRebalanceJob"
+            },
+            "title": "Jobs is the list of rebalance jobs in the response",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
         "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
         "properties": {
@@ -2919,15 +2931,6 @@
             },
             "title": "PoolSelectorLabels allows selecting pools to which trigger thresholds will apply",
             "type": "object"
-          },
-          "run_once": {
-            "format": "boolean",
-            "title": "RunOnce if true will run the rebalance only once using the given schedule. The field only has meaning if\nschedule is provided",
-            "type": "boolean"
-          },
-          "schedule": {
-            "title": "Schedule defines when to run rebalance operation. Empty value indicates run now",
-            "type": "string"
           },
           "trial_run": {
             "format": "boolean",
@@ -6829,6 +6832,27 @@
           }
         },
         "summary": "Rebalance creates a new rebalance task",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/storagepools/rebalance/job": {
+      "get": {
+        "operationId": "EnumerateRebalanceJobs",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkEnumerateRebalanceJobsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateRebalanceJobs returns all rebalance jobs currently known to the system",
         "tags": [
           "OpenStoragePool"
         ]
