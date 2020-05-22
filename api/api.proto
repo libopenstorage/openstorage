@@ -508,6 +508,8 @@ message VolumeSpecUpdate {
   oneof export_spec_opt { ExportSpec export_spec = 29; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 30; }
+  // Xattr specifies implementation specific volume attributes
+  oneof xattr_opt { Xattr.Value xattr = 31; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy

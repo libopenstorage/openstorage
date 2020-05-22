@@ -603,6 +603,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
+	if spec.Xattr != vol.Spec.Xattr {
+		newSpec.XattrOpt = &api.VolumeSpecUpdate_Xattr{
+			Xattr: spec.Xattr,
+		}
+	}
+
 	return newSpec
 }
 
