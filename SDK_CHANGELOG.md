@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.79.0 - (5/22/2020)
+
+* Add new volume xattr for direct-IO
+* Add support for xattr update
+
 ### v0.78.0 - (4/28/2020)
 
 * Add SDK APIs for storage rebalance
