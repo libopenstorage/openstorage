@@ -309,6 +309,8 @@ message Xattr {
 		UNSPECIFIED = 0;
 		// Enable on-demand copy-on-write on the volume
 		COW_ON_DEMAND = 1;
+		// Enable Direct IO on the volume
+		DIRECT_IO = 2;
 	}
 }
 

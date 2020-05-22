@@ -358,4 +358,10 @@ func TestXattr(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecCowOnDemand, "true")
 	require.Equal(t, api.Xattr_COW_ON_DEMAND, spec.Xattr)
 
+	spec = testSpecFromString(t, api.SpecDirectIo, "false")
+	require.Equal(t, api.Xattr_UNSPECIFIED, spec.Xattr)
+
+	spec = testSpecFromString(t, api.SpecDirectIo, "true")
+	require.Equal(t, api.Xattr_DIRECT_IO, spec.Xattr)
+
 }

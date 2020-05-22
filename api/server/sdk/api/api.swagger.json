@@ -239,9 +239,10 @@
         "default": "UNSPECIFIED",
         "enum": [
           "UNSPECIFIED",
-          "COW_ON_DEMAND"
+          "COW_ON_DEMAND",
+          "DIRECT_IO"
         ],
-        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume",
+        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume\n - DIRECT_IO: Enable Direct IO on the volume",
         "type": "string"
       },
       "apiAlert": {
