@@ -33,7 +33,6 @@ func NewCustomMounter(
 			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
 			kl:          keylock.New(),
-			traceCache:  []string{},
 		},
 	}
 	cl, cr := customMounter()

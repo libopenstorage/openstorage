@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"time"
 
 	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
@@ -37,7 +38,6 @@ func NewNFSMounter(servers []string,
 			paths:       make(PathMap),
 			allowedDirs: allowedDirs,
 			kl:          keylock.New(),
-			traceCache:  []string{},
 		},
 	}
 	err := m.Load([]string{""})
@@ -94,7 +94,7 @@ func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
 
 // Load mount table
 func (m *nfsMounter) Load(source []string) error {
-	m.traceCache = append(m.traceCache, "Entered nfsMounter.Load()")
+	traceCache = append(traceCache, fmt.Sprintf("Entered nfsMounter.Load(): %s", time.Now().String()))
 	info, err := mount.GetMounts()
 	if err != nil {
 		return err
@@ -102,26 +102,26 @@ func (m *nfsMounter) Load(source []string) error {
 	re := regexp.MustCompile(`,addr=(.*)`)
 MountLoop:
 	for i, v := range info {
-		m.traceCache = append(m.traceCache, fmt.Sprintf("Info[%d] = %v", i, *v))
+		traceCache = append(traceCache, fmt.Sprintf("Info[%d] = %v. %s", i, *v, time.Now().String()))
 		host := "localhost"
 		if len(m.servers) != 0 {
 			if !strings.HasPrefix(v.Fstype, "nfs") {
 				continue
 			}
 			matches := re.FindStringSubmatch(v.VfsOpts)
-			m.traceCache = append(m.traceCache, fmt.Sprintf("RegEx match[%d] = %v", i, matches))
+			traceCache = append(traceCache, fmt.Sprintf("RegEx match[%d] = %v. %s", i, matches, time.Now().String()))
 			if len(matches) != 2 {
 				continue
 			}
 
 			if exists := m.serverExists(matches[1]); !exists {
-				m.traceCache = append(m.traceCache, fmt.Sprintf("Server does not exists [%d]", i))
+				traceCache = append(traceCache, fmt.Sprintf("Server does not exists [%d]. %s", i, time.Now().String()))
 				continue
 			}
 			host = matches[1]
 		}
 		m.normalizeSource(v, host)
-		m.traceCache = append(m.traceCache, fmt.Sprintf("Normalized info[%d] = %v", i, *v))
+		traceCache = append(traceCache, fmt.Sprintf("Normalized info[%d] = %v. %s", i, *v, time.Now().String()))
 		mount, ok := m.mounts[v.Source]
 		if !ok {
 			mount = &Info{
@@ -131,19 +131,19 @@ MountLoop:
 				Mountpoint: make([]*PathInfo, 0),
 			}
 			m.mounts[v.Source] = mount
-			m.traceCache = append(m.traceCache, fmt.Sprintf("Could not get mount. Assigned: m.mounts[%s] = %v, %v, %v, %v", v.Source, mount.Device, mount.Fs, mount.Minor, mount.Mountpoint))
+			traceCache = append(traceCache, fmt.Sprintf("Could not get mount. Assigned: m.mounts[%s] = %v, %v, %v, %v. %s", v.Source, mount.Device, mount.Fs, mount.Minor, mount.Mountpoint, time.Now().String()))
 		}
 		// Allow Load to be called multiple times.
 		for _, p := range mount.Mountpoint {
 			if p.Path == v.Mountpoint {
-				m.traceCache = append(m.traceCache, fmt.Sprintf("Continue to MountLoop %s == %s", p.Path, v.Mountpoint))
+				traceCache = append(traceCache, fmt.Sprintf("Continue to MountLoop %s == %s. %s", p.Path, v.Mountpoint, time.Now().String()))
 				continue MountLoop
 			}
 		}
 		pi := &PathInfo{
 			Path: normalizeMountPath(v.Mountpoint),
 		}
-		m.traceCache = append(m.traceCache, fmt.Sprintf("Adding pathInfo to MountPoints: %v", *pi))
+		traceCache = append(traceCache, fmt.Sprintf("Adding pathInfo to MountPoints: %v. %s", *pi, time.Now().String()))
 		mount.Mountpoint = append(mount.Mountpoint,
 			pi,
 		)
@@ -153,12 +153,12 @@ MountLoop:
 
 func (m *nfsMounter) LogDevices() {
 	mnts := make(map[string]string)
-	m.traceCache = append(m.traceCache, fmt.Sprintf("Logging NFS device mounts"))
+	traceCache = append(traceCache, fmt.Sprintf("Logging NFS device mounts. %s", time.Now().String()))
 	for _, device := range m.mounts {
 		mnts = map[string]string{}
 		for _, mntPoint := range device.Mountpoint {
 			mnts[mntPoint.Root] = mntPoint.Root
 		}
-		m.traceCache = append(m.traceCache, fmt.Sprintf("Device: %s MountPoints: [%v]", device.Device, mnts))
+		traceCache = append(traceCache, fmt.Sprintf("Device: %s MountPoints: [%v]. %s", device.Device, mnts, time.Now().String()))
 	}
 }

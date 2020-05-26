@@ -32,7 +32,6 @@ func NewDeviceMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
-			traceCache:    []string{},
 		},
 	}
 	err := m.Load(devPrefixes)
