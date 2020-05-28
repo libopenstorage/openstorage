@@ -2,16 +2,17 @@ package pwx_test
 
 import (
 	"fmt"
-	"github.com/golang/mock/gomock"
-	"github.com/kubernetes-csi/csi-test/utils"
-	"github.com/libopenstorage/openstorage/api/server/mock"
-	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
-	"github.com/portworx/sched-ops/k8s/core"
-
-	//"github.com/libopenstorage/openstorage/api/server/mock"
-	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"testing"
+
+	"github.com/golang/mock/gomock"
+	"github.com/kubernetes-csi/csi-test/utils"
+	"github.com/portworx/sched-ops/k8s/core"
+	v1 "k8s.io/api/core/v1"
+
+	"github.com/libopenstorage/openstorage/api/server/mock"
+	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
 )
 
 const (
@@ -22,12 +23,18 @@ const (
 	pxEnableTLSEnv       = "PX_ENABLE_TLS"
 	pxRestPort           = "px-api"
 	pxSdkPort            = "px-sdk"
+	pxEndpointEnv        = "PX_ENDPOINT"
+	StaticSDKPortEnv     = "PX_API_PORT"
+	StaticRestPortEnv    = "PX_SDK_PORT"
 )
 
 func getSvc() *v1.Service {
 	return &v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "portworx-service",
+			Namespace: "kube-system",
+		},
 		Spec: v1.ServiceSpec{
-			ClusterIP: "8.8.4.4",
 			Ports: []v1.ServicePort{
 				{
 					Name: pxSdkPort,
@@ -59,7 +66,24 @@ func TestMain(m *testing.M) {
 
 	mockOps.EXPECT().GetService("portworx-service-not-found", "kube-system").Return(nil, fmt.Errorf("not found"))
 	mockOps.EXPECT().GetService("portworx-service", "kube-system").Return(getSvc(), nil)
-	mockOps.EXPECT().GetService("portworx-service", "non-default-ns").Return(getSvc(), nil)
+	mockOps.EXPECT().GetService("portworx-service", "non-default-ns").Return(&v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "portworx-service",
+			Namespace: "non-default-ns",
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name: pxSdkPort,
+					Port: 9999,
+				},
+				{
+					Name: pxRestPort,
+					Port: 9901,
+				},
+			},
+		},
+	}, nil)
 	mockOps.EXPECT().GetService("portworx-service-no-ip", "kube-system").Return(&v1.Service{
 		Spec: v1.ServiceSpec{
 			Ports: []v1.ServicePort{
@@ -79,6 +103,8 @@ func TestMain(m *testing.M) {
 			ClusterIP: "8.8.4.4",
 		},
 	}, nil)
+	mockOps.EXPECT().GetService("portworx-service", "kube-system").Return(getSvc(), nil)
+	mockOps.EXPECT().GetService("portworx-service", "kube-system").Return(getSvc(), nil)
 	mockOps.EXPECT().GetService("portworx-service-ports-zeroed", "kube-system").Return(&v1.Service{
 		Spec: v1.ServiceSpec{
 			ClusterIP: "8.8.4.4",
@@ -126,21 +152,6 @@ func TestPortworx_buildClientsEndpoints_Error_WhenServiceDoesNotExist(t *testing
 	_, _, err = paramsBuilder.BuildClientsEndpoints()
 	if err == nil {
 		t.Fatal("should return error when service does not exist")
-	}
-}
-
-func TestPortworx_buildClientsEndpoints_Error_WhenServiceDoesNotHaveIP(t *testing.T) {
-	cleaner := setEnvs(t, pxEnableTLSEnv, "true", pxServiceNameEnv, "portworx-service-no-ip", pxNamespaceNameEnv, "kube-system")
-	defer cleaner()
-
-	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
-
-	_, _, err = paramsBuilder.BuildClientsEndpoints()
-	if err == nil {
-		t.Fatal("should return error when service does not have Cluster IP")
 	}
 }
 
@@ -203,12 +214,118 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService(t *testing
 		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 	}
 
-	if pxMgmtEndpoint != "http://8.8.4.4:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://8.8.4.4:9901")
+	if pxMgmtEndpoint != "http://portworx-service.non-default-ns:9901" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.non-default-ns:9901")
 	}
 
-	if sdkEndpoint != "8.8.4.4:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "8.8.4.4:9999")
+	if sdkEndpoint != "portworx-service.non-default-ns:9999" {
+		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.non-default-ns:9999")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns", pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "9020", StaticRestPortEnv, "9001")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
+	if err != nil {
+		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	}
+
+	if pxMgmtEndpoint != "http://k8s-node-0:9001" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://k8s-node-0:9001")
+	}
+
+	if sdkEndpoint != "k8s-node-0:9020" {
+		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "k8s-node-0:9020")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_Err_WithStaticSDKPortIncorrect(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns", pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "0", StaticRestPortEnv, "9999")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	_, _, err = paramsBuilder.BuildClientsEndpoints()
+	if err == nil {
+		t.Fatal("should return error when static port is negative")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_Err_WithStaticRestPortIncorrect(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns", pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "9020", StaticRestPortEnv, "-12")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	_, _, err = paramsBuilder.BuildClientsEndpoints()
+	if err == nil {
+		t.Fatal("should return error when static port is negative")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_Err_WithStaticRestPortRandomString(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns", pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "9020", StaticRestPortEnv, "ololo")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	_, _, err = paramsBuilder.BuildClientsEndpoints()
+	if err == nil {
+		t.Fatal("should return error when static port is negative")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_Err_WithStaticSDKPortRandomString(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns", pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "hi", StaticRestPortEnv, "9001")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	_, _, err = paramsBuilder.BuildClientsEndpoints()
+	if err == nil {
+		t.Fatal("should return error when static port is negative")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStaticRestPort(t *testing.T) {
+	cleaner := setEnvs(t, pxEndpointEnv, "k8s-node-0", StaticSDKPortEnv, "9020")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
+	if err != nil {
+		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	}
+
+	if pxMgmtEndpoint != "http://portworx-service.kube-system:9901" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.kube-system:9901")
+	}
+
+	if sdkEndpoint != "portworx-service.kube-system:9999" {
+		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.kube-system:9999")
 	}
 }
 
@@ -335,6 +452,13 @@ func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertSecretKeyIsEmpty(t *tes
 	_, err = paramsBuilder.BuildDialOps()
 	if err == nil {
 		t.Fatalf("should not get error: %+v", err)
+	}
+}
+
+func TestPortworx_dialOptions_Error_WhenConfigIsNil(t *testing.T) {
+	_, err := pwx.NewConnectionParamsBuilder(ops, nil)
+	if err == nil {
+		t.Fatal("ConnectionParamsBuilder creation should return error when config is nil")
 	}
 }
 
