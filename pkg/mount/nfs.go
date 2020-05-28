@@ -42,7 +42,6 @@ func NewNFSMounter(servers []string,
 	}
 	err := m.Load([]string{""})
 	if err != nil {
-		m.LogTraceCache(err)
 		return nil, err
 	}
 	return m, nil
@@ -65,8 +64,17 @@ func (m *nfsMounter) Reload(source string) error {
 			newNFSmounter)
 	}
 
+	// Check if source existed in the mounts table prior to reload
+	_, sourceExisted := m.mounts[source]
 	err = m.reload(source, newNFSmounter.mounts[source])
+
 	m.LogDevices()
+
+	// only log trace cache if source existed and is no longer present
+	if sourceExisted && m.mounts[source] == nil {
+		newNFSmounter.LogTraceCache(fmt.Errorf("Did not find source in mount table"))
+	}
+
 	return err
 }
 
