@@ -3144,14 +3144,9 @@ message SdkStorageRebalanceRequest {
   bool trial_run = 2;
   // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
   map<string, string> pool_selector_labels = 3;
-  // Schedule defines when to run rebalance operation. Empty value indicates run now
-  string schedule = 4;
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
-  uint64 max_duration_minutes = 5;
-  // RunOnce if true will run the rebalance only once using the given schedule. The field only has meaning if
-  // schedule is provided
-  bool run_once = 6;
+  uint64 max_duration_minutes = 4;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
