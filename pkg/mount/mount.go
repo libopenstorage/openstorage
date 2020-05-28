@@ -629,7 +629,6 @@ func (m *Mounter) Unmount(
 				logrus.Infof("\t Mountpath: %v Rootpath: %v", path.Path, path.Root)
 			}
 		}
-		m.LogTraceCache(ErrEnoent)
 		return ErrEnoent
 	}
 	m.Unlock()
