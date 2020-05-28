@@ -36,7 +36,6 @@ import (
 	"github.com/libopenstorage/openstorage/alerts"
 	mockalerts "github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
-	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
@@ -51,7 +50,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 )
@@ -70,7 +68,6 @@ type testServer struct {
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
 	a      *mockalerts.MockFilterDeleter
-	s      *mockapi.MockOpenStoragePoolServer
 	mc     *gomock.Controller
 	gw     *httptest.Server
 	port   string
@@ -102,7 +99,6 @@ func newTestServer(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	setupMockDriver(tester, t)
 
@@ -125,13 +121,12 @@ func newTestServer(t *testing.T) *testServer {
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
 		AlertsFilterDeleter: tester.a,
-		StoragePoolServer:   tester.s,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 		},
 	})
@@ -139,11 +134,16 @@ func newTestServer(t *testing.T) *testServer {
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -164,7 +164,6 @@ func newTestServerAuth(t *testing.T) *testServer {
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	setupMockDriver(tester, t)
 
@@ -195,14 +194,13 @@ func newTestServerAuth(t *testing.T) *testServer {
 		Cluster:             tester.c,
 		StoragePolicy:       sp,
 		AlertsFilterDeleter: tester.a,
-		StoragePoolServer:   tester.s,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
 			Role: rm,
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 			Authenticators: map[string]auth.Authenticator{
 				"testcode": selfsignedJwt,
@@ -213,11 +211,16 @@ func newTestServerAuth(t *testing.T) *testServer {
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, []grpc.DialOption{grpc.WithTransportCredentials(grpccreds)})
+	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
 	assert.Nil(t, err)
 
 	// Setup REST gateway
@@ -390,8 +393,8 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	os.Remove(testUds)
 	tester := &testServer{}
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 	tester.setPorts()
+
 	server, err := New(&ServerConfig{
 		Net:                 "tcp",
 		Address:             ":" + tester.port,
@@ -399,14 +402,13 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		Socket:              testUds,
 		Cluster:             cm,
 		StoragePolicy:       sp,
-		StoragePoolServer:   tester.s,
 		AlertsFilterDeleter: alert,
 		AccessOutput:        ioutil.Discard,
 		AuditOutput:         ioutil.Discard,
 		Security: &SecurityConfig{
 			Tls: &TLSConfig{
-				CertFile: "test_certs/server-cert.pem",
-				KeyFile:  "test_certs/server-key.pem",
+				CertFile: "test_certs/server.crt",
+				KeyFile:  "test_certs/server.key",
 			},
 		},
 	})
@@ -417,11 +419,17 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		server.Stop()
 	}()
 
-	grpccreds, err := credentials.NewClientTLSFromFile("test_certs/server-cert.pem", "")
+	// Read the CA cert data
+	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
+	assert.Nil(t, err)
+
+	// Get TLS dial options
+	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
 	assert.Nil(t, err)
 
 	// Setup a connection to the driver
-	conn, err := grpc.Dial("localhost:"+tester.port, grpc.WithTransportCredentials(grpccreds))
+	conn, err := grpc.Dial("localhost:"+tester.port, dopts...)
+	assert.Nil(t, err)
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke

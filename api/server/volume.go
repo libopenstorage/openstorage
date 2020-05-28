@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
@@ -194,6 +195,12 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&dcReq); err != nil {
 		fmt.Println("returning error here")
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+	}
+	if dcReq.GetSpec() == nil {
+		vd.sendError(vd.name, method, w, "Must supply a volume specification", http.StatusBadRequest)
+		return
+	} else if dcReq.GetLocator() == nil {
+		vd.sendError(vd.name, method, w, "Must supply a volume locator", http.StatusBadRequest)
 		return
 	}
 
@@ -202,6 +209,26 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	// Check headers for secret reference. These are set by the Kubernetes auth middleware
+	secretName := r.Header.Get(secrets.SecretNameKey)
+	secretNamespace := r.Header.Get(secrets.SecretNamespaceKey)
+	pvcName := r.Header.Get(api.KubernetesPvcNameKey)
+	pvcNamespace := r.Header.Get(api.KubernetesPvcNamespaceKey)
+	if len(secretName) != 0 && len(secretNamespace) != 0 {
+		if dcReq.GetLocator().GetVolumeLabels() == nil {
+			dcReq.GetLocator().VolumeLabels = make(map[string]string)
+		}
+		dcReq.GetLocator().GetVolumeLabels()[secrets.SecretNameKey] = secretName
+		dcReq.GetLocator().GetVolumeLabels()[secrets.SecretNamespaceKey] = secretNamespace
+
+		// Only add the pvc name and namespace if we had the secrets and if the
+		// pvc values where passed
+		if len(pvcName) != 0 && len(pvcNamespace) != 0 {
+			dcReq.GetLocator().GetVolumeLabels()[api.KubernetesPvcNameKey] = pvcName
+			dcReq.GetLocator().GetVolumeLabels()[api.KubernetesPvcNamespaceKey] = pvcNamespace
+		}
 	}
 
 	// Get gRPC connection
@@ -452,7 +479,6 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	json.NewEncoder(w).Encode(resp)
-
 }
 
 func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
@@ -1494,7 +1520,7 @@ func (vd *volAPI) snapGroup(w http.ResponseWriter, r *http.Request) {
 		notFound(w, r)
 		return
 	}
-	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds)
+	snapRes, err = d.SnapshotGroup(snapReq.Id, snapReq.Labels, snapReq.VolumeIds, snapReq.DeleteOnFailure)
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -1822,14 +1848,14 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	nInspect := negroni.New()
 	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
 	inspectRoute := vd.volumeInspectRoute()
-	nSet.UseHandlerFunc(inspectRoute.fn)
+	nInspect.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	// Setup middleware for enumerate
 	nEnumerate := negroni.New()
 	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
 	enumerateRoute := vd.volumeEnumerateRoute()
-	nSet.UseHandlerFunc(enumerateRoute.fn)
+	nEnumerate.UseHandlerFunc(enumerateRoute.fn)
 	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
 
 	routes := []*Route{vd.versionRoute()}

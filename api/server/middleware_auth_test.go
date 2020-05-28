@@ -12,6 +12,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockAuthenticator struct {
@@ -45,31 +47,44 @@ func (n *noTokenGenerator) GetAuthenticator() (auth.Authenticator, error) {
 
 func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 	table := []struct {
-		description    string
-		isAuthEnabled  bool
-		authenticators map[string]auth.Authenticator
+		description     string
+		isAuthEnabled   bool
+		authenticators  map[string]auth.Authenticator
+		expectDecorated bool
 	}{
 		{
-			description:   "auth enabled authenticator not null",
-			isAuthEnabled: true,
+			expectDecorated: true,
+			description:     "auth enabled authenticator not null",
+			isAuthEnabled:   true,
 			authenticators: map[string]auth.Authenticator{
 				"no-authenticators": &mockAuthenticator{},
 			},
-		}, {
-			description:    "auth enabled authenticator is null",
-			isAuthEnabled:  true,
-			authenticators: nil,
 		},
 		{
-			description:   "auth not enabled authenticator is not null",
-			isAuthEnabled: false,
+			expectDecorated: false,
+			description:     "auth enabled authenticator is null",
+			isAuthEnabled:   true,
+			authenticators:  nil,
+		},
+		{
+			expectDecorated: true,
+			description:     "auth not enabled authenticator is not null",
+			isAuthEnabled:   false,
 			authenticators: map[string]auth.Authenticator{
 				"no-authenticators": &mockAuthenticator{},
 			},
-		}, {
-			description:    "auth is not enabled authenticator is null",
-			authenticators: nil,
-			isAuthEnabled:  false,
+		},
+		{
+			expectDecorated: false,
+			description:     "auth is not enabled authenticator is null",
+			authenticators:  nil,
+			isAuthEnabled:   false,
+		},
+		{
+			expectDecorated: false,
+			description:     "auth enabled authenticator is empty",
+			isAuthEnabled:   true,
+			authenticators:  map[string]auth.Authenticator{},
 		},
 	}
 
@@ -78,7 +93,6 @@ func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 	handlerFunc = func(w http.ResponseWriter, r *http.Request) {}
 
 	for _, testCase := range table {
-		t.Log(testCase.description)
 
 		var (
 			stm auth.TokenGenerator
@@ -104,12 +118,14 @@ func TestNewSecurityMiddlewareDecorate(t *testing.T) {
 
 		decorator := newSecurityMiddleware(testCase.authenticators)
 
-		if testCase.isAuthEnabled && testCase.authenticators != nil {
+		if testCase.expectDecorated {
 			if reflect.ValueOf(decorator(handlerFunc)) == reflect.ValueOf(handlerFunc) {
+				t.Log(testCase.description)
 				t.Errorf("func must be decorated")
 			}
 		} else {
 			if reflect.ValueOf(decorator(handlerFunc)) != reflect.ValueOf(handlerFunc) {
+				t.Log(testCase.description)
 				t.Errorf("func must not be decorated")
 			}
 		}
@@ -229,4 +245,40 @@ func TestNewSecurityMiddlewareCall(t *testing.T) {
 			t.Errorf("Wrong code expected %d actual %d", testCase.expectedHttpCode, rec.Code)
 		}
 	}
+}
+
+func TestAuthMiddlewareIsTokenProcessingRequired(t *testing.T) {
+	orig := OverrideSchedDriverName
+	defer func() {
+		OverrideSchedDriverName = orig
+	}()
+	OverrideSchedDriverName = "fake"
+
+	a := NewAuthMiddleware()
+	assert.NotNil(t, a)
+
+	rNoToken, err := http.NewRequest("GET", "http://localhost:80", nil)
+	assert.NoError(t, err)
+	rWithToken, err := http.NewRequest("GET", "http://localhost:80", nil)
+	assert.NoError(t, err)
+	rWithToken.Header.Set("Authorization", "bearer abcd")
+
+	d, b := a.isTokenProcessingRequired(rNoToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
+
+	d, b = a.isTokenProcessingRequired(rWithToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
+
+	rNoToken.Header.Set("User-Agent", "px-sched")
+	rWithToken.Header.Set("User-Agent", "px-sched")
+
+	d, b = a.isTokenProcessingRequired(rNoToken)
+	assert.NotNil(t, d)
+	assert.True(t, b)
+
+	d, b = a.isTokenProcessingRequired(rWithToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
 }

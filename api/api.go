@@ -73,6 +73,7 @@ const (
 	SpecMatchSrcVolProvision = "match_src_vol_provision"
 	SpecNodiscard            = "nodiscard"
 	StoragePolicy            = "storagepolicy"
+	SpecCowOnDemand          = "cow_ondemand"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -166,6 +167,19 @@ const (
 const (
 	// AutoAggregation value indicates driver to select aggregation level.
 	AutoAggregation = math.MaxUint32
+)
+
+// The main goal of the following label keys is for the Kubernetes intree middleware
+// to keep track of the source location of the PVC with labels that cannot be modified
+// by the owner of the volume, but only by the storage administrator.
+const (
+	// KubernetesPvcNameKey is a label on the openstorage volume
+	// which tracks the source PVC for the volume.
+	KubernetesPvcNameKey = "openstorage.io/pvc-name"
+
+	// KubernetesPvcNamespaceKey is a label on the openstorage volume
+	// which tracks the source PVC namespace for the volume
+	KubernetesPvcNamespaceKey = "openstorage.io/pvc-namespace"
 )
 
 // Node describes the state of a node.
@@ -1203,4 +1217,6 @@ func (v *Volume) IsAttached() bool {
 type TokenSecretContext struct {
 	SecretName      string
 	SecretNamespace string
+	PvcName         string
+	PvcNamespace    string
 }

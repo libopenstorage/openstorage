@@ -70,6 +70,9 @@ func (s *OsdCsiServer) NodePublishVolume(
 	if req.GetVolumeCapability() == nil || req.GetVolumeCapability().GetAccessMode() == nil {
 		return nil, status.Error(codes.InvalidArgument, "Volume access mode must be provided")
 	}
+	if req.GetVolumeCapability().GetBlock() != nil {
+		return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
+	}
 
 	// Verify target location is an existing directory
 	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {

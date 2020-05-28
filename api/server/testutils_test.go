@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
-	mockapi "github.com/libopenstorage/openstorage/api/mock"
+	servermock "github.com/libopenstorage/openstorage/api/server/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -42,6 +42,8 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
+
+	schedopsk8s "github.com/portworx/sched-ops/k8s/core"
 )
 
 const (
@@ -63,14 +65,15 @@ var (
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service and REST server
 type testServer struct {
-	conn   *grpc.ClientConn
-	m      *mockdriver.MockVolumeDriver
-	c      cluster.Cluster
-	s      *mockapi.MockOpenStoragePoolServer
-	mc     *gomock.Controller
-	sdk    *sdk.Server
-	port   string
-	gwport string
+	conn        *grpc.ClientConn
+	m           *mockdriver.MockVolumeDriver
+	c           cluster.Cluster
+	k8sops      *servermock.MockOps
+	originalOps schedopsk8s.Ops
+	mc          *gomock.Controller
+	sdk         *sdk.Server
+	port        string
+	gwport      string
 }
 
 // Struct used for creation and setup of cluster api testing
@@ -137,7 +140,10 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
+	tester.k8sops = servermock.NewMockOps(tester.mc)
+
+	tester.originalOps = schedopsk8s.Instance()
+	schedopsk8s.SetInstance(tester.k8sops)
 
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
@@ -150,16 +156,15 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 	os.Remove(testSdkSock)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:        "fake",
-		Net:               "tcp",
-		Address:           ":" + tester.port,
-		RestPort:          tester.gwport,
-		StoragePolicy:     stp,
-		StoragePoolServer: tester.s,
-		Cluster:           tester.c,
-		Socket:            testSdkSock,
-		AccessOutput:      ioutil.Discard,
-		AuditOutput:       ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":" + tester.port,
+		RestPort:      tester.gwport,
+		StoragePolicy: stp,
+		Cluster:       tester.c,
+		Socket:        testSdkSock,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 	})
 	assert.Nil(t, err)
 	err = tester.sdk.Start()
@@ -193,7 +198,10 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
+	tester.k8sops = servermock.NewMockOps(tester.mc)
+
+	tester.originalOps = schedopsk8s.Instance()
+	schedopsk8s.SetInstance(tester.k8sops)
 
 	// Create a role manager
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
@@ -216,16 +224,15 @@ func newTestServerSdk(t *testing.T) *testServer {
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:        "fake",
-		Net:               "tcp",
-		Address:           ":" + tester.port,
-		RestPort:          tester.gwport,
-		Cluster:           tester.c,
-		Socket:            testSdkSock,
-		StoragePolicy:     stp,
-		StoragePoolServer: tester.s,
-		AccessOutput:      ioutil.Discard,
-		AuditOutput:       ioutil.Discard,
+		DriverName:    "fake",
+		Net:           "tcp",
+		Address:       ":" + tester.port,
+		RestPort:      tester.gwport,
+		Cluster:       tester.c,
+		Socket:        testSdkSock,
+		StoragePolicy: stp,
+		AccessOutput:  ioutil.Discard,
+		AuditOutput:   ioutil.Discard,
 		Security: &sdk.SecurityConfig{
 			Role: rm,
 			Authenticators: map[string]auth.Authenticator{
@@ -306,6 +313,10 @@ func (s *testServer) setPorts() {
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
+}
+
+func (s *testServer) MockK8sOps() *servermock.MockOps {
+	return s.k8sops
 }
 
 func (s *testServer) Conn() *grpc.ClientConn {
@@ -416,6 +427,8 @@ func (s *testServer) Stop() {
 
 	// Remove from registry
 	volumedrivers.Remove(mockDriverName)
+
+	schedopsk8s.SetInstance(s.originalOps)
 }
 
 func createToken(name, role, secret string) (string, error) {

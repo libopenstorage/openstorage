@@ -301,6 +301,16 @@ message IoStrategy {
   bool early_ack = 2;
 }
 
+// Xattr defines implementation specific volume attribute
+message Xattr {
+	enum Value {
+		// Value is uninitialized or unknown
+		UNSPECIFIED = 0;
+		// Enable on-demand copy-on-write on the volume
+		COW_ON_DEMAND = 1;
+	}
+}
+
 // ExportProtocol defines how the device is exported..
 enum ExportProtocol  {
   // Invalid uninitialized value
@@ -445,6 +455,8 @@ message VolumeSpec {
   ExportSpec export_spec = 34;
   // fastpath extensions
   bool fp_preference = 35;
+  // Xattr specifies implementation specific volume attributes
+  Xattr.Value xattr = 36;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -1149,6 +1161,7 @@ message GroupSnapCreateRequest {
   string id = 1;
   map<string, string> Labels = 2;
   repeated string volume_ids = 3;
+  bool delete_on_failure = 4;
 }
 
 // GroupSnapCreateRequest specifies a response that get's returned when creating a group snapshot.
@@ -1557,7 +1570,7 @@ service OpenStorageClusterDomains {
 
 // OpenStoragePool is a service used to manage storage pools in the cluster
 service OpenStoragePool {
-  // Resize resizes the specified storage pool based on the request parameters
+  // Resize expands the specified storage pool based on the request parameters
   rpc Resize(SdkStoragePoolResizeRequest)
     returns (SdkStoragePoolResizeResponse) {
       option(google.api.http) = {
@@ -1565,6 +1578,41 @@ service OpenStoragePool {
       };
     }
 
+  // Rebalance creates a new rebalance task
+  rpc Rebalance(SdkStorageRebalanceRequest)
+  returns (SdkStorageRebalanceResponse) {
+    option(google.api.http) = {
+        put: "/v1/storagepools/rebalance"
+      };
+  }
+
+  // UpdateRebalanceJobState updates existing rebalance task state.
+  // Only acceptable values are
+  // StorageRebalanceJobState_PAUSED - acceptable only from running state
+  // StorageRebalanceJobState_CANCELLED - acceptable only from running/pause state
+  // StorageRebalanceJobState_RUNNING - acceptable only from pause state
+  rpc UpdateRebalanceJobState(SdkUpdateRebalanceJobRequest)
+  returns (SdkUpdateRebalanceJobResponse) {
+    option(google.api.http) = {
+        put: "/v1/storagepools/rebalance/job/{id}"
+      };
+  }
+
+  // GetRebalanceJobStatus returns rebalance status for specified job
+  rpc GetRebalanceJobStatus(SdkGetRebalanceJobStatusRequest)
+  returns (SdkGetRebalanceJobStatusResponse) {
+    option(google.api.http) = {
+        get: "/v1/storagepools/rebalance/job/{id}"
+      };
+  }
+
+  // EnumerateRebalanceJobs returns all rebalance jobs currently known to the system
+  rpc EnumerateRebalanceJobs(SdkEnumerateRebalanceJobsRequest)
+  returns (SdkEnumerateRebalanceJobsResponse) {
+    option(google.api.http) = {
+        get: "/v1/storagepools/rebalance/job"
+      };
+  }
 }
 
 
@@ -3036,7 +3084,7 @@ message SdkNodeInspectRequest {
 message SdkStoragePoolResizeRequest {
   // UUID of the storage pool to inspect
   string uuid = 1;
-  // ResizeFactor is the option to indiciate if you would like to resize the pool
+  // ResizeFactor is the option to indicate if you would like to resize the pool
   // by a fixed size or by a percentage of current size
   oneof resize_factor {
     // Size is the new desired size of the storage pool
@@ -3050,7 +3098,190 @@ message SdkStoragePoolResizeRequest {
   bool skip_wait_for_clean_volumes = 4;
 }
 
+message StorageRebalanceTriggerThreshold {
+  // Type defines type of threshold
+  Type type = 1;
+  // Metric defines metric for which this threshold applies to.
+  Metric metric = 2;
+  // OverLoadTriggerThreshold will select entity which is over this
+  // threshold. OverLoadTriggerThreshold threshold selects pools
+  // which act as source for reduction of load defined by the metric.
+  uint64 over_load_trigger_threshold = 3;
+  // UnderLoadTriggerThreshold will select entity which is under this
+  // threshold. UnderLoadTriggerThreshold selects pools which act as
+  // targets for increasing load defined by metric.
+  uint64 under_load_trigger_threshold = 4;
 
+  // Type is an enum that defines the type fo the trigger threshold
+  enum Type {
+    // AbsolutePercent indicates absolute percent comparison.
+    // Example, 75 % used of capacity, or 50 % provisioned of capacity.
+    ABSOLUTE_PERCENT = 0;
+    // DeltaMeanPercent indicates mean percent comparision threshold.
+    // Example, 10 % more than mean for cluster.
+    DELTA_MEAN_PERCENT = 1;
+  }
+
+  // Metric is an enum that defines the metric to use for rebalance
+  enum Metric {
+    // ProvisionSpace indicates rebalance for provisioned space
+    PROVISION_SPACE = 0;
+    // UsedSpace indicates rebalance for used space
+    USED_SPACE = 1;
+  }
+}
+
+message SdkStorageRebalanceRequest {
+  // TriggerThresholds defines thresholds that would trigger rebalance.
+  // For example, TriggerThreshold{ThresholdTypeAbsolutePercent, MetricTypeUsedSpace, 75, 10}
+  // would trigger rebalance on pools where used space is more than 75% or less than 10%. Similarly,
+  // TriggerThreshold{ThresholdTypeDeltaMeanPercent, MetricTypeUsedSpace, 15, 25} will
+  // trigger rebalance for pools where used space is more than 15% from the mean
+  // percent for used space for the entire cluster or less than 25% from the mean
+  // percent for used space for the entire cluster.
+  repeated  StorageRebalanceTriggerThreshold trigger_thresholds = 1;
+  // TrialRun if true the job only produces steps that would be taken without making any changes
+  bool trial_run = 2;
+  // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
+  map<string, string> pool_selector_labels = 3;
+  // MaxDurationMinutes defines how long operation should run when started at schedule.
+  // 0 values means no limit on duration
+  uint64 max_duration_minutes = 4;
+}
+
+// SdkStorageRebalanceResponse is the response to a storage rebalance request
+message SdkStorageRebalanceResponse {
+  // Job for this rebalance
+  StorageRebalanceJob job = 1;
+  // Summary summarizes the rebalance job
+  StorageRebalanceSummary summary = 2;
+  // Actions describe all the actions taken during this rebalance
+  repeated StorageRebalanceAudit actions = 3;
+}
+
+// StorageRebalanceJob describes job input and current status
+message StorageRebalanceJob {
+  // ID of the rebalance job
+  string id = 1;
+  // Error describes errors occurred during rebalance
+  string error = 2;
+  // State of the current job
+  StorageRebalanceJobState state = 3;
+  // Parameters is the original request params for this rebalance operation
+  SdkStorageRebalanceRequest parameters = 4;
+  // CreateTime is the time the job was created
+  google.protobuf.Timestamp create_time = 5;
+}
+
+// StorageRebalanceJobState is an enum for state of the current rebalance operation
+enum StorageRebalanceJobState {
+    // Pending indicates job is still pending and has not started work
+  PENDING = 0;
+  // Running indicates job is actively running
+  RUNNING = 1;
+  // Done indicates job has finished processing
+  DONE = 2;
+  // Paused indicates job is paused
+  PAUSED = 3;
+  // Cancelled indicates job is cancelled
+  CANCELLED = 4;
+}
+// StorageRebalanceSummary describes summary for the job
+message StorageRebalanceSummary  {
+  // LastUpdateTime is the time the job was last updated
+  google.protobuf.Timestamp last_update_time = 1;
+  // TotalRunTimeSeconds is the total time rebalance is running
+  uint64 total_run_time_seconds = 2;
+  // WorkSummary summarizes the work done
+  repeated StorageRebalanceWorkSummary work_summary = 3;
+}
+
+message StorageRebalanceWorkSummary {
+  // Type describes the type of summary.
+  Type type = 1;
+  // Done is the amount of bytes/work done
+  uint64 done = 2;
+  // Pending is the amount of bytes/work pending. Done + Pending == Total
+  uint64 pending = 3;
+
+  // Type is an enum to indicate the type of work summary
+  enum Type {
+    // summary for unbalanced pools
+    UnbalancedPools = 0;
+    // summary for unbalanced volumes
+    UnbalancedVolumes = 1;
+    // summary for unbalanced provisioned space
+    UnbalancedProvisionedSpaceBytes = 2;
+    // summary for unbalanced used space
+    UnbalancedUsedSpaceBytes = 3;
+  }
+
+}
+
+// StorageRebalanceAudit describes the action taken during rebalance
+message StorageRebalanceAudit {
+  // VolumeID is the id of the volume which was rebalanced
+  string volume_id = 1;
+  // Name is the name of the volumes which was rebalanced
+  string name  = 2;
+  // Action is the action executed
+  StorageRebalanceAction action = 3;
+  // Node on which this action happened
+  string node = 4;
+  // Pool on which this action happened
+  string pool = 5;
+  // StartTime is the time at which action was started
+  google.protobuf.Timestamp  start_time = 6;
+  // EndTime is time time at which action ended
+  google.protobuf.Timestamp end_time = 7;
+  // WorkSummary summarizes the work done
+  repeated StorageRebalanceWorkSummary work_summary = 8;
+  // StorageRebalanceAction describes type of rebalance action
+  enum StorageRebalanceAction {
+    // Indicates new replica was added
+    ADD_REPLICA = 0;
+    // Indicates existing replica was removed
+    REMOVE_REPLICA = 1;
+  }
+
+  // ReplicationSetId is the ID of the replication set
+  uint64 replication_set_id = 9;
+  // State is the current state of the rebalance action
+  StorageRebalanceJobState state = 10;
+}
+
+message SdkUpdateRebalanceJobRequest {
+  // ID of the rebalance job
+  string id = 1;
+  // State is the new task state to update the job to
+  StorageRebalanceJobState state = 2;
+}
+
+message SdkUpdateRebalanceJobResponse {
+}
+
+message SdkGetRebalanceJobStatusRequest {
+  // ID of the rebalance job
+  string id = 1;
+}
+
+message SdkGetRebalanceJobStatusResponse {
+  // Job for this rebalance
+  StorageRebalanceJob job = 1;
+  // Summary summarizes the rebalance job
+  StorageRebalanceSummary summary = 2;
+  // Actions describe all the actions taken during this rebalance
+  repeated StorageRebalanceAudit actions = 3;
+}
+
+
+message SdkEnumerateRebalanceJobsRequest  {
+}
+
+message SdkEnumerateRebalanceJobsResponse {
+  // Jobs is the list of rebalance jobs in the response
+  repeated StorageRebalanceJob jobs = 1;
+}
 
 message SdkStoragePool {
   // OperationStatus captures the various statuses of a storage pool operation
@@ -3970,7 +4201,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 6;
+    Patch = 9;
   }
 
   // The following cannot be set to use the enum Version because the REST

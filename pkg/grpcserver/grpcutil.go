@@ -17,6 +17,7 @@ package grpcserver
 
 import (
 	"context"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"net/url"
@@ -27,10 +28,33 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/connectivity"
+	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
 
-// Connect address by grpc
+// GetTlsDialOptions returns the appropriate gRPC dial options to connect to a gRPC server over TLS.
+// If caCertData is nil then it will use the CA from the host.
+func GetTlsDialOptions(caCertData []byte) ([]grpc.DialOption, error) {
+	// Read the provided CA cert from the user
+	capool, err := x509.SystemCertPool()
+	if err != nil || capool == nil {
+		logrus.Warnf("cannot load system root certificates: %v", err)
+		capool = x509.NewCertPool()
+	}
+
+	// If user provided CA cert, then append it to systemCertPool.
+	if len(caCertData) != 0 {
+		if !capool.AppendCertsFromPEM(caCertData) {
+			return nil, fmt.Errorf("cannot parse CA certificate")
+		}
+	}
+
+	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(
+		credentials.NewClientTLSFromCert(capool, ""))}
+	return dialOptions, nil
+}
+
+// Connect to address by grpc
 func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, error) {
 	u, err := url.Parse(address)
 	if err == nil && (!u.IsAbs() || u.Scheme == "unix") {

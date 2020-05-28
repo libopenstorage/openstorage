@@ -145,6 +145,7 @@ type Mounter struct {
 	allowedDirs   []string
 	kl            keylock.KeyLock
 	trashLocation string
+	traceCache    []string
 }
 
 type findMountPoint func(source *mount.Info, destination string, mountInfo []*mount.Info) (bool, string, string)
@@ -360,11 +361,13 @@ func (m *Mounter) reload(device string, newM *Info) error {
 }
 
 func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
+	m.traceCache = append(m.traceCache, "Entered mounter.Load()")
 	info, err := GetMounts()
 	if err != nil {
 		return err
 	}
-	for _, v := range info {
+	for i, v := range info {
+		m.traceCache = append(m.traceCache, fmt.Sprintf("Info[%d] = %v", i, *v))
 		var (
 			sourcePath, devicePath, targetDevice string
 			foundPrefix, foundTarget             bool
@@ -379,13 +382,16 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 				// as fmp might have returned an incorrect or empty sourcePath
 				sourcePath = devPrefix
 				devicePath = devPrefix
+				m.traceCache = append(m.traceCache, fmt.Sprintf("Could not find prefix or target device. Assigning sourcePath/devicePath to %v", devPrefix))
 			}
 
 			if foundPrefix || foundTarget {
+				m.traceCache = append(m.traceCache, fmt.Sprintf("Found prefix: %v, found target: %v", foundPrefix, foundTarget))
 				break
 			}
 		}
 		if !foundPrefix && !foundTarget {
+			m.traceCache = append(m.traceCache, "Did not find prefix or target")
 			continue
 		}
 
@@ -399,23 +405,27 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 					Mountpoint: make([]*PathInfo, 0),
 				}
 				m.mounts[mountSourcePath] = mount
+				m.traceCache = append(m.traceCache, fmt.Sprintf("Mounts table did not contain %s. Assigning mount: %v, %v, %v", mountSourcePath, mount.Device, mount.Fs, mount.Minor))
 			}
 			// Allow Load to be called multiple times.
 			for _, p := range mount.Mountpoint {
+				m.traceCache = append(m.traceCache, fmt.Sprintf("Mounts table did not contain %s. Assigning mount: %v, %v, %v", mountSourcePath, mount.Device, mount.Fs, mount.Minor))
+
 				if p.Path == v.Mountpoint {
+					m.traceCache = append(m.traceCache, fmt.Sprintf("Path equals mount, no need to update mountpoint"))
 					// No need of updating Mountpoint
 					return
 				}
 			}
-			mount.Mountpoint = append(
-				mount.Mountpoint,
-				&PathInfo{
-					Root: normalizeMountPath(v.Root),
-					Path: normalizeMountPath(v.Mountpoint),
-				},
-			)
+			pi := &PathInfo{
+				Root: normalizeMountPath(v.Root),
+				Path: normalizeMountPath(v.Mountpoint),
+			}
+			mount.Mountpoint = append(mount.Mountpoint, pi)
+			m.traceCache = append(m.traceCache, fmt.Sprintf("Appended mount to table: Root: %v, Path: %v", pi.Root, pi.Path))
 			if updatePaths {
 				m.paths[v.Mountpoint] = mountSourcePath
+				m.traceCache = append(m.traceCache, fmt.Sprintf("Updating paths[%v] = %s", v.Mountpoint, mountSourcePath))
 			}
 		}
 		// Only update the paths map with the device with which load was called.
@@ -423,6 +433,7 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 
 		// Add a mountpoint entry for the target device as well.
 		if targetDevice == "" {
+			m.traceCache = append(m.traceCache, fmt.Sprintf("Target device empty, skip mount table entry add for target device"))
 			continue
 		}
 		addMountTableEntry(targetDevice, targetDevice, false /*updatePaths*/)
@@ -491,7 +502,7 @@ func (m *Mounter) Mount(
 	// Try to find the mountpoint. If it already exists, do nothing
 	for _, p := range info.Mountpoint {
 		if p.Path == path {
-			logrus.Warnf("%q mountpoint for device %q already exists",
+			logrus.Infof("%q mountpoint for device %q already exists",
 				device, path)
 			return nil
 		}
@@ -618,6 +629,7 @@ func (m *Mounter) Unmount(
 				logrus.Infof("\t Mountpath: %v Rootpath: %v", path.Path, path.Root)
 			}
 		}
+		m.LogTraceCache(ErrEnoent)
 		return ErrEnoent
 	}
 	m.Unlock()
@@ -790,6 +802,18 @@ func (m *Mounter) makeMountpathReadOnly(mountpath string) error {
 // makeMountpathWriteable makes given mountpath writeable
 func (m *Mounter) makeMountpathWriteable(mountpath string) error {
 	return chattr.RemoveImmutable(mountpath)
+}
+
+// LogTraceCache dumps any trace cache logs
+func (m *Mounter) LogTraceCache(err error) {
+	// print cache
+	logrus.Errorf("Mounter Load() failed due to %s. Reporting trace cache", err.Error())
+	for _, l := range m.traceCache {
+		logrus.Info(l)
+	}
+
+	// clear cache
+	m.traceCache = []string{}
 }
 
 // New returns a new Mount Manager

@@ -1,0 +1,16 @@
+{
+  "name": "openstorage-test",
+  "version": "0.0.1",
+  "description": "OpenStorage Tests",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "bats": "^1.1.0",
+    "bats-assert": "^2.0.0",
+    "bats-support": "^0.3.0"
+  }
+}

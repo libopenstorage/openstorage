@@ -148,16 +148,26 @@ func (d *driver) volFromName(name string) (*api.Volume, error) {
 	return util.VolumeFromName(v, name)
 }
 
-func (d *driver) volFromNameSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (*api.Volume, error) {
-	// get volume id
-	volId, err := d.volIdFromName(ctx, volumes, name)
+func (d *driver) volFromNameOrIDSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (*api.Volume, error) {
+	// Attempt to get volume ID from the name
+	var volumeID string
+	enumerateResp, err := volumes.EnumerateWithFilters(ctx, &api.SdkVolumeEnumerateWithFiltersRequest{
+		Name: name,
+	})
 	if err != nil {
 		return nil, err
+	} else if len(enumerateResp.VolumeIds) < 1 {
+		// cannot find volume by name. Assume name is actually a volumeID.
+		// Inspect will fail if this is not the case.
+		volumeID = name
+	} else {
+		// found volume ID, use it to get volume
+		volumeID = enumerateResp.VolumeIds[0]
 	}
 
 	// inspect for actual volume
 	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
-		VolumeId: volId,
+		VolumeId: volumeID,
 	})
 	if err != nil {
 		return nil, err
@@ -659,7 +669,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	//get volume to mount
 	mountClient := api.NewOpenStorageMountAttachClient(conn)
 	volumeClient := api.NewOpenStorageVolumeClient(conn)
-	vol, err := d.volFromNameSdk(ctx, volumeClient, name)
+	vol, err := d.volFromNameOrIDSdk(ctx, volumeClient, name)
 	if err != nil {
 		d.sendError(method, "", w, err.Error(), http.StatusBadRequest)
 		return

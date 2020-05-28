@@ -17,7 +17,17 @@ import (
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/sirupsen/logrus"
+
+	corev1 "k8s.io/api/core/v1"
+	storagev1 "k8s.io/api/storage/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
+
+func init() {
+	logrus.SetLevel(logrus.PanicLevel)
+}
 
 func TestVolumeNoAuth(t *testing.T) {
 	var err error
@@ -189,7 +199,8 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	size := uint64(1234)
 	secretName := "secret-name"
 	namespace := "ns"
-	tokenKey := "token-key"
+	pvcName := "mypvc"
+	storageClassName := "storageclass1"
 
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{
@@ -218,13 +229,32 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
 
+	pvc := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &storageClassName,
+		},
+	}
+
+	storageClass := storagev1.StorageClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: storageClassName,
+		},
+		Parameters: map[string]string{
+			secrets.SecretNameKey:      secretName,
+			secrets.SecretNamespaceKey: "${pvc.namespace}",
+		},
+	}
+
 	req = &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{
 			Name: name,
 			VolumeLabels: map[string]string{
-				secrets.SecretNameKey:      secretName,
-				secrets.SecretTokenKey:     tokenKey,
-				secrets.SecretNamespaceKey: namespace,
+				PVCNameLabelKey:      pvcName,
+				PVCNamespaceLabelKey: namespace,
 			},
 		},
 		Source: &api.Source{},
@@ -235,6 +265,11 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 			Shared:  true,
 		},
 	}
+
+	testVolDriver.MockK8sOps().EXPECT().
+		GetPersistentVolumeClaim(pvcName, namespace).Return(&pvc, nil).AnyTimes()
+	testVolDriver.MockK8sOps().EXPECT().
+		GetStorageClassForPVC(&pvc).Return(&storageClass, nil).AnyTimes()
 
 	// Send a request and fail to get a token
 	mockSecret.EXPECT().
@@ -871,38 +906,6 @@ func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
 		VolumeId: id,
 	})
 	assert.NoError(t, err)
-}
-
-func TestMiddlewareVolumeSetFailure(t *testing.T) {
-	testVolDriver := newTestServerSdk(t)
-	defer testVolDriver.Stop()
-
-	_, mockSecret, mc := getSecretsMock(t)
-	defer mc.Finish()
-	lsecrets.SetInstance(mockSecret)
-
-	// TODO(stgleb): Fix it
-	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
-	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
-	defer unixServer.Close()
-	defer portServer.Close()
-
-	time.Sleep(1 * time.Second)
-	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
-	assert.NoError(t, err, "Unexpected error on NewDriverClient")
-
-	driverclient := volumeclient.VolumeDriver(c)
-	id, _, _, _ := testMiddlewareCreateVolume(t, driverclient, mockSecret, testVolDriver)
-
-	req := &api.VolumeSetRequest{
-		Spec: &api.VolumeSpec{Shared: true},
-	}
-
-	// Not setting mock secrets
-
-	err = driverclient.Set(id, &api.VolumeLocator{Name: "myvol"}, req.GetSpec())
-	assert.Error(t, err, "Unexpected error on Set")
-
 }
 
 func TestVolumeAttachSuccess(t *testing.T) {
@@ -2438,18 +2441,38 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	size := uint64(1234)
 	secretName := "secret-name"
 	namespace := "ns"
-	tokenKey := "token-key"
+	pvcName := "mypvc"
+	storageClassName := "storageclass1"
 	// get token
 	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
+
+	pvc := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &storageClassName,
+		},
+	}
+
+	storageClass := storagev1.StorageClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: storageClassName,
+		},
+		Parameters: map[string]string{
+			secrets.SecretNameKey:      secretName,
+			secrets.SecretNamespaceKey: "${pvc.namespace}",
+		},
+	}
 
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{
 			Name: name,
 			VolumeLabels: map[string]string{
-				secrets.SecretNameKey:      secretName,
-				secrets.SecretTokenKey:     tokenKey,
-				secrets.SecretNamespaceKey: namespace,
+				PVCNameLabelKey:      pvcName,
+				PVCNamespaceLabelKey: namespace,
 			},
 		},
 		Source: &api.Source{},
@@ -2460,6 +2483,11 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 			Shared:  true,
 		},
 	}
+
+	testVolDriver.MockK8sOps().EXPECT().
+		GetPersistentVolumeClaim(pvcName, namespace).Return(&pvc, nil)
+	testVolDriver.MockK8sOps().EXPECT().
+		GetStorageClassForPVC(&pvc).Return(&storageClass, nil)
 
 	mockSecret.EXPECT().
 		String().
@@ -2525,18 +2553,38 @@ func testMiddlewareCreateVolume(
 	size := uint64(1234)
 	secretName := "secret-name"
 	namespace := "ns"
-	tokenKey := "token-key"
+	pvcName := "mypvc"
+	storageClassName := "storageclass1"
 	// get token
 	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
+
+	pvc := corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      pvcName,
+			Namespace: namespace,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: &storageClassName,
+		},
+	}
+
+	storageClass := storagev1.StorageClass{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: storageClassName,
+		},
+		Parameters: map[string]string{
+			secrets.SecretNameKey:      secretName,
+			secrets.SecretNamespaceKey: "${pvc.namespace}",
+		},
+	}
 
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{
 			Name: name,
 			VolumeLabels: map[string]string{
-				secrets.SecretNameKey:      secretName,
-				secrets.SecretTokenKey:     tokenKey,
-				secrets.SecretNamespaceKey: namespace,
+				PVCNameLabelKey:      pvcName,
+				PVCNamespaceLabelKey: namespace,
 			},
 		},
 		Source: &api.Source{},
@@ -2547,6 +2595,11 @@ func testMiddlewareCreateVolume(
 			Shared:  true,
 		},
 	}
+	testVolDriver.MockK8sOps().EXPECT().
+		GetPersistentVolumeClaim(pvcName, namespace).Return(&pvc, nil)
+	testVolDriver.MockK8sOps().EXPECT().
+		GetStorageClassForPVC(&pvc).Return(&storageClass, nil)
+
 	mockSecret.EXPECT().
 		String().
 		Return(lsecrets.TypeK8s).
