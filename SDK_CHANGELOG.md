@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.78.0 - (5/29/2020)
+
+* Add support for volume xattr update
+
 ### v0.78.0 - (4/28/2020)
 
 * Add SDK APIs for storage rebalance
