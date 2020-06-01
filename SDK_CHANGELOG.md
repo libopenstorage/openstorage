@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.79.0 - (6/1/2020)
+
+* Add "dirty" flag to fastpath volumes.
+
 ### v0.78.0 - (4/28/2020)
 
 * Add SDK APIs for storage rebalance
