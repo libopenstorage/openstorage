@@ -702,6 +702,11 @@
       },
       "apiFastpathConfig": {
         "properties": {
+          "dirty": {
+            "format": "boolean",
+            "title": "Dirty flag on volume - was attached in userspace",
+            "type": "boolean"
+          },
           "promote": {
             "format": "boolean",
             "title": "Fastpath temporary promotion during attach",

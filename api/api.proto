@@ -385,6 +385,8 @@ message FastpathConfig {
   FastpathStatus status = 3;
   // Fastpath replica state for each replica in replica set
   repeated FastpathReplState replicas = 4;
+  // Dirty flag on volume - was attached in userspace
+  bool dirty = 5;
 }
 
 // VolumeSpec has the properties needed to create a volume.
