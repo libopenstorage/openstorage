@@ -702,6 +702,11 @@
       },
       "apiFastpathConfig": {
         "properties": {
+          "dirty": {
+            "format": "boolean",
+            "title": "Dirty flag on volume - was attached in userspace",
+            "type": "boolean"
+          },
           "promote": {
             "format": "boolean",
             "title": "Fastpath temporary promotion during attach",
@@ -4693,7 +4698,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.78.0"
+    "version": "0.79.0"
   },
   "openapi": "3.0.0",
   "paths": {

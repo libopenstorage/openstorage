@@ -385,6 +385,8 @@ message FastpathConfig {
   FastpathStatus status = 3;
   // Fastpath replica state for each replica in replica set
   repeated FastpathReplState replicas = 4;
+  // Dirty flag on volume - was attached in userspace
+  bool dirty = 5;
 }
 
 // VolumeSpec has the properties needed to create a volume.
@@ -4199,7 +4201,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 78;
+    Minor = 79;
     // SDK version patch value of this specification
     Patch = 0;
   }
