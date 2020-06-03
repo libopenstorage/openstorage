@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.81.0 - (6/3/2020)
+
+* Add storage-class options to credentials
+
 ### v0.80.0 - (6/2/2020)
 
 * Add direct_io as IO strategy
