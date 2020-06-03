@@ -127,6 +127,7 @@ var (
 	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
 	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
+	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -398,6 +399,15 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 					spec.Xattr = api.Xattr_COW_ON_DEMAND
 				}
 			}
+		case api.SpecDirectIo:
+			if directIo, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				if spec.IoStrategy == nil {
+					spec.IoStrategy = &api.IoStrategy{}
+				}
+				spec.IoStrategy.DirectIo = directIo
+			}
 		default:
 			locator.VolumeLabels[k] = v
 		}
@@ -549,6 +559,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand
+	}
+	if ok, directIo := d.getVal(directIoRegex, str); ok {
+		opts[api.SpecDirectIo] = directIo
 	}
 
 	return true, opts, name

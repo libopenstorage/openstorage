@@ -300,6 +300,8 @@ message IoStrategy {
   bool async_io = 1;
   // EarlyAck enables acks for async I/O at the source.
   bool early_ack = 2;
+  // Enable direct I/O on the backing datastore
+  bool direct_io = 3;
 }
 
 // Xattr defines implementation specific volume attribute
@@ -4204,7 +4206,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 79;
+    Minor = 80;
     // SDK version patch value of this specification
     Patch = 0;
   }
