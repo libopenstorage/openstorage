@@ -849,7 +849,7 @@ func GetMounts() ([]*mount.Info, error) {
 	if os.Getenv(testDeviceEnv) != "" {
 		return testGetMounts()
 	}
-	return mount.GetMounts()
+	return parseMountTable()
 }
 
 var (
@@ -862,7 +862,7 @@ var (
 func testGetMounts() ([]*mount.Info, error) {
 	var err error
 	if len(testMounts) == 0 {
-		testMounts, err = mount.GetMounts()
+		testMounts, err = parseMountTable()
 	}
 	return testMounts, err
 }
