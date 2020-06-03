@@ -93,8 +93,8 @@ func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
 
 // Load mount table
 func (m *nfsMounter) Load(source []string) error {
-	logrus.Trace("Entered nfsMounter.Load()")
-	info, err := mount.GetMounts()
+	m.traceCache = append(m.traceCache, "Entered nfsMounter.Load()")
+	info, err := GetMounts()
 	if err != nil {
 		return err
 	}
