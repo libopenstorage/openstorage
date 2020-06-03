@@ -118,20 +118,20 @@ func TestEarlyAck(t *testing.T) {
 	require.NoError(t, err)
 
 	_, _, _, err = s.SpecFromOpts(map[string]string{
-		api.SpecAsyncIo: "blah",
+		api.SpecEarlyAck: "blah",
 	})
 	require.Error(t, err)
 	require.Nil(t, spec.GetIoStrategy())
 
-	spec = testSpecFromString(t, api.SpecAsyncIo, "true")
+	spec = testSpecFromString(t, api.SpecEarlyAck, "true")
 	ioStrategy = spec.GetIoStrategy()
 	require.NotNil(t, ioStrategy)
-	require.True(t, ioStrategy.AsyncIo)
+	require.True(t, ioStrategy.EarlyAck)
 
-	spec = testSpecFromString(t, api.SpecAsyncIo, "false")
+	spec = testSpecFromString(t, api.SpecEarlyAck, "false")
 	ioStrategy = spec.GetIoStrategy()
 	require.NotNil(t, ioStrategy)
-	require.False(t, ioStrategy.AsyncIo)
+	require.False(t, ioStrategy.EarlyAck)
 }
 
 func TestAsyncIo(t *testing.T) {
@@ -172,6 +172,46 @@ func TestAsyncIo(t *testing.T) {
 	ioStrategy = spec.GetIoStrategy()
 	require.NotNil(t, ioStrategy)
 	require.False(t, ioStrategy.AsyncIo)
+}
+
+func TestDirectIo(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecDirectIo: "true",
+	})
+
+	require.NoError(t, err)
+	ioStrategy := spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.DirectIo)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecDirectIo: "false",
+	})
+	require.NoError(t, err)
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.DirectIo)
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.Nil(t, spec.GetIoStrategy())
+
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecDirectIo: "blah",
+	})
+	require.Error(t, err)
+	require.Nil(t, spec.GetIoStrategy())
+
+	spec = testSpecFromString(t, api.SpecDirectIo, "true")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.True(t, ioStrategy.DirectIo)
+
+	spec = testSpecFromString(t, api.SpecDirectIo, "false")
+	ioStrategy = spec.GetIoStrategy()
+	require.NotNil(t, ioStrategy)
+	require.False(t, ioStrategy.DirectIo)
 }
 
 func TestForceUnsupportedFsType(t *testing.T) {
