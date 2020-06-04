@@ -73,6 +73,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "true"
 	params[api.OptCredIAMPolicy] = "false"
+	params[api.OptCredStorageClass] = ""
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -127,6 +128,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
+	params[api.OptCredStorageClass] = ""
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -582,23 +584,25 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 	req := &api.SdkCredentialEnumerateRequest{}
 
 	enumS3test1 := map[string]interface{}{
-		api.OptCredType:      "s3",
-		api.OptCredAccessKey: "test-access",
-		api.OptCredSecretKey: "test-secret",
-		api.OptCredEndpoint:  "test-endpoint",
-		api.OptCredRegion:    "test-region",
-		api.OptCredProxy:     "false",
-		api.OptCredIAMPolicy: "false",
+		api.OptCredType:         "s3",
+		api.OptCredAccessKey:    "test-access",
+		api.OptCredSecretKey:    "test-secret",
+		api.OptCredEndpoint:     "test-endpoint",
+		api.OptCredRegion:       "test-region",
+		api.OptCredProxy:        "false",
+		api.OptCredIAMPolicy:    "false",
+		api.OptCredStorageClass: "",
 	}
 
 	enumS3test2 := map[string]interface{}{
-		api.OptCredType:      "s3",
-		api.OptCredAccessKey: "test-access1",
-		api.OptCredSecretKey: "test-secret1",
-		api.OptCredEndpoint:  "test-endpoint1",
-		api.OptCredRegion:    "test-region1",
-		api.OptCredProxy:     "false",
-		api.OptCredIAMPolicy: "false",
+		api.OptCredType:         "s3",
+		api.OptCredAccessKey:    "test-access1",
+		api.OptCredSecretKey:    "test-secret1",
+		api.OptCredEndpoint:     "test-endpoint1",
+		api.OptCredRegion:       "test-region1",
+		api.OptCredProxy:        "false",
+		api.OptCredIAMPolicy:    "false",
+		api.OptCredStorageClass: "",
 	}
 
 	enumAzure := map[string]interface{}{
@@ -643,13 +647,14 @@ func TestSdkCredentialInspectIdNotFound(t *testing.T) {
 	}
 
 	enumS3 := map[string]interface{}{
-		api.OptCredType:      "s3",
-		api.OptCredAccessKey: "test-access",
-		api.OptCredSecretKey: "test-secret",
-		api.OptCredEndpoint:  "test-endpoint",
-		api.OptCredRegion:    "test-region",
-		api.OptCredProxy:     "false",
-		api.OptCredIAMPolicy: "false",
+		api.OptCredType:         "s3",
+		api.OptCredAccessKey:    "test-access",
+		api.OptCredSecretKey:    "test-secret",
+		api.OptCredEndpoint:     "test-endpoint",
+		api.OptCredRegion:       "test-region",
+		api.OptCredProxy:        "false",
+		api.OptCredIAMPolicy:    "false",
+		api.OptCredStorageClass: "",
 	}
 
 	enumAzure := map[string]interface{}{
@@ -735,6 +740,7 @@ func TestSdkAWSInspect(t *testing.T) {
 		api.OptCredDisablePathStyle: "false",
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
+		api.OptCredStorageClass:     "",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -782,6 +788,7 @@ func TestSdkCredentialAzureInspect(t *testing.T) {
 		api.OptCredAzureAccountKey:  "test-azure-account",
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
+		api.OptCredStorageClass:     "",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAzure,
@@ -820,6 +827,7 @@ func TestSdkCredentialDeleteSuccess(t *testing.T) {
 		api.OptCredAzureAccountKey:  "test-azure-account",
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
+		api.OptCredStorageClass:     "",
 	}
 	enumerateData := map[string]interface{}{
 		cred_id: enumAzure,
@@ -875,6 +883,7 @@ func TestSdkCredentialDeleteFailed(t *testing.T) {
 		api.OptCredAzureAccountKey:  "test-azure-account",
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
+		api.OptCredStorageClass:     "",
 	}
 	enumerateData := map[string]interface{}{
 		cred_id: enumAzure,
@@ -955,6 +964,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
+	params[api.OptCredStorageClass] = ""
 
 	// Create a marshalled ownership for the expect params
 	ownership := &api.Ownership{
