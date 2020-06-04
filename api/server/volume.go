@@ -392,7 +392,8 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 			VolumeId: volumeID,
 		})
 		if err != nil {
-			if !sdk.IsErrorNotFound(err) {
+			// Return error here for ha-update operation where the Action is nil
+			if !sdk.IsErrorNotFound(err) || req.Action == nil {
 				vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 				return
 			}
