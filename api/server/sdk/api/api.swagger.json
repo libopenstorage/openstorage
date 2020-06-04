@@ -1335,6 +1335,10 @@
           "region": {
             "title": "Region",
             "type": "string"
+          },
+          "s3_storage_class": {
+            "title": "(optional) Storage class for s3 puts",
+            "type": "string"
           }
         },
         "title": "Defines the response for AWS/S3 credentials",
@@ -2125,6 +2129,10 @@
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
+          },
+          "s3_storage_class": {
+            "title": "s3StorageClass for object puts, empty indicates default STANDARD",
+            "type": "string"
           },
           "use_proxy": {
             "format": "boolean",
@@ -4691,7 +4699,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.9"
+    "version": "0.69.10"
   },
   "openapi": "3.0.0",
   "paths": {
