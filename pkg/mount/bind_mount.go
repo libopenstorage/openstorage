@@ -34,9 +34,11 @@ func NewBindMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
+			traceCache:    []string{},
 		},
 	}
 	if err := b.Load(rootSubstrings); err != nil {
+		b.LogTraceCache(err)
 		return nil, err
 	}
 	return b, nil
