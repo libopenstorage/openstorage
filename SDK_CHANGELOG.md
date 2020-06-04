@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.42.29 - (6/3/2020)
+
+* Add storage-class options to credentials
+
 ### v0.42.28 - (4/7/2020)
 
 * Add implementation specific additional attributes for volume
