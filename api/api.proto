@@ -2546,6 +2546,8 @@ message SdkCredentialCreateRequest {
   bool use_proxy = 5;
   // iamPolicy indicates if IAM creds must be used for access
   bool iam_policy = 6;
+  // s3StorageClass for object puts, empty indicates default STANDARD
+  string s3_storage_class = 7;
   // Start at field number 200 to allow for expansion
   oneof credential_type {
     // Credentials for AWS/S3
@@ -2607,6 +2609,8 @@ message SdkAwsCredentialResponse {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) Storage class for s3 puts
+  string s3_storage_class = 7;
 }
 
 // Defines the response for Azure credentials
@@ -4201,7 +4205,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 9;
+    Patch = 10;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.10 - (6/3/2020)
+
+* Add storage-class options to credentials
+
 ### v0.69.9 - (4/28/2020)
 
 * Add SDK APIs for storage rebalance
