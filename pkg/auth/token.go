@@ -116,6 +116,6 @@ func Token(
 	return signedtoken, nil
 }
 
-func IsPublic(ctx context.Context) bool {
+func IsGuest(ctx context.Context) bool {
 	return metautils.ExtractIncoming(ctx).Get(authorizationHeader) == ""
 }

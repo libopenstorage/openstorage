@@ -57,9 +57,9 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	var token string
 	var err error
 
-	// public call attempted, add system.public user
-	if auth.IsPublic(ctx) {
-		return auth.ContextSaveUserInfo(ctx, auth.NewPublicUser()), nil
+	// guest call attempted, add system.guest user
+	if auth.IsGuest(ctx) {
+		return auth.ContextSaveUserInfo(ctx, auth.NewGuestUser()), nil
 	}
 
 	// Obtain token from metadata in the context
@@ -152,7 +152,7 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
 		logger.Warning("Access denied")
-		if auth.IsPublic(ctx) {
+		if auth.IsGuest(ctx) {
 			return nil, status.Errorf(
 				codes.PermissionDenied,
 				"Access denied without authentication token")
