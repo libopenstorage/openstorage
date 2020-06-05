@@ -20,6 +20,10 @@ import (
 	"context"
 )
 
+const (
+	systemGuestRoleName = "system.guest"
+)
+
 var (
 	systemTokenInst TokenGenerator = &noauth{}
 
