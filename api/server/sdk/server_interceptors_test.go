@@ -82,7 +82,7 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 		assert.NoError(t, err, "Expected context with token to succeed")
 		_, err = rc.Update(updateCtx, &api.SdkRoleUpdateRequest{
 			Role: &api.SdkRole{
-				Name: "system.public",
+				Name: "system.guest",
 				Rules: []*api.SdkRule{
 					&api.SdkRule{
 						Services: []string{"volume"},
