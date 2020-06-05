@@ -96,7 +96,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
 	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
-
+	params[api.OptCredStorageClass] = fmt.Sprintf("%v", req.GetS3StorageClass())
 	uuid, err := s.create(ctx, req, params)
 
 	if err != nil {
@@ -384,6 +384,11 @@ func (s *CredentialServer) Inspect(
 	if ok && val.(string) != "" {
 		resp.IamPolicy = val.(string) == "true"
 	}
+	storageClass := ""
+	val, ok = info[api.OptCredStorageClass]
+	if ok {
+		storageClass = val.(string)
+	}
 	switch info[api.OptCredType] {
 	case "s3":
 		var accessKey, endpoint string
@@ -413,7 +418,6 @@ func (s *CredentialServer) Inspect(
 			// older format creds
 			disablePathStyle = "false"
 		}
-
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
 				AccessKey:        accessKey,
@@ -421,6 +425,7 @@ func (s *CredentialServer) Inspect(
 				Region:           region,
 				DisableSsl:       disableSsl == "true",
 				DisablePathStyle: disablePathStyle == "true",
+				S3StorageClass:   storageClass,
 			},
 		}
 	case "azure":
