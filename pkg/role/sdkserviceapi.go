@@ -34,10 +34,10 @@ const (
 	invalidChars = "/ "
 	negMatchChar = "!"
 
-	systemAdminRoleName  = "system.admin"
-	systemViewRoleName   = "system.view"
-	systemUserRoleName   = "system.user"
-	systemPublicRoleName = "system.public"
+	SystemAdminRoleName = "system.admin"
+	SystemViewRoleName  = "system.view"
+	SystemUserRoleName  = "system.user"
+	SystemGuestRoleName = "system.guest"
 )
 
 type defaultRole struct {
@@ -49,7 +49,7 @@ var (
 	// Default roles. Should be prefixed by `system.` to avoid collisions
 	defaultRoles = map[string]*defaultRole{
 		// system:admin role can run any command
-		systemAdminRoleName: &defaultRole{
+		SystemAdminRoleName: &defaultRole{
 			rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"*"},
@@ -60,7 +60,7 @@ var (
 		},
 
 		// system:view role can only run read-only commands
-		systemViewRoleName: &defaultRole{
+		SystemViewRoleName: &defaultRole{
 			rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"*"},
@@ -81,7 +81,7 @@ var (
 			mutable: false,
 		},
 		// system:user role can only access volume lifecycle commands
-		systemUserRoleName: &defaultRole{
+		SystemUserRoleName: &defaultRole{
 			rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{
@@ -111,9 +111,9 @@ var (
 			mutable: false,
 		},
 
-		// system:public role is used for any unauthenticated user.
+		// system:guest role is used for any unauthenticated user.
 		// They can only use standard volume lifecycle commands.
-		systemPublicRoleName: &defaultRole{
+		SystemGuestRoleName: &defaultRole{
 			rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
