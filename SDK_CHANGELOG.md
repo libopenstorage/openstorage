@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.80.0 - (6/3/2020)
+
+* Add storage-class options to credentials
+
 ### v0.79.0 - (6/1/2020)
 
 * Add "dirty" flag to fastpath volumes.
