@@ -37,8 +37,8 @@ func OwnershipSetUsernameFromContext(ctx context.Context, srcOwnership *Ownershi
 	// Check if the context has information about the user. If not,
 	// then security is not enabled.
 	if userinfo, ok := auth.NewUserInfoFromContext(ctx); ok {
-		// Public users cannot provide ownership
-		if userinfo.IsPublic() {
+		// Guest user cannot provide ownership
+		if userinfo.IsGuest() {
 			return nil
 		}
 
