@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.82.0 - (6/16/2020)
+
+* Added support for fetching cloud backup size
+
 ### v0.81.0 - (6/3/2020)
 
 * Add storage-class options to credentials
