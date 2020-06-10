@@ -1606,6 +1606,23 @@ func request_OpenStorageCloudBackup_SchedEnumerate_0(ctx context.Context, marsha
 
 }
 
+var (
+	filter_OpenStorageCloudBackup_Size_0 = &utilities.DoubleArray{Encoding: map[string]int{}, Base: []int(nil), Check: []int(nil)}
+)
+
+func request_OpenStorageCloudBackup_Size_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageCloudBackupClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCloudBackupSizeRequest
+	var metadata runtime.ServerMetadata
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageCloudBackup_Size_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.Size(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_OpenStoragePolicy_Create_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStoragePolicyClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkOpenStoragePolicyCreateRequest
 	var metadata runtime.ServerMetadata
@@ -5354,6 +5371,35 @@ func RegisterOpenStorageCloudBackupHandlerClient(ctx context.Context, mux *runti
 
 	})
 
+	mux.Handle("GET", pattern_OpenStorageCloudBackup_Size_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageCloudBackup_Size_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageCloudBackup_Size_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -5385,6 +5431,8 @@ var (
 	pattern_OpenStorageCloudBackup_SchedDelete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "cloudbackups", "schedules", "backup_schedule_id"}, ""))
 
 	pattern_OpenStorageCloudBackup_SchedEnumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "schedules"}, ""))
+
+	pattern_OpenStorageCloudBackup_Size_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "cloudbackups", "size"}, ""))
 )
 
 var (
@@ -5415,6 +5463,8 @@ var (
 	forward_OpenStorageCloudBackup_SchedDelete_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageCloudBackup_SchedEnumerate_0 = runtime.ForwardResponseMessage
+
+	forward_OpenStorageCloudBackup_Size_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStoragePolicyHandlerFromEndpoint is same as RegisterOpenStoragePolicyHandler but
