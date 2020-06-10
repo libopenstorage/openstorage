@@ -1805,6 +1805,17 @@
         "title": "SdkCloudBackupScheduleInfo describes a schedule for volume backups to\na cloud provider",
         "type": "object"
       },
+      "apiSdkCloudBackupSizeResponse": {
+        "properties": {
+          "size": {
+            "format": "uint64",
+            "title": "Size is the size of the volume in bytes",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response containing the size of the volume",
+        "type": "object"
+      },
       "apiSdkCloudBackupStateChangeRequest": {
         "properties": {
           "requested_state": {
@@ -5113,6 +5124,47 @@
           }
         },
         "summary": "Delete cloud backup schedule",
+        "tags": [
+          "OpenStorageCloudBackup"
+        ]
+      }
+    },
+    "/v1/cloudbackups/size": {
+      "get": {
+        "operationId": "Size",
+        "parameters": [
+          {
+            "description": "BackupId is a value which is used to get information on the\nsize of the specified backup.",
+            "in": "query",
+            "name": "backup_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Credential id describe the credentials for the cloud.",
+            "in": "query",
+            "name": "credential_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCloudBackupSizeResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Size returns the size of any cloud backups of a volume",
         "tags": [
           "OpenStorageCloudBackup"
         ]
