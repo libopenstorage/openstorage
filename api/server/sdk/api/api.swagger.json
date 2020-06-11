@@ -841,6 +841,11 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "direct_io": {
+            "format": "boolean",
+            "title": "Enable direct I/O on the backing datastore",
+            "type": "boolean"
+          },
           "early_ack": {
             "description": "EarlyAck enables acks for async I/O at the source.",
             "format": "boolean",
@@ -4706,7 +4711,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.80.0"
+    "version": "0.81.0"
   },
   "openapi": "3.0.0",
   "paths": {
