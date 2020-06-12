@@ -710,10 +710,10 @@ message Volume {
   google.protobuf.Timestamp attach_time = 24;
   // DetachTime time this device was detached.
   google.protobuf.Timestamp detach_time= 25;
-  // LastFsckScanFix is the time when an integrity check fixed errors in filesystem
-  google.protobuf.Timestamp last_fsck_scan_fix = 26;
   // Fastpath extensions
-  FastpathConfig fpConfig = 27;
+  FastpathConfig fpConfig = 26;
+  // LastFsckScanFix is the time when an integrity check fixed errors in filesystem
+  google.protobuf.Timestamp last_fsck_scan_fix = 27;
 }
 
 // Stats is a structure that represents last collected stats for a volume
