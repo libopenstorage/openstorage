@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.82.0 - (6/11/2020)
+
+* Modified fsck service interface and added new fields to volume spec
+
 ### v0.81.0 - (6/3/2020)
 
 * Add storage-class options to credentials
