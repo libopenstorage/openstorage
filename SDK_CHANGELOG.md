@@ -2,7 +2,11 @@
 
 ## Releases
 
-### v0.84.0 - (6/26/2020)
+### v0.84.0 - (6/29/2020)
+
+* Modified fsck service interface and added new fields to volume spec master PR1607
+
+### v0.83.0 - (6/26/2020)
 
 * Updated rebalance data structures
 
