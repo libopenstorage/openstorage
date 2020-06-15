@@ -3,7 +3,6 @@
 package mount
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,12 +32,10 @@ func NewDeviceMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
-			traceCache:    []string{},
 		},
 	}
 	err := m.Load(devPrefixes)
 	if err != nil {
-		m.LogTraceCache(err)
 		return nil, err
 	}
 
@@ -62,16 +59,7 @@ func (m *deviceMounter) Reload(device string) error {
 		return err
 	}
 
-	// Check if source existed in the mounts table prior to reload
-	_, sourceExisted := m.mounts[device]
-	err = m.reload(device, newDm.mounts[device])
-
-	// only log trace cache if source existed and is no longer present
-	if sourceExisted && m.mounts[device] == nil {
-		m.LogTraceCache(fmt.Errorf("Did not find device in mount table"))
-	}
-
-	return err
+	return m.reload(device, newDm.mounts[device])
 }
 
 // Load mount table
