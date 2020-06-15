@@ -146,6 +146,7 @@ type serverAccessor interface {
 	alert() alerts.FilterDeleter
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
+	auditLogWriter() io.Writer
 }
 
 type logger struct {
@@ -562,4 +563,8 @@ func (s *sdkGrpcServer) cluster() cluster.Cluster {
 
 func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
 	return s.alertHandler
+}
+
+func (s *sdkGrpcServer) auditLogWriter() io.Writer {
+	return s.auditLogOutput
 }
