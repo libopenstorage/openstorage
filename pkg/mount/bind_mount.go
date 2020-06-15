@@ -3,7 +3,6 @@
 package mount
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
@@ -34,11 +33,9 @@ func NewBindMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
-			traceCache:    []string{},
 		},
 	}
 	if err := b.Load(rootSubstrings); err != nil {
-		b.LogTraceCache(err)
 		return nil, err
 	}
 	return b, nil
@@ -55,16 +52,7 @@ func (b *bindMounter) Reload(rootSubstring string) error {
 		return err
 	}
 
-	// Check if source existed in the mounts table prior to reload
-	_, sourceExisted := b.mounts[rootSubstring]
-	err = b.reload(rootSubstring, newBm.mounts[rootSubstring])
-
-	// only log trace cache if source existed and is no longer present
-	if sourceExisted && b.mounts[rootSubstring] == nil {
-		b.LogTraceCache(fmt.Errorf("Did not find source in mount table"))
-	}
-
-	return err
+	return b.reload(rootSubstring, newBm.mounts[rootSubstring])
 }
 
 func (b *bindMounter) Load(rootSubstrings []string) error {
