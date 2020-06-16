@@ -186,6 +186,11 @@ const (
 	KubernetesPvcNamespaceKey = "openstorage.io/pvc-namespace"
 )
 
+const (
+	// gRPC root path used to extract service and API information
+	SdkRootPath = "openstorage.api.OpenStorage"
+)
+
 // Node describes the state of a node.
 // It includes the current physical state (CPU, memory, storage, network usage) as
 // well as the containers running on the system.
