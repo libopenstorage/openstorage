@@ -1092,3 +1092,33 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 		assert.Equal(t, v.GetSchedules()[0].GetDaily().GetMinute(), int32(30))
 	}
 }
+
+func TestSdkCloudBackupSize(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "pxbackup"
+	creds := "creds"
+	backupSize := uint64(176433)
+	resp := &api.SdkCloudBackupSizeResponse{
+		Size: backupSize,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupSize(&api.SdkCloudBackupSizeRequest{BackupId: id, CredentialId: creds}).
+		Return(resp, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	r, err := c.Size(context.Background(), &api.SdkCloudBackupSizeRequest{BackupId: id, CredentialId: creds})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.GetSize())
+	assert.Equal(t, r.GetSize(), backupSize)
+}
