@@ -312,6 +312,19 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus), arg0)
 }
 
+// CloudBackupSize mocks base method
+func (m *MockVolumeDriver) CloudBackupSize(arg0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
+	ret := m.ctrl.Call(m, "CloudBackupSize", arg0)
+	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CloudBackupSize indicates an expected call of CloudBackupSize
+func (mr *MockVolumeDriverMockRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSize", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSize), arg0)
+}
+
 // Create mocks base method
 func (m *MockVolumeDriver) Create(arg0 *api.VolumeLocator, arg1 *api.Source, arg2 *api.VolumeSpec) (string, error) {
 	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)

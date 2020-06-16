@@ -55,7 +55,6 @@ func (m *nfsMounter) Reload(source string) error {
 	if err != nil {
 		return err
 	}
-	m.LogDevices()
 
 	newNFSmounter, ok := newNFSm.(*nfsMounter)
 	if !ok {
@@ -137,14 +136,4 @@ MountLoop:
 		)
 	}
 	return nil
-}
-
-func (m *nfsMounter) LogDevices() {
-	mnts := make(map[string]string)
-	for _, device := range m.mounts {
-		mnts = map[string]string{}
-		for _, mntPoint := range device.Mountpoint {
-			mnts[mntPoint.Root] = mntPoint.Root
-		}
-	}
 }
