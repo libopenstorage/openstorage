@@ -237,6 +237,12 @@ func (cl *cloudBackupNotSupported) CloudBackupSchedEnumerate() (*api.CloudBackup
 	return nil, ErrNotSupported
 }
 
+func (cl *cloudBackupNotSupported) CloudBackupSize(
+	input *api.SdkCloudBackupSizeRequest,
+) (*api.SdkCloudBackupSizeResponse, error) {
+	return nil, ErrNotSupported
+}
+
 type cloudMigrateNotSupported struct{}
 
 func (cl *cloudMigrateNotSupported) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {

@@ -177,6 +177,8 @@ type CloudBackupDriver interface {
 	CloudBackupSchedDelete(input *api.CloudBackupSchedDeleteRequest) error
 	// CloudBackupSchedEnumerate enumerates the configured backup schedules in the cluster
 	CloudBackupSchedEnumerate() (*api.CloudBackupSchedEnumerateResponse, error)
+	// CloudBackupSize fetches the size of a cloud backup
+	CloudBackupSize(input *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error)
 }
 
 // CloudMigrateDriver interface provides Cloud migration features

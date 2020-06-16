@@ -264,6 +264,17 @@ func (_mr *_MockVolumeDriverRecorder) CloudMigrateStatus(arg0 interface{}) *gomo
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudMigrateStatus", arg0)
 }
 
+func (_m *MockVolumeDriver) CloudBackupSize(arg0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
+	ret := _m.ctrl.Call(_m, "CloudBackupSize", arg0)
+	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockVolumeDriverRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudBackupSize", arg0)
+}
+
 func (_m *MockVolumeDriver) Create(_param0 *api.VolumeLocator, _param1 *api.Source, _param2 *api.VolumeSpec) (string, error) {
 	ret := _m.ctrl.Call(_m, "Create", _param0, _param1, _param2)
 	ret0, _ := ret[0].(string)
