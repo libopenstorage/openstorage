@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.83.0 - (6/16/2020)
+
+* Added support for fetching cloud backup size
+
 ### v0.82.0 - (6/11/2020)
 
 * Modified fsck service interface and added new fields to volume spec
