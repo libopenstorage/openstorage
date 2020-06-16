@@ -289,14 +289,14 @@ func listContains(list []string, s string) bool {
 func IsAdminByUser(user *auth.UserInfo) bool {
 	// If there is a user, then auth is enabled
 	if user != nil {
-		return listContains(user.Claims.Groups, AdminGroup)
+		return !user.IsGuest() && listContains(user.Claims.Groups, AdminGroup)
 	}
 
 	// No auth enabled, so everyone is an admin
 	return true
 }
 
-// Functions
+// IsAdminByContext checks if the context userInfo contains admin privileges
 func IsAdminByContext(ctx context.Context) bool {
 	// Check if the context has information about the user. If not,
 	// then security is not enabled.

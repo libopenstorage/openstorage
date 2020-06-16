@@ -57,8 +57,7 @@ func NewUserInfoFromContext(ctx context.Context) (*UserInfo, bool) {
 func NewGuestUser() *UserInfo {
 	return &UserInfo{
 		Claims: Claims{
-			Roles:  []string{systemGuestRoleName},
-			Groups: []string{"*"},
+			Roles: []string{systemGuestRoleName},
 		},
 		Guest: true,
 	}
