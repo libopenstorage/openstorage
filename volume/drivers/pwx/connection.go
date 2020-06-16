@@ -2,13 +2,15 @@ package pwx
 
 import (
 	"fmt"
-	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/portworx/sched-ops/k8s/core"
-	"github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/portworx/sched-ops/k8s/core"
+	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc"
+
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 )
 
 // ConnectionParamsBuilder contains dependencies needed for building Dial options and endpoints
@@ -36,7 +38,7 @@ type ConnectionParamsBuilderConfig struct {
 	NamespaceNameEnv string
 	// ServiceNameEnv is used to set environment variable name which should be read to fetch Porx service
 	ServiceNameEnv string
-	// ServiceNameEnv is used to set environment variable name which should be read to fetch secret
+	// CaCertSecretEnv is used to set environment variable name which should be read to fetch secret
 	// containing certificate used for protecting Porx APIs
 	CaCertSecretEnv    string
 	CaCertSecretKeyEnv string
@@ -47,6 +49,10 @@ type ConnectionParamsBuilderConfig struct {
 	StaticSDKPortEnv string
 	// StaticRestPortEnv can be used to overwrite Porx Legacy Rest API port
 	StaticRestPortEnv string
+	// if AuthEnabled is set to true params builder generates additional dial option which injects authorization token
+	AuthEnabled bool
+	// AuthTokenGen function need to be used to generate Authorization token
+	AuthTokenGenerator func() (string, error)
 }
 
 // NewConnectionParamsBuilderDefaultConfig returns ConnectionParamsBuilderConfig with default values set
@@ -64,6 +70,8 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		StaticEndpointEnv:           "PX_ENDPOINT",
 		StaticSDKPortEnv:            "PX_API_PORT",
 		StaticRestPortEnv:           "PX_SDK_PORT",
+		AuthEnabled:                 false,
+		AuthTokenGenerator:          func() (string, error) { return "", fmt.Errorf("auth token generator func is not set") },
 	}
 }
 
@@ -139,8 +147,16 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 
 // BuildDialOps build slice of grpc.DialOption to connect to SDK API
 func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
-	if !isTLSEnabled(cpb.Config.EnableTLSEnv) {
-		return []grpc.DialOption{grpc.WithInsecure()}, nil
+	var dialOptions []grpc.DialOption
+	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
+
+	if cpb.Config.AuthEnabled {
+		dialOptions = append(dialOptions, grpc.WithPerRPCCredentials(grpcserver.NewCredsInjector(cpb.Config.AuthTokenGenerator, isTLSEnabled)))
+	}
+
+	if !isTLSEnabled {
+		dialOptions = append(dialOptions, grpc.WithInsecure())
+		return dialOptions, nil
 	}
 
 	var rootCA []byte
@@ -168,10 +184,12 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 		}
 	}
 
-	dialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
+	tlsDialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
 	if err != nil {
 		return nil, fmt.Errorf("unable to build TLS gRPC connection options: %v", err)
 	}
+
+	dialOptions = append(dialOptions, tlsDialOptions...)
 
 	return dialOptions, nil
 }

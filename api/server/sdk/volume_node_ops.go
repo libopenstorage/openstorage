@@ -75,6 +75,7 @@ func (s *VolumeServer) Attach(
 			err.Error())
 	}
 
+	s.auditLog(ctx, "mountattach.attach", "Volume %s attached", req.GetVolumeId())
 	return &api.SdkVolumeAttachResponse{DevicePath: devPath}, nil
 }
 
@@ -117,6 +118,7 @@ func (s *VolumeServer) Detach(
 			err)
 	}
 
+	s.auditLog(ctx, "mountattach.detach", "Volume %s detached", req.GetVolumeId())
 	return &api.SdkVolumeDetachResponse{}, nil
 }
 
@@ -151,6 +153,7 @@ func (s *VolumeServer) Mount(
 			req.GetVolumeId(),
 			err.Error())
 	}
+	s.auditLog(ctx, "mountattach.mount", "Volume %s mounted", req.GetVolumeId())
 	return &api.SdkVolumeMountResponse{}, err
 }
 
@@ -198,5 +201,6 @@ func (s *VolumeServer) Unmount(
 			err.Error())
 	}
 
+	s.auditLog(ctx, "mountattach.unmount", "Volume %s mounted", req.GetVolumeId())
 	return &api.SdkVolumeUnmountResponse{}, nil
 }
