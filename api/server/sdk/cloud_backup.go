@@ -776,3 +776,22 @@ func (s *CloudBackupServer) defaultCloudBackupCreds(
 	}
 	return credList.CredentialIds[0], nil
 }
+
+// Size returns size of a cloud backup
+func (s *CloudBackupServer) Size(
+	ctx context.Context,
+	req *api.SdkCloudBackupSizeRequest,
+) (*api.SdkCloudBackupSizeResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	r, err := s.driver(ctx).CloudBackupSize(req)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed to fetch backup size: %v", err)
+	}
+
+	return &api.SdkCloudBackupSizeResponse{
+		Size: r.GetSize(),
+	}, nil
+}

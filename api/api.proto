@@ -2248,6 +2248,14 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
+  
+  // Size returns the size of any cloud backups of a volume
+  rpc Size(SdkCloudBackupSizeRequest)
+    returns (SdkCloudBackupSizeResponse) {
+      option(google.api.http) = {
+        get: "/v1/cloudbackups/size"
+      };
+    }
 }
 
 // OpenStoragePolicy service provides methods to manager storage policies.
@@ -3811,6 +3819,22 @@ message SdkCloudBackupSchedEnumerateResponse{
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
 }
 
+// Defines a request to retrieve the size of the volume for the
+// specificed volume
+message SdkCloudBackupSizeRequest{
+  // BackupId is a value which is used to get information on the
+  // size of the specified backup.
+  string backup_id = 1;
+  // Credential id describe the credentials for the cloud
+  string credential_id = 2;
+}
+
+// Defines a response containing the size of the volume
+message SdkCloudBackupSizeResponse{
+  // Size is the size of the volume in bytes
+  uint64 size = 1;
+}
+
 //
 // SdkRule is the message used to construct custom roles in the OpenStorage SDK.
 //
@@ -4207,7 +4231,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 81;
+    Minor = 82;
     // SDK version patch value of this specification
     Patch = 0;
   }
