@@ -57,10 +57,10 @@ func (s *FilesystemCheckServer) Start(
 }
 
 // GetStatus of a filesystem check operation
-func (s *FilesystemCheckServer) GetStatus(
+func (s *FilesystemCheckServer) Status(
 	ctx context.Context,
-	req *api.SdkFilesystemCheckGetStatusRequest,
-) (*api.SdkFilesystemCheckGetStatusResponse, error) {
+	req *api.SdkFilesystemCheckStatusRequest,
+) (*api.SdkFilesystemCheckStatusResponse, error) {
 
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
@@ -70,7 +70,7 @@ func (s *FilesystemCheckServer) GetStatus(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	}
 
-	r, err := s.driver(ctx).FilesystemCheckGetStatus(req)
+	r, err := s.driver(ctx).FilesystemCheckStatus(req)
 
 	return r, err
 }

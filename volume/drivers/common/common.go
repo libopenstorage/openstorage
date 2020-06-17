@@ -16,15 +16,15 @@ func NewVolume(
 	volumeSpec *api.VolumeSpec,
 ) *api.Volume {
 	return &api.Volume{
-		Id:           volumeID,
-		Locator:      volumeLocator,
-		Ctime:        prototime.Now(),
-		Spec:         volumeSpec,
-		Source:       source,
-		LastFsckScan: prototime.Now(),
-		Format:       fsType,
-		State:        api.VolumeState_VOLUME_STATE_AVAILABLE,
-		Status:       api.VolumeStatus_VOLUME_STATUS_UP,
+		Id:       volumeID,
+		Locator:  volumeLocator,
+		Ctime:    prototime.Now(),
+		Spec:     volumeSpec,
+		Source:   source,
+		LastScan: prototime.Now(),
+		Format:   fsType,
+		State:    api.VolumeState_VOLUME_STATE_AVAILABLE,
+		Status:   api.VolumeStatus_VOLUME_STATUS_UP,
 	}
 }
 

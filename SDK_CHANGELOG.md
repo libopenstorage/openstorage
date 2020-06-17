@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.87.0 - (6/29/2020)
+
+* Modified fsck service interface and added new fields to volume and volume spec
+
 ### v0.86.0 - (6/25/2020)
 
 * Add support for volume xattr update
