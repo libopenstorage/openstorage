@@ -56,10 +56,10 @@ func (s *FilesystemTrimServer) Start(
 }
 
 // Get Status of a filesystem trim operation
-func (s *FilesystemTrimServer) Status(
+func (s *FilesystemTrimServer) GetStatus(
 	ctx context.Context,
-	req *api.SdkFilesystemTrimStatusRequest,
-) (*api.SdkFilesystemTrimStatusResponse, error) {
+	req *api.SdkFilesystemTrimGetStatusRequest,
+) (*api.SdkFilesystemTrimGetStatusResponse, error) {
 
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
@@ -72,7 +72,7 @@ func (s *FilesystemTrimServer) Status(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
 	}
 
-	r, err := s.driver(ctx).FilesystemTrimStatus(req)
+	r, err := s.driver(ctx).FilesystemTrimGetStatus(req)
 
 	return r, err
 }

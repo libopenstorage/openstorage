@@ -200,10 +200,10 @@ type FilesystemTrimDriver interface {
 	// FilesystemTrimStart starts a filesystem trim background operation on a
 	// specified volume
 	FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error)
-	// FilesystemTrimStatus returns the status of a filesystem trim
+	// FilesystemTrimGetStatus returns the status of a filesystem trim
 	// background operation on a specified volume, if any
-	FilesystemTrimStatus(request *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error)
-	// FilesystemTrimStop stops a filesystem trim background operation on
+	FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error)
+	// FilesystemTrimGetStatus stops a filesystem trim background operation on
 	// a specified volume, if any
 	FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error)
 }

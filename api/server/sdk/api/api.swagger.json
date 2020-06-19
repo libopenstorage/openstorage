@@ -2327,6 +2327,19 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkFilesystemTrimGetStatusResponse": {
+        "description": "SdkFilesystemTrimGetStatusResponse defines the response for a\nSdkFilesystemTrimGetStatusRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkFilesystemTrimStartRequest": {
         "properties": {
           "mount_path": {
@@ -2343,19 +2356,6 @@
       },
       "apiSdkFilesystemTrimStartResponse": {
         "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
-          }
-        },
-        "type": "object"
-      },
-      "apiSdkFilesystemTrimStatusResponse": {
-        "description": "SdkFilesystemTrimStatusResponse defines the response for a\nSdkFilesystemTrimStatusRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -5854,7 +5854,7 @@
     },
     "/v1/filesystem-trim/status": {
       "get": {
-        "operationId": "Status",
+        "operationId": "GetStatus",
         "parameters": [
           {
             "description": "Id of the volume.",
@@ -5880,7 +5880,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemTrimStatusResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimGetStatusResponse"
                 }
               }
             },

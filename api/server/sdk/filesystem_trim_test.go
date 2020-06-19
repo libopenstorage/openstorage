@@ -48,7 +48,7 @@ func TestSdkFilesystemTrimStartSuccess(t *testing.T) {
 	assert.Equal(t, resp.Message, testMockResp.Message)
 }
 
-func TestSdkFilesystemTrimStatus(t *testing.T) {
+func TestSdkFilesystemTrimGetStatus(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -58,12 +58,12 @@ func TestSdkFilesystemTrimStatus(t *testing.T) {
 	testMountPath := "/var/lib/osd/test"
 	testStatus := api.FilesystemTrim_FS_TRIM_INPROGRESS
 	testMessage := "Test Message : FStrim in progress"
-	req := &api.SdkFilesystemTrimStatusRequest{
+	req := &api.SdkFilesystemTrimGetStatusRequest{
 		VolumeId:  testVolumeId,
 		MountPath: testMountPath,
 	}
 
-	testMockResp := &api.SdkFilesystemTrimStatusResponse{
+	testMockResp := &api.SdkFilesystemTrimGetStatusResponse{
 		Status:  testStatus,
 		Message: testMessage,
 	}
@@ -71,7 +71,7 @@ func TestSdkFilesystemTrimStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemTrimStatus(&api.SdkFilesystemTrimStatusRequest{
+		FilesystemTrimGetStatus(&api.SdkFilesystemTrimGetStatusRequest{
 			VolumeId:  testVolumeId,
 			MountPath: testMountPath,
 		}).
@@ -82,7 +82,7 @@ func TestSdkFilesystemTrimStatus(t *testing.T) {
 	c := api.NewOpenStorageFilesystemTrimClient(s.Conn())
 
 	// Get info
-	resp, err := c.Status(context.Background(), req)
+	resp, err := c.GetStatus(context.Background(), req)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.Status, testMockResp.Status)
 	assert.Equal(t, resp.Message, testMockResp.Message)
