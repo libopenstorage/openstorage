@@ -609,6 +609,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			Xattr: spec.Xattr,
 		}
 	}
+	if spec.ScanPolicy != nil {
+		newSpec.ScanPolicyOpt = &api.VolumeSpecUpdate_ScanPolicy{
+			ScanPolicy: spec.ScanPolicy,
+		}
+	}
 
 	return newSpec
 }
