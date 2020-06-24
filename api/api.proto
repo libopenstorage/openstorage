@@ -3155,11 +3155,13 @@ message SdkStorageRebalanceRequest {
   repeated  StorageRebalanceTriggerThreshold trigger_thresholds = 1;
   // TrialRun if true the job only produces steps that would be taken without making any changes
   bool trial_run = 2;
-  // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
-  map<string, string> pool_selector_labels = 3;
+  // SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source
+  LabelSelectorRequirement source_pool_selector = 3;
+  // TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target
+  LabelSelectorRequirement target_pool_selector = 4;
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
-  uint64 max_duration_minutes = 4;
+  uint64 max_duration_minutes = 5;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -3176,8 +3178,8 @@ message SdkStorageRebalanceResponse {
 message StorageRebalanceJob {
   // ID of the rebalance job
   string id = 1;
-  // Error describes errors occurred during rebalance
-  string error = 2;
+  // Status describes status of pools after rebalance if rebalance did not finish successfully
+  string status = 2;
   // State of the current job
   StorageRebalanceJobState state = 3;
   // Parameters is the original request params for this rebalance operation
@@ -4181,7 +4183,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 83;
+    Minor = 84;
     // SDK version patch value of this specification
     Patch = 0;
   }
