@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.13 - (6/24/2020)
+
+* Updated rebalance data structures
+
 ### v0.69.12 - (6/24/2020)
 
 * Updated rebalance data structures
