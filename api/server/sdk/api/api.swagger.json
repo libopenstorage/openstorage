@@ -2954,12 +2954,11 @@
             "title": "MaxDurationMinutes defines how long operation should run when started at schedule.\n0 values means no limit on duration",
             "type": "string"
           },
-          "pool_selector_labels": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "PoolSelectorLabels allows selecting pools to which trigger thresholds will apply",
-            "type": "object"
+          "source_pool_selector": {
+            "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+          },
+          "target_pool_selector": {
+            "$ref": "#/components/schemas/apiLabelSelectorRequirement"
           },
           "trial_run": {
             "format": "boolean",
@@ -3864,10 +3863,6 @@
             "title": "CreateTime is the time the job was created",
             "type": "string"
           },
-          "error": {
-            "title": "Error describes errors occurred during rebalance",
-            "type": "string"
-          },
           "id": {
             "title": "ID of the rebalance job",
             "type": "string"
@@ -3877,6 +3872,10 @@
           },
           "state": {
             "$ref": "#/components/schemas/apiStorageRebalanceJobState"
+          },
+          "status": {
+            "title": "Status describes status of pools after rebalance if rebalance did not finish successfully",
+            "type": "string"
           }
         },
         "title": "StorageRebalanceJob describes job input and current status",
@@ -4722,7 +4721,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.82.0"
+    "version": "0.83.0"
   },
   "openapi": "3.0.0",
   "paths": {
