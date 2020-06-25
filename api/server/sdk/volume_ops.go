@@ -271,6 +271,7 @@ func (s *VolumeServer) Create(
 		return nil, err
 	}
 
+	s.auditLog(ctx, "volume.create", "Volume %s created", id)
 	return &api.SdkVolumeCreateResponse{
 		VolumeId: id,
 	}, nil
@@ -317,6 +318,7 @@ func (s *VolumeServer) Clone(
 		return nil, err
 	}
 
+	s.auditLog(ctx, "volume.clone", "Volume %s created from %s", id, req.GetParentId())
 	return &api.SdkVolumeCloneResponse{
 		VolumeId: id,
 	}, nil
@@ -363,6 +365,7 @@ func (s *VolumeServer) Delete(
 			err.Error())
 	}
 
+	s.auditLog(ctx, "volume.delete", "Volume %s deleted", req.GetVolumeId())
 	return &api.SdkVolumeDeleteResponse{}, nil
 }
 
@@ -624,6 +627,7 @@ func (s *VolumeServer) Update(
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
+	s.auditLog(ctx, "volume.update", "Volume %s updated", req.GetVolumeId())
 	return &api.SdkVolumeUpdateResponse{}, nil
 }
 

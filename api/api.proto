@@ -300,6 +300,8 @@ message IoStrategy {
   bool async_io = 1;
   // EarlyAck enables acks for async I/O at the source.
   bool early_ack = 2;
+  // Enable direct I/O on the backing datastore
+  bool direct_io = 3;
 }
 
 // Xattr defines implementation specific volume attribute
@@ -385,6 +387,8 @@ message FastpathConfig {
   FastpathStatus status = 3;
   // Fastpath replica state for each replica in replica set
   repeated FastpathReplState replicas = 4;
+  // Dirty flag on volume - was attached in userspace
+  bool dirty = 5;
 }
 
 // VolumeSpec has the properties needed to create a volume.
@@ -673,8 +677,8 @@ message Volume {
   VolumeSpec spec = 7;
   // Usage is bytes consumed by this volume.
   uint64 usage = 8;
-  // LastScan is the time when an integrity check was run.
-  google.protobuf.Timestamp last_scan = 9;
+  // LastFsckScan is the time when an integrity check was run.
+  google.protobuf.Timestamp last_fsck_scan = 9;
   // Format specifies the filesytem for this volume.
   FSType format = 10;
   // VolumeStatus is the availability status of this volume.
@@ -710,6 +714,8 @@ message Volume {
   google.protobuf.Timestamp detach_time= 25;
   // Fastpath extensions
   FastpathConfig fpConfig = 26;
+  // LastFsckScanFix is the time when an integrity check fixed errors in filesystem
+  google.protobuf.Timestamp last_fsck_scan_fix = 27;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1350,65 +1356,57 @@ service OpenStorageFilesystemTrim {
 // This operation is run in the background on an **unmounted volume**.
 // If the volume is mounted, then these APIs return error.
 //
-// Once the filesystem check operation(either CheckHealth() or FixAll()) is
-// started, the clients have to poll for the status of the background operation
-// using the `OpenStorageFilesystemcheck.CheckHealthGetStatus()` rpc request or
-// `OpenStorageFilesystemCheck.FixAllGetStatus()` rpc request.
+// Once the filesystem check operation is started, in one of the available
+// modes(check_health, fix_safe, fix_all),
+// the clients have to poll for the status of the background operation
+// using the `OpenStorageFilesystemcheck.GetStatus()` rpc request.
 //
-// **Note: CheckHealth() and FixAll() cannot run in parallel for the same volume**
+// **Note:
+// 1. Different modes of filesystem check can execute in parallel for
+// the same volume.
+// 2. Filesystem Check and volume Mount are mutually exclusive, meaning both
+// cannot be run on a volume at the same time.
 //
 // A typical workflow involving filesystem check would be as follows
 // 1. Attach the volume
 //    `OpenStorageMountAttachClient.Attach()`
 // 2. Check the health of the filesystem by issuing a grpc call to
-//    `OpenStorageFilesystemCheckClient.CheckHealth()`
-// 3. Status of the CheckHealth() operation can be retrieved by polling for the
-//    status using `OpenStorageFilesystemCheck.CheckHealthGetStatus()`
-// 4. If the CheckHealth Operations status reports filesystem is in unhealthy
+//    `OpenStorageFilesystemCheckClient.Start(Mode='check_health')`
+// 3. Status of the Filesystem Check operation in check_health mode, can be
+//    retrieved by polling for the status using
+//    `OpenStorageFilesystemCheck.GetStatus()`
+// 4. If the Filesystem Check Operation status reports filesystem is in unhealthy
 //    state, then to fix all the problems issue a grpc call to
-//    `OpenStorageFilesystemCheckClient.FixAll()`
-// 5. Status of the FixAll() operation can be retrieved by polling for the
-//    status using `OpenStorageFilesystemCheck.FixAllGetStatus()`
-// 6. CheckHealth() and FixAll() operations run in the background, to stop these
-//    operations, issue a call to
+//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_all')`
+// 5. Status of the Filesystem Check operation in fix_all mode, can be retrieved
+//    by polling for the status using
+//    `OpenStorageFilesystemCheck.GetStatus()`
+// 6. Filesystem Check operation runs in the background, to stop the operation,
+//    issue a call to
 //    `OpenStorageFilesystemCheckClient.Stop()`
+// 7. To Check and Fix errors in the filesystem that are safe to fix, issue a
+//    grpc call to
+//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_safe')`
+//    Status of this operation can be polled in the way mentioned in step 3
+//    This operation can be stopped a Stop request as mentioned in step 6
+
 service OpenStorageFilesystemCheck {
 
-  // Get a report of issues found on the filesystem. This operation works on an
-  // unmounted volume.
-  rpc CheckHealth(SdkFilesystemCheckCheckHealthRequest)
-    returns (SdkFilesystemCheckCheckHealthResponse){
+  // Start a filesystem-check background operation on a unmounted volume.
+  rpc Start(SdkFilesystemCheckStartRequest)
+    returns (SdkFilesystemCheckStartResponse){
       option(google.api.http) = {
-        post: "/v1/filesystem-check/checkhealth"
+        post: "/v1/filesystem-check/start"
         body: "*"
       };
     }
 
-  // Get Status of a filesystem CheckHealth background operation on an unmounted
+  // Get Status of a filesystem-check background operation on an unmounted
   // volume, if any
-  rpc CheckHealthGetStatus(SdkFilesystemCheckCheckHealthGetStatusRequest)
-    returns (SdkFilesystemCheckCheckHealthGetStatusResponse){
+  rpc GetStatus(SdkFilesystemCheckGetStatusRequest)
+    returns (SdkFilesystemCheckGetStatusResponse){
       option(google.api.http) = {
-        get: "/v1/filesystem-check/checkhealth/status"
-      };
-    }
-
-  // FixAll fixes all the issues reported in the response to CheckHealth API on
-  // a filesystem. This operation works on an unmounted volume.
-  rpc FixAll(SdkFilesystemCheckFixAllRequest)
-    returns (SdkFilesystemCheckFixAllResponse){
-      option(google.api.http) = {
-        post: "/v1/filesystem-check/fixall"
-        body: "*"
-      };
-    }
-
-  // Get Status of a filesystem FixAll background operation on an unmounted
-  // volume, if any
-  rpc FixAllGetStatus(SdkFilesystemCheckFixAllGetStatusRequest)
-    returns (SdkFilesystemCheckFixAllGetStatusResponse){
-      option(google.api.http) = {
-        get: "/v1/filesystem-check/fixall/status"
+        get: "/v1/filesystem-check/status"
       };
     }
 
@@ -2246,6 +2244,14 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
+  
+  // Size returns the size of any cloud backups of a volume
+  rpc Size(SdkCloudBackupSizeRequest)
+    returns (SdkCloudBackupSizeResponse) {
+      option(google.api.http) = {
+        get: "/v1/cloudbackups/size"
+      };
+    }
 }
 
 // OpenStoragePolicy service provides methods to manager storage policies.
@@ -2551,6 +2557,8 @@ message SdkCredentialCreateRequest {
   bool use_proxy = 5;
   // iamPolicy indicates if IAM creds must be used for access
   bool iam_policy = 6;
+  // s3StorageClass for object puts, empty indicates default STANDARD
+  string s3_storage_class = 7;
   // Start at field number 200 to allow for expansion
   oneof credential_type {
     // Credentials for AWS/S3
@@ -2612,6 +2620,8 @@ message SdkAwsCredentialResponse {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) Storage class for s3 puts
+  string s3_storage_class = 7;
 }
 
 // Defines the response for Azure credentials
@@ -3147,11 +3157,13 @@ message SdkStorageRebalanceRequest {
   repeated  StorageRebalanceTriggerThreshold trigger_thresholds = 1;
   // TrialRun if true the job only produces steps that would be taken without making any changes
   bool trial_run = 2;
-  // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
-  map<string, string> pool_selector_labels = 3;
+  // SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source
+  LabelSelectorRequirement source_pool_selector = 3;
+  // TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target
+  LabelSelectorRequirement target_pool_selector = 4;
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
-  uint64 max_duration_minutes = 4;
+  uint64 max_duration_minutes = 5;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -3168,8 +3180,8 @@ message SdkStorageRebalanceResponse {
 message StorageRebalanceJob {
   // ID of the rebalance job
   string id = 1;
-  // Error describes errors occurred during rebalance
-  string error = 2;
+  // Status describes status of pools after rebalance if rebalance did not finish successfully
+  string status = 2;
   // State of the current job
   StorageRebalanceJobState state = 3;
   // Parameters is the original request params for this rebalance operation
@@ -3805,6 +3817,22 @@ message SdkCloudBackupSchedEnumerateResponse{
   map<string, SdkCloudBackupScheduleInfo> cloud_sched_list = 1;
 }
 
+// Defines a request to retrieve the size of the volume for the
+// specificed volume
+message SdkCloudBackupSizeRequest{
+  // BackupId is a value which is used to get information on the
+  // size of the specified backup.
+  string backup_id = 1;
+  // Credential id describe the credentials for the cloud
+  string credential_id = 2;
+}
+
+// Defines a response containing the size of the volume
+message SdkCloudBackupSizeResponse{
+  // Size is the size of the volume in bytes
+  uint64 size = 1;
+}
+
 //
 // SdkRule is the message used to construct custom roles in the OpenStorage SDK.
 //
@@ -4002,109 +4030,62 @@ message FilesystemCheck {
     FS_CHECK_NOT_RUNNING = 1;
     // FilesystemCheck operation started for the specified volume
     FS_CHECK_STARTED = 2;
-    // FilesystemCheck CheckHealth operation is in progress
-    FS_CHECK_CHECK_HEALTH_INPROGRESS = 3;
-    // FilesystemCheck CheckHealth operation was stopped by the user
-    FS_CHECK_CHECK_HEALTH_STOPPED = 4;
-    // FilesystemCheck CheckHealth operation completed successfully
-    FS_CHECK_CHECK_HEALTH_COMPLETED = 5;
-    // FilesystemCheck CheckHealth operation failed due to internal error
-    FS_CHECK_CHECK_HEALTH_FAILED = 6;
-    // FilesystemCheck FixAll operation is in progress
-    FS_CHECK_FIXALL_INPROGRESS = 7;
-    // FilesystemCheck FixAll operation was stopped by the user
-    FS_CHECK_FIXALL_STOPPED = 8;
-    // FilesystemCheck FixAll operation completed successfully
-    FS_CHECK_FIXALL_COMPLETED = 9;
-    // FilesystemCheck FixAll operation failed due to internal error
-    FS_CHECK_FIXALL_FAILED = 10;
+    // FilesystemCheck operation is in progress
+    FS_CHECK_INPROGRESS = 3;
+    // FilesystemCheck operation was stopped by the user
+    FS_CHECK_STOPPED = 4;
+    // FilesystemCheck operation completed successfully
+    FS_CHECK_COMPLETED = 5;
+    // FilesystemCheck operation failed due to internal error
+    FS_CHECK_FAILED = 6;
   }
 
-  enum CheckHealthStatus {
+  enum FilesystemHealthStatus {
     // filesystem health status is unknown
-    CHECK_HEALTH_STATUS_UNKNOWN = 0;
+    FS_HEALTH_STATUS_UNKNOWN = 0;
     // filesystem health is healthy
-    CHECK_HEALTH_STATUS_HEALTHY = 1;
+    FS_HEALTH_STATUS_HEALTHY = 1;
     // filesystem health is not healthy
-    CHECK_HEALTH_STATUS_NOT_HEALTHY = 2;
-  }
-
-  enum FixAllStatus {
-    // filesystem check fixall status is unknown
-    FIXALL_STATUS_UNKNOWN = 0;
-    // filesystem check fixall is healthy
-    FIXALL_STATUS_HEALTHY = 1;
-    // check fixall is not healthy
-    FIXALL_STATUS_NOT_HEALTHY = 2;
+    FS_HEALTH_STATUS_NOT_HEALTHY = 2;
   }
 }
-// SdkFilesystemCheckCheckHealthRequest defines a request to report the
-// filesystem consistency issues
-message SdkFilesystemCheckCheckHealthRequest {
+// SdkFilesystemCheckStartRequest defines a request to start a background
+// filesystem consistency check operation
+message SdkFilesystemCheckStartRequest {
   // Id of the volume
   string volume_id = 1;
+  // Mode of operation
+  string mode = 2;
 }
 
-// SdkFilesystemCheckCheckHealthResponse defines the response for a
-// SdkFilesystemCheckCheckHealthRequest.
-message SdkFilesystemCheckCheckHealthResponse{
+// SdkFilesystemCheckStartResponse defines the response for a
+// SdkFilesystemCheckStartRequest.
+message SdkFilesystemCheckStartResponse{
   // Status code representing the state of the filesystem check operation
   FilesystemCheck.FilesystemCheckStatus status = 1;
   // Text blob containing ASCII text providing details of the operation
   string message = 2;
 }
 
-// SdkFilesystemCheckCheckHealthGetStatusRequest defines a request to get status of a
+// SdkFilesystemCheckGetStatusRequest defines a request to get status of a
 // background filesystem check operation
-message SdkFilesystemCheckCheckHealthGetStatusRequest {
+message SdkFilesystemCheckGetStatusRequest {
   // Id of the volume
   string volume_id = 1;
 }
 
-// SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a
-// SdkFilesystemCheckCheckHealthGetStatusRequest.
-message SdkFilesystemCheckCheckHealthGetStatusResponse{
+// SdkFilesystemCheckGetStatusResponse defines the response for a
+// SdkFilesystemCheckGetStatusRequest.
+message SdkFilesystemCheckGetStatusResponse{
   // Status code representing the state of the filesystem check operation
   FilesystemCheck.FilesystemCheckStatus status = 1;
   // Status code representing the health of the filesystem after a checkHealth
   // operation
-  FilesystemCheck.CheckHealthStatus health_status = 2;
+  FilesystemCheck.FilesystemHealthStatus health_status = 2;
+  // Text string representing the mode of filesystem check operation
+  string mode = 3;
   // Text blob containing ASCII text providing details of the operation
-  string message = 3;
-}
-
-// SdkFilesystemCheckFixAllRequest defines a request to fix all the filesystem
-// consistency issues
-message SdkFilesystemCheckFixAllRequest {
-  // Id of the volume
-  string volume_id = 1;
-}
-
-// SdkFilesystemCheckFixAllResponse defines the response for a
-// SdkFilesystemCheckFixAllRequest.
-message SdkFilesystemCheckFixAllResponse{
-  // Status code representing the state of the filesystem check operation
-  FilesystemCheck.FilesystemCheckStatus status = 1;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 2;
-}
-
-// SdkFilesystemCheckFixAllGetStatusRequest defines a request to get status of a
-// background filesystem check operation
-message SdkFilesystemCheckFixAllGetStatusRequest {
-  // Id of the volume
-  string volume_id = 1;
-}
-
-// SdkFilesystemCheckFixAllGetStatusResponse defines the response for a
-// SdkFilesystemCheckFixAllGetStatusRequest.
-message SdkFilesystemCheckFixAllGetStatusResponse{
-  // Status code representing the state of the filesystem check operation
-  FilesystemCheck.FilesystemCheckStatus status = 1;
-  // Status code representing the health of the filesystem after FixAll operation
-  FilesystemCheck.FixAllStatus health_status = 2;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 3;
+  string message = 4;
 }
 
 // SdkFilesystemCheckStopRequest defines a request to stop a background
@@ -4204,7 +4185,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 79;
+    Minor = 85;
     // SDK version patch value of this specification
     Patch = 0;
   }

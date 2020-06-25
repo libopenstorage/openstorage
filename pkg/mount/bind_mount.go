@@ -33,11 +33,9 @@ func NewBindMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
-			traceCache:    []string{},
 		},
 	}
 	if err := b.Load(rootSubstrings); err != nil {
-		b.LogTraceCache(err)
 		return nil, err
 	}
 	return b, nil
@@ -53,6 +51,7 @@ func (b *bindMounter) Reload(rootSubstring string) error {
 	if err != nil {
 		return err
 	}
+
 	return b.reload(rootSubstring, newBm.mounts[rootSubstring])
 }
 

@@ -965,7 +965,9 @@ func TestOwnershipIsAdminByContext(t *testing.T) {
 	userctx := auth.ContextSaveUserInfo(context.Background(), &auth.UserInfo{
 		Username: "user",
 	})
+	guestctx := auth.ContextSaveUserInfo(context.Background(), auth.NewGuestUser())
 	assert.True(t, IsAdminByContext(context.Background()))
 	assert.True(t, IsAdminByContext(adminctx))
 	assert.False(t, IsAdminByContext(userctx))
+	assert.False(t, IsAdminByContext(guestctx))
 }

@@ -74,6 +74,7 @@ const (
 	SpecNodiscard            = "nodiscard"
 	StoragePolicy            = "storagepolicy"
 	SpecCowOnDemand          = "cow_ondemand"
+	SpecDirectIo             = "direct_io"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -108,6 +109,9 @@ const (
 	OptCredDisableSSL = "CredDisableSSL"
 	// OptCredDisablePathStyle does not enforce path style for s3
 	OptCredDisablePathStyle = "CredDisablePathStyle"
+	// OptCredStorageClass indicates the storage class to be used for puts
+	// allowed values are STANDARD, STANDARD_IA,ONEZONE_IA, REDUCED_REDUNDANCY
+	OptCredStorageClass = "CredStorageClass"
 	// OptCredEndpoint indicate the cloud endpoint
 	OptCredEndpoint = "CredEndpoint"
 	// OptCredAccKey for s3
@@ -180,6 +184,11 @@ const (
 	// KubernetesPvcNamespaceKey is a label on the openstorage volume
 	// which tracks the source PVC namespace for the volume
 	KubernetesPvcNamespaceKey = "openstorage.io/pvc-namespace"
+)
+
+const (
+	// gRPC root path used to extract service and API information
+	SdkRootPath = "openstorage.api.OpenStorage"
 )
 
 // Node describes the state of a node.
@@ -453,6 +462,12 @@ type CloudBackupOpType string
 const (
 	CloudBackupOp  = CloudBackupOpType("Backup")
 	CloudRestoreOp = CloudBackupOpType("Restore")
+)
+
+// Allowed storage classes s3
+const (
+	S3StorageClassStandard   = "STANDARD"
+	S3StorageClassStandardIa = "STANDARD_IA"
 )
 
 type CloudBackupStatusType string

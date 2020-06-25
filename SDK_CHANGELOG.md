@@ -2,9 +2,33 @@
 
 ## Releases
 
-### v0.78.0 - (5/29/2020)
+### v0.85.0 - (6/24/2020)
 
 * Add support for volume xattr update
+
+### v0.84.0 - (6/24/2020)
+
+* Updated rebalance data structures
+
+### v0.83.0 - (6/16/2020)
+
+* Added support for fetching cloud backup size
+
+### v0.82.0 - (6/11/2020)
+
+* Modified fsck service interface and added new fields to volume spec
+
+### v0.81.0 - (6/3/2020)
+
+* Add storage-class options to credentials
+
+### v0.80.0 - (6/2/2020)
+
+* Add direct_io as IO strategy
+
+### v0.79.0 - (6/1/2020)
+
+* Add "dirty" flag to fastpath volumes.
 
 ### v0.78.0 - (4/28/2020)
 
@@ -29,7 +53,7 @@
 ### v0.73.0 - Tech Preview (1/27/2020)
 
 * Add Restore volume spec for Cloud Backup restore api
-*
+
 ### v0.72.0 - (1/21/2020)
 
 * Added documentation to SdkRule about new denial support

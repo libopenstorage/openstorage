@@ -18,9 +18,12 @@ package sdk
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
 	"github.com/pborman/uuid"
@@ -57,21 +60,32 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	var token string
 	var err error
 
-	// public call attempted, add system.public user
-	if auth.IsPublic(ctx) {
-		return auth.ContextSaveUserInfo(ctx, auth.NewPublicUser()), nil
+	// Audit log
+	log := logrus.New()
+	log.Out = s.auditLogOutput
+	auditLogWarningf := func(c codes.Code, format string, a ...interface{}) error {
+		log.WithFields(logrus.Fields{
+			"method": "Authentication",
+			"code":   c.String(),
+		}).Warningf(format, a)
+		return status.Errorf(c, format, a)
+	}
+
+	// guest call attempted, add system.guest user
+	if auth.IsGuest(ctx) {
+		return auth.ContextSaveUserInfo(ctx, auth.NewGuestUser()), nil
 	}
 
 	// Obtain token from metadata in the context
 	token, err = grpc_auth.AuthFromMD(ctx, ContextMetadataTokenKey)
 	if err != nil {
-		return nil, err
+		return nil, auditLogWarningf(codes.Unauthenticated, "Invalid or missing authentication token")
 	}
 
 	// Determine issuer
 	issuer, err := auth.TokenIssuer(token)
 	if err != nil {
-		return nil, status.Errorf(codes.PermissionDenied, "Unable to obtain issuer from token: %v", err)
+		return nil, auditLogWarningf(codes.Unauthenticated, "Unable to obtain token issuer from authorization token: %v", err)
 	}
 
 	// Authenticate user
@@ -88,10 +102,10 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 			})
 			return ctx, nil
 		} else {
-			return nil, status.Error(codes.PermissionDenied, err.Error())
+			return nil, auditLogWarningf(codes.PermissionDenied, err.Error())
 		}
 	} else {
-		return nil, status.Errorf(codes.PermissionDenied, "%s is not a trusted issuer", issuer)
+		return nil, auditLogWarningf(codes.Unauthenticated, "%s is not a trusted issuer", issuer)
 	}
 }
 
@@ -136,6 +150,9 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	}
 	claims := &userinfo.Claims
 
+	// Get method and API
+	reqService, reqApi := grpcserver.GetMethodInformation(api.SdkRootPath, info.FullMethod)
+
 	// Setup auditor log
 	log := logrus.New()
 	log.Out = s.auditLogOutput
@@ -146,13 +163,13 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 		"email":    claims.Email,
 		"roles":    claims.Roles,
 		"groups":   claims.Groups,
-		"method":   info.FullMethod,
+		"method":   fmt.Sprintf("%s.%s", reqService, reqApi),
 	})
 
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
 		logger.Warning("Access denied")
-		if auth.IsPublic(ctx) {
+		if auth.IsGuest(ctx) {
 			return nil, status.Errorf(
 				codes.PermissionDenied,
 				"Access denied without authentication token")

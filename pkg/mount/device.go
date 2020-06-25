@@ -32,12 +32,10 @@ func NewDeviceMounter(
 			allowedDirs:   allowedDirs,
 			kl:            keylock.New(),
 			trashLocation: trashLocation,
-			traceCache:    []string{},
 		},
 	}
 	err := m.Load(devPrefixes)
 	if err != nil {
-		m.LogTraceCache(err)
 		return nil, err
 	}
 
@@ -60,6 +58,7 @@ func (m *deviceMounter) Reload(device string) error {
 	if err != nil {
 		return err
 	}
+
 	return m.reload(device, newDm.mounts[device])
 }
 
