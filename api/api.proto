@@ -3154,11 +3154,13 @@ message SdkStorageRebalanceRequest {
   repeated  StorageRebalanceTriggerThreshold trigger_thresholds = 1;
   // TrialRun if true the job only produces steps that would be taken without making any changes
   bool trial_run = 2;
-  // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
-  map<string, string> pool_selector_labels = 3;
+  // SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source
+  repeated LabelSelectorRequirement source_pool_selector = 3;
+  // TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target
+  repeated LabelSelectorRequirement target_pool_selector = 4;
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
-  uint64 max_duration_minutes = 4;
+  uint64 max_duration_minutes = 5;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -4229,7 +4231,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 11;
+    Patch = 12;
   }
 
   // The following cannot be set to use the enum Version because the REST

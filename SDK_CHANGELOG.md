@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.12 - (6/25/2020)
+
+* Updated rebalance data structures
+
 ### v0.69.11 - (6/16/2020)
 
 * Added support for fetching cloud backup size
