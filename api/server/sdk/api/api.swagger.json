@@ -2955,10 +2955,18 @@
             "type": "string"
           },
           "source_pool_selector": {
-            "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "title": "SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source",
+            "type": "array"
           },
           "target_pool_selector": {
-            "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "title": "TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target",
+            "type": "array"
           },
           "trial_run": {
             "format": "boolean",
@@ -4721,7 +4729,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.83.0"
+    "version": "0.84.0"
   },
   "openapi": "3.0.0",
   "paths": {
