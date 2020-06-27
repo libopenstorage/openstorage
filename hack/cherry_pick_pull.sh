@@ -93,6 +93,7 @@ declare -r PULLSUBJ
 
 echo "+++ Updating remotes..."
 git remote update "${UPSTREAM_REMOTE}" "${FORK_REMOTE}"
+git fetch --all
 
 if ! git log -n1 --format=%H "${BRANCH}" >/dev/null 2>&1; then
   echo "!!! '${BRANCH}' not found. The second argument should be something like ${UPSTREAM_REMOTE}/release-0.21."
