@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.85.0 - (6/29/2020)
+
+* Add support for volume xattr update
+
 ### v0.84.0 - (6/29/2020)
 
 * Modified fsck service interface and added new fields to volume spec master PR1607

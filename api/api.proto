@@ -512,6 +512,8 @@ message VolumeSpecUpdate {
   oneof export_spec_opt { ExportSpec export_spec = 29; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 30; }
+  // Xattr specifies implementation specific volume attributes
+  oneof xattr_opt { Xattr.Value xattr = 31; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -2242,7 +2244,7 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
-  
+
   // Size returns the size of any cloud backups of a volume
   rpc Size(SdkCloudBackupSizeRequest)
     returns (SdkCloudBackupSizeResponse) {
@@ -4180,7 +4182,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 84;
+    Minor = 85;
     // SDK version patch value of this specification
     Patch = 0;
   }
