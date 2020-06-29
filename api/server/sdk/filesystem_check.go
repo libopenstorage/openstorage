@@ -25,7 +25,7 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// FilesystemTrimServer is an implementation of the gRPC OpenStorageFilesystemTrim interface
+// FilesystemCheckServer is an implementation of the gRPC OpenStorageFilesystemCheck interface
 type FilesystemCheckServer struct {
 	server serverAccessor
 }
@@ -34,11 +34,33 @@ func (s *FilesystemCheckServer) driver(ctx context.Context) volume.VolumeDriver 
 	return s.server.driver(ctx)
 }
 
-// Start a filesystem trim operation on a mounted volume
-func (s *FilesystemCheckServer) CheckHealth(
+// Start a filesystem check operation on a unmounted volume
+func (s *FilesystemCheckServer) Start(
 	ctx context.Context,
-	req *api.SdkFilesystemCheckCheckHealthRequest,
-) (*api.SdkFilesystemCheckCheckHealthResponse, error) {
+	req *api.SdkFilesystemCheckStartRequest,
+) (*api.SdkFilesystemCheckStartResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
+	}
+	if len(req.GetMode()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a mode parameter")
+	}
+
+	r, err := s.driver(ctx).FilesystemCheckStart(req)
+
+	return r, err
+}
+
+// GetStatus of a filesystem check operation
+func (s *FilesystemCheckServer) Status(
+	ctx context.Context,
+	req *api.SdkFilesystemCheckStatusRequest,
+) (*api.SdkFilesystemCheckStatusResponse, error) {
 
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
@@ -48,68 +70,12 @@ func (s *FilesystemCheckServer) CheckHealth(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	}
 
-	r, err := s.driver(ctx).FilesystemCheckCheckHealth(req)
+	r, err := s.driver(ctx).FilesystemCheckStatus(req)
 
 	return r, err
 }
 
-// Get Status of a filesystem trim operation
-func (s *FilesystemCheckServer) CheckHealthGetStatus(
-	ctx context.Context,
-	req *api.SdkFilesystemCheckCheckHealthGetStatusRequest,
-) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error) {
-
-	if s.driver(ctx) == nil {
-		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
-	}
-	var err error
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	}
-
-	r, err := s.driver(ctx).FilesystemCheckCheckHealthGetStatus(req)
-
-	return r, err
-}
-
-// Start a filesystem trim operation on a mounted volume
-func (s *FilesystemCheckServer) FixAll(
-	ctx context.Context,
-	req *api.SdkFilesystemCheckFixAllRequest,
-) (*api.SdkFilesystemCheckFixAllResponse, error) {
-
-	if s.driver(ctx) == nil {
-		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
-	}
-	var err error
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	}
-
-	r, err := s.driver(ctx).FilesystemCheckFixAll(req)
-
-	return r, err
-}
-
-// Get Status of a filesystem trim operation
-func (s *FilesystemCheckServer) FixAllGetStatus(
-	ctx context.Context,
-	req *api.SdkFilesystemCheckFixAllGetStatusRequest,
-) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error) {
-
-	if s.driver(ctx) == nil {
-		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
-	}
-	var err error
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	}
-	r, err := s.driver(ctx).FilesystemCheckFixAllGetStatus(req)
-
-	return r, err
-}
-
-// Stop the background filesystem check (CheckHealth or FixAll) operation on a volume, if any
+// Stop the background filesystem check (CheckHealth or FixSafe or Fixall) operation on a volume, if any
 func (s *FilesystemCheckServer) Stop(
 	ctx context.Context,
 	req *api.SdkFilesystemCheckStopRequest,
