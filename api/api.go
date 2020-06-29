@@ -74,6 +74,8 @@ const (
 	SpecNodiscard            = "nodiscard"
 	StoragePolicy            = "storagepolicy"
 	SpecCowOnDemand          = "cow_ondemand"
+	SpecScanPolicyTrigger    = "scan_policy_trigger"
+	SpecScanPolicyAction     = "scan_policy_action"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -762,6 +764,28 @@ func simpleString(typeString string, nameMap map[int32]string, v int32) string {
 		return strconv.Itoa(int(v))
 	}
 	return strings.TrimPrefix(strings.ToLower(s), fmt.Sprintf("%s_", strings.ToLower(typeString)))
+}
+
+// ScanPolicyTriggerValueof returns value of string
+func ScanPolicy_ScanTriggerSimpleValueOf(s string) (ScanPolicy_ScanTrigger, error) {
+	obj, err := simpleValueOf("scan_trigger", ScanPolicy_ScanTrigger_value, s)
+	return ScanPolicy_ScanTrigger(obj), err
+}
+
+// SimpleString returns the string format of ScanPolicy_ScanTrigger
+func (x ScanPolicy_ScanTrigger) SimpleString() string {
+	return simpleString("scan_trigger", ScanPolicy_ScanTrigger_name, int32(x))
+}
+
+// ScanPolicyActioinValueof returns value of string
+func ScanPolicy_ScanActionSimpleValueOf(s string) (ScanPolicy_ScanAction, error) {
+	obj, err := simpleValueOf("scan_action", ScanPolicy_ScanAction_value, s)
+	return ScanPolicy_ScanAction(obj), err
+}
+
+// SimpleString returns the string format of ScanPolicy_ScanAction
+func (x ScanPolicy_ScanAction) SimpleString() string {
+	return simpleString("scan_action", ScanPolicy_ScanAction_name, int32(x))
 }
 
 func toSec(ms uint64) uint64 {
