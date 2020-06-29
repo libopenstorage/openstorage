@@ -19,7 +19,7 @@ if ! git diff ${latest}..HEAD api/api.proto | grep -v "^\+\+\+../api/api.proto$"
 fi
 
 currentver=$(go run tools/sdkver/sdkver.go)
-prevver=$(git show ${lastest}:api/server/sdk/api/api.swagger.json | jq -r '.info.version')
+prevver=$(git show ${latest}:api/server/sdk/api/api.swagger.json | jq -r '.info.version')
 
 if [ "$currentver" = "$prevver" ] ; then
 	fail "SdkVersion $currentver matches previous version and has not been updated"
