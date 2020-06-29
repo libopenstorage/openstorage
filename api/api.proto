@@ -36,6 +36,7 @@ enum Status {
   STATUS_NOT_IN_QUORUM_NO_STORAGE = 13;
   // Add statuses before MAX and update the number for MAX
   STATUS_MAX = 14;
+  STATUS_REMOVE = 15;
 }
 
 enum DriverType {

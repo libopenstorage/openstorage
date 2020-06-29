@@ -36,7 +36,7 @@ func (m *AttachRequest) Reset()         { *m = AttachRequest{} }
 func (m *AttachRequest) String() string { return proto.CompactTextString(m) }
 func (*AttachRequest) ProtoMessage()    {}
 func (*AttachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{0}
+	return fileDescriptor_flexvolume_9d6fbec81bba21ce, []int{0}
 }
 func (m *AttachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AttachRequest.Unmarshal(m, b)
@@ -74,7 +74,7 @@ func (m *DetachRequest) Reset()         { *m = DetachRequest{} }
 func (m *DetachRequest) String() string { return proto.CompactTextString(m) }
 func (*DetachRequest) ProtoMessage()    {}
 func (*DetachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{1}
+	return fileDescriptor_flexvolume_9d6fbec81bba21ce, []int{1}
 }
 func (m *DetachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DetachRequest.Unmarshal(m, b)
@@ -114,7 +114,7 @@ func (m *MountRequest) Reset()         { *m = MountRequest{} }
 func (m *MountRequest) String() string { return proto.CompactTextString(m) }
 func (*MountRequest) ProtoMessage()    {}
 func (*MountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{2}
+	return fileDescriptor_flexvolume_9d6fbec81bba21ce, []int{2}
 }
 func (m *MountRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MountRequest.Unmarshal(m, b)
@@ -166,7 +166,7 @@ func (m *UnmountRequest) Reset()         { *m = UnmountRequest{} }
 func (m *UnmountRequest) String() string { return proto.CompactTextString(m) }
 func (*UnmountRequest) ProtoMessage()    {}
 func (*UnmountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{3}
+	return fileDescriptor_flexvolume_9d6fbec81bba21ce, []int{3}
 }
 func (m *UnmountRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UnmountRequest.Unmarshal(m, b)
@@ -407,10 +407,10 @@ var _API_serviceDesc = grpc.ServiceDesc{
 }
 
 func init() {
-	proto.RegisterFile("pkg/flexvolume/flexvolume.proto", fileDescriptor_flexvolume_503b7911b4b4c52f)
+	proto.RegisterFile("pkg/flexvolume/flexvolume.proto", fileDescriptor_flexvolume_9d6fbec81bba21ce)
 }
 
-var fileDescriptor_flexvolume_503b7911b4b4c52f = []byte{
+var fileDescriptor_flexvolume_9d6fbec81bba21ce = []byte{
 	// 436 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x92, 0x41, 0x6b, 0xdb, 0x30,
 	0x14, 0xc7, 0xb1, 0xbd, 0xa4, 0xed, 0xb3, 0x53, 0x3c, 0x6d, 0x0c, 0xcf, 0x1d, 0xac, 0xd3, 0x29,
