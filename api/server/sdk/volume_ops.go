@@ -821,6 +821,14 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	} else {
 		spec.Xattr = vol.GetXattr()
 	}
+
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		spec.ScanPolicy = req.GetScanPolicy()
+	} else {
+		spec.ScanPolicy = vol.GetScanPolicy()
+	}
+
 	return spec
 }
 
@@ -1100,6 +1108,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			}
 		}
 	}
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		if isValidate && vol.GetScanPolicy() != req.GetScanPolicy() {
+			return vol, errMsg
+		}
+		spec.ScanPolicy = req.GetScanPolicy()
+	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }

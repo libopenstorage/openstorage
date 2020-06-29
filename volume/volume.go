@@ -40,6 +40,9 @@ var (
 	ErrAborted = errors.New("Aborted CapacityUsage request")
 	// ErrInvalidName returned when Cloudbackup Name/request is invalid
 	ErrInvalidName = errors.New("Invalid name for cloud backup/restore request")
+	// ErrFsResizeFailed returned when Filesystem resize failed because of filesystem
+	// errors
+	ErrFsResizeFailed = errors.New("Filesystem Resize failed due to filesystem errors")
 )
 
 // Constants used by the VolumeDriver
@@ -211,9 +214,9 @@ type FilesystemCheckDriver interface {
 	// FilesystemCheckStart starts a filesystem check background operation
 	// on a specified volume
 	FilesystemCheckStart(request *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error)
-	// FilesystemCheckGetStatus returns the status of a filesystem check
+	// FilesystemCheckStatus returns the status of a filesystem check
 	// background operation on the filesystem of a specified volume, if any.
-	FilesystemCheckGetStatus(request *api.SdkFilesystemCheckGetStatusRequest) (*api.SdkFilesystemCheckGetStatusResponse, error)
+	FilesystemCheckStatus(request *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error)
 	// FilesystemCheckStop stops the filesystem check background operation on
 	// the filesystem of a specified volume, if any.
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)

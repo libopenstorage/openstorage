@@ -273,7 +273,7 @@ type filesystemCheckNotSupported struct{}
 func (cl *filesystemCheckNotSupported) FilesystemCheckStart(request *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	return nil, ErrNotSupported
 }
-func (cl *filesystemCheckNotSupported) FilesystemCheckGetStatus(request *api.SdkFilesystemCheckGetStatusRequest) (*api.SdkFilesystemCheckGetStatusResponse, error) {
+func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error) {
 	return nil, ErrNotSupported
 }
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
