@@ -36,16 +36,6 @@
         "title": "FilesystemChecktatus represents the status codes returned from\nOpenStorageFilesystemCheck service APIs()",
         "type": "string"
       },
-      "FilesystemCheckFilesystemHealthStatus": {
-        "default": "FS_HEALTH_STATUS_UNKNOWN",
-        "enum": [
-          "FS_HEALTH_STATUS_UNKNOWN",
-          "FS_HEALTH_STATUS_HEALTHY",
-          "FS_HEALTH_STATUS_NOT_HEALTHY"
-        ],
-        "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem health is healthy\n - FS_HEALTH_STATUS_NOT_HEALTHY: filesystem health is not healthy",
-        "type": "string"
-      },
       "FilesystemTrimFilesystemTrimStatus": {
         "default": "FS_TRIM_UNKNOWN",
         "description": "- FS_TRIM_UNKNOWN: Filesystem Trim operation is an unknown state\n - FS_TRIM_NOT_RUNNING: Filesystem Trim operation is not running for the specified volume\n - FS_TRIM_STARTED: Filesystem Trim operation started for the specified volume\n - FS_TRIM_INPROGRESS: Filesystem Trim operation is in progress for the specified volume\n - FS_TRIM_STOPPED: Filesystem Trim operation was stopped by the user for the specified volume\n - FS_TRIM_COMPLETED: Filesystem Trim operation completed successfully for the specified volume\n - FS_TRIM_FAILED: Filesystem Trim operation failed due to internal error for the specified\nvolume",
@@ -115,6 +105,24 @@
         },
         "title": "PublicAccessControl allows assigning public ownership",
         "type": "object"
+      },
+      "ScanPolicyScanAction": {
+        "default": "SCAN_ACTION_NONE",
+        "enum": [
+          "SCAN_ACTION_NONE",
+          "SCAN_ACTION_SCAN_ONLY",
+          "SCAN_ACTION_SCAN_REPAIR"
+        ],
+        "type": "string"
+      },
+      "ScanPolicyScanTrigger": {
+        "default": "SCAN_TRIGGER_NONE",
+        "enum": [
+          "SCAN_TRIGGER_NONE",
+          "SCAN_TRIGGER_ON_MOUNT",
+          "SCAN_TRIGGER_ON_NEXT_MOUNT"
+        ],
+        "type": "string"
       },
       "SdkCloudMigrateStartRequestMigrateAllVolumes": {
         "title": "Defines a migration request for all volumes in a cluster",
@@ -784,6 +792,17 @@
         "title": "fastpath extensions",
         "type": "string"
       },
+      "apiFilesystemHealthStatus": {
+        "default": "FS_HEALTH_STATUS_UNKNOWN",
+        "enum": [
+          "FS_HEALTH_STATUS_UNKNOWN",
+          "FS_HEALTH_STATUS_HEALTHY",
+          "FS_HEALTH_STATUS_SAFE_TO_FIX",
+          "FS_HEALTH_STATUS_NEEDS_INSPECTION"
+        ],
+        "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem is a healthy\n - FS_HEALTH_STATUS_SAFE_TO_FIX: filesystem has errors, but can be fixed safely\n - FS_HEALTH_STATUS_NEEDS_INSPECTION: filesystem has errors, these cannot be fixed automatically,\nuser needs to review the reported errors and take appropriate action",
+        "type": "string"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -1116,6 +1135,18 @@
               "type": "string"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "apiScanPolicy": {
+        "description": "ScanPolicy defines when a filesystem check is triggered and what action to take\nUser can specify *one* of the following valid policies\n1. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_ONLY\n2. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_REPAIR\n3. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_ONLY\n4. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_REPAIR\n5. trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE\nNote: When trigger == SCAN_TRIGGER_ON_NEXT_MOUNT, the associated action is\nperformed once on the next mount and the scanpolicy gets reset to\n`trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE`, irrespective of the\noutput of the action.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ScanPolicyScanAction"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/ScanPolicyScanTrigger"
           }
         },
         "type": "object"
@@ -2235,26 +2266,6 @@
         },
         "type": "object"
       },
-      "apiSdkFilesystemCheckGetStatusResponse": {
-        "description": "SdkFilesystemCheckGetStatusResponse defines the response for a\nSdkFilesystemCheckGetStatusRequest.",
-        "properties": {
-          "health_status": {
-            "$ref": "#/components/schemas/FilesystemCheckFilesystemHealthStatus"
-          },
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "mode": {
-            "title": "Text string representing the mode of filesystem check operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
-          }
-        },
-        "type": "object"
-      },
       "apiSdkFilesystemCheckStartRequest": {
         "properties": {
           "mode": {
@@ -2274,6 +2285,26 @@
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemCheckStatusResponse": {
+        "description": "SdkFilesystemCheckStatusResponse defines the response for a\nSdkFilesystemCheckStatusRequest.",
+        "properties": {
+          "health_status": {
+            "$ref": "#/components/schemas/apiFilesystemHealthStatus"
+          },
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "mode": {
+            "title": "Text string representing the mode of filesystem check operation",
             "type": "string"
           },
           "status": {
@@ -4098,15 +4129,18 @@
             "description": "Self referential volume ID.",
             "type": "string"
           },
-          "last_fsck_scan": {
-            "description": "LastFsckScan is the time when an integrity check was run.",
+          "last_scan": {
+            "description": "LastScan is the time when an integrity check was run.",
             "format": "date-time",
             "type": "string"
           },
-          "last_fsck_scan_fix": {
+          "last_scan_fix": {
             "format": "date-time",
-            "title": "LastFsckScanFix is the time when an integrity check fixed errors in filesystem",
+            "title": "LastScanFix is the time when an integrity check fixed errors in filesystem",
             "type": "string"
+          },
+          "last_scan_status": {
+            "$ref": "#/components/schemas/apiFilesystemHealthStatus"
           },
           "locator": {
             "$ref": "#/components/schemas/apiVolumeLocator"
@@ -4399,6 +4433,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
             "format": "boolean",
@@ -4506,6 +4543,9 @@
           "scale_operator": {
             "$ref": "#/components/schemas/VolumeSpecPolicyPolicyOp"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "format": "boolean",
             "type": "boolean"
@@ -4600,6 +4640,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "format": "boolean",
             "type": "boolean"
@@ -4622,6 +4665,9 @@
           "sticky": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/XattrValue"
           }
         },
         "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
@@ -4689,7 +4735,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.84.0"
+    "version": "0.86.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5714,7 +5760,7 @@
     },
     "/v1/filesystem-check/status": {
       "get": {
-        "operationId": "GetStatus",
+        "operationId": "Status",
         "parameters": [
           {
             "description": "Id of the volume.",
@@ -5731,7 +5777,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemCheckGetStatusResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckStatusResponse"
                 }
               }
             },
