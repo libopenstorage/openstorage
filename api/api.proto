@@ -154,6 +154,18 @@ enum VolumeStatus {
   VOLUME_STATUS_DEGRADED = 4;
 }
 
+enum FilesystemHealthStatus {
+  // filesystem health status is unknown
+  FS_HEALTH_STATUS_UNKNOWN = 0;
+  // filesystem is a healthy
+  FS_HEALTH_STATUS_HEALTHY = 1;
+  // filesystem has errors, but can be fixed safely
+  FS_HEALTH_STATUS_SAFE_TO_FIX = 2;
+  // filesystem has errors, these cannot be fixed automatically,
+  // user needs to review the reported errors and take appropriate action
+  FS_HEALTH_STATUS_NEEDS_INSPECTION = 3;
+}
+
 enum StorageMedium {
   // Magnetic spinning disk.
   STORAGE_MEDIUM_MAGNETIC = 0;
@@ -391,6 +403,33 @@ message FastpathConfig {
   bool dirty = 5;
 }
 
+// ScanPolicy defines when a filesystem check is triggered and what action to take
+// User can specify *one* of the following valid policies
+// 1. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_ONLY
+// 2. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_REPAIR
+// 3. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_ONLY
+// 4. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_REPAIR
+// 5. trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE
+// Note: When trigger == SCAN_TRIGGER_ON_NEXT_MOUNT, the associated action is
+// performed once on the next mount and the scanpolicy gets reset to
+// `trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE`, irrespective of the
+// output of the action.
+message ScanPolicy {
+    enum ScanTrigger {
+        SCAN_TRIGGER_NONE = 0;
+        SCAN_TRIGGER_ON_MOUNT = 1;
+        SCAN_TRIGGER_ON_NEXT_MOUNT = 2;
+    }
+    enum ScanAction {
+        SCAN_ACTION_NONE = 0;
+        SCAN_ACTION_SCAN_ONLY = 1;
+        SCAN_ACTION_SCAN_REPAIR = 2;
+    }
+
+    ScanTrigger trigger = 1;
+    ScanAction action = 2;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -463,6 +502,8 @@ message VolumeSpec {
   bool fp_preference = 35;
   // Xattr specifies implementation specific volume attributes
   Xattr.Value xattr = 36;
+  // ScanPolicy specifies the filesystem check policy
+  ScanPolicy scan_policy = 37;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -514,6 +555,8 @@ message VolumeSpecUpdate {
   oneof fastpath_opt { bool fastpath = 30; }
   // Xattr specifies implementation specific volume attributes
   oneof xattr_opt { Xattr.Value xattr = 31; }
+  // scan_policy_opt defines the filesystem check policy for the volume
+  oneof scan_policy_opt { ScanPolicy scan_policy = 32;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -583,6 +626,8 @@ message VolumeSpecPolicy {
   IoStrategy io_strategy = 55;
   // ExportSpec preferred volume export options.
   oneof export_spec_opt { ExportSpec export_spec = 56; }
+  // scan_policy_opt defines the filesystem check policy for the volume
+  oneof scan_policy_opt { ScanPolicy scan_policy = 57;}
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -677,8 +722,8 @@ message Volume {
   VolumeSpec spec = 7;
   // Usage is bytes consumed by this volume.
   uint64 usage = 8;
-  // LastFsckScan is the time when an integrity check was run.
-  google.protobuf.Timestamp last_fsck_scan = 9;
+  // LastScan is the time when an integrity check was run.
+  google.protobuf.Timestamp last_scan = 9;
   // Format specifies the filesytem for this volume.
   FSType format = 10;
   // VolumeStatus is the availability status of this volume.
@@ -714,8 +759,10 @@ message Volume {
   google.protobuf.Timestamp detach_time= 25;
   // Fastpath extensions
   FastpathConfig fpConfig = 26;
-  // LastFsckScanFix is the time when an integrity check fixed errors in filesystem
-  google.protobuf.Timestamp last_fsck_scan_fix = 27;
+  // LastScanFix is the time when an integrity check fixed errors in filesystem
+  google.protobuf.Timestamp last_scan_fix = 27;
+  // LastScanStatus is the time when an integrity check fixed errors in filesystem
+  FilesystemHealthStatus last_scan_status = 28;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1359,7 +1406,7 @@ service OpenStorageFilesystemTrim {
 // Once the filesystem check operation is started, in one of the available
 // modes(check_health, fix_safe, fix_all),
 // the clients have to poll for the status of the background operation
-// using the `OpenStorageFilesystemcheck.GetStatus()` rpc request.
+// using the `OpenStorageFilesystemcheck.Status()` rpc request.
 //
 // **Note:
 // 1. Different modes of filesystem check can execute in parallel for
@@ -1374,13 +1421,13 @@ service OpenStorageFilesystemTrim {
 //    `OpenStorageFilesystemCheckClient.Start(Mode='check_health')`
 // 3. Status of the Filesystem Check operation in check_health mode, can be
 //    retrieved by polling for the status using
-//    `OpenStorageFilesystemCheck.GetStatus()`
+//    `OpenStorageFilesystemCheck.Status()`
 // 4. If the Filesystem Check Operation status reports filesystem is in unhealthy
 //    state, then to fix all the problems issue a grpc call to
 //    `OpenStorageFilesystemCheckClient.Start(Mode='fix_all')`
 // 5. Status of the Filesystem Check operation in fix_all mode, can be retrieved
 //    by polling for the status using
-//    `OpenStorageFilesystemCheck.GetStatus()`
+//    `OpenStorageFilesystemCheck.Status()`
 // 6. Filesystem Check operation runs in the background, to stop the operation,
 //    issue a call to
 //    `OpenStorageFilesystemCheckClient.Stop()`
@@ -1403,8 +1450,8 @@ service OpenStorageFilesystemCheck {
 
   // Get Status of a filesystem-check background operation on an unmounted
   // volume, if any
-  rpc GetStatus(SdkFilesystemCheckGetStatusRequest)
-    returns (SdkFilesystemCheckGetStatusResponse){
+  rpc Status(SdkFilesystemCheckStatusRequest)
+    returns (SdkFilesystemCheckStatusResponse){
       option(google.api.http) = {
         get: "/v1/filesystem-check/status"
       };
@@ -2244,7 +2291,7 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
-  
+
   // Size returns the size of any cloud backups of a volume
   rpc Size(SdkCloudBackupSizeRequest)
     returns (SdkCloudBackupSizeResponse) {
@@ -4040,14 +4087,6 @@ message FilesystemCheck {
     FS_CHECK_FAILED = 6;
   }
 
-  enum FilesystemHealthStatus {
-    // filesystem health status is unknown
-    FS_HEALTH_STATUS_UNKNOWN = 0;
-    // filesystem health is healthy
-    FS_HEALTH_STATUS_HEALTHY = 1;
-    // filesystem health is not healthy
-    FS_HEALTH_STATUS_NOT_HEALTHY = 2;
-  }
 }
 // SdkFilesystemCheckStartRequest defines a request to start a background
 // filesystem consistency check operation
@@ -4067,21 +4106,21 @@ message SdkFilesystemCheckStartResponse{
   string message = 2;
 }
 
-// SdkFilesystemCheckGetStatusRequest defines a request to get status of a
+// SdkFilesystemCheckStatusRequest defines a request to get status of a
 // background filesystem check operation
-message SdkFilesystemCheckGetStatusRequest {
+message SdkFilesystemCheckStatusRequest {
   // Id of the volume
   string volume_id = 1;
 }
 
-// SdkFilesystemCheckGetStatusResponse defines the response for a
-// SdkFilesystemCheckGetStatusRequest.
-message SdkFilesystemCheckGetStatusResponse{
+// SdkFilesystemCheckStatusResponse defines the response for a
+// SdkFilesystemCheckStatusRequest.
+message SdkFilesystemCheckStatusResponse{
   // Status code representing the state of the filesystem check operation
   FilesystemCheck.FilesystemCheckStatus status = 1;
   // Status code representing the health of the filesystem after a checkHealth
   // operation
-  FilesystemCheck.FilesystemHealthStatus health_status = 2;
+  FilesystemHealthStatus health_status = 2;
   // Text string representing the mode of filesystem check operation
   string mode = 3;
   // Text blob containing ASCII text providing details of the operation
@@ -4185,7 +4224,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 86;
+    Minor = 87;
     // SDK version patch value of this specification
     Patch = 0;
   }

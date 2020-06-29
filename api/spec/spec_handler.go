@@ -408,6 +408,25 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				}
 				spec.IoStrategy.DirectIo = directIo
 			}
+		case api.SpecScanPolicyTrigger:
+			if spec.ScanPolicy == nil {
+				spec.ScanPolicy = &api.ScanPolicy{}
+			}
+			if scanTrigger, err := api.ScanPolicy_ScanTriggerSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ScanPolicy.Trigger = scanTrigger
+			}
+		case api.SpecScanPolicyAction:
+			if spec.ScanPolicy == nil {
+				spec.ScanPolicy = &api.ScanPolicy{}
+			}
+			if scanAction, err := api.ScanPolicy_ScanActionSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ScanPolicy.Action = scanAction
+			}
+
 		default:
 			locator.VolumeLabels[k] = v
 		}

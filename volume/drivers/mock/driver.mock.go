@@ -211,6 +211,17 @@ func (_mr *_MockVolumeDriverRecorder) CloudBackupSchedUpdate(arg0 interface{}) *
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudBackupSchedUpdate", arg0)
 }
 
+func (_m *MockVolumeDriver) CloudBackupSize(_param0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
+	ret := _m.ctrl.Call(_m, "CloudBackupSize", _param0)
+	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockVolumeDriverRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudBackupSize", arg0)
+}
+
 func (_m *MockVolumeDriver) CloudBackupStateChange(_param0 *api.CloudBackupStateChangeRequest) error {
 	ret := _m.ctrl.Call(_m, "CloudBackupStateChange", _param0)
 	ret0, _ := ret[0].(error)
@@ -262,17 +273,6 @@ func (_m *MockVolumeDriver) CloudMigrateStatus(_param0 *api.CloudMigrateStatusRe
 
 func (_mr *_MockVolumeDriverRecorder) CloudMigrateStatus(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudMigrateStatus", arg0)
-}
-
-func (_m *MockVolumeDriver) CloudBackupSize(arg0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
-	ret := _m.ctrl.Call(_m, "CloudBackupSize", arg0)
-	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-func (_mr *_MockVolumeDriverRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "CloudBackupSize", arg0)
 }
 
 func (_m *MockVolumeDriver) Create(_param0 *api.VolumeLocator, _param1 *api.Source, _param2 *api.VolumeSpec) (string, error) {
@@ -359,17 +359,6 @@ func (_mr *_MockVolumeDriverRecorder) Enumerate(arg0, arg1 interface{}) *gomock.
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "Enumerate", arg0, arg1)
 }
 
-func (_m *MockVolumeDriver) FilesystemCheckGetStatus(_param0 *api.SdkFilesystemCheckGetStatusRequest) (*api.SdkFilesystemCheckGetStatusResponse, error) {
-	ret := _m.ctrl.Call(_m, "FilesystemCheckGetStatus", _param0)
-	ret0, _ := ret[0].(*api.SdkFilesystemCheckGetStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-func (_mr *_MockVolumeDriverRecorder) FilesystemCheckGetStatus(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemCheckGetStatus", arg0)
-}
-
 func (_m *MockVolumeDriver) FilesystemCheckStart(_param0 *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	ret := _m.ctrl.Call(_m, "FilesystemCheckStart", _param0)
 	ret0, _ := ret[0].(*api.SdkFilesystemCheckStartResponse)
@@ -379,6 +368,17 @@ func (_m *MockVolumeDriver) FilesystemCheckStart(_param0 *api.SdkFilesystemCheck
 
 func (_mr *_MockVolumeDriverRecorder) FilesystemCheckStart(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemCheckStart", arg0)
+}
+
+func (_m *MockVolumeDriver) FilesystemCheckStatus(_param0 *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error) {
+	ret := _m.ctrl.Call(_m, "FilesystemCheckStatus", _param0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockVolumeDriverRecorder) FilesystemCheckStatus(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemCheckStatus", arg0)
 }
 
 func (_m *MockVolumeDriver) FilesystemCheckStop(_param0 *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
