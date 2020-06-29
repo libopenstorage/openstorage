@@ -7,9 +7,12 @@ fail() {
 	exit 1
 }
 
+# Get latest merge to OpenStorage
+latest=$(git log --merges --oneline | grep "Merge pull request " | head -1 | cut -d" " -f1)
+
 # Check if the api.proto was changed
 # Don't check versions if only the comments have been updated.
-if ! git diff api/api.proto | grep -v "^\+\+\+../api/api.proto$" | grep "^\+" | grep -v "^\+*.//" > /dev/null 2>&1 ; then
+if ! git diff ${latest}..HEAD api/api.proto | grep -v "^\+\+\+../api/api.proto$" | grep "^\+" | grep -v "^\+*.//" > /dev/null 2>&1 ; then
 	exit 0
 fi
 
