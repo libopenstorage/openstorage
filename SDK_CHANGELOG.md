@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.69.14 - (6/29/2020)
+
+* Modified fsck service interface and added new fields to volume and volume spec master PR1622
+* Add support for volume xattr update PR1577
+* Modified fsck service interface and added new fields to volume spec master PR1607
+
 ### v0.69.13 - (6/24/2020)
 
 * Updated rebalance data structures
