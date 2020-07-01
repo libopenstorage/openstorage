@@ -1563,7 +1563,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(cluster.ClusterListener).Enumerate(clusterState); err != nil {
+		if err := e.Value.(cluster.ClusterListener).Enumerate(&clusterState); err != nil {
 			logrus.Warnf("listener %s enumerate failed: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
 			continue
