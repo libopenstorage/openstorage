@@ -67,7 +67,7 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 		log.WithFields(logrus.Fields{
 			"method": "Authentication",
 			"code":   c.String(),
-		}).Warningf(format, a)
+		}).Warningf(format, a...)
 		return status.Errorf(c, format, a...)
 	}
 
