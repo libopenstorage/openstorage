@@ -706,6 +706,41 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 			fullmethod: "/openstorage.api.OpenStorageFutureService/SomeCallInTheFuture",
 			roles:      []string{"system.view"},
 		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageCluster/InspectCurrent",
+			roles:      []string{"system.guest"},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageNode/Enumerate",
+			roles:      []string{"system.guest"},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageNode/Inspect",
+			roles:      []string{"system.guest"},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageCluster/InspectCurrent",
+			roles:      []string{"system.user"},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageNode/Enumerate",
+			roles:      []string{"system.user"},
+		},
+		{
+			denied:     false,
+			fullmethod: "/openstorage.api.OpenStorageNode/Inspect",
+			roles:      []string{"system.user"},
+		},
+		{
+			denied:     true,
+			fullmethod: "/openstorage.api.OpenStorageNode/FutureCall",
+			roles:      []string{"system.user"},
+		},
 	}
 
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
@@ -715,7 +750,6 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 	assert.NoError(t, err)
 
 	for _, test := range tests {
-		var rules []*api.SdkRule
 		var err error
 		if len(test.roles) != 0 {
 			err = s.Verify(context.Background(), test.roles, test.fullmethod)
@@ -726,7 +760,7 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 		if test.denied {
 			assert.NotNil(t, err, test.fullmethod, fmt.Sprintf("%v", test))
 		} else {
-			assert.Nil(t, err, test.fullmethod, rules)
+			assert.Nil(t, err, test.fullmethod)
 		}
 	}
 }
