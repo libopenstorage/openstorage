@@ -266,7 +266,7 @@ type Cluster struct {
 	NodeId string
 
 	// array of all the nodes in the cluster.
-	Nodes []Node
+	Nodes []*Node
 
 	// Management url for the cluster
 	ManagementURL string
