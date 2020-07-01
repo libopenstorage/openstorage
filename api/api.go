@@ -249,7 +249,7 @@ type Cluster struct {
 	NodeId string
 
 	// array of all the nodes in the cluster.
-	Nodes []Node
+	Nodes []*Node
 
 	// Logging url for the cluster.
 	LoggingURL string
