@@ -314,7 +314,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	nodeid := "nodeid"
 
 	// Create response
-	node := &api.Node{
+	node := api.Node{
 		Id:                nodeid,
 		SchedulerNodeName: "nodename",
 		Cpu:               1.414,
@@ -343,7 +343,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		Id:     "someid",
 		NodeId: nodeid,
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		Nodes:  []*api.Node{node},
+		Nodes:  []*api.Node{&node},
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
