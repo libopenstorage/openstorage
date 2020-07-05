@@ -33,16 +33,16 @@ func TestClusterEnumerateSuccess(t *testing.T) {
 			Id:            "cluster-dummy-id",
 			Status:        api.Status_STATUS_OK,
 			ManagementURL: "mgmturl:1234/mgmt-endpoint",
-			Nodes: []api.Node{
-				api.Node{
+			Nodes: []*api.Node{
+				{
 					Hostname: "node1-hostname",
 					Id:       "1",
 				},
-				api.Node{
+				{
 					Hostname: "node2-hostname",
 					Id:       "2",
 				},
-				api.Node{
+				{
 					Hostname: "node3-hostname",
 					Id:       "3",
 				},
