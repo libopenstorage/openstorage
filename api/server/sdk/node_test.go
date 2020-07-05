@@ -62,8 +62,8 @@ func TestSdkNodeEnumerate(t *testing.T) {
 		Id:     "someid",
 		NodeId: "somenodeid",
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		Nodes: []api.Node{
-			api.Node{
+		Nodes: []*api.Node{
+			{
 				Id:       "nodeid",
 				Cpu:      1.414,
 				MemTotal: 112,
@@ -139,8 +139,8 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 		Id:     "someid",
 		NodeId: "somenodeid",
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		Nodes: []api.Node{
-			api.Node{
+		Nodes: []*api.Node{
+			{
 				Id:                "nodeid",
 				SchedulerNodeName: "schedulernodename",
 				Cpu:               1.414,
@@ -345,7 +345,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		Id:     "someid",
 		NodeId: nodeid,
 		Status: api.Status_STATUS_NOT_IN_QUORUM,
-		Nodes:  []api.Node{node},
+		Nodes:  []*api.Node{&node},
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
