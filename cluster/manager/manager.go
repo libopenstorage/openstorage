@@ -1231,7 +1231,7 @@ func (c *ClusterManager) initListeners(
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
 	for _, node := range c.nodes(kvClusterInfo) {
-		c.nodeCache[node.Id] = node
+		c.nodeCache[node.Id] = *node
 	}
 	return kvp.ModifiedIndex, kvClusterInfo, nil
 }
@@ -1503,8 +1503,8 @@ func (c *ClusterManager) PeerStatus(listenerName string) (map[string]api.Status,
 	return statusMap, nil
 }
 
-func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
-	nodes := []api.Node{}
+func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []*api.Node {
+	nodes := make([]*api.Node, 0)
 	for _, n := range clusterDB.NodeEntries {
 		node := api.Node{}
 		if n.Id == c.selfNode.Id {
@@ -1518,29 +1518,29 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []api.Node {
 			node.Hostname = n.Hostname
 			node.NodeLabels = n.NodeLabels
 		}
-		nodes = append(nodes, node)
+		nodes = append(nodes, &node)
 	}
 	return nodes
 }
 
-func (c *ClusterManager) enumerateFromClusterDB() []api.Node {
+func (c *ClusterManager) enumerateFromClusterDB() []*api.Node {
 	clusterDB, _, err := readClusterInfo()
 	if err != nil {
 		logrus.Errorf("enumerateNodesFromClusterDB failed with error: %v", err)
-		return make([]api.Node, 0)
+		return make([]*api.Node, 0)
 	}
 	return c.nodes(&clusterDB)
 }
 
-func (c *ClusterManager) enumerateFromCache() []api.Node {
+func (c *ClusterManager) enumerateFromCache() []*api.Node {
 	var clusterDB cluster.ClusterInfo
 	c.nodeCacheLock.Lock()
 	defer c.nodeCacheLock.Unlock()
-	nodes := make([]api.Node, len(c.nodeCache))
+	nodes := make([]*api.Node, len(c.nodeCache))
 	i := 0
 	for _, n := range c.nodeCache {
 		n, _ := c.getNodeEntry(n.Id, &clusterDB)
-		nodes[i] = *n.Copy()
+		nodes[i] = n.Copy()
 		i++
 	}
 	return nodes
@@ -1565,7 +1565,7 @@ func (c *ClusterManager) Enumerate() (api.Cluster, error) {
 
 	// Allow listeners to add/modify data
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
-		if err := e.Value.(cluster.ClusterListener).Enumerate(clusterState); err != nil {
+		if err := e.Value.(cluster.ClusterListener).Enumerate(&clusterState); err != nil {
 			logrus.Warnf("listener %s enumerate failed: %v",
 				e.Value.(cluster.ClusterListener).String(), err)
 			continue
