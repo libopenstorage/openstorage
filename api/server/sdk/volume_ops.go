@@ -829,6 +829,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ScanPolicy = vol.GetScanPolicy()
 	}
 
+	// MountOptions
+	if req.GetMountOptSpec() != nil {
+		spec.MountOptions = req.GetMountOptSpec()
+	} else {
+		spec.MountOptions = vol.GetMountOptions()
+	}
+
 	return spec
 }
 
