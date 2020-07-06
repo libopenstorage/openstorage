@@ -392,7 +392,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			spec.ExportSpec.ExportOptions = v
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
-				spec.MountOptions = &api.MountOptionsSpec{
+				spec.MountOptions = &api.MountOptions{
 					Options: make(map[string]string),
 				}
 			}
