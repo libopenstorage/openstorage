@@ -126,6 +126,7 @@ var (
 	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
 	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
 	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
+	mountOptionsRegex           = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
 )
@@ -391,6 +392,17 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ExportSpec = &api.ExportSpec{}
 			}
 			spec.ExportSpec.ExportOptions = v
+		case api.SpecMountOptions:
+			if spec.MountOptions == nil {
+				spec.MountOptions = &api.MountOptionsSpec{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
+			}
+			spec.MountOptions.Options = options
 		case api.SpecCowOnDemand:
 			if cowOnDemand, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -575,6 +587,12 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, exportOptions := d.getVal(exportOptionsRegex, str); ok {
 		opts[api.SpecExportOptions] = exportOptions
+	}
+	if ok, mountOptions := d.getVal(mountOptionsRegex, str); ok {
+		// mount options will be provided as a string in the following format
+		// mount_options=k1;k2:v2;k3:v3
+		// convert it to k1,k2=v2,k3=v3
+		opts[api.SpecMountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
 	}
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand
