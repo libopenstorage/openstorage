@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.91.0 - (7/13/2020)
+
+* Add mount_options field to Volume and VolumeSpec object.
+* The mount_options will be used at runtime while mounting the volume.
+
 ### v0.90.0 - (7/8/2020)
 
 * Added new field to CloudBackupGroupCreate api
