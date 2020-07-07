@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.88.0 - (7/6/2020)
+
+* Added new field to CloudBackupCreate api
+
 ### v0.87.0 - (6/29/2020)
 
 * Modified fsck service interface and added new fields to volume and volume spec

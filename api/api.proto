@@ -3484,6 +3484,9 @@ message SdkCloudBackupCreateRequest {
   // manual/user triggerred backups and not applicable for scheduled backups
   // Value of 0 retains the default behavior.
   uint32 full_backup_frequency = 6;
+  // DeleteLocal indicates if local snap created for backup must be deleted after
+  // the backup is complete
+  bool delete_local = 7;
 }
 
 // Empty response
@@ -4224,7 +4227,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 87;
+    Minor = 88;
     // SDK version patch value of this specification
     Patch = 0;
   }
