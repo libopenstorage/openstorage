@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.69.15 - (7/7/2020)
+
+* Remove LastUpdateTime from RebalanceJobSummary and added it RebalanceJob,
+  added RemoveRepl1Snapshots to RebalanceJob
+
 ### v0.69.14 - (6/29/2020)
 
 * Modified fsck service interface and added new fields to volume and volume spec master PR1622
