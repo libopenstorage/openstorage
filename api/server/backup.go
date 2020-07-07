@@ -44,6 +44,7 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 		TaskId:              backupReq.Name,
 		Labels:              backupReq.Labels,
 		FullBackupFrequency: backupReq.FullBackupFrequency,
+		DeleteLocal:         backupReq.DeleteLocal,
 	})
 	if err != nil {
 		if serverError, ok := status.FromError(err); ok {
