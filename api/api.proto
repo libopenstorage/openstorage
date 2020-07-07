@@ -3211,6 +3211,8 @@ message SdkStorageRebalanceRequest {
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
   uint64 max_duration_minutes = 5;
+  // RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots
+  bool remove_repl_1_snapshots = 6;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -3235,6 +3237,8 @@ message StorageRebalanceJob {
   SdkStorageRebalanceRequest parameters = 4;
   // CreateTime is the time the job was created
   google.protobuf.Timestamp create_time = 5;
+  // LastUpdateTime is the time the job was updated
+  google.protobuf.Timestamp last_update_time = 6;
 }
 
 // StorageRebalanceJobState is an enum for state of the current rebalance operation
@@ -3252,12 +3256,10 @@ enum StorageRebalanceJobState {
 }
 // StorageRebalanceSummary describes summary for the job
 message StorageRebalanceSummary  {
-  // LastUpdateTime is the time the job was last updated
-  google.protobuf.Timestamp last_update_time = 1;
   // TotalRunTimeSeconds is the total time rebalance is running
-  uint64 total_run_time_seconds = 2;
+  uint64 total_run_time_seconds = 1;
   // WorkSummary summarizes the work done
-  repeated StorageRebalanceWorkSummary work_summary = 3;
+  repeated StorageRebalanceWorkSummary work_summary = 2;
 }
 
 message StorageRebalanceWorkSummary {
@@ -4224,7 +4226,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 87;
+    Minor = 89;
     // SDK version patch value of this specification
     Patch = 0;
   }
