@@ -99,6 +99,16 @@ var (
 					Apis: []string{"*"},
 				},
 				&api.SdkRule{
+					Services: []string{
+						"cluster",
+						"node",
+					},
+					Apis: []string{
+						"inspect*",
+						"enumerate*",
+					},
+				},
+				&api.SdkRule{
 					Services: []string{"identity"},
 					Apis:     []string{"*"},
 				},
@@ -125,6 +135,16 @@ var (
 				&api.SdkRule{
 					Services: []string{"identity"},
 					Apis:     []string{"version"},
+				},
+				&api.SdkRule{
+					Services: []string{
+						"cluster",
+						"node",
+					},
+					Apis: []string{
+						"inspect*",
+						"enumerate*",
+					},
 				},
 			},
 			Mutable: true,
