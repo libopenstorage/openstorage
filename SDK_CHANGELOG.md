@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.88.0 - (7/7/2020)
+
+* Remove LastUpdateTime from RebalanceJobSummary and added it RebalanceJob,
+  added RemoveRepl1Snapshots to RebalanceJob
+
 ### v0.87.0 - (7/6/2020)
 
 * Added new field to CloudBackupCreate api
