@@ -86,7 +86,7 @@ shift 1
 declare -r PULLS=( "$@" )
 
 function join { local IFS="$1"; shift; echo "$*"; }
-PULLDASH=$(join - "${PULLS[@]/#/#}") # Generates something like "#12345-#56789"
+PULLDASH=$(join - "${PULLS[@]//}") # Generates something like "12345-56789"
 declare -r PULLDASH
 PULLSUBJ=$(join " " "${PULLS[@]/#/#}") # Generates something like "#12345 #56789"
 declare -r PULLSUBJ
