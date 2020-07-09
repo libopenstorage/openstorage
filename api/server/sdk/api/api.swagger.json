@@ -1430,6 +1430,11 @@
             "title": "Credential id refers to the cloud credentials needed to backup",
             "type": "string"
           },
+          "delete_local": {
+            "format": "boolean",
+            "title": "DeleteLocal indicates if local snap created for backup must be deleted after\nthe backup is complete",
+            "type": "boolean"
+          },
           "full": {
             "format": "boolean",
             "title": "Full indicates if full backup is desired even though incremental is possible",
@@ -2940,6 +2945,11 @@
             "title": "MaxDurationMinutes defines how long operation should run when started at schedule.\n0 values means no limit on duration",
             "type": "string"
           },
+          "remove_repl_1_snapshots": {
+            "format": "boolean",
+            "title": "RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots",
+            "type": "boolean"
+          },
           "source_pool_selector": {
             "items": {
               "$ref": "#/components/schemas/apiLabelSelectorRequirement"
@@ -3861,6 +3871,11 @@
             "title": "ID of the rebalance job",
             "type": "string"
           },
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time the job was updated",
+            "type": "string"
+          },
           "parameters": {
             "$ref": "#/components/schemas/apiSdkStorageRebalanceRequest"
           },
@@ -3890,11 +3905,6 @@
       },
       "apiStorageRebalanceSummary": {
         "properties": {
-          "last_update_time": {
-            "format": "date-time",
-            "title": "LastUpdateTime is the time the job was last updated",
-            "type": "string"
-          },
           "total_run_time_seconds": {
             "format": "uint64",
             "title": "TotalRunTimeSeconds is the total time rebalance is running",
@@ -4735,7 +4745,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.87.0"
+    "version": "0.89.0"
   },
   "openapi": "3.0.0",
   "paths": {
