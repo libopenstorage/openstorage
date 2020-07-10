@@ -3512,6 +3512,9 @@ message SdkCloudBackupGroupCreateRequest {
     // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
+  // DeleteLocal indicates if local snap created for backup must be deleted after
+  // the backup is complete
+  bool delete_local = 6;
 }
 
 // Empty response
@@ -4226,7 +4229,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 88;
+    Minor = 89;
     // SDK version patch value of this specification
     Patch = 0;
   }
