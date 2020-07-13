@@ -79,13 +79,24 @@ type Config struct {
 	ClientID string
 	// If specified, only this set of algorithms may be used to sign the JWT.
 	//
-	// Since many providers only support RS256, SupportedSigningAlgs defaults to this value.
+	// If the IDTokenVerifier is created from a provider with (*Provider).Verifier, this
+	// defaults to the set of algorithms the provider supports. Otherwise this values
+	// defaults to RS256.
 	SupportedSigningAlgs []string
 
 	// If true, no ClientID check performed. Must be true if ClientID field is empty.
 	SkipClientIDCheck bool
 	// If true, token expiry is not checked.
 	SkipExpiryCheck bool
+
+	// SkipIssuerCheck is intended for specialized cases where the the caller wishes to
+	// defer issuer validation. When enabled, callers MUST independently verify the Token's
+	// Issuer is a known good value.
+	//
+	// Mismatched issuers often indicate client mis-configuration. If mismatches are
+	// unexpected, evaluate if the provided issuer URL is incorrect instead of enabling
+	// this option.
+	SkipIssuerCheck bool
 
 	// Time function to check Token expiry. Defaults to time.Now
 	Now func() time.Time
@@ -96,6 +107,13 @@ type Config struct {
 // The returned IDTokenVerifier is tied to the Provider's context and its behavior is
 // undefined once the Provider's context is canceled.
 func (p *Provider) Verifier(config *Config) *IDTokenVerifier {
+	if len(config.SupportedSigningAlgs) == 0 && len(p.algorithms) > 0 {
+		// Make a copy so we don't modify the config values.
+		cp := &Config{}
+		*cp = *config
+		cp.SupportedSigningAlgs = p.algorithms
+		config = cp
+	}
 	return NewVerifier(p.issuer, p.remoteKeySet, config)
 }
 
@@ -231,7 +249,7 @@ func (v *IDTokenVerifier) Verify(ctx context.Context, rawIDToken string) (*IDTok
 	}
 
 	// Check issuer.
-	if t.Issuer != v.issuer {
+	if !v.config.SkipIssuerCheck && t.Issuer != v.issuer {
 		// Google sometimes returns "accounts.google.com" as the issuer claim instead of
 		// the required "https://accounts.google.com". Detect this case and allow it only
 		// for Google.
@@ -261,9 +279,20 @@ func (v *IDTokenVerifier) Verify(ctx context.Context, rawIDToken string) (*IDTok
 		if v.config.Now != nil {
 			now = v.config.Now
 		}
+		nowTime := now()
 
-		if t.Expiry.Before(now()) {
+		if t.Expiry.Before(nowTime) {
 			return nil, fmt.Errorf("oidc: token is expired (Token Expiry: %v)", t.Expiry)
+		}
+
+		// If nbf claim is provided in token, ensure that it is indeed in the past.
+		if token.NotBefore != nil {
+			nbfTime := time.Time(*token.NotBefore)
+			leeway := 1 * time.Minute
+
+			if nowTime.Add(leeway).Before(nbfTime) {
+				return nil, fmt.Errorf("oidc: current time %v before the nbf (not before) time: %v", nowTime, nbfTime)
+			}
 		}
 	}
 
