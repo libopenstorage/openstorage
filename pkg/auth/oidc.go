@@ -33,6 +33,8 @@ type OIDCAuthConfig struct {
 	// SkipClientIDCheck skips a verification on tokens which are returned
 	// from the OIDC without the client ID set
 	SkipClientIDCheck bool
+	// SkipIssuerCheck skips verification of the issuer URL.
+	SkipIssuerCheck bool
 	// UsernameClaim has the location of the unique id for the user.
 	// If empty, "sub" will be used for the user name unique id.
 	UsernameClaim UsernameClaimType
@@ -63,6 +65,7 @@ func NewOIDC(config *OIDCAuthConfig) (*OIDCAuthenticator, error) {
 	v := p.Verifier(&oidc.Config{
 		ClientID:          config.ClientID,
 		SkipClientIDCheck: config.SkipClientIDCheck,
+		SkipIssuerCheck:   config.SkipIssuerCheck,
 	})
 	return &OIDCAuthenticator{
 		url:           config.Issuer,
