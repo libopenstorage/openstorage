@@ -514,8 +514,11 @@ message VolumeSpec {
   Xattr.Value xattr = 36;
   // ScanPolicy specifies the filesystem check policy
   ScanPolicy scan_policy = 37;
-  // MountOptions defines the options that should be used while mounting this volume
+  // MountOptions defines the options that will be used while mounting this volume
   MountOptions mount_options = 38;
+  // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 39;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -571,6 +574,9 @@ message VolumeSpecUpdate {
   oneof scan_policy_opt { ScanPolicy scan_policy = 32;}
   // mount_opt provides the mount time options for a volume
   oneof mount_opt { MountOptions mount_opt_spec = 33;}
+  // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
+  oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 34;}
+
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -644,6 +650,8 @@ message VolumeSpecPolicy {
   oneof scan_policy_opt { ScanPolicy scan_policy = 57;}
   // mount_opt provides the mount time options for a volume
   oneof mount_opt { MountOptions mount_opt_spec = 58;}
+  // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
+  oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 59;}
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -781,6 +789,9 @@ message Volume {
   FilesystemHealthStatus last_scan_status = 28;
   // MountOptions are the runtime mount options that will be used while mounting this volume
   MountOptions mount_options = 29;
+  // Sharedv4MountOptions are the runtime mount options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 30;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -4250,7 +4261,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 91;
+    Minor = 92;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4812,6 +4823,9 @@ message RestoreVolumeSpec {
   RestoreParamBoolType fp_preference = 21;
   // MountOptions defines the options that should be used while mounting this volume
   MountOptions mount_options = 22;
+  // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 23;
 }
 
 // Request message to get the volume catalog
