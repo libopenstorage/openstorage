@@ -31,7 +31,6 @@ jobs:
     - name: Set up KinD with K8s version ${{ matrix.k8s-version }}
       uses: engineerd/setup-kind@v0.4.0
       with:
-          version: "latest"
           name: openstorage-test-cluster
           config: hack/kind.yaml
           image: kindest/node:${{ matrix.k8s-version }}
