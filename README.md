@@ -1,4 +1,4 @@
-# Open Storage
+# KubeCon Europe 2020 Open Storage with KinD & Actions Demo
 
 [![Travis branch](https://img.shields.io/travis/libopenstorage/openstorage/master.svg)](https://travis-ci.org/libopenstorage/openstorage)
 [![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
