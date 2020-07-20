@@ -47,7 +47,6 @@ jobs:
       run: kind load docker-image quay.io/openstorage/osd:latest --name openstorage-test-cluster
     - name: Start OSD
       run: |
-        kubectl delete -f hack/osd-csi.yaml
         kubectl apply -f hack/osd-csi.yaml
 
     # Runs Testing Steps
