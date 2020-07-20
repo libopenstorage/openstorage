@@ -40,7 +40,7 @@ jobs:
           config: hack/kind.yaml
           image: kindest/node:${{ matrix.k8s-version }}
     - name: Set kubeconfig
-      run: export KUBECONFIG=$(kind get kubeconfig-path --name kind-csi)
+      run: export KUBECONFIG=$(kind get kubeconfig-path --name openstorage-test-cluster)
     
     # Configure & Setups cluster
     - name: Load Local openstorage image into KinD
