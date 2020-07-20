@@ -1,0 +1,59 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Create Cluster using KinD
+
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  pull_request:
+    branches: [ master ]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  kind:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    
+    #defining the matrix build for K8s versions
+    strategy:
+      matrix:
+        k8s-version: ['v1.16.0', 'v1.17.0', 'v1.18.0']
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    
+    # Creates KinD with the latest version using the k8s versions from the matrix above
+    - name: Set up KinD with K8s version ${{ matrix.k8s-version }}
+      uses: engineerd/setup-kind@v0.4.0
+      with:
+          version: "latest"
+          name: openstorage-test-cluster
+          config: hack/kind.yaml
+          image: kindest/node:${{ matrix.k8s-version }}
+    - name: Set kubeconfig
+      run: export KUBECONFIG=$(kind get kubeconfig-path --name kind-csi)
+    
+    # Configure & Setups cluster
+    - name: Load Local openstorage image into KinD
+      run: kind load docker-image quay.io/openstorage/osd:latest --name openstorage-test-cluster
+    - name: Start OSD
+      run: |
+        kubectl delete -f hack/osd-csi.yaml
+        kubectl apply -f hack/osd-csi.yaml
+
+    # Runs Testing Steps
+    - name: Testing
+      run: |
+        kubectl cluster-info
+        kubectl get pods -n kube-system
+        echo "Done, check your cluster to see if the CSI sidecars are ready"
+
+        echo "current-context:" $(kubectl config current-context)
+        echo "environment-kubeconfig:" $(kind get kubeconfig-path --name openstorage-test-cluster)
+
+        
