@@ -45,7 +45,7 @@ spec:
       containers:
         - name: osd
           image: docker.pkg.github.com/skhalife/openstorage/demo:latest
-          imagePullPolicy: Never # Manually loaded into KinD (see setup script)
+          imagePullPolicy: IfNotPresent
           args:
               ["-d","--driver=name=fake", "--csidrivername","csi.openstorage.org"]
           env:
