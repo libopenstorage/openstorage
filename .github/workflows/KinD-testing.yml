@@ -11,7 +11,8 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: quay.io/openstorage/osd
+  IMAGE_NAME: osd
+  OSD_IMAGE: quay.io/openstorage/osd
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -58,7 +59,7 @@ jobs:
         echo IMAGE_ID=$IMAGE_ID
         echo VERSION=$VERSION
 
-        docker tag $IMAGE_NAME $IMAGE_ID:$VERSION
+        docker tag $OSD_IMAGE $IMAGE_ID:$VERSION
         docker push $IMAGE_ID:$VERSION
       
     # Creates KinD with using k8s versions from the matrix above
