@@ -73,7 +73,7 @@ jobs:
       run: |
         kubectl apply -f demo/openstorage-setup
 
-        echo "Environment setup:"
+    - name: Environment setup check
         kubectl cluster-info
         kubectl get pods -n kube-system
 
