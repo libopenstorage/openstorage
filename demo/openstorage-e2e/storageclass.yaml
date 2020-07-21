@@ -1,0 +1,7 @@
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+    name: openstorage-sc
+provisioner: csi.openstorage.org
+parameters:
+    repl: "1"

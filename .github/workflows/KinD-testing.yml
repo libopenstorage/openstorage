@@ -73,14 +73,13 @@ jobs:
       run: |
         kubectl apply -f demo/openstorage-setup
 
+        echo "Environment setup:"
+        kubectl cluster-info
+        kubectl get pods -n kube-system
+
+
     # Runs Testing Steps
     - name: Run tests
       run: |
-        kubectl cluster-info
-        kubectl get pods -n kube-system
-        echo "Done, check your cluster to see if the CSI sidecars are ready"
-
-        echo "current-context:" $(kubectl config current-context)
-        echo "environment-kubeconfig:" $(kind get kubeconfig-path --name openstorage-test-cluster)
-
-        
+        echo "Running tests:"
+        ./demo/test.sh
