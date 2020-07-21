@@ -11,7 +11,7 @@ on:
 
 env:
   # TODO: Change variable to your image's name.
-  IMAGE_NAME: openstorage-demo
+  IMAGE_NAME: quay.io/openstorage/osd
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
