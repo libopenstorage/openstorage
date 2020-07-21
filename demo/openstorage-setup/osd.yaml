@@ -44,8 +44,8 @@ spec:
       hostPID: false
       containers:
         - name: osd
-          image: quay.io/openstorage/osd:latest
-          imagePullPolicy: Never # Manually loaded into KinD (see setup script)
+          image: docker.pkg.github.com/skhalife/openstorage/demo:latest
+          imagePullPolicy: IfNotPresent
           args:
               ["-d","--driver=name=fake", "--csidrivername","csi.openstorage.org"]
           env:
