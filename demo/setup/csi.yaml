@@ -13,6 +13,7 @@ spec:
       labels:
         app: openstorage-csi-driver
     spec:
+      hostNetwork: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
