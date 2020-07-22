@@ -127,6 +127,7 @@ var (
 	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
 	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
 	mountOptionsRegex           = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	sharedv4MountOptionsRegex   = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 )
 
@@ -401,6 +402,17 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
 			}
 			spec.MountOptions.Options = options
+		case api.SpecSharedv4MountOptions:
+			if spec.Sharedv4MountOptions == nil {
+				spec.Sharedv4MountOptions = &api.MountOptions{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 client mount options format %v", v)
+			}
+			spec.Sharedv4MountOptions.Options = options
 		case api.SpecCowOnDemand:
 			if cowOnDemand, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -582,6 +594,12 @@ func (d *specHandler) SpecOptsFromString(
 		// mount_options=k1;k2:v2;k3:v3
 		// convert it to k1,k2=v2,k3=v3
 		opts[api.SpecMountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
+	}
+	if ok, mountOptions := d.getVal(sharedv4MountOptionsRegex, str); ok {
+		// mount options will be provided as a string in the following format
+		// mount_options=k1;k2:v2;k3:v3
+		// convert it to k1,k2=v2,k3=v3
+		opts[api.SpecSharedv4MountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
 	}
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand

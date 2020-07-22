@@ -1114,6 +1114,9 @@
           "sharedv4": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
           },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "snapshot_interval": {
             "format": "int64",
             "title": "SnapshotInterval in minutes, set to 0 to disable snapshots",
@@ -4180,6 +4183,9 @@
             "description": "SecureDevicePath is the device path for an encrypted volume.",
             "type": "string"
           },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "source": {
             "$ref": "#/components/schemas/apiSource"
           },
@@ -4461,6 +4467,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "size": {
             "format": "uint64",
             "title": "Size specifies the thin provisioned volume size in bytes",
@@ -4572,6 +4581,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "size": {
             "format": "uint64",
             "type": "string"
@@ -4672,6 +4684,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "size": {
             "format": "uint64",
             "type": "string"
@@ -4756,7 +4771,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.70.15"
+    "version": "0.69.17"
   },
   "openapi": "3.0.0",
   "paths": {
