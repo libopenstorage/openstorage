@@ -1,5 +1,5 @@
 
-name: Create Cluster using KinD
+name: e2e test with kind
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the master branch
@@ -13,9 +13,7 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  
-  build:
-    
+  build:    
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
     
@@ -67,17 +65,21 @@ jobs:
           name: openstorage-test-cluster
           config: hack/kind.yaml
           image: kindest/node:${{ matrix.k8s-version }}
-    
+
+  # KinD Cluster Creation
+  test:
+    # this job is dependent of the previous one completing
+    needs: kind
+
     # Configure & Setups cluster
     - name: Start openstorage
       run: |
-        kubectl apply -f demo/openstorage-setup
+        kubectl apply -f demo/setup
 
     - name: Environment setup check
       run: |
         kubectl cluster-info
         kubectl get pods -n kube-system
-
 
     # Runs Testing Steps
     - name: Run tests
