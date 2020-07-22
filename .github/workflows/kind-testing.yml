@@ -40,7 +40,7 @@ jobs:
     
   
   # KinD Cluster Creation
-  kind:
+  test:
     # this job is dependent of the previous one completing
     needs: build
     
@@ -65,15 +65,7 @@ jobs:
           name: openstorage-test-cluster
           config: hack/kind.yaml
           image: kindest/node:${{ matrix.k8s-version }}
-
-  # KinD Cluster Creation
-  test:
-    needs: kind
-
-    runs-on: ubuntu-latest
-
-    steps:
-    - uses: actions/checkout@v2
+          
     - name: Start openstorage
       run: |
         kubectl apply -f demo/setup
