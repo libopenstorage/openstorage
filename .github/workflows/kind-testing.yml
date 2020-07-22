@@ -68,10 +68,12 @@ jobs:
 
   # KinD Cluster Creation
   test:
-    # this job is dependent of the previous one completing
     needs: kind
 
-    # Configure & Setups cluster
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
     - name: Start openstorage
       run: |
         kubectl apply -f demo/setup
@@ -81,7 +83,6 @@ jobs:
         kubectl cluster-info
         kubectl get pods -n kube-system
 
-    # Runs Testing Steps
     - name: Run tests
       run: |
         echo "Running tests:"
