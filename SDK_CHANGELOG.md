@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.92.0 - (7/16/2020)
+
+* Add sharedv4_mount_options field to Volume and VolumeSpec object.
+* The sharedv4_mount_options will be used at runtime while mounting the sharedv4 volume from
+  a node (client) which does not have the volume replica.
+
 ### v0.91.0 - (7/13/2020)
 
 * Add mount_options field to Volume and VolumeSpec object.
