@@ -47,7 +47,15 @@ spec:
           image: docker.pkg.github.com/skhalife/openstorage/demo:latest
           imagePullPolicy: IfNotPresent
           args:
-              ["-d","--driver=name=fake", "--csidrivername","csi.openstorage.org"]
+              [
+                "-d",
+                "--driver=name=fake",
+                "--jwt-issuer=openstorage.io",
+                "--csidrivername=csi.openstorage.org",
+                "--jwt-shared-secret=mysecret",
+                "--jwt-shared-secret=mysecret",
+                "--jwt-system-shared-secret=mysecret",
+              ]
           env:
             - name: "CSI_ENDPOINT"
               value: "/var/lib/csi.openstorage.org/csi.sock"
