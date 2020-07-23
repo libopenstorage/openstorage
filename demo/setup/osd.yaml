@@ -44,8 +44,8 @@ spec:
       hostPID: false
       containers:
         - name: osd
-          # image: docker.pkg.github.com/skhalife/openstorage/demo:latest
-          image: quay.io/ggriffiths/osd:latest
+        # image: quay.io/ggriffiths/osd:latest
+          image: docker.pkg.github.com/skhalife/openstorage/demo:latest
           imagePullPolicy: IfNotPresent
           args:
               [
