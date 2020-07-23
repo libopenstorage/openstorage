@@ -9,3 +9,4 @@ parameters:
     csi.storage.k8s.io/provisioner-secret-namespace: default
     csi.storage.k8s.io/node-publish-secret-name: token-secret
     csi.storage.k8s.io/node-publish-secret-namespace: default
+
