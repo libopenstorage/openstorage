@@ -13,34 +13,33 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # build:    
-  #   # The type of runner that the job will run on
-  #   runs-on: ubuntu-latest
+  build:    
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
     
-  #   # Steps represent a sequence of tasks that will be executed as part of the job
-  #   steps:
-  #   # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
-  #   - uses: actions/checkout@v2
-  #   - name: Build the Docker image
-  #     run: make docker-build-osd
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: make docker-build-osd
     
-  #   - name: Log into registry
-  #     run: echo "${{ secrets.QUAY_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USER }} --password-stdin
+    - name: Log into registry
+      run: echo "${{ secrets.QUAY_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USER }} --password-stdin
 
-  #   - name: Push image
-  #     run: |
-  #       IMAGE_ID=quay.io/ggriffiths/osd
+    - name: Push image
+      run: |
+        IMAGE_ID=quay.io/ggriffiths/osd
 
-  #       echo IMAGE_ID=$IMAGE_ID
+        echo IMAGE_ID=$IMAGE_ID
 
-  #       docker tag $OSD_IMAGE $IMAGE_ID:latest
-  #       docker push $IMAGE_ID:latest
-    
+        docker tag $OSD_IMAGE $IMAGE_ID:latest
+        docker push $IMAGE_ID:latest
   
   # KinD Cluster Creation
   test:
     # this job is dependent of the previous one completing
-    #needs: build
+    needs: build
     
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -48,8 +47,7 @@ jobs:
     # Defines the matrix build for K8s versions
     strategy:
       matrix:
-        k8s-version: ['v1.18.6']
-        #k8s-version: ['v1.16.9', 'v1.17.5', 'v1.18.6']
+        k8s-version: ['v1.16.9', 'v1.17.5', 'v1.18.6']
     
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -67,7 +65,6 @@ jobs:
           
     - name: Start openstorage
       run: |
-        # kubectl create secret docker-registry ghpkgcred --docker-server=docker.pkg.github.com --docker-username=token --docker-password=${{ secrets.GITHUB_TOKEN }}
         kubectl -n kube-system apply -f demo/setup
 
     - name: Environment setup check
