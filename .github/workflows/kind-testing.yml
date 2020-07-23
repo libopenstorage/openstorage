@@ -40,7 +40,7 @@ jobs:
   # KinD Cluster Creation
   test:
     # this job is dependent of the previous one completing
-    # needs: build
+    needs: build
     
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -67,7 +67,7 @@ jobs:
           
     - name: Start openstorage
       run: |
-        kubectl create secret docker-registry ghpkgcred --docker-server=docker.pkg.github.com --docker-username=${{ github.actor }} --docker-password=${{ secrets.GITHUB_TOKEN }}
+        kubectl create secret docker-registry ghpkgcred --docker-server=docker.pkg.github.com --docker-username=${{ secrets.GITHUB_TOKEN }} --docker-password=${{ secrets.GITHUB_TOKEN }}
         kubectl -n kube-system apply -f demo/setup
 
     - name: Environment setup check
