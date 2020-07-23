@@ -324,7 +324,7 @@ func (s *OsdCsiServer) CreateVolume(
 ) (*csi.CreateVolumeResponse, error) {
 
 	// Log request
-	logrus.Debugf("CreateVolume req[%#v]", *req)
+	logrus.Infof("CreateVolume req[%#v]", *req)
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
