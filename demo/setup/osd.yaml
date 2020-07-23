@@ -42,12 +42,12 @@ spec:
                 operator: DoesNotExist
       hostNetwork: true
       hostPID: false
-      imagePullSecrets: 
-        - name: ghpkgcred
+      # imagePullSecrets: 
+      #   - name: ghpkgcred
       containers:
         - name: osd
           # image: quay.io/ggriffiths/osd:latest
-          image: docker.pkg.github.com/skhalife/openstorage/demo:latest
+          image: quay.io/ggriffiths/osd:latest
           imagePullPolicy: IfNotPresent    
           args:
               [
