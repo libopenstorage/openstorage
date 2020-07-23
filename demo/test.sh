@@ -1,6 +1,7 @@
 #!/bin/bash
 exitFail() {
   echo "$1"
+  kubectl describe pvc
   kubectl get pods -n kube-system | grep 'openstorage-'
   kubectl -n kube-system describe pods -l name=openstorage
   kubectl -n kube-system describe daemonset
