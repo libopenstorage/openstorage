@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: openstorage-csi-service
+  name: osd-csi-service
   namespace: kube-system
 spec:
   selector:
