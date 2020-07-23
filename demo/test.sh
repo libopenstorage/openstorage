@@ -23,4 +23,5 @@ kubectl get pvc openstorage-pvc | grep Bound || exitFail "PVC not bound after 15
 
 # Use PVC with MySQL deployment
 kubectl apply -f demo/e2e/mysql.yaml || exitFail "failed to apply deployment yaml"
+sleep 15
 kubectl get deployment mysql || exitFail "failed to create deployment"

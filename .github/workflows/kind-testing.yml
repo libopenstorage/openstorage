@@ -67,6 +67,7 @@ jobs:
           
     - name: Start openstorage
       run: |
+        kubectl create secret docker-registry ghpkgcred --docker-server=docker.pkg.github.com --docker-username=${{ github.actor }} --docker-password=${{ secrets.GITHUB_TOKEN }}
         kubectl -n kube-system apply -f demo/setup
 
     - name: Environment setup check
