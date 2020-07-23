@@ -74,7 +74,7 @@ jobs:
       run: |
         kubectl cluster-info
         kubectl get pods -n kube-system
-        expected_running_pods=4
+        expected_running_pods=2
         cnt=0
         while [ "$(kubectl get pods -n kube-system | grep 'openstorage-' | grep 'Running' -c)" -lt "$expected_running_pods" ]; do
           if [ $cnt -gt 15 ]; then
