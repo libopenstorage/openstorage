@@ -69,6 +69,7 @@ jobs:
 
     - name: Environment setup check
       run: |
+        sleep 15
         expected_running_pods=6
         cnt=0
         while [ "$(kubectl get pods -n kube-system | grep 'openstorage-' | grep 'Running' -c)" -lt "$expected_running_pods" ]; do
@@ -83,7 +84,6 @@ jobs:
           cnt=$((cnt + 1))
           sleep 10   
         done
-        sleep 15
 
     - name: Run tests
       run: |
