@@ -15,9 +15,8 @@ kubectl get storageclass openstorage-sc || exitFail "failed to create storagecla
 
 # Create PVC
 kubectl apply -f demo/e2e/pvc.yaml || exitFail "failed to apply PVC yaml"
-sleep 5
-kubectl get pvc openstorage-pvc | grep Bound || exitFail "PVC not bound after 5 seconds"
-
+sleep 15
+kubectl get pvc openstorage-pvc | grep Bound || exitFail "PVC not bound after 15 seconds"
 
 # Use PVC with MySQL deployment
 kubectl apply -f demo/e2e/mysql.yaml || exitFail "failed to apply deployment yaml"
