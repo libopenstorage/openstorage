@@ -386,7 +386,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	}
 
 	// Setup SDK Server with no volume driver
-	alert, err := alerts.NewFilterDeleter(kv)
+	alert, err := alerts.NewFilterDeleter()
 	assert.NoError(t, err)
 
 	sp, err := policy.Inst()
