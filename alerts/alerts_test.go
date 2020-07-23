@@ -11,13 +11,19 @@ import (
 )
 
 // helper function go get a new kvdb instance
-func newInMemKvdb() (kvdb.Kvdb, error) {
+func newInMemKvdb() error {
 	// create in memory kvdb
-	if kv, err := kvdb.New(mem.Name, "", []string{}, nil, nil); err != nil {
-		return nil, err
-	} else {
-		return kv, nil
+	kv := kvdb.Instance()
+	if kv == nil {
+		var err error
+		kv, err = kvdb.New(mem.Name, "", []string{}, nil, nil)
+		if err != nil {
+			return err
+		}
+		kvdb.SetInstance(kv)
 	}
+	kv.DeleteTree("")
+	return nil
 }
 
 // raiseAlerts is a helper func that raises some alerts for test purposes.
@@ -87,12 +93,11 @@ func raiseAlerts(manager Manager) error {
 }
 
 func TestUniqueKeys(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
-
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -294,12 +299,12 @@ func TestUniqueKeys(t *testing.T) {
 
 // TestManager_Enumerate tests enumeration based on various filters.
 func TestManager_Enumerate(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -529,12 +534,12 @@ func TestManager_Enumerate(t *testing.T) {
 
 // TestManager_Filter tests alert filtering based on various filters.
 func TestManager_Filter(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -698,12 +703,12 @@ func TestManager_Filter(t *testing.T) {
 
 // TestManager_Delete tests if delete works as governed by filters.
 func TestManager_Delete(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -849,12 +854,12 @@ func TestManager_Delete(t *testing.T) {
 
 // TestManager_DeleteMultipleTimes tests if delete works without errors if called multiple times.
 func TestManager_DeleteMultipleTimes(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -917,12 +922,12 @@ func TestManager_DeleteMultipleTimes(t *testing.T) {
 
 // TestManager_SetRules_EventRaise_ActionDelete tests if set rules activate on raise.
 func TestManager_SetRules_EventRaise_ActionDelete(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	manager, err := NewManager(kv)
+	manager, err := NewManager()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1043,13 +1048,13 @@ func TestManager_SetRules_EventRaise_ActionDelete(t *testing.T) {
 // TestManager_SetRules_EventRaise_ActionCancel tests if we can cancel alerts by raising
 // some other alerts.
 func TestManager_SetRules_EventRaise_ActionClear(t *testing.T) {
-	kv, err := newInMemKvdb()
+	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// create a ttl value of 5 seconds
-	manager, err := NewManager(kv, NewTTLOption(1))
+	manager, err := NewManager(NewTTLOption(1))
 	if err != nil {
 		t.Fatal(err)
 	}
