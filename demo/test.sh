@@ -1,6 +1,7 @@
 #!/bin/bash
 exitFail() {
   echo "$1"
+  kubectl get pods -n kube-system | grep 'openstorage-'
   kubectl -n kube-system describe daemonset
   kubectl -n kube-system describe deployment
   exit 1

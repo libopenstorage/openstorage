@@ -89,6 +89,8 @@ jobs:
           cnt=$((cnt + 1))
           sleep 10   
         done
+        kubectl get pods -n kube-system | grep 'openstorage-'
+        sleep 30
 
     - name: Run tests
       run: |
