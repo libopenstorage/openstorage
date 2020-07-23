@@ -1,5 +1,4 @@
 #!/bin/bash
-
 fail() {
   echo "$1"
   exit 1
@@ -16,7 +15,24 @@ kubectl get storageclass openstorage-sc || fail "failed to create storageclass"
 
 # Create PVC
 kubectl apply -f demo/e2e/pvc.yaml || fail "failed to apply PVC yaml"
-kubectl get pvc openstorage-pvc || fail "failed to create pvc"
+kubectl get pvc openstorage-pvc | grep Bound
+
+# Check PVC with 5 retries
+n=0
+while true; do
+  kubectl get pvc openstorage-pvc | grep Bound 
+  if [ $? -eq 0 ]; then
+    break
+	elif [ $n -gt 5 ]; then
+    kubectl describe pvc openstorage-pvc
+    fail "PVC not bound after 5 retries"
+  else
+    echo "PVC not bound"
+    kubectl get pvc openstorage-pvc
+    n=$((n+1))
+    sleep 5  
+  fi
+done
 
 # Use PVC with MySQL deployment
 kubectl apply -f demo/e2e/mysql.yaml || fail "failed to apply deployment yaml"
