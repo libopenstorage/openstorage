@@ -1,4 +1,4 @@
-D/*
+/*
 Package csi is CSI driver interface for OSD
 Copyright 2017 Portworx
 
