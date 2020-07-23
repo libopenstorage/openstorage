@@ -32,4 +32,4 @@ spec:
       volumes:
       - name: mysql-persistent-storage
         persistentVolumeClaim:
-          claimName: my-pvc
+          claimName: openstorage-pvc

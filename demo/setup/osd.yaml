@@ -1,7 +1,7 @@
 kind: Service
 apiVersion: v1
 metadata:
-  name: openstorage-csi-service
+  name: osd-csi-service
   namespace: kube-system
 spec:
   selector:
@@ -42,12 +42,22 @@ spec:
                 operator: DoesNotExist
       hostNetwork: true
       hostPID: false
+      # imagePullSecrets: 
+      #   - name: ghpkgcred
       containers:
         - name: osd
-          image: docker.pkg.github.com/skhalife/openstorage/demo:latest
-          imagePullPolicy: IfNotPresent
+          # image: quay.io/ggriffiths/osd:latest
+          image: quay.io/ggriffiths/osd:latest
+          imagePullPolicy: IfNotPresent    
           args:
-              ["-d","--driver=name=fake", "--csidrivername","csi.openstorage.org"]
+              [
+                "-d",
+                "--driver=name=fake",
+                "--jwt-issuer=openstorage.io",
+                "--csidrivername=csi.openstorage.org",
+                "--jwt-shared-secret=mysecret",
+                "--jwt-system-shared-secret=mysecret"
+              ]
           env:
             - name: "CSI_ENDPOINT"
               value: "/var/lib/csi.openstorage.org/csi.sock"
