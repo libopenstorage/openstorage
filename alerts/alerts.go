@@ -3,6 +3,7 @@ package alerts
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -66,8 +67,11 @@ type FilterDeleter interface {
 	Delete(filters ...Filter) error
 }
 
-func newManager(kv kvdb.Kvdb, options ...Option) (*manager, error) {
-	m := &manager{kv: kv, rules: make(map[string]Rule), ttl: HalfDay}
+func newManager(options ...Option) (*manager, error) {
+	if kvdb.Instance() == nil {
+		return nil, fmt.Errorf("kvdb instance is not set")
+	}
+	m := &manager{rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
 		case ttlOption:
@@ -83,7 +87,6 @@ func newManager(kv kvdb.Kvdb, options ...Option) (*manager, error) {
 
 // manager implements Manager interface.
 type manager struct {
-	kv    kvdb.Kvdb
 	rules map[string]Rule
 	ttl   uint64
 	sync.Mutex
@@ -116,7 +119,7 @@ func (m *manager) Raise(alert *api.Alert) error {
 	}
 
 	key := getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)
-	if _, err := m.kv.Delete(key); err != nil && err != kvdb.ErrNotFound {
+	if _, err := kvdb.Instance().Delete(key); err != nil && err != kvdb.ErrNotFound {
 		logrus.WithField("pkg", "openstorage/alerts").WithField("func", "Raise").Error(err)
 	}
 
@@ -124,11 +127,11 @@ func (m *manager) Raise(alert *api.Alert) error {
 	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
 		// if the alert is marked Cleared, it is pushed to kvdb with a ttlOption of half day
-		_, err := m.kv.Put(key, alert, m.ttl)
+		_, err := kvdb.Instance().Put(key, alert, m.ttl)
 		return err
 	} else {
 		// otherwise use the ttl value embedded in the alert object
-		_, err := m.kv.Put(key, alert, alert.Ttl)
+		_, err := kvdb.Instance().Put(key, alert, alert.Ttl)
 		return err
 	}
 }
@@ -145,7 +148,7 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 
 	// enumerate for unique keys
 	for key := range keys {
-		kvps, err := enumerate(m.kv, key)
+		kvps, err := enumerate(kvdb.Instance(), key)
 		if err != nil {
 			return nil, err
 		}
@@ -273,7 +276,7 @@ Loop:
 		}
 
 		for key := range keys {
-			if err := m.kv.DeleteTree(key); err != nil {
+			if err := kvdb.Instance().DeleteTree(key); err != nil {
 				return err
 			}
 		}
@@ -284,7 +287,7 @@ Loop:
 		}
 
 		for _, alert := range myAlerts {
-			if _, err := m.kv.Delete(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)); err != nil {
+			if _, err := kvdb.Instance().Delete(getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)); err != nil {
 				return err
 			}
 		}
