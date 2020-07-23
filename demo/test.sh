@@ -1,6 +1,8 @@
 #!/bin/bash
 exitFail() {
   echo "$1"
+  kubectl -n kube-system describe daemonset
+  kubectl -n kube-system describe deployment
   exit 1
 }
 

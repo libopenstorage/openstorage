@@ -13,36 +13,36 @@ env:
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  build:    
-    # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+  # build:    
+  #   # The type of runner that the job will run on
+  #   runs-on: ubuntu-latest
     
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
-    - uses: actions/checkout@v2
-    - name: Build the Docker image
-      run: make docker-build-osd
+  #   # Steps represent a sequence of tasks that will be executed as part of the job
+  #   steps:
+  #   # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+  #   - uses: actions/checkout@v2
+  #   - name: Build the Docker image
+  #     run: make docker-build-osd
     
-    - name: Log into registry
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
+  #   - name: Log into registry
+  #     run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login docker.pkg.github.com -u ${{ github.actor }} --password-stdin
 
-    - name: Push image
-      run: |
-        IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/demo
-        VERSION=$(date +%s)
+  #   - name: Push image
+  #     run: |
+  #       IMAGE_ID=docker.pkg.github.com/${{ github.repository }}/demo
+  #       VERSION=$(date +%s)
 
-        echo IMAGE_ID=$IMAGE_ID
-        echo VERSION=$VERSION
+  #       echo IMAGE_ID=$IMAGE_ID
+  #       echo VERSION=$VERSION
 
-        docker tag $OSD_IMAGE $IMAGE_ID:$VERSION
-        docker push $IMAGE_ID:$VERSION
+  #       docker tag $OSD_IMAGE $IMAGE_ID:$VERSION
+  #       docker push $IMAGE_ID:$VERSION
     
   
   # KinD Cluster Creation
   test:
     # this job is dependent of the previous one completing
-    needs: build
+    # needs: build
     
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
@@ -85,7 +85,7 @@ jobs:
           fi
           kubectl get pods -n kube-system | grep 'openstorage-'
           echo "$(date +%H:%M:%S)" "waiting for openstorage deployment to complete, attempt #$cnt"
-        cnt=$((cnt + 1))
+          cnt=$((cnt + 1))
           sleep 10   
         done
 
