@@ -68,7 +68,7 @@ jobs:
           
     - name: Start openstorage
       run: |
-        kubectl apply -f demo/setup
+        kubectl -n kube-system apply -f demo/setup
 
     - name: Environment setup check
       run: |
