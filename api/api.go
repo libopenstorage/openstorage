@@ -60,6 +60,8 @@ const (
 	SpecExportProtocolCustom = "custom"
 	SpecExportOptions        = "export_options"
 	SpecExportOptionsEmpty   = "empty_export_options"
+	SpecMountOptions         = "mount_options"
+	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"

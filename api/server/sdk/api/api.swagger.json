@@ -867,6 +867,19 @@
         },
         "type": "object"
       },
+      "apiMountOptions": {
+        "description": "MountOptions defines the mount options with which a volume is mounted.",
+        "properties": {
+          "options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Options are opaque key value pairs that are passed as mount options when\na volume is mounted.\nIf an empty value is provided only the key will be passed as an option\nIf both key and value are provided then 'key=value' will be passed as an\noption",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "apiObjectstoreInfo": {
         "properties": {
           "access_key": {
@@ -1075,6 +1088,9 @@
           "journal": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
           },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
           },
@@ -1097,6 +1113,9 @@
           },
           "sharedv4": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "snapshot_interval": {
             "format": "int64",
@@ -4138,6 +4157,9 @@
           "locator": {
             "$ref": "#/components/schemas/apiVolumeLocator"
           },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "readonly": {
             "description": "Readonly is true if this volume is to be mounted with readonly access.",
             "format": "boolean",
@@ -4160,6 +4182,9 @@
           "secure_device_path": {
             "description": "SecureDevicePath is the device path for an encrypted volume.",
             "type": "string"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "source": {
             "$ref": "#/components/schemas/apiSource"
@@ -4398,6 +4423,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
             "format": "boolean",
@@ -4438,6 +4466,9 @@
             "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4515,6 +4546,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -4546,6 +4580,9 @@
           "sharedv4": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4612,6 +4649,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -4643,6 +4683,9 @@
           "sharedv4": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4728,7 +4771,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.15"
+    "version": "0.69.17"
   },
   "openapi": "3.0.0",
   "paths": {

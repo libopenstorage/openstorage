@@ -829,6 +829,20 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ScanPolicy = vol.GetScanPolicy()
 	}
 
+	// MountOptions
+	if req.GetMountOptSpec() != nil {
+		spec.MountOptions = req.GetMountOptSpec()
+	} else {
+		spec.MountOptions = vol.GetMountOptions()
+	}
+
+	// Sharedv4MountOptions
+	if req.GetSharedv4MountOptSpec() != nil {
+		spec.Sharedv4MountOptions = req.GetSharedv4MountOptSpec()
+	} else {
+		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
+	}
+
 	return spec
 }
 
