@@ -261,7 +261,7 @@ type filesystemTrimNotSupported struct{}
 func (cl *filesystemTrimNotSupported) FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
 	return nil, ErrNotSupported
 }
-func (cl *filesystemTrimNotSupported) FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error) {
+func (cl *filesystemTrimNotSupported) FilesystemTrimStatus(request *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error) {
 	return nil, ErrNotSupported
 }
 func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
