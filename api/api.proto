@@ -1380,7 +1380,7 @@ service OpenStorageRole {
 //
 // Once the filesystem trim operation is started, the clients have to poll for
 // the status of the background operation using the
-// `OpenStorageFilesystemTrim.GetStatus()` rpc request
+// `OpenStorageFilesystemTrim.Status()` rpc request
 //
 // A typical workflow involving filesystem trim would be as follows
 // 1. Attach the volume
@@ -1392,7 +1392,7 @@ service OpenStorageRole {
 //    This call returns immediately with a status code indicating if the
 //    operation was successfully started or not.
 // 4. To get the status of the Filesystem Trim operation, issue a grpc call to
-//    `OpenStorageFilesystemTrimClient.GetStatus()`
+//    `OpenStorageFilesystemTrimClient.Status()`
 // 5. To stop the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.Stop()`
 service OpenStorageFilesystemTrim {
@@ -1406,10 +1406,10 @@ service OpenStorageFilesystemTrim {
       };
     }
 
-  // Get Status of a filesystem Trim background operation on a mounted
+  // Status of a filesystem Trim background operation on a mounted
   // volume, if any
-  rpc GetStatus(SdkFilesystemTrimGetStatusRequest)
-    returns (SdkFilesystemTrimGetStatusResponse){
+  rpc Status(SdkFilesystemTrimStatusRequest)
+    returns (SdkFilesystemTrimStatusResponse){
       option(google.api.http) = {
         get: "/v1/filesystem-trim/status"
       };
@@ -4073,18 +4073,18 @@ message SdkFilesystemTrimStartResponse{
   string message = 2;
 }
 
-// SdkFilesystemTrimGetStatusRequest defines a request to get status of a
+// SdkFilesystemTrimStatusRequest defines a request to get status of a
 // background filesystem trim operation
-message SdkFilesystemTrimGetStatusRequest {
+message SdkFilesystemTrimStatusRequest {
   // Id of the volume
   string volume_id = 1;
   // Path where the volume is mounted
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimGetStatusResponse defines the response for a
-// SdkFilesystemTrimGetStatusRequest.
-message SdkFilesystemTrimGetStatusResponse{
+// SdkFilesystemTrimStatusResponse defines the response for a
+// SdkFilesystemTrimStatusRequest.
+message SdkFilesystemTrimStatusResponse{
   // Status code representing the state of the filesystem trim operation
   FilesystemTrim.FilesystemTrimStatus status = 1;
   // Text blob containing ASCII text providing details of the operation
@@ -4261,7 +4261,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 92;
+    Minor = 93;
     // SDK version patch value of this specification
     Patch = 0;
   }
