@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.18 - (7/27/2020)
+
+* Renamed FilesystemTrim Api GetStatus() to Status().
+
 ### v0.69.17 - (7/16/2020)
 
 * Add sharedv4_mount_options field to Volume and VolumeSpec object.

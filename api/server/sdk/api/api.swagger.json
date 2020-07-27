@@ -2334,19 +2334,6 @@
         "title": "Empty response",
         "type": "object"
       },
-      "apiSdkFilesystemTrimGetStatusResponse": {
-        "description": "SdkFilesystemTrimGetStatusResponse defines the response for a\nSdkFilesystemTrimGetStatusRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
-          }
-        },
-        "type": "object"
-      },
       "apiSdkFilesystemTrimStartRequest": {
         "properties": {
           "mount_path": {
@@ -2363,6 +2350,19 @@
       },
       "apiSdkFilesystemTrimStartResponse": {
         "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStatusResponse": {
+        "description": "SdkFilesystemTrimStatusResponse defines the response for a\nSdkFilesystemTrimStatusRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -4771,7 +4771,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.17"
+    "version": "0.69.18"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5890,7 +5890,7 @@
     },
     "/v1/filesystem-trim/status": {
       "get": {
-        "operationId": "GetStatus",
+        "operationId": "Status",
         "parameters": [
           {
             "description": "Id of the volume.",
@@ -5916,14 +5916,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemTrimGetStatusResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimStatusResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Get Status of a filesystem Trim background operation on a mounted\nvolume, if any",
+        "summary": "Status of a filesystem Trim background operation on a mounted\nvolume, if any",
         "tags": [
           "OpenStorageFilesystemTrim"
         ]
