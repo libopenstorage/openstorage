@@ -392,17 +392,6 @@ func (_mr *_MockVolumeDriverRecorder) FilesystemCheckStop(arg0 interface{}) *gom
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemCheckStop", arg0)
 }
 
-func (_m *MockVolumeDriver) FilesystemTrimGetStatus(_param0 *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error) {
-	ret := _m.ctrl.Call(_m, "FilesystemTrimGetStatus", _param0)
-	ret0, _ := ret[0].(*api.SdkFilesystemTrimGetStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-func (_mr *_MockVolumeDriverRecorder) FilesystemTrimGetStatus(arg0 interface{}) *gomock.Call {
-	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemTrimGetStatus", arg0)
-}
-
 func (_m *MockVolumeDriver) FilesystemTrimStart(_param0 *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
 	ret := _m.ctrl.Call(_m, "FilesystemTrimStart", _param0)
 	ret0, _ := ret[0].(*api.SdkFilesystemTrimStartResponse)
@@ -412,6 +401,17 @@ func (_m *MockVolumeDriver) FilesystemTrimStart(_param0 *api.SdkFilesystemTrimSt
 
 func (_mr *_MockVolumeDriverRecorder) FilesystemTrimStart(arg0 interface{}) *gomock.Call {
 	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemTrimStart", arg0)
+}
+
+func (_m *MockVolumeDriver) FilesystemTrimStatus(_param0 *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error) {
+	ret := _m.ctrl.Call(_m, "FilesystemTrimStatus", _param0)
+	ret0, _ := ret[0].(*api.SdkFilesystemTrimStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+func (_mr *_MockVolumeDriverRecorder) FilesystemTrimStatus(arg0 interface{}) *gomock.Call {
+	return _mr.mock.ctrl.RecordCall(_mr.mock, "FilesystemTrimStatus", arg0)
 }
 
 func (_m *MockVolumeDriver) FilesystemTrimStop(_param0 *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
