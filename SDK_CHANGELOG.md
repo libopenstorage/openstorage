@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.96.0 - (8/5/2020)
+
+* Add CredentialId field to ClusterPairCreate api
+
 ### v0.95.0 - (8/4/2020)
 
 * Removed IO_PROFILE_BKUPSRC from ioProfile list
