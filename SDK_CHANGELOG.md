@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.21 - (8/6/2020)
+
+* Add CredentialId field to ClusterPairCreate api
+
 ### v0.69.20 - (8/5/2020)
 
 * Add IO_PROFILE_AUTO to the ioProfile list
