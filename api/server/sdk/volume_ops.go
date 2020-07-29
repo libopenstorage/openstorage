@@ -843,6 +843,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
 	}
 
+	// ReflectionSpec
+	if req.GetReflectionSpec() != nil {
+		spec.ReflectionSpec = req.GetReflectionSpec()
+	} else {
+		spec.ReflectionSpec = vol.GetReflectionSpec()
+	}
+
 	return spec
 }
 
@@ -1121,6 +1128,13 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 				}
 			}
 		}
+	}
+
+	if req.GetReflectionSpecOpt() != nil {
+		if isValidate && vol.GetReflectionSpec() != req.GetReflectionSpec() {
+			return vol, errMsg
+		}
+		spec.ReflectionSpec = req.GetReflectionSpec()
 	}
 	// ScanPolicy
 	if req.GetScanPolicy() != nil {

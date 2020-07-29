@@ -92,43 +92,47 @@ type SpecHandler interface {
 }
 
 var (
-	nameRegex                   = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
-	tokenRegex                  = regexp.MustCompile(api.Token + "=([A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]+),?")
-	tokenSecretRegex            = regexp.MustCompile(api.TokenSecret + `=/*([0-9A-Za-z_/]+),?`)
-	tokenSecretNamespaceRegex   = regexp.MustCompile(api.TokenSecretNamespace + `=/*([0-9A-Za-z_/]+),?`)
-	nodesRegex                  = regexp.MustCompile(api.SpecNodes + "=([A-Za-z0-9-_;]+),?")
-	parentRegex                 = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
-	sizeRegex                   = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
-	scaleRegex                  = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
-	fsRegex                     = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
-	bsRegex                     = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
-	queueDepthRegex             = regexp.MustCompile(api.SpecQueueDepth + "=([0-9]+),?")
-	haRegex                     = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
-	cosRegex                    = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
-	sharedRegex                 = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
-	journalRegex                = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
-	sharedv4Regex               = regexp.MustCompile(api.SpecSharedv4 + "=([A-Za-z]+),?")
-	cascadedRegex               = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
-	passphraseRegex             = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
-	stickyRegex                 = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
-	secureRegex                 = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
-	zonesRegex                  = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
-	racksRegex                  = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
-	rackRegex                   = regexp.MustCompile(api.SpecRack + "=([A-Za-z]+),?")
-	aggrRegex                   = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" + api.SpecAutoAggregationValue + "),?")
-	compressedRegex             = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
-	snapScheduleRegex           = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
-	ioProfileRegex              = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
-	asyncIoRegex                = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
-	earlyAckRegex               = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
-	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
-	nodiscardRegex              = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
-	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
-	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
-	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
-	mountOptionsRegex           = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
-	sharedv4MountOptionsRegex   = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
-	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
+	nameRegex                    = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
+	tokenRegex                   = regexp.MustCompile(api.Token + "=([A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]+),?")
+	tokenSecretRegex             = regexp.MustCompile(api.TokenSecret + `=/*([0-9A-Za-z_/]+),?`)
+	tokenSecretNamespaceRegex    = regexp.MustCompile(api.TokenSecretNamespace + `=/*([0-9A-Za-z_/]+),?`)
+	nodesRegex                   = regexp.MustCompile(api.SpecNodes + "=([A-Za-z0-9-_;]+),?")
+	parentRegex                  = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
+	sizeRegex                    = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
+	scaleRegex                   = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
+	fsRegex                      = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
+	bsRegex                      = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
+	queueDepthRegex              = regexp.MustCompile(api.SpecQueueDepth + "=([0-9]+),?")
+	haRegex                      = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
+	cosRegex                     = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
+	sharedRegex                  = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	journalRegex                 = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
+	sharedv4Regex                = regexp.MustCompile(api.SpecSharedv4 + "=([A-Za-z]+),?")
+	cascadedRegex                = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
+	passphraseRegex              = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
+	stickyRegex                  = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
+	secureRegex                  = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
+	zonesRegex                   = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
+	racksRegex                   = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
+	rackRegex                    = regexp.MustCompile(api.SpecRack + "=([A-Za-z]+),?")
+	aggrRegex                    = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" + api.SpecAutoAggregationValue + "),?")
+	compressedRegex              = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
+	snapScheduleRegex            = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
+	ioProfileRegex               = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	asyncIoRegex                 = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
+	earlyAckRegex                = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
+	forceUnsupportedFsTypeRegex  = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
+	nodiscardRegex               = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
+	storagePolicyRegex           = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
+	exportProtocolRegex          = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
+	exportOptionsRegex           = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
+	reflectionEndpointRegex      = regexp.MustCompile(api.SpecReflectionEndpoint + "=([0-9A-Za-z_@:./#&+-]+),?")
+	reflectionNFSSubPathRegex    = regexp.MustCompile(api.SpecReflectionNFSSubPath + "=([A-Za-z]+),?")
+	reflectionNFSExportPathRegex = regexp.MustCompile(api.SpecReflectionNFSExportPath + "=([A-Za-z]+),?")
+	reflectionS3BucketRegex      = regexp.MustCompile(api.SpecReflectionS3Bucket + "=([A-Za-z]+),?")
+	mountOptionsRegex            = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	sharedv4MountOptionsRegex    = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	cowOnDemandRegex             = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -392,6 +396,41 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ExportSpec = &api.ExportSpec{}
 			}
 			spec.ExportSpec.ExportOptions = v
+		case api.SpecReflectionEndpoint:
+			if spec.ReflectionSpec == nil {
+				spec.ReflectionSpec = &api.ReflectionSpec{}
+			}
+			reflectionProtocol, endpoint := api.ParseReflectionEndpoint(v)
+			if reflectionProtocol == api.ReflectionProtocol_REFLECTION_PROTOCOL_INVALID {
+				return nil, nil, nil, fmt.Errorf("invalid reflection endpoint: %v", v)
+			}
+			spec.ReflectionSpec.Endpoint = endpoint
+			spec.ReflectionSpec.ReflectionProtocol = reflectionProtocol
+
+		case api.SpecReflectionNFSSubPath:
+			if spec.ReflectionSpec == nil {
+				spec.ReflectionSpec = &api.ReflectionSpec{}
+			}
+			if spec.ReflectionSpec.NfsSpec == nil {
+				spec.ReflectionSpec.NfsSpec = &api.NFSReflectionSpec{
+					SubPath: v,
+				}
+			} else {
+				spec.ReflectionSpec.NfsSpec.SubPath = v
+			}
+
+		case api.SpecReflectionNFSExportPath:
+			if spec.ReflectionSpec == nil {
+				spec.ReflectionSpec = &api.ReflectionSpec{}
+			}
+			if spec.ReflectionSpec.NfsSpec == nil {
+				spec.ReflectionSpec.NfsSpec = &api.NFSReflectionSpec{
+					ExportPath: v,
+				}
+			} else {
+				spec.ReflectionSpec.NfsSpec.ExportPath = v
+			}
+
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
 				spec.MountOptions = &api.MountOptions{
@@ -589,6 +628,18 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, exportOptions := d.getVal(exportOptionsRegex, str); ok {
 		opts[api.SpecExportOptions] = exportOptions
+	}
+	if ok, reflectionEndpoint := d.getVal(reflectionEndpointRegex, str); ok {
+		opts[api.SpecReflectionEndpoint] = reflectionEndpoint
+	}
+	if ok, reflectionNFSSubPath := d.getVal(reflectionNFSSubPathRegex, str); ok {
+		opts[api.SpecReflectionNFSSubPath] = reflectionNFSSubPath
+	}
+	if ok, reflectionNFSExportPath := d.getVal(reflectionNFSExportPathRegex, str); ok {
+		opts[api.SpecReflectionNFSExportPath] = reflectionNFSExportPath
+	}
+	if ok, reflectionS3Bucket := d.getVal(reflectionS3BucketRegex, str); ok {
+		opts[api.SpecReflectionS3Bucket] = reflectionS3Bucket
 	}
 	if ok, mountOptions := d.getVal(mountOptionsRegex, str); ok {
 		// mount options will be provided as a string in the following format

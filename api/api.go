@@ -15,53 +15,60 @@ import (
 
 // Strings for VolumeSpec
 const (
-	Name                     = "name"
-	Token                    = "token"
-	TokenSecret              = "token_secret"
-	TokenSecretNamespace     = "token_secret_namespace"
-	SpecNodes                = "nodes"
-	SpecParent               = "parent"
-	SpecEphemeral            = "ephemeral"
-	SpecShared               = "shared"
-	SpecJournal              = "journal"
-	SpecSharedv4             = "sharedv4"
-	SpecCascaded             = "cascaded"
-	SpecSticky               = "sticky"
-	SpecSecure               = "secure"
-	SpecCompressed           = "compressed"
-	SpecSize                 = "size"
-	SpecScale                = "scale"
-	SpecFilesystem           = "fs"
-	SpecBlockSize            = "block_size"
-	SpecQueueDepth           = "queue_depth"
-	SpecHaLevel              = "repl"
-	SpecPriority             = "io_priority"
-	SpecSnapshotInterval     = "snap_interval"
-	SpecSnapshotSchedule     = "snap_schedule"
-	SpecAggregationLevel     = "aggregation_level"
-	SpecDedupe               = "dedupe"
-	SpecPassphrase           = "secret_key"
-	SpecAutoAggregationValue = "auto"
-	SpecGroup                = "group"
-	SpecGroupEnforce         = "fg"
-	SpecZones                = "zones"
-	SpecRacks                = "racks"
-	SpecRack                 = "rack"
-	SpecRegions              = "regions"
-	SpecLabels               = "labels"
-	SpecPriorityAlias        = "priority_io"
-	SpecIoProfile            = "io_profile"
-	SpecAsyncIo              = "async_io"
-	SpecEarlyAck             = "early_ack"
-	SpecExportProtocol       = "export"
-	SpecExportProtocolISCSI  = "iscsi"
-	SpecExportProtocolPXD    = "pxd"
-	SpecExportProtocolNFS    = "nfs"
-	SpecExportProtocolCustom = "custom"
-	SpecExportOptions        = "export_options"
-	SpecExportOptionsEmpty   = "empty_export_options"
-	SpecMountOptions         = "mount_options"
-	SpecSharedv4MountOptions = "sharedv4_mount_options"
+	Name                        = "name"
+	Token                       = "token"
+	TokenSecret                 = "token_secret"
+	TokenSecretNamespace        = "token_secret_namespace"
+	SpecNodes                   = "nodes"
+	SpecParent                  = "parent"
+	SpecEphemeral               = "ephemeral"
+	SpecShared                  = "shared"
+	SpecJournal                 = "journal"
+	SpecSharedv4                = "sharedv4"
+	SpecCascaded                = "cascaded"
+	SpecSticky                  = "sticky"
+	SpecSecure                  = "secure"
+	SpecCompressed              = "compressed"
+	SpecSize                    = "size"
+	SpecScale                   = "scale"
+	SpecFilesystem              = "fs"
+	SpecBlockSize               = "block_size"
+	SpecQueueDepth              = "queue_depth"
+	SpecHaLevel                 = "repl"
+	SpecPriority                = "io_priority"
+	SpecSnapshotInterval        = "snap_interval"
+	SpecSnapshotSchedule        = "snap_schedule"
+	SpecAggregationLevel        = "aggregation_level"
+	SpecDedupe                  = "dedupe"
+	SpecPassphrase              = "secret_key"
+	SpecAutoAggregationValue    = "auto"
+	SpecGroup                   = "group"
+	SpecGroupEnforce            = "fg"
+	SpecZones                   = "zones"
+	SpecRacks                   = "racks"
+	SpecRack                    = "rack"
+	SpecRegions                 = "regions"
+	SpecLabels                  = "labels"
+	SpecPriorityAlias           = "priority_io"
+	SpecIoProfile               = "io_profile"
+	SpecAsyncIo                 = "async_io"
+	SpecEarlyAck                = "early_ack"
+	SpecExportProtocol          = "export"
+	SpecExportProtocolISCSI     = "iscsi"
+	SpecExportProtocolPXD       = "pxd"
+	SpecExportProtocolNFS       = "nfs"
+	SpecExportProtocolCustom    = "custom"
+	SpecExportOptions           = "export_options"
+	SpecExportOptionsEmpty      = "empty_export_options"
+	SpecMountOptions            = "mount_options"
+	SpecSharedv4MountOptions    = "sharedv4_mount_options"
+	SpecReflectionProtocolS3    = "s3"
+	SpecReflectionProtocolPXD   = "pxd"
+	SpecReflectionProtocolNFS   = "nfs"
+	SpecReflectionEndpoint      = "reflection_endpoint"
+	SpecReflectionNFSSubPath    = "reflection_nfs_subpath"
+	SpecReflectionNFSExportPath = "reflection_nfs_exportpath"
+	SpecReflectionS3Bucket      = "reflection_s3_bucket"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
@@ -1259,4 +1266,28 @@ type TokenSecretContext struct {
 	SecretNamespace string
 	PvcName         string
 	PvcNamespace    string
+}
+
+// ParseReflectionEndpoint parses the reflection endpoint and returns the
+// reflection protocol and the endpoint
+func ParseReflectionEndpoint(reflectionEndpoint string) (ReflectionProtocol, string) {
+	if len(reflectionEndpoint) == 0 {
+		return ReflectionProtocol_REFLECTION_PROTOCOL_INVALID, ""
+	}
+	tokens := strings.Split(reflectionEndpoint, "://")
+	if len(tokens) == 1 {
+		return ReflectionProtocol_REFLECTION_PROTOCOL_INVALID, tokens[0]
+	} else if len(tokens) == 2 {
+		switch tokens[0] {
+		case SpecReflectionProtocolS3:
+			return ReflectionProtocol_REFLECTION_PROTOCOL_S3, tokens[1]
+		case SpecReflectionProtocolNFS:
+			return ReflectionProtocol_REFLECTION_PROTOCOL_NFS, tokens[1]
+		case SpecReflectionProtocolPXD:
+			return ReflectionProtocol_REFLECTION_PROTOCOL_PXD, tokens[1]
+		default:
+			return ReflectionProtocol_REFLECTION_PROTOCOL_INVALID, tokens[1]
+		}
+	}
+	return ReflectionProtocol_REFLECTION_PROTOCOL_INVALID, ""
 }

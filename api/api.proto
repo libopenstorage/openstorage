@@ -344,6 +344,55 @@ message ExportSpec {
    string export_options = 2;
 }
 
+// ReflectionProtocol defines the protocol used for reflection.
+enum ReflectionProtocol {
+    // Invalid uninitialized value
+    REFLECTION_PROTOCOL_INVALID = 0;
+    // NFS indicates that the external data source is NFS and the volume
+    // will be reflected over NFS protocol
+    REFLECTION_PROTOCOL_NFS = 1;
+    // S3 indicates that the external data source is an object store.
+    REFLECTION_PROTOCOL_S3 = 2;
+    // PXD indicates that the external data source is a Portworx block volume.
+    REFLECTION_PROTOCOL_PXD = 3;
+}
+
+// NFSReflectionSpec is the spec for reflecting an NFS share.
+message NFSReflectionSpec {
+    // ExportPath is the NFS export path on the NFS server
+    string export_path = 1;
+    // SubPath is the sub-directory from an NFS share that should be reflected.
+    string sub_path = 2;
+}
+
+// S3ReflectionSpec is the spec for reflecting an external object store.
+message S3ReflectionSpec {
+    // BucketName is the name of the bucket from the object store
+    string bucket_name = 1;
+}
+
+// PXDReflectionSpec is the spec for reflecting a Portworx volume
+message PXDReflectionSpec {
+    // ID of the remote portworx volume
+    string id = 1;
+}
+
+
+// ReflectionSpec defines how this volume will reflect an external data source.
+message ReflectionSpec {
+    // ReflectionProtocol defines the protocol used for reflection.
+    ReflectionProtocol reflection_protocol = 1;
+    // Endpoint is the external endpoint which can be used for accessing the
+    // external data source.
+    string endpoint = 2;
+    // NFSReflectionSpec is the spec for reflecting an NFS share
+    NFSReflectionSpec nfs_spec = 3;
+    // S3ReflectionSpec is the spec for reflecting an external object store
+    S3ReflectionSpec s3_spec = 4;
+    // PXDReflectionSpec is the spec for reflecting a Portworx volume
+    PXDReflectionSpec pxd_spec = 5;
+}
+
 // MountOptions defines the mount options with which a volume is mounted.
 message MountOptions {
   // Options are opaque key value pairs that are passed as mount options when
@@ -512,6 +561,8 @@ message VolumeSpec {
   // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 39;
+  // ReflectionSpec indicates that this volume is used for reflecting an external data source
+  ReflectionSpec reflection_spec = 41;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -569,7 +620,8 @@ message VolumeSpecUpdate {
   oneof mount_opt { MountOptions mount_opt_spec = 33;}
   // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 34;}
-
+  // reflection_spec_opt provides the spec for a reflection volume
+  oneof reflection_spec_opt { ReflectionSpec reflection_spec = 36;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -645,6 +697,8 @@ message VolumeSpecPolicy {
   oneof mount_opt { MountOptions mount_opt_spec = 58;}
   // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 59;}
+  // reflection_spec_opt provides the spec for a reflection volume.
+  oneof reflection_spec_opt { ReflectionSpec reflection_spec = 61; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4249,7 +4303,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 21;
+    Patch = 22;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4822,6 +4876,8 @@ message RestoreVolumeSpec {
   MountOptions sharedv4_mount_options = 23;
   // IoProfileBkupSrc indicates to inherit IoProfile from cloudbackup
   bool io_profile_bkup_src = 25;
+  // ReflectionSpec indicates that this volume is used for reflecting an external data source
+  ReflectionSpec reflection_spec = 26;
 }
 
 // Request message to get the volume catalog
