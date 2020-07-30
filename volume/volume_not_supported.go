@@ -261,7 +261,7 @@ type filesystemTrimNotSupported struct{}
 func (cl *filesystemTrimNotSupported) FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
 	return nil, ErrNotSupported
 }
-func (cl *filesystemTrimNotSupported) FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error) {
+func (cl *filesystemTrimNotSupported) FilesystemTrimStatus(request *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error) {
 	return nil, ErrNotSupported
 }
 func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
@@ -270,16 +270,10 @@ func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesys
 
 type filesystemCheckNotSupported struct{}
 
-func (cl *filesystemCheckNotSupported) FilesystemCheckCheckHealth(request *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error) {
+func (cl *filesystemCheckNotSupported) FilesystemCheckStart(request *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	return nil, ErrNotSupported
 }
-func (cl *filesystemCheckNotSupported) FilesystemCheckCheckHealthGetStatus(request *api.SdkFilesystemCheckCheckHealthGetStatusRequest) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckFixAll(request *api.SdkFilesystemCheckFixAllRequest) (*api.SdkFilesystemCheckFixAllResponse, error) {
-	return nil, ErrNotSupported
-}
-func (cl *filesystemCheckNotSupported) FilesystemCheckFixAllGetStatus(request *api.SdkFilesystemCheckFixAllGetStatusRequest) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error) {
+func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error) {
 	return nil, ErrNotSupported
 }
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {

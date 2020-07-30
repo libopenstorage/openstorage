@@ -74,6 +74,7 @@ func (s *CloudBackupServer) Create(
 		Name:                req.GetTaskId(),
 		Labels:              req.GetLabels(),
 		FullBackupFrequency: req.GetFullBackupFrequency(),
+		DeleteLocal:         req.GetDeleteLocal(),
 	})
 	if err != nil {
 		if err == volume.ErrExist {
@@ -182,6 +183,7 @@ func (s *CloudBackupServer) GroupCreate(
 		CredentialUUID: credId,
 		Full:           req.GetFull(),
 		Labels:         req.GetLabels(),
+		DeleteLocal:    req.GetDeleteLocal(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create group backup: %v", err)

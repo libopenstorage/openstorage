@@ -645,10 +645,10 @@
 			"revisionTime": "2016-11-18T19:16:01Z"
 		},
 		{
-			"checksumSHA1": "3/JBQVvN2IjnJLuntaUGMJqKXPw=",
+			"checksumSHA1": "F77I8pSgI1lLdp3AckoIvmkfZAo=",
 			"path": "github.com/coreos/go-oidc",
-			"revision": "66476e0267012774b2f9767d2d37a317d1f1aac3",
-			"revisionTime": "2018-11-01T19:42:49Z"
+			"revision": "8d771559cf6e5111c9b9159810d0e4538e7cdc82",
+			"revisionTime": "2020-01-27T16:17:54Z"
 		},
 		{
 			"checksumSHA1": "butr+Orbf1fd1hcLqNXYwUDAjcI=",

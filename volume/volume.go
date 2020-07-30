@@ -40,6 +40,9 @@ var (
 	ErrAborted = errors.New("Aborted CapacityUsage request")
 	// ErrInvalidName returned when Cloudbackup Name/request is invalid
 	ErrInvalidName = errors.New("Invalid name for cloud backup/restore request")
+	// ErrFsResizeFailed returned when Filesystem resize failed because of filesystem
+	// errors
+	ErrFsResizeFailed = errors.New("Filesystem Resize failed due to filesystem errors")
 )
 
 // Constants used by the VolumeDriver
@@ -197,10 +200,10 @@ type FilesystemTrimDriver interface {
 	// FilesystemTrimStart starts a filesystem trim background operation on a
 	// specified volume
 	FilesystemTrimStart(request *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error)
-	// FilesystemTrimGetStatus returns the status of a filesystem trim
+	// FilesystemTrimStatus returns the status of a filesystem trim
 	// background operation on a specified volume, if any
-	FilesystemTrimGetStatus(request *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error)
-	// FilesystemTrimGetStatus stops a filesystem trim background operation on
+	FilesystemTrimStatus(request *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error)
+	// FilesystemTrimStop stops a filesystem trim background operation on
 	// a specified volume, if any
 	FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error)
 }
@@ -208,18 +211,12 @@ type FilesystemTrimDriver interface {
 // FilesystemCheckDriver interface exposes APIs to manage filesystem check
 // operation on a volume
 type FilesystemCheckDriver interface {
-	// FilesystemCheckReport starts a filesystem check background operation to
-	// report the issues found on the filesystem of a specified volume
-	FilesystemCheckCheckHealth(request *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error)
-	// FilesystemCheckCheckHealthGetStatus returns the status of a filesystem check
+	// FilesystemCheckStart starts a filesystem check background operation
+	// on a specified volume
+	FilesystemCheckStart(request *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error)
+	// FilesystemCheckStatus returns the status of a filesystem check
 	// background operation on the filesystem of a specified volume, if any.
-	FilesystemCheckCheckHealthGetStatus(request *api.SdkFilesystemCheckCheckHealthGetStatusRequest) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error)
-	// FilesystemCheckFixAll starts a filesystem check background operation to
-	// fix all the filesystem consistency issues in the specified volume
-	FilesystemCheckFixAll(request *api.SdkFilesystemCheckFixAllRequest) (*api.SdkFilesystemCheckFixAllResponse, error)
-	// FilesystemCheckFixAllGetStatus returns the status of a filesystem check
-	// background operation on the filesystem of a specified volume, if any.
-	FilesystemCheckFixAllGetStatus(request *api.SdkFilesystemCheckFixAllGetStatusRequest) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error)
+	FilesystemCheckStatus(request *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error)
 	// FilesystemCheckStop stops the filesystem check background operation on
 	// the filesystem of a specified volume, if any.
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)

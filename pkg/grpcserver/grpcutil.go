@@ -57,6 +57,11 @@ func GetTlsDialOptions(caCertData []byte) ([]grpc.DialOption, error) {
 
 // Connect to address by grpc
 func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, error) {
+	return ConnectWithTimeout(address, dialOptions, 1*time.Minute)
+}
+
+// ConnectWithTimeout to address by grpc with timeout
+func ConnectWithTimeout(address string, dialOptions []grpc.DialOption, timeout time.Duration) (*grpc.ClientConn, error) {
 	u, err := url.Parse(address)
 	if err == nil && (!u.IsAbs() || u.Scheme == "unix") {
 		dialOptions = append(dialOptions,
@@ -72,9 +77,9 @@ func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, e
 		return nil, err
 	}
 
-	// We wait for 1 minute until conn.GetState() is READY.
-	// The interval for this check is 1 second.
-	if err := util.WaitFor(1*time.Minute, 10*time.Millisecond, func() (bool, error) {
+	// We wait for given timeout until conn.GetState() is READY.
+	// The interval for this check is 10 ms.
+	if err := util.WaitFor(timeout, 10*time.Millisecond, func() (bool, error) {
 		if conn.GetState() == connectivity.Ready {
 			return false, nil
 		}

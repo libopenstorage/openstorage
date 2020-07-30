@@ -815,6 +815,34 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ExportSpec = vol.GetExportSpec()
 	}
 
+	// Xattr
+	if req.GetXattr() >= 0 {
+		spec.Xattr = req.GetXattr()
+	} else {
+		spec.Xattr = vol.GetXattr()
+	}
+
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		spec.ScanPolicy = req.GetScanPolicy()
+	} else {
+		spec.ScanPolicy = vol.GetScanPolicy()
+	}
+
+	// MountOptions
+	if req.GetMountOptSpec() != nil {
+		spec.MountOptions = req.GetMountOptSpec()
+	} else {
+		spec.MountOptions = vol.GetMountOptions()
+	}
+
+	// Sharedv4MountOptions
+	if req.GetSharedv4MountOptSpec() != nil {
+		spec.Sharedv4MountOptions = req.GetSharedv4MountOptSpec()
+	} else {
+		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
+	}
+
 	return spec
 }
 
@@ -1094,6 +1122,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			}
 		}
 	}
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		if isValidate && vol.GetScanPolicy() != req.GetScanPolicy() {
+			return vol, errMsg
+		}
+		spec.ScanPolicy = req.GetScanPolicy()
+	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }

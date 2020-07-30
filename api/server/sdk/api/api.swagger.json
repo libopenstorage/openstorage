@@ -21,43 +21,19 @@
         "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery",
         "type": "string"
       },
-      "FilesystemCheckCheckHealthStatus": {
-        "default": "CHECK_HEALTH_STATUS_UNKNOWN",
-        "enum": [
-          "CHECK_HEALTH_STATUS_UNKNOWN",
-          "CHECK_HEALTH_STATUS_HEALTHY",
-          "CHECK_HEALTH_STATUS_NOT_HEALTHY"
-        ],
-        "title": "- CHECK_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - CHECK_HEALTH_STATUS_HEALTHY: filesystem health is healthy\n - CHECK_HEALTH_STATUS_NOT_HEALTHY: filesystem health is not healthy",
-        "type": "string"
-      },
       "FilesystemCheckFilesystemCheckStatus": {
         "default": "FS_CHECK_UNKNOWN",
-        "description": "- FS_CHECK_UNKNOWN: Filesystem Check operation is an unknown state\n - FS_CHECK_NOT_RUNNING: FilesystemCheck operation not running for the specified volume\n - FS_CHECK_STARTED: FilesystemCheck operation started for the specified volume\n - FS_CHECK_CHECK_HEALTH_INPROGRESS: FilesystemCheck CheckHealth operation is in progress\n - FS_CHECK_CHECK_HEALTH_STOPPED: FilesystemCheck CheckHealth operation was stopped by the user\n - FS_CHECK_CHECK_HEALTH_COMPLETED: FilesystemCheck CheckHealth operation completed successfully\n - FS_CHECK_CHECK_HEALTH_FAILED: FilesystemCheck CheckHealth operation failed due to internal error\n - FS_CHECK_FIXALL_INPROGRESS: FilesystemCheck FixAll operation is in progress\n - FS_CHECK_FIXALL_STOPPED: FilesystemCheck FixAll operation was stopped by the user\n - FS_CHECK_FIXALL_COMPLETED: FilesystemCheck FixAll operation completed successfully\n - FS_CHECK_FIXALL_FAILED: FilesystemCheck FixAll operation failed due to internal error",
+        "description": "- FS_CHECK_UNKNOWN: Filesystem Check operation is an unknown state\n - FS_CHECK_NOT_RUNNING: FilesystemCheck operation not running for the specified volume\n - FS_CHECK_STARTED: FilesystemCheck operation started for the specified volume\n - FS_CHECK_INPROGRESS: FilesystemCheck operation is in progress\n - FS_CHECK_STOPPED: FilesystemCheck operation was stopped by the user\n - FS_CHECK_COMPLETED: FilesystemCheck operation completed successfully\n - FS_CHECK_FAILED: FilesystemCheck operation failed due to internal error",
         "enum": [
           "FS_CHECK_UNKNOWN",
           "FS_CHECK_NOT_RUNNING",
           "FS_CHECK_STARTED",
-          "FS_CHECK_CHECK_HEALTH_INPROGRESS",
-          "FS_CHECK_CHECK_HEALTH_STOPPED",
-          "FS_CHECK_CHECK_HEALTH_COMPLETED",
-          "FS_CHECK_CHECK_HEALTH_FAILED",
-          "FS_CHECK_FIXALL_INPROGRESS",
-          "FS_CHECK_FIXALL_STOPPED",
-          "FS_CHECK_FIXALL_COMPLETED",
-          "FS_CHECK_FIXALL_FAILED"
+          "FS_CHECK_INPROGRESS",
+          "FS_CHECK_STOPPED",
+          "FS_CHECK_COMPLETED",
+          "FS_CHECK_FAILED"
         ],
         "title": "FilesystemChecktatus represents the status codes returned from\nOpenStorageFilesystemCheck service APIs()",
-        "type": "string"
-      },
-      "FilesystemCheckFixAllStatus": {
-        "default": "FIXALL_STATUS_UNKNOWN",
-        "enum": [
-          "FIXALL_STATUS_UNKNOWN",
-          "FIXALL_STATUS_HEALTHY",
-          "FIXALL_STATUS_NOT_HEALTHY"
-        ],
-        "title": "- FIXALL_STATUS_UNKNOWN: filesystem check fixall status is unknown\n - FIXALL_STATUS_HEALTHY: filesystem check fixall is healthy\n - FIXALL_STATUS_NOT_HEALTHY: check fixall is not healthy",
         "type": "string"
       },
       "FilesystemTrimFilesystemTrimStatus": {
@@ -129,6 +105,24 @@
         },
         "title": "PublicAccessControl allows assigning public ownership",
         "type": "object"
+      },
+      "ScanPolicyScanAction": {
+        "default": "SCAN_ACTION_NONE",
+        "enum": [
+          "SCAN_ACTION_NONE",
+          "SCAN_ACTION_SCAN_ONLY",
+          "SCAN_ACTION_SCAN_REPAIR"
+        ],
+        "type": "string"
+      },
+      "ScanPolicyScanTrigger": {
+        "default": "SCAN_TRIGGER_NONE",
+        "enum": [
+          "SCAN_TRIGGER_NONE",
+          "SCAN_TRIGGER_ON_MOUNT",
+          "SCAN_TRIGGER_ON_NEXT_MOUNT"
+        ],
+        "type": "string"
       },
       "SdkCloudMigrateStartRequestMigrateAllVolumes": {
         "title": "Defines a migration request for all volumes in a cluster",
@@ -798,6 +792,17 @@
         "title": "fastpath extensions",
         "type": "string"
       },
+      "apiFilesystemHealthStatus": {
+        "default": "FS_HEALTH_STATUS_UNKNOWN",
+        "enum": [
+          "FS_HEALTH_STATUS_UNKNOWN",
+          "FS_HEALTH_STATUS_HEALTHY",
+          "FS_HEALTH_STATUS_SAFE_TO_FIX",
+          "FS_HEALTH_STATUS_NEEDS_INSPECTION"
+        ],
+        "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem is a healthy\n - FS_HEALTH_STATUS_SAFE_TO_FIX: filesystem has errors, but can be fixed safely\n - FS_HEALTH_STATUS_NEEDS_INSPECTION: filesystem has errors, these cannot be fixed automatically,\nuser needs to review the reported errors and take appropriate action",
+        "type": "string"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -870,6 +875,19 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "apiMountOptions": {
+        "description": "MountOptions defines the mount options with which a volume is mounted.",
+        "properties": {
+          "options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Options are opaque key value pairs that are passed as mount options when\na volume is mounted.\nIf an empty value is provided only the key will be passed as an option\nIf both key and value are provided then 'key=value' will be passed as an\noption",
+            "type": "object"
           }
         },
         "type": "object"
@@ -1082,6 +1100,9 @@
           "journal": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
           },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
           },
@@ -1104,6 +1125,9 @@
           },
           "sharedv4": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "snapshot_interval": {
             "format": "int64",
@@ -1130,6 +1154,18 @@
               "type": "string"
             },
             "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "apiScanPolicy": {
+        "description": "ScanPolicy defines when a filesystem check is triggered and what action to take\nUser can specify *one* of the following valid policies\n1. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_ONLY\n2. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_REPAIR\n3. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_ONLY\n4. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_REPAIR\n5. trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE\nNote: When trigger == SCAN_TRIGGER_ON_NEXT_MOUNT, the associated action is\nperformed once on the next mount and the scanpolicy gets reset to\n`trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE`, irrespective of the\noutput of the action.",
+        "properties": {
+          "action": {
+            "$ref": "#/components/schemas/ScanPolicyScanAction"
+          },
+          "trigger": {
+            "$ref": "#/components/schemas/ScanPolicyScanTrigger"
           }
         },
         "type": "object"
@@ -1413,6 +1449,11 @@
             "title": "Credential id refers to the cloud credentials needed to backup",
             "type": "string"
           },
+          "delete_local": {
+            "format": "boolean",
+            "title": "DeleteLocal indicates if local snap created for backup must be deleted after\nthe backup is complete",
+            "type": "boolean"
+          },
           "full": {
             "format": "boolean",
             "title": "Full indicates if full backup is desired even though incremental is possible",
@@ -1542,6 +1583,11 @@
           "credential_id": {
             "title": "Credential id refers to the cloud credentials needed to backup",
             "type": "string"
+          },
+          "delete_local": {
+            "format": "boolean",
+            "title": "DeleteLocal indicates if local snap created for backup must be deleted after\nthe backup is complete",
+            "type": "boolean"
           },
           "full": {
             "format": "boolean",
@@ -2249,34 +2295,22 @@
         },
         "type": "object"
       },
-      "apiSdkFilesystemCheckCheckHealthGetStatusResponse": {
-        "description": "SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a\nSdkFilesystemCheckCheckHealthGetStatusRequest.",
+      "apiSdkFilesystemCheckStartRequest": {
         "properties": {
-          "health_status": {
-            "$ref": "#/components/schemas/FilesystemCheckCheckHealthStatus"
-          },
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
+          "mode": {
+            "title": "Mode of operation",
             "type": "string"
           },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
-          }
-        },
-        "type": "object"
-      },
-      "apiSdkFilesystemCheckCheckHealthRequest": {
-        "properties": {
           "volume_id": {
             "title": "Id of the volume",
             "type": "string"
           }
         },
-        "title": "SdkFilesystemCheckCheckHealthRequest defines a request to report the\nfilesystem consistency issues",
+        "title": "SdkFilesystemCheckStartRequest defines a request to start a background\nfilesystem consistency check operation",
         "type": "object"
       },
-      "apiSdkFilesystemCheckCheckHealthResponse": {
-        "description": "SdkFilesystemCheckCheckHealthResponse defines the response for a\nSdkFilesystemCheckCheckHealthRequest.",
+      "apiSdkFilesystemCheckStartResponse": {
+        "description": "SdkFilesystemCheckStartResponse defines the response for a\nSdkFilesystemCheckStartRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -2288,37 +2322,18 @@
         },
         "type": "object"
       },
-      "apiSdkFilesystemCheckFixAllGetStatusResponse": {
-        "description": "SdkFilesystemCheckFixAllGetStatusResponse defines the response for a\nSdkFilesystemCheckFixAllGetStatusRequest.",
+      "apiSdkFilesystemCheckStatusResponse": {
+        "description": "SdkFilesystemCheckStatusResponse defines the response for a\nSdkFilesystemCheckStatusRequest.",
         "properties": {
           "health_status": {
-            "$ref": "#/components/schemas/FilesystemCheckFixAllStatus"
+            "$ref": "#/components/schemas/apiFilesystemHealthStatus"
           },
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
             "type": "string"
           },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemCheckFilesystemCheckStatus"
-          }
-        },
-        "type": "object"
-      },
-      "apiSdkFilesystemCheckFixAllRequest": {
-        "properties": {
-          "volume_id": {
-            "title": "Id of the volume",
-            "type": "string"
-          }
-        },
-        "title": "SdkFilesystemCheckFixAllRequest defines a request to fix all the filesystem\nconsistency issues",
-        "type": "object"
-      },
-      "apiSdkFilesystemCheckFixAllResponse": {
-        "description": "SdkFilesystemCheckFixAllResponse defines the response for a\nSdkFilesystemCheckFixAllRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
+          "mode": {
+            "title": "Text string representing the mode of filesystem check operation",
             "type": "string"
           },
           "status": {
@@ -2341,19 +2356,6 @@
         "title": "Empty response",
         "type": "object"
       },
-      "apiSdkFilesystemTrimGetStatusResponse": {
-        "description": "SdkFilesystemTrimGetStatusResponse defines the response for a\nSdkFilesystemTrimGetStatusRequest.",
-        "properties": {
-          "message": {
-            "title": "Text blob containing ASCII text providing details of the operation",
-            "type": "string"
-          },
-          "status": {
-            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
-          }
-        },
-        "type": "object"
-      },
       "apiSdkFilesystemTrimStartRequest": {
         "properties": {
           "mount_path": {
@@ -2370,6 +2372,19 @@
       },
       "apiSdkFilesystemTrimStartResponse": {
         "description": "SdkFilesystemTrimStartResponse defines the response for a\nSdkFilesystemTrimStartRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilesystemTrimStatusResponse": {
+        "description": "SdkFilesystemTrimStatusResponse defines the response for a\nSdkFilesystemTrimStatusRequest.",
         "properties": {
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
@@ -2954,12 +2969,24 @@
             "title": "MaxDurationMinutes defines how long operation should run when started at schedule.\n0 values means no limit on duration",
             "type": "string"
           },
-          "pool_selector_labels": {
-            "additionalProperties": {
-              "type": "string"
+          "remove_repl_1_snapshots": {
+            "format": "boolean",
+            "title": "RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots",
+            "type": "boolean"
+          },
+          "source_pool_selector": {
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
             },
-            "title": "PoolSelectorLabels allows selecting pools to which trigger thresholds will apply",
-            "type": "object"
+            "title": "SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source",
+            "type": "array"
+          },
+          "target_pool_selector": {
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "title": "TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target",
+            "type": "array"
           },
           "trial_run": {
             "format": "boolean",
@@ -3864,12 +3891,13 @@
             "title": "CreateTime is the time the job was created",
             "type": "string"
           },
-          "error": {
-            "title": "Error describes errors occurred during rebalance",
-            "type": "string"
-          },
           "id": {
             "title": "ID of the rebalance job",
+            "type": "string"
+          },
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time the job was updated",
             "type": "string"
           },
           "parameters": {
@@ -3877,6 +3905,10 @@
           },
           "state": {
             "$ref": "#/components/schemas/apiStorageRebalanceJobState"
+          },
+          "status": {
+            "title": "Status describes status of pools after rebalance if rebalance did not finish successfully",
+            "type": "string"
           }
         },
         "title": "StorageRebalanceJob describes job input and current status",
@@ -3897,11 +3929,6 @@
       },
       "apiStorageRebalanceSummary": {
         "properties": {
-          "last_update_time": {
-            "format": "date-time",
-            "title": "LastUpdateTime is the time the job was last updated",
-            "type": "string"
-          },
           "total_run_time_seconds": {
             "format": "uint64",
             "title": "TotalRunTimeSeconds is the total time rebalance is running",
@@ -4141,8 +4168,19 @@
             "format": "date-time",
             "type": "string"
           },
+          "last_scan_fix": {
+            "format": "date-time",
+            "title": "LastScanFix is the time when an integrity check fixed errors in filesystem",
+            "type": "string"
+          },
+          "last_scan_status": {
+            "$ref": "#/components/schemas/apiFilesystemHealthStatus"
+          },
           "locator": {
             "$ref": "#/components/schemas/apiVolumeLocator"
+          },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "readonly": {
             "description": "Readonly is true if this volume is to be mounted with readonly access.",
@@ -4166,6 +4204,9 @@
           "secure_device_path": {
             "description": "SecureDevicePath is the device path for an encrypted volume.",
             "type": "string"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "source": {
             "$ref": "#/components/schemas/apiSource"
@@ -4404,6 +4445,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
             "format": "boolean",
@@ -4432,6 +4476,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
             "format": "boolean",
@@ -4441,6 +4488,9 @@
             "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_options": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4518,6 +4568,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -4539,6 +4592,9 @@
           "scale_operator": {
             "$ref": "#/components/schemas/VolumeSpecPolicyPolicyOp"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "format": "boolean",
             "type": "boolean"
@@ -4546,6 +4602,9 @@
           "sharedv4": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4612,6 +4671,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
+          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -4633,6 +4695,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "scan_policy": {
+            "$ref": "#/components/schemas/apiScanPolicy"
+          },
           "shared": {
             "format": "boolean",
             "type": "boolean"
@@ -4640,6 +4705,9 @@
           "sharedv4": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "sharedv4_mount_opt_spec": {
+            "$ref": "#/components/schemas/apiMountOptions"
           },
           "size": {
             "format": "uint64",
@@ -4655,6 +4723,9 @@
           "sticky": {
             "format": "boolean",
             "type": "boolean"
+          },
+          "xattr": {
+            "$ref": "#/components/schemas/XattrValue"
           }
         },
         "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
@@ -4722,7 +4793,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.82.0"
+    "version": "0.93.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5714,14 +5785,14 @@
         ]
       }
     },
-    "/v1/filesystem-check/checkhealth": {
+    "/v1/filesystem-check/start": {
       "post": {
-        "operationId": "CheckHealth",
+        "operationId": "Start",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthRequest"
+                "$ref": "#/components/schemas/apiSdkFilesystemCheckStartRequest"
               }
             }
           },
@@ -5732,22 +5803,22 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckStartResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Get a report of issues found on the filesystem. This operation works on an\nunmounted volume.",
+        "summary": "Start a filesystem-check background operation on a unmounted volume.",
         "tags": [
           "OpenStorageFilesystemCheck"
         ]
       }
     },
-    "/v1/filesystem-check/checkhealth/status": {
+    "/v1/filesystem-check/status": {
       "get": {
-        "operationId": "CheckHealthGetStatus",
+        "operationId": "Status",
         "parameters": [
           {
             "description": "Id of the volume.",
@@ -5764,77 +5835,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemCheckCheckHealthGetStatusResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemCheckStatusResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Get Status of a filesystem CheckHealth background operation on an unmounted\nvolume, if any",
-        "tags": [
-          "OpenStorageFilesystemCheck"
-        ]
-      }
-    },
-    "/v1/filesystem-check/fixall": {
-      "post": {
-        "operationId": "FixAll",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllResponse"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "FixAll fixes all the issues reported in the response to CheckHealth API on\na filesystem. This operation works on an unmounted volume.",
-        "tags": [
-          "OpenStorageFilesystemCheck"
-        ]
-      }
-    },
-    "/v1/filesystem-check/fixall/status": {
-      "get": {
-        "operationId": "FixAllGetStatus",
-        "parameters": [
-          {
-            "description": "Id of the volume.",
-            "in": "query",
-            "name": "volume_id",
-            "required": false,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemCheckFixAllGetStatusResponse"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "Get Status of a filesystem FixAll background operation on an unmounted\nvolume, if any",
+        "summary": "Get Status of a filesystem-check background operation on an unmounted\nvolume, if any",
         "tags": [
           "OpenStorageFilesystemCheck"
         ]
@@ -5904,7 +5912,7 @@
     },
     "/v1/filesystem-trim/status": {
       "get": {
-        "operationId": "GetStatus",
+        "operationId": "Status",
         "parameters": [
           {
             "description": "Id of the volume.",
@@ -5930,14 +5938,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkFilesystemTrimGetStatusResponse"
+                  "$ref": "#/components/schemas/apiSdkFilesystemTrimStatusResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Get Status of a filesystem Trim background operation on a mounted\nvolume, if any",
+        "summary": "Status of a filesystem Trim background operation on a mounted\nvolume, if any",
         "tags": [
           "OpenStorageFilesystemTrim"
         ]
