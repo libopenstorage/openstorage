@@ -1131,7 +1131,7 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		}
 		spec.ScanPolicy = req.GetScanPolicy()
 	}
-	//proxy_write
+	// ProxyWrite
 	if req.GetProxyWriteOpt() != nil {
 		if isValidate && vol.GetProxyWrite() != req.GetProxyWrite() {
 			return vol, errMsg
