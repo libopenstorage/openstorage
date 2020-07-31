@@ -49,6 +49,21 @@ func TestParseDuration(t *testing.T) {
 			expectedDuration: 123 * time.Second,
 		},
 		{
+			s:                "123sabcd",
+			expectedDuration: 0,
+			expectFail:       true,
+		},
+		{
+			s:                "ab123s",
+			expectedDuration: 0,
+			expectFail:       true,
+		},
+		{
+			s:                "ab123s123",
+			expectedDuration: 0,
+			expectFail:       true,
+		},
+		{
 			s:                "123",
 			expectedDuration: 0,
 			expectFail:       true,

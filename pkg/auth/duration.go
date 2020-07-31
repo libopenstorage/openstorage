@@ -23,22 +23,34 @@ import (
 )
 
 const (
+	// SecondDef is the abbrevation for seconds
 	SecondDef = "s"
+	// MinuteDef is the abbrevation for minutes
 	MinuteDef = "m"
-	HourDef   = "h"
-	DayDef    = "d"
-	YearDef   = "y"
+	// HourDef is the abbrevation for hours
+	HourDef = "h"
+	// DayDef is the abbrevation for days
+	DayDef = "d"
+	// YearDef is the abbrevation for years
+	YearDef = "y"
 
-	Day  = time.Hour * 24
+	// Day is the duration of hours in a day
+	Day = time.Hour * 24
+	// Year is the duration of days in a year
 	Year = Day * 365
 )
 
 var (
-	SecondRegex = regexp.MustCompile("([0-9]+)" + SecondDef)
-	MinuteRegex = regexp.MustCompile("([0-9]+)" + MinuteDef)
-	HourRegex   = regexp.MustCompile("([0-9]+)" + HourDef)
-	DayRegex    = regexp.MustCompile("([0-9]+)" + DayDef)
-	YearRegex   = regexp.MustCompile("([0-9]+)" + YearDef)
+	// SecondRegex is a regular expression for finding seconds as a duration
+	SecondRegex = regexp.MustCompile("^([0-9]+)" + SecondDef + "$")
+	// MinuteRegex is a regular expression for finding minutes as a duration
+	MinuteRegex = regexp.MustCompile("^([0-9]+)" + MinuteDef + "$")
+	// HourRegex is a regular expression for finding hours as a duration
+	HourRegex = regexp.MustCompile("^([0-9]+)" + HourDef + "$")
+	// DayRegex is a regular expression for finding days as a duration
+	DayRegex = regexp.MustCompile("^([0-9]+)" + DayDef + "$")
+	// YearRegex is a regular expression for finding years as a duration
+	YearRegex = regexp.MustCompile("^([0-9]+)" + YearDef + "$")
 )
 
 // ParseToDuration takes in a "human" type duration and changes it to
