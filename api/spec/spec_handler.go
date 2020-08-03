@@ -130,6 +130,7 @@ var (
 	sharedv4MountOptionsRegex   = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
+	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -449,6 +450,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ScanPolicy.Action = scanAction
 			}
+		case api.SpecProxyWrite:
+			if proxyWrite, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ProxyWrite = proxyWrite
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -616,6 +623,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, directIo := d.getVal(directIoRegex, str); ok {
 		opts[api.SpecDirectIo] = directIo
+	}
+	if ok, proxyWrite := d.getVal(ProxyWriteRegex, str); ok {
+		opts[api.SpecProxyWrite] = proxyWrite
 	}
 
 	return true, opts, name

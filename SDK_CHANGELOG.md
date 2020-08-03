@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.94.0 - (7/29/2020)
+
+* Added proxy write flag in volume spec
+
 ### v0.93.0 - (7/23/2020)
 
 * Renamed FilesystemTrim Api GetStatus() to Status().

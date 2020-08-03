@@ -842,6 +842,8 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	} else {
 		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
 	}
+	// ProxyWrite
+	spec.ProxyWrite = setSpecBool(vol.GetProxyWrite(), req.GetProxyWrite(), req.GetProxyWriteOpt())
 
 	return spec
 }
@@ -1128,6 +1130,13 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.ScanPolicy = req.GetScanPolicy()
+	}
+	// ProxyWrite
+	if req.GetProxyWriteOpt() != nil {
+		if isValidate && vol.GetProxyWrite() != req.GetProxyWrite() {
+			return vol, errMsg
+		}
+		spec.ProxyWrite = req.GetProxyWrite()
 	}
 
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
