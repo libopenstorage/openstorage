@@ -6,10 +6,11 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
 // MockOpenStorageFilesystemCheckServer is a mock of OpenStorageFilesystemCheckServer interface.

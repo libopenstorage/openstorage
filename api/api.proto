@@ -519,6 +519,8 @@ message VolumeSpec {
   // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 39;
+  // Proxy_write if true, per volume proxy write replication enabled
+  bool proxy_write = 40;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -576,6 +578,8 @@ message VolumeSpecUpdate {
   oneof mount_opt { MountOptions mount_opt_spec = 33;}
   // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 34;}
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  oneof proxy_write_opt { bool proxy_write = 35; }
 
 }
 
@@ -652,6 +656,8 @@ message VolumeSpecPolicy {
   oneof mount_opt { MountOptions mount_opt_spec = 58;}
   // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 59;}
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  oneof proxy_write_opt { bool proxy_write = 60; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4258,7 +4264,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 93;
+    Minor = 94;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4823,6 +4829,8 @@ message RestoreVolumeSpec {
   // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 23;
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  RestoreParamBoolType proxy_write = 24;
 }
 
 // Request message to get the volume catalog
