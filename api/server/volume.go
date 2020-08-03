@@ -618,6 +618,10 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		newSpec.XattrOpt = &api.VolumeSpecUpdate_Xattr{
 			Xattr: spec.Xattr,
 		}
+	} else {
+		newSpec.XattrOpt = &api.VolumeSpecUpdate_Xattr{
+			Xattr: vol.Spec.Xattr,
+		}
 	}
 	if spec.ScanPolicy != nil {
 		newSpec.ScanPolicyOpt = &api.VolumeSpecUpdate_ScanPolicy{
