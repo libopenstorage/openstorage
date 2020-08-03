@@ -826,6 +826,7 @@
           "IO_PROFILE_DB_REMOTE",
           "IO_PROFILE_CMS",
           "IO_PROFILE_SYNC_SHARED",
+          "IO_PROFILE_AUTO",
           "IO_PROFILE_BKUPSRC"
         ],
         "title": "- IO_PROFILE_BKUPSRC: IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile",

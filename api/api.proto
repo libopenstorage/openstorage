@@ -111,8 +111,9 @@ enum IoProfile {
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
+  IO_PROFILE_AUTO = 6;
   // IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile
-  IO_PROFILE_BKUPSRC = 6;
+  IO_PROFILE_BKUPSRC = 7;
 }
 
 // VolumeState represents the state of a volume.
