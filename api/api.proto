@@ -112,8 +112,6 @@ enum IoProfile {
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
   IO_PROFILE_AUTO = 6;
-  // IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile
-  IO_PROFILE_BKUPSRC = 7;
 }
 
 // VolumeState represents the state of a volume.
@@ -4267,7 +4265,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 94;
+    Minor = 95;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4780,6 +4778,7 @@ message RestoreVolSnashotSchedule {
 message RestoreVolStoragePolicy {
 	string policy = 1;
 }
+
 // RestoreSpec allows some of the restore volume properties of to be modified
 // while restoring the cloud baackup. All pointer fields with nil value will
 // inherit corresponding field value from backup's spec.
@@ -4788,7 +4787,8 @@ message RestoreVolumeSpec {
   int64 ha_level = 1;
   // Cos specifies the relative class of service.
   CosType cos = 2;
-  // IoProfile provides a hint about application using this volume.
+  // IoProfile provides a hint about application using this volume. This field
+  // is ignored if IoProfileBkupSrc is set true
   IoProfile io_profile = 3;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 4;
@@ -4834,6 +4834,8 @@ message RestoreVolumeSpec {
   MountOptions sharedv4_mount_options = 23;
   // Proxy_write is true if proxy write replication is enabled for the volume
   RestoreParamBoolType proxy_write = 24;
+  // IoProfileBkupSrc indicates to inherit IoProfile from cloudbackup
+  bool io_profile_bkup_src = 25;
 }
 
 // Request message to get the volume catalog
