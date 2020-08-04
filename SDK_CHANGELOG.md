@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.95.0 - (8/4/2020)
+
+* Removed IO_PROFILE_BKUPSRC from ioProfile list
+
 ### v0.94.0 - (7/29/2020)
 
 * Added proxy write flag in volume spec

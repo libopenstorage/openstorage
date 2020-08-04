@@ -832,10 +832,8 @@
           "IO_PROFILE_DB_REMOTE",
           "IO_PROFILE_CMS",
           "IO_PROFILE_SYNC_SHARED",
-          "IO_PROFILE_AUTO",
-          "IO_PROFILE_BKUPSRC"
+          "IO_PROFILE_AUTO"
         ],
-        "title": "- IO_PROFILE_BKUPSRC: IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile",
         "type": "string"
       },
       "apiIoStrategy": {
@@ -1093,6 +1091,11 @@
           },
           "io_profile": {
             "$ref": "#/components/schemas/apiIoProfile"
+          },
+          "io_profile_bkup_src": {
+            "format": "boolean",
+            "title": "IoProfileBkupSrc indicates to inherit IoProfile from cloudbackup",
+            "type": "boolean"
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
@@ -4809,7 +4812,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.94.0"
+    "version": "0.95.0"
   },
   "openapi": "3.0.0",
   "paths": {
