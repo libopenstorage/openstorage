@@ -816,7 +816,7 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	}
 
 	// Xattr
-	if req.GetXattr() >= 0 {
+	if req.GetXattrOpt() != nil {
 		spec.Xattr = req.GetXattr()
 	} else {
 		spec.Xattr = vol.GetXattr()
