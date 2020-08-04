@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.19 - (8/8/2020)
+
+* Removed IO_PROFILE_BKUPSRC from ioProfile list
+
 ### v0.69.18 - (7/27/2020)
 
 * Renamed FilesystemTrim Api GetStatus() to Status().
