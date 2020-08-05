@@ -360,7 +360,9 @@ func (a *authMiddleware) parseSecret(
 	specLabels, locatorLabels map[string]string,
 	fetchCOLabels bool,
 ) (*api.TokenSecretContext, error) {
-	if lsecrets.Instance().String() == lsecrets.TypeK8s && fetchCOLabels {
+	if lsecrets.Instance() != nil &&
+		lsecrets.Instance().String() == lsecrets.TypeK8s &&
+		fetchCOLabels {
 		// For k8s fetch the actual annotations
 		pvcName, ok := locatorLabels[PVCNameLabelKey]
 		if !ok {
