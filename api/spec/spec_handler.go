@@ -169,8 +169,9 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
-		Format:  api.FSType_FS_TYPE_EXT4,
-		HaLevel: 1,
+		Format:    api.FSType_FS_TYPE_EXT4,
+		HaLevel:   1,
+		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
 	}
 }
 
