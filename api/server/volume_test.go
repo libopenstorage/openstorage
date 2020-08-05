@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"net/http"
 	"testing"
 	"time"
 
@@ -2754,3 +2755,52 @@ func TestThousandsOfVolumes(t *testing.T) {
 	assert.Len(t, res, numvols, fmt.Sprintf("Len res:%d numvols:%d", len(res), numvols))
 }
 */
+
+func TestVolumeInspectWithNameOfVersion(t *testing.T) {
+
+	// Setup volume rest server with Auth
+	ts, testVolDriver := testRestServerSdk(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// Test that sending versions as the Kubernetes Portworx intree driver gets
+	// a 200 OK even if the volume does not exist or the client does not send a token
+	resp, err := http.Get(ts.URL + "/v1/osd-volumes/versions")
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
+	// Create a token
+	token, err := createToken("Admin", "system.admin", testSharedSecret)
+
+	// Should return 200 OK even if not found with a good token
+	req, err := http.NewRequest("GET", ts.URL+"/v1/osd-volumes/volumes", nil)
+	assert.NoError(t, err)
+
+	req.Header.Set("Authorization", "bearer "+token)
+	c := &http.Client{Timeout: time.Second * 10}
+	resp, err = c.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
+	// Should return 200 OK even with a bad token
+	req, err = http.NewRequest("GET", ts.URL+"/v1/osd-volumes/volumes", nil)
+	assert.NoError(t, err)
+
+	req.Header.Set("Authorization", "bearer asdf")
+	c = &http.Client{Timeout: time.Second * 10}
+	resp, err = c.Do(req)
+	assert.NoError(t, err)
+
+	assert.NotEqual(t, resp.StatusCode, http.StatusOK)
+
+	// Check that sending any other volume id works as normal with a bad token
+	req, err = http.NewRequest("GET", ts.URL+"/v1/osd-volumes/doesnotexist", nil)
+	assert.NoError(t, err)
+
+	req.Header.Set("Authorization", "bearer asdf")
+	c = &http.Client{Timeout: time.Second * 10}
+	resp, err = c.Do(req)
+	assert.NoError(t, err)
+
+	assert.NotEqual(t, resp.StatusCode, http.StatusOK)
+}
