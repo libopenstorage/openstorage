@@ -429,7 +429,8 @@ func (a *authMiddleware) parseSecret(
 ) (*api.TokenSecretContext, error) {
 
 	// Check if it is Kubernetes
-	if lsecrets.Instance().String() == lsecrets.TypeK8s {
+	if lsecrets.Instance() != nil &&
+		lsecrets.Instance().String() == lsecrets.TypeK8s {
 		return a.getSecretInformationInKubernetes(specLabels, locatorLabels)
 	}
 

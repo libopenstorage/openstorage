@@ -87,6 +87,11 @@ func GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
 func requestToContext(request *api.TokenSecretContext) map[string]string {
 	context := make(map[string]string)
 
+	// Check if instance is nil
+	if lsecrets.Instance() == nil {
+		return context
+	}
+
 	// Add namespace for providers that support it.
 	switch lsecrets.Instance().String() {
 	case lsecrets.TypeK8s:
