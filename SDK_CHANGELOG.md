@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.20 - (8/5/2020)
+
+* Add IO_PROFILE_AUTO to the ioProfile list
+
 ### v0.69.19 - (8/8/2020)
 
 * Removed IO_PROFILE_BKUPSRC from ioProfile list
