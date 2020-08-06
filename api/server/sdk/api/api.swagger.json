@@ -515,6 +515,10 @@
       },
       "apiClusterPairCreateRequest": {
         "properties": {
+          "credential_id": {
+            "title": "Use for the cluster pairing, if given\ncredential id will be used in ClusterPairCreate service",
+            "type": "string"
+          },
           "mode": {
             "$ref": "#/components/schemas/ClusterPairModeMode"
           },
@@ -4775,7 +4779,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.20"
+    "version": "0.69.21"
   },
   "openapi": "3.0.0",
   "paths": {
