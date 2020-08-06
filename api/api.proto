@@ -4262,7 +4262,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 95;
+    Minor = 96;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -4482,6 +4482,9 @@ message ClusterPairCreateRequest {
   bool set_default = 4;
   // The mode to use for the cluster pair
   ClusterPairMode.Mode mode = 5;
+  // Use for the cluster pairing, if given
+  // credential id will be used in ClusterPairCreate service
+  string credential_id = 6;
 }
 
 // Response for a pair request
@@ -4511,6 +4514,9 @@ message ClusterPairProcessRequest {
     string remote_cluster_token = 2;
     // The mode to use for the cluster pair
     ClusterPairMode.Mode mode = 3;
+    // Use for the cluster pairing, if given
+    // credential id will be used in ClusterPairCreate service
+    string credential_id = 4;
 }
 
 // Response after a pairing has been processed
