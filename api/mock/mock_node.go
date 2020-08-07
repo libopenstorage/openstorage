@@ -35,6 +35,21 @@ func (m *MockOpenStorageNodeServer) EXPECT() *MockOpenStorageNodeServerMockRecor
 	return m.recorder
 }
 
+// Drain mocks base method.
+func (m *MockOpenStorageNodeServer) Drain(arg0 context.Context, arg1 *api.SdkNodeDrainRequest) (*api.SdkNodeDrainResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Drain", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkNodeDrainResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Drain indicates an expected call of Drain.
+func (mr *MockOpenStorageNodeServerMockRecorder) Drain(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Drain", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).Drain), arg0, arg1)
+}
+
 // Enumerate mocks base method.
 func (m *MockOpenStorageNodeServer) Enumerate(arg0 context.Context, arg1 *api.SdkNodeEnumerateRequest) (*api.SdkNodeEnumerateResponse, error) {
 	m.ctrl.T.Helper()
@@ -50,6 +65,21 @@ func (mr *MockOpenStorageNodeServerMockRecorder) Enumerate(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).Enumerate), arg0, arg1)
 }
 
+// EnumerateNodeDrainJobs mocks base method.
+func (m *MockOpenStorageNodeServer) EnumerateNodeDrainJobs(arg0 context.Context, arg1 *api.SdkEnumerateNodeDrainJobsRequest) (*api.SdkEnumerateNodeDrainJobsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateNodeDrainJobs", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateNodeDrainJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateNodeDrainJobs indicates an expected call of EnumerateNodeDrainJobs.
+func (mr *MockOpenStorageNodeServerMockRecorder) EnumerateNodeDrainJobs(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateNodeDrainJobs", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).EnumerateNodeDrainJobs), arg0, arg1)
+}
+
 // EnumerateWithFilters mocks base method.
 func (m *MockOpenStorageNodeServer) EnumerateWithFilters(arg0 context.Context, arg1 *api.SdkNodeEnumerateWithFiltersRequest) (*api.SdkNodeEnumerateWithFiltersResponse, error) {
 	m.ctrl.T.Helper()
@@ -63,6 +93,21 @@ func (m *MockOpenStorageNodeServer) EnumerateWithFilters(arg0 context.Context, a
 func (mr *MockOpenStorageNodeServerMockRecorder) EnumerateWithFilters(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateWithFilters", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).EnumerateWithFilters), arg0, arg1)
+}
+
+// GetDrainStatus mocks base method.
+func (m *MockOpenStorageNodeServer) GetDrainStatus(arg0 context.Context, arg1 *api.SdkGetNodeDrainJobStatusRequest) (*api.SdkGetNodeDrainJobStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDrainStatus", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkGetNodeDrainJobStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDrainStatus indicates an expected call of GetDrainStatus.
+func (mr *MockOpenStorageNodeServerMockRecorder) GetDrainStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDrainStatus", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).GetDrainStatus), arg0, arg1)
 }
 
 // Inspect mocks base method.
@@ -95,6 +140,21 @@ func (mr *MockOpenStorageNodeServerMockRecorder) InspectCurrent(arg0, arg1 inter
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectCurrent", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).InspectCurrent), arg0, arg1)
 }
 
+// UpdateNodeDrainJobState mocks base method.
+func (m *MockOpenStorageNodeServer) UpdateNodeDrainJobState(arg0 context.Context, arg1 *api.SdkUpdateNodeDrainJobRequest) (*api.SdkUpdateNodeDrainJobResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateNodeDrainJobState", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkUpdateNodeDrainJobResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNodeDrainJobState indicates an expected call of UpdateNodeDrainJobState.
+func (mr *MockOpenStorageNodeServerMockRecorder) UpdateNodeDrainJobState(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeDrainJobState", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).UpdateNodeDrainJobState), arg0, arg1)
+}
+
 // MockOpenStorageNodeClient is a mock of OpenStorageNodeClient interface.
 type MockOpenStorageNodeClient struct {
 	ctrl     *gomock.Controller
@@ -118,6 +178,26 @@ func (m *MockOpenStorageNodeClient) EXPECT() *MockOpenStorageNodeClientMockRecor
 	return m.recorder
 }
 
+// Drain mocks base method.
+func (m *MockOpenStorageNodeClient) Drain(arg0 context.Context, arg1 *api.SdkNodeDrainRequest, arg2 ...grpc.CallOption) (*api.SdkNodeDrainResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "Drain", varargs...)
+	ret0, _ := ret[0].(*api.SdkNodeDrainResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Drain indicates an expected call of Drain.
+func (mr *MockOpenStorageNodeClientMockRecorder) Drain(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Drain", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).Drain), varargs...)
+}
+
 // Enumerate mocks base method.
 func (m *MockOpenStorageNodeClient) Enumerate(arg0 context.Context, arg1 *api.SdkNodeEnumerateRequest, arg2 ...grpc.CallOption) (*api.SdkNodeEnumerateResponse, error) {
 	m.ctrl.T.Helper()
@@ -138,6 +218,26 @@ func (mr *MockOpenStorageNodeClientMockRecorder) Enumerate(arg0, arg1 interface{
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).Enumerate), varargs...)
 }
 
+// EnumerateNodeDrainJobs mocks base method.
+func (m *MockOpenStorageNodeClient) EnumerateNodeDrainJobs(arg0 context.Context, arg1 *api.SdkEnumerateNodeDrainJobsRequest, arg2 ...grpc.CallOption) (*api.SdkEnumerateNodeDrainJobsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "EnumerateNodeDrainJobs", varargs...)
+	ret0, _ := ret[0].(*api.SdkEnumerateNodeDrainJobsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateNodeDrainJobs indicates an expected call of EnumerateNodeDrainJobs.
+func (mr *MockOpenStorageNodeClientMockRecorder) EnumerateNodeDrainJobs(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateNodeDrainJobs", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).EnumerateNodeDrainJobs), varargs...)
+}
+
 // EnumerateWithFilters mocks base method.
 func (m *MockOpenStorageNodeClient) EnumerateWithFilters(arg0 context.Context, arg1 *api.SdkNodeEnumerateWithFiltersRequest, arg2 ...grpc.CallOption) (*api.SdkNodeEnumerateWithFiltersResponse, error) {
 	m.ctrl.T.Helper()
@@ -156,6 +256,26 @@ func (mr *MockOpenStorageNodeClientMockRecorder) EnumerateWithFilters(arg0, arg1
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateWithFilters", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).EnumerateWithFilters), varargs...)
+}
+
+// GetDrainStatus mocks base method.
+func (m *MockOpenStorageNodeClient) GetDrainStatus(arg0 context.Context, arg1 *api.SdkGetNodeDrainJobStatusRequest, arg2 ...grpc.CallOption) (*api.SdkGetNodeDrainJobStatusResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetDrainStatus", varargs...)
+	ret0, _ := ret[0].(*api.SdkGetNodeDrainJobStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDrainStatus indicates an expected call of GetDrainStatus.
+func (mr *MockOpenStorageNodeClientMockRecorder) GetDrainStatus(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDrainStatus", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).GetDrainStatus), varargs...)
 }
 
 // Inspect mocks base method.
@@ -196,4 +316,24 @@ func (mr *MockOpenStorageNodeClientMockRecorder) InspectCurrent(arg0, arg1 inter
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectCurrent", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).InspectCurrent), varargs...)
+}
+
+// UpdateNodeDrainJobState mocks base method.
+func (m *MockOpenStorageNodeClient) UpdateNodeDrainJobState(arg0 context.Context, arg1 *api.SdkUpdateNodeDrainJobRequest, arg2 ...grpc.CallOption) (*api.SdkUpdateNodeDrainJobResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "UpdateNodeDrainJobState", varargs...)
+	ret0, _ := ret[0].(*api.SdkUpdateNodeDrainJobResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNodeDrainJobState indicates an expected call of UpdateNodeDrainJobState.
+func (mr *MockOpenStorageNodeClientMockRecorder) UpdateNodeDrainJobState(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeDrainJobState", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).UpdateNodeDrainJobState), varargs...)
 }

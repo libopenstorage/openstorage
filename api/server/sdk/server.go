@@ -420,7 +420,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.filesystemCheckServer = &FilesystemCheckServer{
 		server: s,
 	}
-
 	s.storagePoolServer = &StoragePoolServer{
 		server: s,
 	}

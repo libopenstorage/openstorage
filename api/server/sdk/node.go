@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
@@ -135,4 +136,49 @@ func (s *NodeServer) InspectCurrent(
 	return &api.SdkNodeInspectCurrentResponse{
 		Node: resp.GetNode(),
 	}, nil
+}
+
+func (s *NodeServer) Drain(
+	ctx context.Context,
+	req *api.SdkNodeDrainRequest,
+) (*api.SdkNodeDrainResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().Drain(ctx, req)
+
+}
+
+func (s *NodeServer) UpdateNodeDrainJobState(
+	ctx context.Context,
+	req *api.SdkUpdateNodeDrainJobRequest,
+) (*api.SdkUpdateNodeDrainJobResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().UpdateNodeDrainJobState(ctx, req)
+}
+
+func (s *NodeServer) GetDrainStatus(
+	ctx context.Context,
+	req *api.SdkGetNodeDrainJobStatusRequest,
+) (*api.SdkGetNodeDrainJobStatusResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().GetDrainStatus(ctx, req)
+}
+
+func (s *NodeServer) EnumerateNodeDrainJobs(
+	ctx context.Context,
+	req *api.SdkEnumerateNodeDrainJobsRequest,
+) (*api.SdkEnumerateNodeDrainJobsResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().EnumerateNodeDrainJobs(ctx, req)
 }
