@@ -843,11 +843,11 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
 	}
 
-	// ReflectionSpec
-	if req.GetReflectionSpec() != nil {
-		spec.ReflectionSpec = req.GetReflectionSpec()
+	// ProxySpec
+	if req.GetProxySpec() != nil {
+		spec.ProxySpec = req.GetProxySpec()
 	} else {
-		spec.ReflectionSpec = vol.GetReflectionSpec()
+		spec.ProxySpec = vol.GetProxySpec()
 	}
 
 	return spec
@@ -1130,11 +1130,11 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		}
 	}
 
-	if req.GetReflectionSpecOpt() != nil {
-		if isValidate && vol.GetReflectionSpec() != req.GetReflectionSpec() {
+	if req.GetProxySpecOpt() != nil {
+		if isValidate && vol.GetProxySpec() != req.GetProxySpec() {
 			return vol, errMsg
 		}
-		spec.ReflectionSpec = req.GetReflectionSpec()
+		spec.ProxySpec = req.GetProxySpec()
 	}
 	// ScanPolicy
 	if req.GetScanPolicy() != nil {
