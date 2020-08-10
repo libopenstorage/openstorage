@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.97.0 - (8/7/2020)
+
+* Add support for Reflection Volumes.
+* Reflection Volumes essentially reflect an external data source as an openstorage volume.
+* Added a new field ReflectionSpec to VolumeSpec object.
+
 ### v0.96.0 - (8/5/2020)
 
 * Add CredentialId field to ClusterPairCreate api
