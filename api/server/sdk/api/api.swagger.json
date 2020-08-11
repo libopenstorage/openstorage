@@ -883,8 +883,8 @@
         },
         "type": "object"
       },
-      "apiNFSReflectionSpec": {
-        "description": "NFSReflectionSpec is the spec for reflecting an NFS share.",
+      "apiNFSProxySpec": {
+        "description": "NFSProxySpec is the spec for proxying an NFS share.",
         "properties": {
           "export_path": {
             "title": "ExportPath is the NFS export path on the NFS server",
@@ -966,45 +966,45 @@
         },
         "type": "object"
       },
-      "apiPXDReflectionSpec": {
+      "apiPXDProxySpec": {
         "properties": {
           "id": {
             "title": "ID of the remote portworx volume",
             "type": "string"
           }
         },
-        "title": "PXDReflectionSpec is the spec for reflecting a Portworx volume",
+        "title": "PXDProxySpec is the spec for proxying a Portworx volume",
         "type": "object"
       },
-      "apiReflectionProtocol": {
-        "default": "REFLECTION_PROTOCOL_INVALID",
-        "description": "ReflectionProtocol defines the protocol used for reflection.\n\n - REFLECTION_PROTOCOL_INVALID: Invalid uninitialized value\n - REFLECTION_PROTOCOL_NFS: NFS indicates that the external data source is NFS and the volume\nwill be reflected over NFS protocol\n - REFLECTION_PROTOCOL_S3: S3 indicates that the external data source is an object store.\n - REFLECTION_PROTOCOL_PXD: PXD indicates that the external data source is a Portworx block volume.",
+      "apiProxyProtocol": {
+        "default": "PROXY_PROTOCOL_INVALID",
+        "description": "ProxyProtocol defines the protocol used for proxy.\n\n - PROXY_PROTOCOL_INVALID: Invalid uninitialized value\n - PROXY_PROTOCOL_NFS: NFS indicates that the external data source is NFS and the volume\nwill be reflected over NFS protocol\n - PROXY_PROTOCOL_S3: S3 indicates that the external data source is an object store.\n - PROXY_PROTOCOL_PXD: PXD indicates that the external data source is a Portworx block volume.",
         "enum": [
-          "REFLECTION_PROTOCOL_INVALID",
-          "REFLECTION_PROTOCOL_NFS",
-          "REFLECTION_PROTOCOL_S3",
-          "REFLECTION_PROTOCOL_PXD"
+          "PROXY_PROTOCOL_INVALID",
+          "PROXY_PROTOCOL_NFS",
+          "PROXY_PROTOCOL_S3",
+          "PROXY_PROTOCOL_PXD"
         ],
         "type": "string"
       },
-      "apiReflectionSpec": {
-        "description": "ReflectionSpec defines how this volume will reflect an external data source.",
+      "apiProxySpec": {
+        "description": "ProxySpec defines how this volume will reflect an external data source.",
         "properties": {
           "endpoint": {
             "description": "Endpoint is the external endpoint which can be used for accessing the\nexternal data source.",
             "type": "string"
           },
           "nfs_spec": {
-            "$ref": "#/components/schemas/apiNFSReflectionSpec"
+            "$ref": "#/components/schemas/apiNFSProxySpec"
+          },
+          "proxy_protocol": {
+            "$ref": "#/components/schemas/apiProxyProtocol"
           },
           "pxd_spec": {
-            "$ref": "#/components/schemas/apiPXDReflectionSpec"
-          },
-          "reflection_protocol": {
-            "$ref": "#/components/schemas/apiReflectionProtocol"
+            "$ref": "#/components/schemas/apiPXDProxySpec"
           },
           "s3_spec": {
-            "$ref": "#/components/schemas/apiS3ReflectionSpec"
+            "$ref": "#/components/schemas/apiS3ProxySpec"
           }
         },
         "type": "object"
@@ -1165,13 +1165,13 @@
           "placement_strategy": {
             "$ref": "#/components/schemas/apiVolumePlacementStrategy"
           },
+          "proxy_spec": {
+            "$ref": "#/components/schemas/apiProxySpec"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
-          },
-          "reflection_spec": {
-            "$ref": "#/components/schemas/apiReflectionSpec"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
@@ -1214,8 +1214,8 @@
         },
         "type": "object"
       },
-      "apiS3ReflectionSpec": {
-        "description": "S3ReflectionSpec is the spec for reflecting an external object store.",
+      "apiS3ProxySpec": {
+        "description": "S3ProxySpec is the spec for proxying an external object store.",
         "properties": {
           "bucket_name": {
             "title": "BucketName is the name of the bucket from the object store",
@@ -4519,13 +4519,13 @@
           "placement_strategy": {
             "$ref": "#/components/schemas/apiVolumePlacementStrategy"
           },
+          "proxy_spec": {
+            "$ref": "#/components/schemas/apiProxySpec"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
-          },
-          "reflection_spec": {
-            "$ref": "#/components/schemas/apiReflectionSpec"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
@@ -4637,12 +4637,12 @@
           "passphrase": {
             "type": "string"
           },
+          "proxy_spec": {
+            "$ref": "#/components/schemas/apiProxySpec"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
-          },
-          "reflection_spec": {
-            "$ref": "#/components/schemas/apiReflectionSpec"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
@@ -4746,12 +4746,12 @@
           "passphrase": {
             "type": "string"
           },
+          "proxy_spec": {
+            "$ref": "#/components/schemas/apiProxySpec"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
-          },
-          "reflection_spec": {
-            "$ref": "#/components/schemas/apiReflectionSpec"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
@@ -4858,7 +4858,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.22"
+    "version": "0.69.23"
   },
   "openapi": "3.0.0",
   "paths": {

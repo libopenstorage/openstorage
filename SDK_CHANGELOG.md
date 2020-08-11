@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.23 - (8/10/2020)
+
+* Rename reflection volumes to proxy volumes.
+
 ### v0.69.22 - (8/7/2020)
 
 * Add support for Reflection Volumes.
