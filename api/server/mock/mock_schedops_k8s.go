@@ -5,9 +5,6 @@
 package mock
 
 import (
-	reflect "reflect"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	core "github.com/portworx/sched-ops/k8s/core"
 	v1 "k8s.io/api/core/v1"
@@ -18,6 +15,8 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	version "k8s.io/apimachinery/pkg/version"
 	rest "k8s.io/client-go/rest"
+	reflect "reflect"
+	time "time"
 )
 
 // MockOps is a mock of Ops interface.
