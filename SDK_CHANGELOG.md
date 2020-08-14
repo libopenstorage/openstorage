@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.0 - (10/14/2020)
+
+* Add CredentialRemoreReferences API
+
 ### v0.100.0 - (09/10/2020)
 
 * Rename NodeDrain API to RemoveVolumeAttachments API

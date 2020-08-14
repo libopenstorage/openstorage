@@ -1099,3 +1099,80 @@ func TestSdkCredentialGetOwnershipFromCred(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, o)
 }
+
+func TestSdkCredentialRemovereferencesSuccess(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "good-uuid"
+
+	req := &api.SdkCredentialRemoveReferencesRequest{CredentialId: uuid}
+
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
+		api.OptCredIAMPolicy:        "false",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAzure,
+	}
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
+	s.MockDriver().
+		EXPECT().
+		CredsRemoveReferences(uuid).
+		Return(nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Validate Created Credentials
+	_, err := c.RemoveReferences(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkCredentialRemoveReferencesFailed(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	uuid := "bad-uuid"
+
+	req := &api.SdkCredentialRemoveReferencesRequest{CredentialId: uuid}
+	enumAzure := map[string]interface{}{
+		api.OptCredType:             "azure",
+		api.OptCredAzureAccountName: "test-azure-account",
+		api.OptCredAzureAccountKey:  "test-azure-account",
+		api.OptCredProxy:            "false",
+		api.OptCredIAMPolicy:        "false",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAzure,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
+	s.MockDriver().
+		EXPECT().
+		CredsRemoveReferences(uuid).
+		Return(fmt.Errorf("Failed to remove refs"))
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Validate Created Credentials
+	_, err := c.RemoveReferences(context.Background(), req)
+	assert.Error(t, err)
+
+	_, ok := status.FromError(err)
+	assert.True(t, ok)
+}
