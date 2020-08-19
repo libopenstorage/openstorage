@@ -1,5 +1,15 @@
-# KubeCon Europe 2020 Open Storage with KinD & Actions Demo 
+# KubeCon Europe 2020 Open Storage with KinD & Actions Demo
+Thanks everyone for attending out KubeCon Session.
+Check out our demo [slides](demo/Kind-ly_Validating_your_K8s_Apps_Automatically_per_PR.pdf):
+[![ppt](demo/ppt-screenshot.png)](demo/Kind-ly_Validating_your_K8s_Apps_Automatically_per_PR.pdf)
 
+
+CI/CD pipeline used with GitHub Actions is under [.github directory](https://github.com/skhalife/openstorage/blob/master/.github/workflows/kind-testing.yml)
+
+E2E Setup and test.sh are located in our [demo folder](demo/)
+
+
+# README
 [![Travis branch](https://img.shields.io/travis/libopenstorage/openstorage/master.svg)](https://travis-ci.org/libopenstorage/openstorage)
 [![Docker Pulls](https://img.shields.io/docker/pulls/openstorage/osd.svg)](https://hub.docker.com/r/openstorage/osd)
 [![Go Report Card](https://goreportcard.com/badge/github.com/libopenstorage/openstorage)](https://goreportcard.com/report/github.com/libopenstorage/openstorage)
