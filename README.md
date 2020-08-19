@@ -4,10 +4,11 @@ Check out our demo [slides](demo/Kind-ly_Validating_your_K8s_Apps_Automatically_
 [![ppt](demo/ppt-screenshot.png)](demo/Kind-ly_Validating_your_K8s_Apps_Automatically_per_PR.pdf)
 
 
-CI/CD pipeline used with GitHub Actions is under [.github directory](https://github.com/skhalife/openstorage/blob/master/.github/workflows/kind-testing.yml)
+CI/CD pipeline used with GitHub Actions is under [.github directory](.github/workflows/kind-testing.yml)
 
 E2E Setup and test.sh are located in our [demo folder](demo/)
 
+Open-sourced [kind GitHub Action](https://github.com/marketplace/actions/kind-kubernetes-in-docker-action) found in the marketplace
 
 # README
 [![Travis branch](https://img.shields.io/travis/libopenstorage/openstorage/master.svg)](https://travis-ci.org/libopenstorage/openstorage)
