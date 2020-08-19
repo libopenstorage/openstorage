@@ -2,6 +2,11 @@
 
 ## Releases
 
+
+### v0.99.0 - (8/12/2020)
+
+* Add NodeDrain SDK API to OpenstorageNode service.
+
 ### v0.98.0 - (8/7/2020)
 
 * Rename reflection volumes to proxy volumes.
