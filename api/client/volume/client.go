@@ -532,7 +532,7 @@ func (v *volumeClient) CredsValidate(uuid string) error {
 // CredsRemoveReferences removes any references the  credential specified
 // by the Name/Uuid
 func (v *volumeClient) CredsDeleteReferences(uuid string) error {
-	req := v.c.Put().Resource(api.OsdCredsPath + "/deleterefs").Instance(uuid)
+	req := v.c.Delete().Resource(api.OsdCredsPath + "/references").Instance(uuid)
 	response := req.Do()
 	if response.Error() != nil {
 		if response.StatusCode() == http.StatusUnprocessableEntity {

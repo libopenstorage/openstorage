@@ -6060,37 +6060,6 @@
         ]
       }
     },
-    "/v1/credentials/deleteref/{credential_id}": {
-      "post": {
-        "operationId": "DeleteReferences",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "credential_id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/apiSdkCredentialDeleteReferencesResponse"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "DeleteReferences is used to remove references to credentials",
-        "tags": [
-          "OpenStorageCredentials"
-        ]
-      }
-    },
     "/v1/credentials/inspect/{credential_id}": {
       "get": {
         "operationId": "Inspect",
@@ -6117,6 +6086,37 @@
           }
         },
         "summary": "Inspect returns the information about a credential, but does not return the secret key.",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      }
+    },
+    "/v1/credentials/references/{credential_id}": {
+      "delete": {
+        "operationId": "DeleteReferences",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCredentialDeleteReferencesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "DeleteReferences is used to remove references to credentials",
         "tags": [
           "OpenStorageCredentials"
         ]

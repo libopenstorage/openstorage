@@ -2276,7 +2276,7 @@ service OpenStorageCredentials {
   rpc DeleteReferences(SdkCredentialDeleteReferencesRequest)
     returns (SdkCredentialDeleteReferencesResponse) {
       option(google.api.http) = {
-         post: "/v1/credentials/deleteref/{credential_id}"
+         delete: "/v1/credentials/references/{credential_id}"
       };
     }
 
