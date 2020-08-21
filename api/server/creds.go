@@ -96,8 +96,8 @@ func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-func (vd *volAPI) credsRemoveRefs(w http.ResponseWriter, r *http.Request) {
-	method := "credsRemoveRefs"
+func (vd *volAPI) credsDeleteRefs(w http.ResponseWriter, r *http.Request) {
+	method := "credsDeleteRefs"
 	vars := mux.Vars(r)
 	uuid, ok := vars["uuid"]
 	if !ok {
@@ -110,7 +110,7 @@ func (vd *volAPI) credsRemoveRefs(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := d.CredsRemoveReferences(uuid); err != nil {
+	if err := d.CredsDeleteReferences(uuid); err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}

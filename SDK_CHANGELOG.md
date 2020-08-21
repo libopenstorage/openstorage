@@ -4,7 +4,7 @@
 
 ### v0.101.0 - (10/14/2020)
 
-* Add CredentialRemoreReferences API
+* Add CredentialDeleteReferences API
 
 ### v0.100.0 - (09/10/2020)
 

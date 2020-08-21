@@ -1792,7 +1792,7 @@ func (vd *volAPI) credsRoutes() []*Route {
 		{verb: "POST", path: credsPath("", volume.APIVersion), fn: vd.credsCreate},
 		{verb: "DELETE", path: credsPath("/{uuid}", volume.APIVersion), fn: vd.credsDelete},
 		{verb: "PUT", path: credsPath("/validate/{uuid}", volume.APIVersion), fn: vd.credsValidate},
-		{verb: "PUT", path: credsPath("/removerefs/{uuid}", volume.APIVersion), fn: vd.credsRemoveRefs},
+		{verb: "PUT", path: credsPath("/deleterefs/{uuid}", volume.APIVersion), fn: vd.credsDeleteRefs},
 	}
 }
 

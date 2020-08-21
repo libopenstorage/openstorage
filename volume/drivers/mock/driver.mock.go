@@ -363,6 +363,18 @@ func (mr *MockVolumeDriverMockRecorder) CredsDelete(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsDelete", reflect.TypeOf((*MockVolumeDriver)(nil).CredsDelete), arg0)
 }
 
+// CredsDeleteReferences mocks base method
+func (m *MockVolumeDriver) CredsDeleteReferences(arg0 string) error {
+	ret := m.ctrl.Call(m, "CredsDeleteReferences", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CredsDeleteReferences indicates an expected call of CredsDeleteReferences
+func (mr *MockVolumeDriverMockRecorder) CredsDeleteReferences(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsDeleteReferences", reflect.TypeOf((*MockVolumeDriver)(nil).CredsDeleteReferences), arg0)
+}
+
 // CredsEnumerate mocks base method
 func (m *MockVolumeDriver) CredsEnumerate() (map[string]interface{}, error) {
 	ret := m.ctrl.Call(m, "CredsEnumerate")
@@ -374,18 +386,6 @@ func (m *MockVolumeDriver) CredsEnumerate() (map[string]interface{}, error) {
 // CredsEnumerate indicates an expected call of CredsEnumerate
 func (mr *MockVolumeDriverMockRecorder) CredsEnumerate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsEnumerate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsEnumerate))
-}
-
-// CredsRemoveReferences mocks base method
-func (m *MockVolumeDriver) CredsRemoveReferences(arg0 string) error {
-	ret := m.ctrl.Call(m, "CredsRemoveReferences", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// CredsRemoveReferences indicates an expected call of CredsRemoveReferences
-func (mr *MockVolumeDriverMockRecorder) CredsRemoveReferences(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsRemoveReferences", reflect.TypeOf((*MockVolumeDriver)(nil).CredsRemoveReferences), arg0)
 }
 
 // CredsValidate mocks base method

@@ -1100,7 +1100,7 @@ func TestSdkCredentialGetOwnershipFromCred(t *testing.T) {
 	assert.NotNil(t, o)
 }
 
-func TestSdkCredentialRemovereferencesSuccess(t *testing.T) {
+func TestSdkCredentialDeleteReferencesSuccess(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -1108,7 +1108,7 @@ func TestSdkCredentialRemovereferencesSuccess(t *testing.T) {
 
 	uuid := "good-uuid"
 
-	req := &api.SdkCredentialRemoveReferencesRequest{CredentialId: uuid}
+	req := &api.SdkCredentialDeleteReferencesRequest{CredentialId: uuid}
 
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
@@ -1126,18 +1126,18 @@ func TestSdkCredentialRemovereferencesSuccess(t *testing.T) {
 		Return(enumerateData, nil)
 	s.MockDriver().
 		EXPECT().
-		CredsRemoveReferences(uuid).
+		CredsDeleteReferences(uuid).
 		Return(nil)
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
-	_, err := c.RemoveReferences(context.Background(), req)
+	_, err := c.DeleteReferences(context.Background(), req)
 	assert.NoError(t, err)
 }
 
-func TestSdkCredentialRemoveReferencesFailed(t *testing.T) {
+func TestSdkCredentialDeleteReferencesFailed(t *testing.T) {
 
 	// Create server and client connection
 	s := newTestServer(t)
@@ -1145,7 +1145,7 @@ func TestSdkCredentialRemoveReferencesFailed(t *testing.T) {
 
 	uuid := "bad-uuid"
 
-	req := &api.SdkCredentialRemoveReferencesRequest{CredentialId: uuid}
+	req := &api.SdkCredentialDeleteReferencesRequest{CredentialId: uuid}
 	enumAzure := map[string]interface{}{
 		api.OptCredType:             "azure",
 		api.OptCredAzureAccountName: "test-azure-account",
@@ -1163,14 +1163,14 @@ func TestSdkCredentialRemoveReferencesFailed(t *testing.T) {
 		Return(enumerateData, nil)
 	s.MockDriver().
 		EXPECT().
-		CredsRemoveReferences(uuid).
-		Return(fmt.Errorf("Failed to remove refs"))
+		CredsDeleteReferences(uuid).
+		Return(fmt.Errorf("Failed to delete refs"))
 
 	// Setup client
 	c := api.NewOpenStorageCredentialsClient(s.Conn())
 
 	// Validate Created Credentials
-	_, err := c.RemoveReferences(context.Background(), req)
+	_, err := c.DeleteReferences(context.Background(), req)
 	assert.Error(t, err)
 
 	_, ok := status.FromError(err)

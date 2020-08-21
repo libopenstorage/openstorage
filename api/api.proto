@@ -2272,11 +2272,11 @@ service OpenStorageCredentials {
         get: "/v1/credentials/validate/{credential_id}"
       };
     }
-  // RemoveReferences is used to remove references to credentials
-  rpc RemoveReferences(SdkCredentialRemoveReferencesRequest)
-    returns (SdkCredentialRemoveReferencesResponse) {
+  // DeleteReferences is used to remove references to credentials
+  rpc DeleteReferences(SdkCredentialDeleteReferencesRequest)
+    returns (SdkCredentialDeleteReferencesResponse) {
       option(google.api.http) = {
-         post: "/v1/credentials/removeref/{credential_id}"
+         post: "/v1/credentials/deleteref/{credential_id}"
       };
     }
 
@@ -2936,13 +2936,13 @@ message SdkCredentialValidateResponse {
 }
 
 // Defines a request to remove any references to credentials
-message SdkCredentialRemoveReferencesRequest {
+message SdkCredentialDeleteReferencesRequest {
   // Id of the credentials
   string credential_id = 1;
 }
 
 // Empty response
-message SdkCredentialRemoveReferencesResponse {
+message SdkCredentialDeleteReferencesResponse {
 }
 
 

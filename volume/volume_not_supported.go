@@ -149,7 +149,7 @@ func (c *credsNotSupported) CredsValidate(
 	return ErrNotSupported
 }
 
-func (c *credsNotSupported) CredsRemoveReferences(
+func (c *credsNotSupported) CredsDeleteReferences(
 	uuid string,
 ) error {
 	return ErrNotSupported
