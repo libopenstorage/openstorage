@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"io"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -26,7 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestAuthorizationServerInterceptorCreate(t *testing.T) {
+func TestAuthorizationServerInterceptorCreateVolume(t *testing.T) {
 	tt := []struct {
 		TestName                     string
 		PublicVolumeCreationDisabled bool
@@ -146,6 +147,101 @@ func TestAuthorizationServerInterceptorCreate(t *testing.T) {
 		} else {
 			assert.Error(t, err)
 			assert.Equal(t, tc.ExpectedError, err.Error())
+		}
+	}
+}
+
+func TestAuthorizationServerInterceptorStreamingCreateAlert(t *testing.T) {
+	tt := []struct {
+		TestName             string
+		RequestAuthenticated bool
+
+		ExpectSuccess      bool
+		ExpectedError      string
+		ExpectedDriverCall gomock.Call
+	}{
+		{
+			TestName:             "1-1: Authenticated alerts API call should succeed",
+			RequestAuthenticated: true,
+
+			ExpectSuccess: true,
+			ExpectedError: "",
+		},
+		{
+			TestName:             "1-2: Unauthenticated alerts API call should not succeed",
+			RequestAuthenticated: false,
+
+			ExpectSuccess: false,
+			ExpectedError: "rpc error: code = PermissionDenied desc = Access denied without authentication token",
+		},
+	}
+
+	s := newTestServerAuth(t)
+	defer s.Stop()
+	for _, tc := range tt {
+		req := &api.SdkAlertsEnumerateWithFiltersRequest{
+			Queries: []*api.SdkAlertsQuery{
+				{
+					Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
+					Opts: []*api.SdkAlertsOption{
+						{
+							Opt: testNewCountSpanOption(0, 10),
+						},
+					},
+				},
+			},
+		}
+
+		// Setup client
+		c := api.NewOpenStorageAlertsClient(s.Conn())
+		var filters []interface{}
+		for _, filter := range getFilters([]*api.SdkAlertsQuery{
+			{
+				Query: testNewResourceTypeQuery(api.ResourceType_RESOURCE_TYPE_DRIVE),
+				Opts: []*api.SdkAlertsOption{
+					{
+						Opt: testNewCountSpanOption(0, 10),
+					},
+				},
+			},
+		}) {
+			filters = append(filters, filter)
+		}
+		expectedAlerts := 4
+		myAlerts := make([]*api.Alert, expectedAlerts)
+		for i := range myAlerts {
+			myAlerts[i] = &api.Alert{}
+		}
+		s.MockFilterDeleter().EXPECT().Enumerate(filters...).Return(myAlerts, nil).AnyTimes()
+
+		// Call create with or without auth
+		ctx := context.Background()
+		var err error
+		if tc.RequestAuthenticated {
+			ctx, err = contextWithToken(ctx, "jim.stevens", "system.admin", "mysecret")
+			assert.NoError(t, err)
+		}
+		enumerateClient, err := c.EnumerateWithFilters(ctx, req)
+		assert.NoError(t, err)
+
+		resp := &api.SdkAlertsEnumerateWithFiltersResponse{}
+		for {
+			r, err := enumerateClient.Recv()
+			if err == io.EOF {
+				break
+			}
+			if tc.ExpectSuccess {
+				assert.NoError(t, err)
+				resp.Alerts = append(resp.Alerts, r.Alerts...)
+			} else {
+				assert.Error(t, err)
+				assert.Equal(t, tc.ExpectedError, err.Error())
+				break
+			}
+		}
+
+		if tc.ExpectSuccess {
+			assert.Len(t, resp.Alerts, expectedAlerts)
 		}
 	}
 }
