@@ -42,8 +42,8 @@ const (
 	ContextMetadataTokenKey = "bearer"
 )
 
-// This interceptor provides a way to lock out any calls while we adjust the server
-func (s *sdkGrpcServer) rwlockIntercepter(
+// This interceptor provides a way to lock out any unary calls while we adjust the server
+func (s *sdkGrpcServer) rwlockUnaryIntercepter(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
@@ -53,6 +53,19 @@ func (s *sdkGrpcServer) rwlockIntercepter(
 	defer s.lock.RUnlock()
 
 	return handler(ctx, req)
+}
+
+// This interceptor provides a way to lock out any stream calls while we adjust the server
+func (s *sdkGrpcServer) rwlockStreamIntercepter(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	s.lock.RLock()
+	defer s.lock.RUnlock()
+
+	return handler(srv, stream)
 }
 
 // Authenticate user and add authorization information back in the context
@@ -109,23 +122,19 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	}
 }
 
-func (s *sdkGrpcServer) loggerServerInterceptor(
-	ctx context.Context,
-	req interface{},
-	info *grpc.UnaryServerInfo,
-	handler grpc.UnaryHandler,
-) (interface{}, error) {
+func (s *sdkGrpcServer) loggerInterceptor(handler func() error, fullMethod string) error {
 	reqid := uuid.New()
 	log := logrus.New()
 	log.Out = s.accessLogOutput
 	logger := log.WithFields(logrus.Fields{
-		"method": info.FullMethod,
+		"method": fullMethod,
 		"reqid":  reqid,
 	})
 
 	logger.Info("Start")
+	s.log = logger
 	ts := time.Now()
-	i, err := handler(ctx, req)
+	err := handler()
 	duration := time.Now().Sub(ts)
 	if err != nil {
 		logger.WithFields(logrus.Fields{"duration": duration}).Infof("Failed: %v", err)
@@ -133,25 +142,58 @@ func (s *sdkGrpcServer) loggerServerInterceptor(
 		logger.WithFields(logrus.Fields{"duration": duration}).Info("Successful")
 	}
 
-	return i, err
+	return err
 }
 
-func (s *sdkGrpcServer) authorizationServerInterceptor(
+func (s *sdkGrpcServer) loggerServerUnaryInterceptor(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
+	var i interface{}
+	var err error
+
+	err = s.loggerInterceptor(func() error {
+		i, err = handler(ctx, req)
+		return err
+	}, info.FullMethod)
+
+	return i, err
+}
+
+func (s *sdkGrpcServer) loggerServerStreamInterceptor(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	var err error
+
+	return s.loggerInterceptor(func() error {
+		err = handler(srv, stream)
+		if err != nil {
+			return err
+		}
+		return nil
+	}, info.FullMethod)
+}
+
+func (s *sdkGrpcServer) authorizationInterceptor(
+	ctx context.Context,
+	handler func() error,
+	fullMethod string,
+) error {
 	userinfo, ok := auth.NewUserInfoFromContext(ctx)
 	if !ok {
-		return nil, status.Error(
+		return status.Error(
 			codes.Internal,
 			"Unable to authorize user because token is missing from context")
 	}
 	claims := &userinfo.Claims
 
 	// Get method and API
-	reqService, reqApi := grpcserver.GetMethodInformation(api.SdkRootPath, info.FullMethod)
+	reqService, reqAPI := grpcserver.GetMethodInformation(api.SdkRootPath, fullMethod)
 
 	// Setup auditor log
 	log := logrus.New()
@@ -163,33 +205,31 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 		"email":    claims.Email,
 		"roles":    claims.Roles,
 		"groups":   claims.Groups,
-		"method":   fmt.Sprintf("%s.%s", reqService, reqApi),
+		"method":   fmt.Sprintf("%s.%s", reqService, reqAPI),
 	})
 
 	// Authorize
-	if err := s.roleServer.Verify(ctx, claims.Roles, info.FullMethod); err != nil {
+	if err := s.roleServer.Verify(ctx, claims.Roles, fullMethod); err != nil {
 		logger.Warning("Access denied")
 		if auth.IsGuest(ctx) {
-			return nil, status.Errorf(
+			return status.Errorf(
 				codes.PermissionDenied,
 				"Access denied without authentication token")
 		}
 
-		return nil, status.Errorf(
+		return status.Errorf(
 			codes.PermissionDenied,
 			"Access to %s denied: %v",
-			info.FullMethod, err)
+			fullMethod, err)
 	}
 
-	// Execute the command
-	i, err := handler(ctx, req)
-
 	// Check if we have been denied
+	err := handler()
 	if err != nil {
 		if gErr, ok := status.FromError(err); ok {
 			if gErr.Code() == codes.PermissionDenied {
 				logger.Warningf("Access denied: %v", err)
-				return i, err
+				return err
 			}
 		}
 	}
@@ -197,5 +237,34 @@ func (s *sdkGrpcServer) authorizationServerInterceptor(
 	// Log
 	logger.Info("Authorized")
 
+	return err
+}
+
+func (s *sdkGrpcServer) authorizationServerUnaryInterceptor(
+	ctx context.Context,
+	req interface{},
+	info *grpc.UnaryServerInfo,
+	handler grpc.UnaryHandler,
+) (interface{}, error) {
+	var i interface{}
+	var err error
+
+	err = s.authorizationInterceptor(ctx, func() error {
+		i, err = handler(ctx, req)
+		return err
+	}, info.FullMethod)
+
+	// Execute the command
 	return i, err
+}
+
+func (s *sdkGrpcServer) authorizationServerStreamInterceptor(
+	srv interface{},
+	stream grpc.ServerStream,
+	info *grpc.StreamServerInfo,
+	handler grpc.StreamHandler,
+) error {
+	return s.authorizationInterceptor(stream.Context(), func() error {
+		return handler(srv, stream)
+	}, info.FullMethod)
 }
