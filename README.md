@@ -8,6 +8,7 @@ Helpful Links:
 - E2E Setup and test.sh are located in our [demo folder](demo/)
 - Open-sourced [kind GitHub Action](https://github.com/marketplace/actions/kind-kubernetes-in-docker-action) found in the marketplace
 - [kind Quick Start](https://kind.sigs.k8s.io/docs/user/quick-star) for installation and simple tutorials
+- KubeCon Europe 2020 [Scheduled Event link](https://sched.co/Zele)
 
 # README
 [![Travis branch](https://img.shields.io/travis/libopenstorage/openstorage/master.svg)](https://travis-ci.org/libopenstorage/openstorage)
