@@ -2,6 +2,7 @@ package server
 
 import (
 	"fmt"
+	"strconv"
 	"testing"
 	"time"
 
@@ -710,7 +711,7 @@ func TestSetClusterConfFailed(t *testing.T) {
 		Version:   "x.y.z",
 		Kvdb: &osdconfig.KvdbConfig{
 			Discovery: []string{"2.2.2.2"},
-			Password:  "kvdb-pass",
+			Password:  strconv.FormatInt(time.Now().Unix(), 10),
 			Username:  "kvdb",
 		},
 	}
