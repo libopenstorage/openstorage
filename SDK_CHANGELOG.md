@@ -2,6 +2,71 @@
 
 ## Releases
 
+### v0.98.0 - (8/7/2020)
+
+* Rename reflection volumes to proxy volumes.
+
+### v0.97.0 - (8/7/2020)
+
+* Add support for Reflection Volumes.
+* Reflection Volumes essentially reflect an external data source as an openstorage volume.
+* Added a new field ReflectionSpec to VolumeSpec object.
+
+### v0.96.0 - (8/5/2020)
+
+* Add CredentialId field to ClusterPairCreate api
+
+### v0.95.0 - (8/4/2020)
+
+* Removed IO_PROFILE_BKUPSRC from ioProfile list
+
+### v0.94.0 - (7/29/2020)
+
+* Added proxy write flag in volume spec
+
+### v0.93.0 - (7/23/2020)
+
+* Renamed FilesystemTrim Api GetStatus() to Status().
+
+### v0.92.0 - (7/16/2020)
+
+* Add sharedv4_mount_options field to Volume and VolumeSpec object.
+* The sharedv4_mount_options will be used at runtime while mounting the sharedv4 volume from
+  a node (client) which does not have the volume replica.
+
+### v0.91.0 - (7/13/2020)
+
+* Add mount_options field to Volume and VolumeSpec object.
+* The mount_options will be used at runtime while mounting the volume.
+
+### v0.90.0 - (7/8/2020)
+
+* Added new field to CloudBackupGroupCreate api
+
+### v0.88.0 - (7/7/2020)
+
+* Remove LastUpdateTime from RebalanceJobSummary and added it RebalanceJob,
+
+### v0.87.0 - (7/6/2020)
+
+* Added new field to CloudBackupCreate api
+
+### v0.86.0 - (6/29/2020)
+
+* Modified fsck service interface and added new fields to volume and volume spec master PR1622
+
+### v0.85.0 - (6/29/2020)
+
+* Add support for volume xattr update
+
+### v0.84.0 - (6/29/2020)
+
+* Modified fsck service interface and added new fields to volume spec master PR1607
+
+### v0.83.0 - (6/26/2020)
+
+* Updated rebalance data structures
+
 ### v0.82.0 - (6/16/2020)
 
 * Added support for fetching cloud backup size

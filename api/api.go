@@ -60,6 +60,15 @@ const (
 	SpecExportProtocolCustom = "custom"
 	SpecExportOptions        = "export_options"
 	SpecExportOptionsEmpty   = "empty_export_options"
+	SpecMountOptions         = "mount_options"
+	SpecSharedv4MountOptions = "sharedv4_mount_options"
+	SpecProxyProtocolS3      = "s3"
+	SpecProxyProtocolPXD     = "pxd"
+	SpecProxyProtocolNFS     = "nfs"
+	SpecProxyEndpoint        = "proxy_endpoint"
+	SpecProxyNFSSubPath      = "proxy_nfs_subpath"
+	SpecProxyNFSExportPath   = "proxy_nfs_exportpath"
+	SpecProxyS3Bucket        = "proxy_s3_bucket"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
@@ -75,6 +84,9 @@ const (
 	StoragePolicy            = "storagepolicy"
 	SpecCowOnDemand          = "cow_ondemand"
 	SpecDirectIo             = "direct_io"
+	SpecScanPolicyTrigger    = "scan_policy_trigger"
+	SpecScanPolicyAction     = "scan_policy_action"
+	SpecProxyWrite           = "proxy_write"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -264,7 +276,7 @@ type Cluster struct {
 	NodeId string
 
 	// array of all the nodes in the cluster.
-	Nodes []Node
+	Nodes []*Node
 
 	// Management url for the cluster
 	ManagementURL string
@@ -317,6 +329,9 @@ type CloudBackupCreateRequest struct {
 	// manual/user triggerred backups and not applicable for scheduled backups.
 	// Value of 0 retains the default behavior.
 	FullBackupFrequency uint32
+	// DeleteLocal indicates if local snap must be deleted after the
+	// backup is complete
+	DeleteLocal bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -337,6 +352,9 @@ type CloudBackupGroupCreateRequest struct {
 	CredentialUUID string
 	// Full indicates if full backup is desired even though incremental is possible
 	Full bool
+	// DeleteLocal indicates if local snap must be deleted after the
+	// backup is complete
+	DeleteLocal bool
 }
 
 type CloudBackupRestoreRequest struct {
@@ -763,6 +781,28 @@ func simpleString(typeString string, nameMap map[int32]string, v int32) string {
 		return strconv.Itoa(int(v))
 	}
 	return strings.TrimPrefix(strings.ToLower(s), fmt.Sprintf("%s_", strings.ToLower(typeString)))
+}
+
+// ScanPolicyTriggerValueof returns value of string
+func ScanPolicy_ScanTriggerSimpleValueOf(s string) (ScanPolicy_ScanTrigger, error) {
+	obj, err := simpleValueOf("scan_trigger", ScanPolicy_ScanTrigger_value, s)
+	return ScanPolicy_ScanTrigger(obj), err
+}
+
+// SimpleString returns the string format of ScanPolicy_ScanTrigger
+func (x ScanPolicy_ScanTrigger) SimpleString() string {
+	return simpleString("scan_trigger", ScanPolicy_ScanTrigger_name, int32(x))
+}
+
+// ScanPolicyActioinValueof returns value of string
+func ScanPolicy_ScanActionSimpleValueOf(s string) (ScanPolicy_ScanAction, error) {
+	obj, err := simpleValueOf("scan_action", ScanPolicy_ScanAction_value, s)
+	return ScanPolicy_ScanAction(obj), err
+}
+
+// SimpleString returns the string format of ScanPolicy_ScanAction
+func (x ScanPolicy_ScanAction) SimpleString() string {
+	return simpleString("scan_action", ScanPolicy_ScanAction_name, int32(x))
 }
 
 func toSec(ms uint64) uint64 {
@@ -1234,4 +1274,28 @@ type TokenSecretContext struct {
 	SecretNamespace string
 	PvcName         string
 	PvcNamespace    string
+}
+
+// ParseProxyEndpoint parses the proxy endpoint and returns the
+// proxy protocol and the endpoint
+func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
+	if len(proxyEndpoint) == 0 {
+		return ProxyProtocol_PROXY_PROTOCOL_INVALID, ""
+	}
+	tokens := strings.Split(proxyEndpoint, "://")
+	if len(tokens) == 1 {
+		return ProxyProtocol_PROXY_PROTOCOL_INVALID, tokens[0]
+	} else if len(tokens) == 2 {
+		switch tokens[0] {
+		case SpecProxyProtocolS3:
+			return ProxyProtocol_PROXY_PROTOCOL_S3, tokens[1]
+		case SpecProxyProtocolNFS:
+			return ProxyProtocol_PROXY_PROTOCOL_NFS, tokens[1]
+		case SpecProxyProtocolPXD:
+			return ProxyProtocol_PROXY_PROTOCOL_PXD, tokens[1]
+		default:
+			return ProxyProtocol_PROXY_PROTOCOL_INVALID, tokens[1]
+		}
+	}
+	return ProxyProtocol_PROXY_PROTOCOL_INVALID, ""
 }

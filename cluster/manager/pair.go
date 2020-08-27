@@ -35,6 +35,7 @@ func (c *ClusterManager) CreatePair(
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: request.RemoteClusterToken,
 		Mode:               request.Mode,
+		CredentialId:       request.CredentialId,
 	}
 
 	endpoint := "http://" + remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)

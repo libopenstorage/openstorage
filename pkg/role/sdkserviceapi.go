@@ -41,28 +41,30 @@ const (
 	SystemGuestRoleName = "system.guest"
 )
 
-type defaultRole struct {
-	rules   []*api.SdkRule
-	mutable bool
+// DefaultRole is a role loaded into the system on startup
+type DefaultRole struct {
+	Rules   []*api.SdkRule
+	Mutable bool
 }
 
 var (
-	// Default roles. Should be prefixed by `system.` to avoid collisions
-	defaultRoles = map[string]*defaultRole{
+	// DefaultRoles are the default roles to load on system startup
+	// Should be prefixed by `system.` to avoid collisions
+	DefaultRoles = map[string]*DefaultRole{
 		// system:admin role can run any command
-		SystemAdminRoleName: &defaultRole{
-			rules: []*api.SdkRule{
+		SystemAdminRoleName: &DefaultRole{
+			Rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"*"},
 					Apis:     []string{"*"},
 				},
 			},
-			mutable: false,
+			Mutable: false,
 		},
 
 		// system:view role can only run read-only commands
-		SystemViewRoleName: &defaultRole{
-			rules: []*api.SdkRule{
+		SystemViewRoleName: &DefaultRole{
+			Rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"*"},
 					Apis: []string{
@@ -79,11 +81,11 @@ var (
 					Apis:     []string{"*"},
 				},
 			},
-			mutable: false,
+			Mutable: false,
 		},
 		// system:user role can only access volume lifecycle commands
-		SystemUserRoleName: &defaultRole{
-			rules: []*api.SdkRule{
+		SystemUserRoleName: &DefaultRole{
+			Rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{
 						"volume",
@@ -95,6 +97,16 @@ var (
 						"migrate",
 					},
 					Apis: []string{"*"},
+				},
+				&api.SdkRule{
+					Services: []string{
+						"cluster",
+						"node",
+					},
+					Apis: []string{
+						"inspect*",
+						"enumerate*",
+					},
 				},
 				&api.SdkRule{
 					Services: []string{"identity"},
@@ -109,13 +121,13 @@ var (
 					},
 				},
 			},
-			mutable: false,
+			Mutable: false,
 		},
 
 		// system:guest role is used for any unauthenticated user.
 		// They can only use standard volume lifecycle commands.
-		SystemGuestRoleName: &defaultRole{
-			rules: []*api.SdkRule{
+		SystemGuestRoleName: &DefaultRole{
+			Rules: []*api.SdkRule{
 				&api.SdkRule{
 					Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
 					Apis:     []string{"*"},
@@ -124,8 +136,18 @@ var (
 					Services: []string{"identity"},
 					Apis:     []string{"version"},
 				},
+				&api.SdkRule{
+					Services: []string{
+						"cluster",
+						"node",
+					},
+					Apis: []string{
+						"inspect*",
+						"enumerate*",
+					},
+				},
 			},
-			mutable: true,
+			Mutable: true,
 		},
 	}
 )
@@ -191,7 +213,7 @@ func NewSdkRoleManager(kv kvdb.Kvdb) (*SdkRoleManager, error) {
 	}
 
 	// Load all default roles
-	for roleName, defaultRole := range defaultRoles {
+	for roleName, defaultRole := range DefaultRoles {
 		roleExists := false
 		if _, err := kv.Get(prefixWithName(roleName)); err == nil {
 			roleExists = true
@@ -199,10 +221,10 @@ func NewSdkRoleManager(kv kvdb.Kvdb) (*SdkRoleManager, error) {
 
 		// always re-initialize immutable default roles.
 		// if the role is mutable and does exist, skip kvdb put.
-		if !roleExists || !defaultRole.mutable {
+		if !roleExists || !defaultRole.Mutable {
 			role := &api.SdkRole{
 				Name:  roleName,
-				Rules: defaultRole.rules,
+				Rules: defaultRole.Rules,
 			}
 			if _, err := kv.Put(prefixWithName(roleName), role, 0); err != nil {
 				return nil, err
@@ -227,7 +249,7 @@ func (r *SdkRoleManager) Create(
 	}
 
 	// Determine if there is collision with default roles
-	if _, ok := defaultRoles[req.GetRole().GetName()]; ok {
+	if _, ok := DefaultRoles[req.GetRole().GetName()]; ok {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"Name %s already used by system role", req.GetRole().GetName())
@@ -310,7 +332,7 @@ func (r *SdkRoleManager) Delete(
 	}
 
 	// Determine if there is collision with default roles
-	if _, ok := defaultRoles[req.GetName()]; ok {
+	if _, ok := DefaultRoles[req.GetName()]; ok {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"Cannot delete system role %s", req.GetName())
@@ -338,7 +360,7 @@ func (r *SdkRoleManager) Update(
 
 	// Determine if there is collision with default roles.
 	// We can still update mutable default roles.
-	if defaultRole, ok := defaultRoles[req.GetRole().GetName()]; ok && !defaultRole.mutable {
+	if defaultRole, ok := DefaultRoles[req.GetRole().GetName()]; ok && !defaultRole.Mutable {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"System role %s cannot be updated", req.GetRole().GetName())

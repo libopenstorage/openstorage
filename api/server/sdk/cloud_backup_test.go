@@ -92,6 +92,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 		Full:         full,
 		TaskId:       taskId,
 		Labels:       labels,
+		DeleteLocal:  true,
 	}
 
 	// Create response
@@ -103,6 +104,7 @@ func TestSdkCloudBackupCreate(t *testing.T) {
 			Full:           false,
 			Name:           taskId,
 			Labels:         labels,
+			DeleteLocal:    true,
 		}).
 		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
 		Times(2)

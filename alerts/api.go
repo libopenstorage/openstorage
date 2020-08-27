@@ -4,17 +4,16 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/portworx/kvdb"
 )
 
 // NewManager obtains instance of Manager for alerts management.
-func NewManager(kv kvdb.Kvdb, options ...Option) (Manager, error) {
-	return newManager(kv, options...)
+func NewManager(options ...Option) (Manager, error) {
+	return newManager(options...)
 }
 
 // NewFilterDeleter obtains instance of FilterDeleter for alerts enumeration and deletion.
-func NewFilterDeleter(kv kvdb.Kvdb, options ...Option) (FilterDeleter, error) {
-	return newManager(kv, options...)
+func NewFilterDeleter(options ...Option) (FilterDeleter, error) {
+	return newManager(options...)
 }
 
 // Option API

@@ -645,10 +645,10 @@
 			"revisionTime": "2016-11-18T19:16:01Z"
 		},
 		{
-			"checksumSHA1": "3/JBQVvN2IjnJLuntaUGMJqKXPw=",
+			"checksumSHA1": "F77I8pSgI1lLdp3AckoIvmkfZAo=",
 			"path": "github.com/coreos/go-oidc",
-			"revision": "66476e0267012774b2f9767d2d37a317d1f1aac3",
-			"revisionTime": "2018-11-01T19:42:49Z"
+			"revision": "8d771559cf6e5111c9b9159810d0e4538e7cdc82",
+			"revisionTime": "2020-01-27T16:17:54Z"
 		},
 		{
 			"checksumSHA1": "butr+Orbf1fd1hcLqNXYwUDAjcI=",
@@ -2677,12 +2677,6 @@
 			"path": "gopkg.in/inf.v0",
 			"revision": "d2d2541c53f18d2a059457998ce2876cc8e67cbf",
 			"revisionTime": "2018-03-26T17:23:32Z"
-		},
-		{
-			"checksumSHA1": "tr9VfMj5HNs7UqT6MrGnqMSakOE=",
-			"path": "gopkg.in/jmcvetta/napping.v3",
-			"revision": "6c845f879618cc607cbc2bb1d8e817e618505341",
-			"revisionTime": "2016-02-12T23:58:06Z"
 		},
 		{
 			"checksumSHA1": "wMNF3SsJSGCd/niEpHwY/dtyjGY=",
