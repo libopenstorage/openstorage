@@ -597,10 +597,31 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			ExportSpec: spec.ExportSpec,
 		}
 	}
+	if spec.MountOptions != nil {
+		newSpec.MountOpt = &api.VolumeSpecUpdate_MountOptSpec{
+			MountOptSpec: spec.MountOptions,
+		}
+	}
+	if spec.Sharedv4MountOptions != nil {
+		newSpec.Sharedv4MountOpt = &api.VolumeSpecUpdate_Sharedv4MountOptSpec{
+			Sharedv4MountOptSpec: spec.Sharedv4MountOptions,
+		}
+	}
 
 	if spec.FpPreference != vol.Spec.FpPreference {
 		newSpec.FastpathOpt = &api.VolumeSpecUpdate_Fastpath{
 			Fastpath: spec.FpPreference,
+		}
+	}
+
+	if spec.Xattr != vol.Spec.Xattr {
+		newSpec.XattrOpt = &api.VolumeSpecUpdate_Xattr{
+			Xattr: spec.Xattr,
+		}
+	}
+	if spec.ScanPolicy != nil {
+		newSpec.ScanPolicyOpt = &api.VolumeSpecUpdate_ScanPolicy{
+			ScanPolicy: spec.ScanPolicy,
 		}
 	}
 
@@ -659,6 +680,19 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	})
 	dkVolumes := []*api.Volume{}
 	if err != nil {
+		// The Kubernetes Portworx intree driver has a bug when it tries to
+		// check if the server is up and running. It sends a request to this
+		// server to get a version, but instead of using the correct API, it sends a
+		// request to get information about a volume called "version".
+		// Since the intree driver is _not_ sending a authenticated call for this
+		// check, it will be denied as an unathorized request. We will need to
+		// return a 200 HTTP request as if the volume was not found.
+		if volumeID == "versions" {
+			// This is repetition of code, but is simple to understand
+			json.NewEncoder(w).Encode(dkVolumes)
+			return
+		}
+
 		// SDK returns a NotFound error for an invalid volume
 		// Previously the REST server returned an empty array if a volume was not found
 		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {

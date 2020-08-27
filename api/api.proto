@@ -111,8 +111,7 @@ enum IoProfile {
   IO_PROFILE_DB_REMOTE = 3;
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
-  // IO_PROFILE_BKUPSRC inherits cloudbackup's IOprofile
-  IO_PROFILE_BKUPSRC = 6;
+  IO_PROFILE_AUTO = 6;
 }
 
 // VolumeState represents the state of a volume.
@@ -151,6 +150,18 @@ enum VolumeStatus {
   // Volume is up but with degraded performance
   // In a RAID group, this may indicate a problem with one or more drives
   VOLUME_STATUS_DEGRADED = 4;
+}
+
+enum FilesystemHealthStatus {
+  // filesystem health status is unknown
+  FS_HEALTH_STATUS_UNKNOWN = 0;
+  // filesystem is a healthy
+  FS_HEALTH_STATUS_HEALTHY = 1;
+  // filesystem has errors, but can be fixed safely
+  FS_HEALTH_STATUS_SAFE_TO_FIX = 2;
+  // filesystem has errors, these cannot be fixed automatically,
+  // user needs to review the reported errors and take appropriate action
+  FS_HEALTH_STATUS_NEEDS_INSPECTION = 3;
 }
 
 enum StorageMedium {
@@ -333,6 +344,65 @@ message ExportSpec {
    string export_options = 2;
 }
 
+// ProxyProtocol defines the protocol used for proxy.
+enum ProxyProtocol {
+    // Invalid uninitialized value
+    PROXY_PROTOCOL_INVALID = 0;
+    // NFS indicates that the external data source is NFS and the volume
+    // will be reflected over NFS protocol
+    PROXY_PROTOCOL_NFS = 1;
+    // S3 indicates that the external data source is an object store.
+    PROXY_PROTOCOL_S3 = 2;
+    // PXD indicates that the external data source is a Portworx block volume.
+    PROXY_PROTOCOL_PXD = 3;
+}
+
+// NFSProxySpec is the spec for proxying an NFS share.
+message NFSProxySpec {
+    // ExportPath is the NFS export path on the NFS server
+    string export_path = 1;
+    // SubPath is the sub-directory from an NFS share that should be reflected.
+    string sub_path = 2;
+}
+
+// S3ProxySpec is the spec for proxying an external object store.
+message S3ProxySpec {
+    // BucketName is the name of the bucket from the object store
+    string bucket_name = 1;
+}
+
+// PXDProxySpec is the spec for proxying a Portworx volume
+message PXDProxySpec {
+    // ID of the remote portworx volume
+    string id = 1;
+}
+
+
+// ProxySpec defines how this volume will reflect an external data source.
+message ProxySpec {
+    // ProxyProtocol defines the protocol used for proxy.
+    ProxyProtocol proxy_protocol = 1;
+    // Endpoint is the external endpoint which can be used for accessing the
+    // external data source.
+    string endpoint = 2;
+    // NFSProxySpec is the spec for proxying an NFS share
+    NFSProxySpec nfs_spec = 3;
+    // S3ProxySpec is the spec for proxying an external object store
+    S3ProxySpec s3_spec = 4;
+    // PXDProxySpec is the spec for proxying a Portworx volume
+    PXDProxySpec pxd_spec = 5;
+}
+
+// MountOptions defines the mount options with which a volume is mounted.
+message MountOptions {
+  // Options are opaque key value pairs that are passed as mount options when
+  // a volume is mounted.
+  // If an empty value is provided only the key will be passed as an option
+  // If both key and value are provided then 'key=value' will be passed as an
+  // option
+  map<string, string> options = 1;
+}
+
 // fastpath extensions
 enum FastpathStatus {
 	// backward compatible state
@@ -383,6 +453,33 @@ message FastpathConfig {
   FastpathStatus status = 3;
   // Fastpath replica state for each replica in replica set
   repeated FastpathReplState replicas = 4;
+}
+
+// ScanPolicy defines when a filesystem check is triggered and what action to take
+// User can specify *one* of the following valid policies
+// 1. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_ONLY
+// 2. trigger=SCAN_TRIGGER_ON_MOUNT, action=SCAN_ACTION_SCAN_REPAIR
+// 3. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_ONLY
+// 4. trigger=SCAN_TRIGGER_ON_NEXT_MOUNT, action=SCAN_ACTION_SCAN_REPAIR
+// 5. trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE
+// Note: When trigger == SCAN_TRIGGER_ON_NEXT_MOUNT, the associated action is
+// performed once on the next mount and the scanpolicy gets reset to
+// `trigger=SCAN_TRIGGER_NONE, action=SCAN_ACTION_NONE`, irrespective of the
+// output of the action.
+message ScanPolicy {
+    enum ScanTrigger {
+        SCAN_TRIGGER_NONE = 0;
+        SCAN_TRIGGER_ON_MOUNT = 1;
+        SCAN_TRIGGER_ON_NEXT_MOUNT = 2;
+    }
+    enum ScanAction {
+        SCAN_ACTION_NONE = 0;
+        SCAN_ACTION_SCAN_ONLY = 1;
+        SCAN_ACTION_SCAN_REPAIR = 2;
+    }
+
+    ScanTrigger trigger = 1;
+    ScanAction action = 2;
 }
 
 // VolumeSpec has the properties needed to create a volume.
@@ -457,6 +554,15 @@ message VolumeSpec {
   bool fp_preference = 35;
   // Xattr specifies implementation specific volume attributes
   Xattr.Value xattr = 36;
+  // ScanPolicy specifies the filesystem check policy
+  ScanPolicy scan_policy = 37;
+  // MountOptions defines the options that will be used while mounting this volume
+  MountOptions mount_options = 38;
+  // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 39;
+  // ProxySpec indicates that this volume is used for proxying an external data source
+  ProxySpec proxy_spec = 41;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -506,6 +612,16 @@ message VolumeSpecUpdate {
   oneof export_spec_opt { ExportSpec export_spec = 29; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 30; }
+  // Xattr specifies implementation specific volume attributes
+  oneof xattr_opt { Xattr.Value xattr = 31; }
+  // scan_policy_opt defines the filesystem check policy for the volume
+  oneof scan_policy_opt { ScanPolicy scan_policy = 32;}
+  // mount_opt provides the mount time options for a volume
+  oneof mount_opt { MountOptions mount_opt_spec = 33;}
+  // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
+  oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 34;}
+  // proxy_spec_opt provides the spec for a proxy volume
+  oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -575,6 +691,14 @@ message VolumeSpecPolicy {
   IoStrategy io_strategy = 55;
   // ExportSpec preferred volume export options.
   oneof export_spec_opt { ExportSpec export_spec = 56; }
+  // scan_policy_opt defines the filesystem check policy for the volume
+  oneof scan_policy_opt { ScanPolicy scan_policy = 57;}
+  // mount_opt provides the mount time options for a volume
+  oneof mount_opt { MountOptions mount_opt_spec = 58;}
+  // sharedv4_mount_opt provides the client side mount time options for a sharedv4 volume
+  oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 59;}
+  // proxy_spec_opt provides the spec for a proxy volume.
+  oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -706,6 +830,15 @@ message Volume {
   google.protobuf.Timestamp detach_time= 25;
   // Fastpath extensions
   FastpathConfig fpConfig = 26;
+  // LastScanFix is the time when an integrity check fixed errors in filesystem
+  google.protobuf.Timestamp last_scan_fix = 27;
+  // LastScanStatus is the time when an integrity check fixed errors in filesystem
+  FilesystemHealthStatus last_scan_status = 28;
+  // MountOptions are the runtime mount options that will be used while mounting this volume
+  MountOptions mount_options = 29;
+  // Sharedv4MountOptions are the runtime mount options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 30;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1294,7 +1427,7 @@ service OpenStorageRole {
 //
 // Once the filesystem trim operation is started, the clients have to poll for
 // the status of the background operation using the
-// `OpenStorageFilesystemTrim.GetStatus()` rpc request
+// `OpenStorageFilesystemTrim.Status()` rpc request
 //
 // A typical workflow involving filesystem trim would be as follows
 // 1. Attach the volume
@@ -1306,7 +1439,7 @@ service OpenStorageRole {
 //    This call returns immediately with a status code indicating if the
 //    operation was successfully started or not.
 // 4. To get the status of the Filesystem Trim operation, issue a grpc call to
-//    `OpenStorageFilesystemTrimClient.GetStatus()`
+//    `OpenStorageFilesystemTrimClient.Status()`
 // 5. To stop the Filesystem Trim operation, issue a grpc call to
 //    `OpenStorageFilesystemTrimClient.Stop()`
 service OpenStorageFilesystemTrim {
@@ -1320,10 +1453,10 @@ service OpenStorageFilesystemTrim {
       };
     }
 
-  // Get Status of a filesystem Trim background operation on a mounted
+  // Status of a filesystem Trim background operation on a mounted
   // volume, if any
-  rpc GetStatus(SdkFilesystemTrimGetStatusRequest)
-    returns (SdkFilesystemTrimGetStatusResponse){
+  rpc Status(SdkFilesystemTrimStatusRequest)
+    returns (SdkFilesystemTrimStatusResponse){
       option(google.api.http) = {
         get: "/v1/filesystem-trim/status"
       };
@@ -1346,65 +1479,57 @@ service OpenStorageFilesystemTrim {
 // This operation is run in the background on an **unmounted volume**.
 // If the volume is mounted, then these APIs return error.
 //
-// Once the filesystem check operation(either CheckHealth() or FixAll()) is
-// started, the clients have to poll for the status of the background operation
-// using the `OpenStorageFilesystemcheck.CheckHealthGetStatus()` rpc request or
-// `OpenStorageFilesystemCheck.FixAllGetStatus()` rpc request.
+// Once the filesystem check operation is started, in one of the available
+// modes(check_health, fix_safe, fix_all),
+// the clients have to poll for the status of the background operation
+// using the `OpenStorageFilesystemcheck.Status()` rpc request.
 //
-// **Note: CheckHealth() and FixAll() cannot run in parallel for the same volume**
+// **Note:
+// 1. Different modes of filesystem check can execute in parallel for
+// the same volume.
+// 2. Filesystem Check and volume Mount are mutually exclusive, meaning both
+// cannot be run on a volume at the same time.
 //
 // A typical workflow involving filesystem check would be as follows
 // 1. Attach the volume
 //    `OpenStorageMountAttachClient.Attach()`
 // 2. Check the health of the filesystem by issuing a grpc call to
-//    `OpenStorageFilesystemCheckClient.CheckHealth()`
-// 3. Status of the CheckHealth() operation can be retrieved by polling for the
-//    status using `OpenStorageFilesystemCheck.CheckHealthGetStatus()`
-// 4. If the CheckHealth Operations status reports filesystem is in unhealthy
+//    `OpenStorageFilesystemCheckClient.Start(Mode='check_health')`
+// 3. Status of the Filesystem Check operation in check_health mode, can be
+//    retrieved by polling for the status using
+//    `OpenStorageFilesystemCheck.Status()`
+// 4. If the Filesystem Check Operation status reports filesystem is in unhealthy
 //    state, then to fix all the problems issue a grpc call to
-//    `OpenStorageFilesystemCheckClient.FixAll()`
-// 5. Status of the FixAll() operation can be retrieved by polling for the
-//    status using `OpenStorageFilesystemCheck.FixAllGetStatus()`
-// 6. CheckHealth() and FixAll() operations run in the background, to stop these
-//    operations, issue a call to
+//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_all')`
+// 5. Status of the Filesystem Check operation in fix_all mode, can be retrieved
+//    by polling for the status using
+//    `OpenStorageFilesystemCheck.Status()`
+// 6. Filesystem Check operation runs in the background, to stop the operation,
+//    issue a call to
 //    `OpenStorageFilesystemCheckClient.Stop()`
+// 7. To Check and Fix errors in the filesystem that are safe to fix, issue a
+//    grpc call to
+//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_safe')`
+//    Status of this operation can be polled in the way mentioned in step 3
+//    This operation can be stopped a Stop request as mentioned in step 6
+
 service OpenStorageFilesystemCheck {
 
-  // Get a report of issues found on the filesystem. This operation works on an
-  // unmounted volume.
-  rpc CheckHealth(SdkFilesystemCheckCheckHealthRequest)
-    returns (SdkFilesystemCheckCheckHealthResponse){
+  // Start a filesystem-check background operation on a unmounted volume.
+  rpc Start(SdkFilesystemCheckStartRequest)
+    returns (SdkFilesystemCheckStartResponse){
       option(google.api.http) = {
-        post: "/v1/filesystem-check/checkhealth"
+        post: "/v1/filesystem-check/start"
         body: "*"
       };
     }
 
-  // Get Status of a filesystem CheckHealth background operation on an unmounted
+  // Get Status of a filesystem-check background operation on an unmounted
   // volume, if any
-  rpc CheckHealthGetStatus(SdkFilesystemCheckCheckHealthGetStatusRequest)
-    returns (SdkFilesystemCheckCheckHealthGetStatusResponse){
+  rpc Status(SdkFilesystemCheckStatusRequest)
+    returns (SdkFilesystemCheckStatusResponse){
       option(google.api.http) = {
-        get: "/v1/filesystem-check/checkhealth/status"
-      };
-    }
-
-  // FixAll fixes all the issues reported in the response to CheckHealth API on
-  // a filesystem. This operation works on an unmounted volume.
-  rpc FixAll(SdkFilesystemCheckFixAllRequest)
-    returns (SdkFilesystemCheckFixAllResponse){
-      option(google.api.http) = {
-        post: "/v1/filesystem-check/fixall"
-        body: "*"
-      };
-    }
-
-  // Get Status of a filesystem FixAll background operation on an unmounted
-  // volume, if any
-  rpc FixAllGetStatus(SdkFilesystemCheckFixAllGetStatusRequest)
-    returns (SdkFilesystemCheckFixAllGetStatusResponse){
-      option(google.api.http) = {
-        get: "/v1/filesystem-check/fixall/status"
+        get: "/v1/filesystem-check/status"
       };
     }
 
@@ -2241,7 +2366,7 @@ service OpenStorageCloudBackup {
         get: "/v1/cloudbackups/schedules"
       };
     }
-  
+
   // Size returns the size of any cloud backups of a volume
   rpc Size(SdkCloudBackupSizeRequest)
     returns (SdkCloudBackupSizeResponse) {
@@ -3154,11 +3279,15 @@ message SdkStorageRebalanceRequest {
   repeated  StorageRebalanceTriggerThreshold trigger_thresholds = 1;
   // TrialRun if true the job only produces steps that would be taken without making any changes
   bool trial_run = 2;
-  // PoolSelectorLabels allows selecting pools to which trigger thresholds will apply
-  map<string, string> pool_selector_labels = 3;
+  // SourcePoolSelector allows selecting pools to which trigger thresholds will apply as source
+  repeated LabelSelectorRequirement source_pool_selector = 3;
+  // TargetPoolSelector allows selecting pools to which trigger thresholds will apply as target
+  repeated LabelSelectorRequirement target_pool_selector = 4;
   // MaxDurationMinutes defines how long operation should run when started at schedule.
   // 0 values means no limit on duration
-  uint64 max_duration_minutes = 4;
+  uint64 max_duration_minutes = 5;
+  // RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots
+  bool remove_repl_1_snapshots = 6;
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -3175,14 +3304,16 @@ message SdkStorageRebalanceResponse {
 message StorageRebalanceJob {
   // ID of the rebalance job
   string id = 1;
-  // Error describes errors occurred during rebalance
-  string error = 2;
+  // Status describes status of pools after rebalance if rebalance did not finish successfully
+  string status = 2;
   // State of the current job
   StorageRebalanceJobState state = 3;
   // Parameters is the original request params for this rebalance operation
   SdkStorageRebalanceRequest parameters = 4;
   // CreateTime is the time the job was created
   google.protobuf.Timestamp create_time = 5;
+  // LastUpdateTime is the time the job was updated
+  google.protobuf.Timestamp last_update_time = 6;
 }
 
 // StorageRebalanceJobState is an enum for state of the current rebalance operation
@@ -3200,12 +3331,10 @@ enum StorageRebalanceJobState {
 }
 // StorageRebalanceSummary describes summary for the job
 message StorageRebalanceSummary  {
-  // LastUpdateTime is the time the job was last updated
-  google.protobuf.Timestamp last_update_time = 1;
   // TotalRunTimeSeconds is the total time rebalance is running
-  uint64 total_run_time_seconds = 2;
+  uint64 total_run_time_seconds = 1;
   // WorkSummary summarizes the work done
-  repeated StorageRebalanceWorkSummary work_summary = 3;
+  repeated StorageRebalanceWorkSummary work_summary = 2;
 }
 
 message StorageRebalanceWorkSummary {
@@ -3984,18 +4113,18 @@ message SdkFilesystemTrimStartResponse{
   string message = 2;
 }
 
-// SdkFilesystemTrimGetStatusRequest defines a request to get status of a
+// SdkFilesystemTrimStatusRequest defines a request to get status of a
 // background filesystem trim operation
-message SdkFilesystemTrimGetStatusRequest {
+message SdkFilesystemTrimStatusRequest {
   // Id of the volume
   string volume_id = 1;
   // Path where the volume is mounted
   string mount_path = 2;
 }
 
-// SdkFilesystemTrimGetStatusResponse defines the response for a
-// SdkFilesystemTrimGetStatusRequest.
-message SdkFilesystemTrimGetStatusResponse{
+// SdkFilesystemTrimStatusResponse defines the response for a
+// SdkFilesystemTrimStatusRequest.
+message SdkFilesystemTrimStatusResponse{
   // Status code representing the state of the filesystem trim operation
   FilesystemTrim.FilesystemTrimStatus status = 1;
   // Text blob containing ASCII text providing details of the operation
@@ -4025,109 +4154,54 @@ message FilesystemCheck {
     FS_CHECK_NOT_RUNNING = 1;
     // FilesystemCheck operation started for the specified volume
     FS_CHECK_STARTED = 2;
-    // FilesystemCheck CheckHealth operation is in progress
-    FS_CHECK_CHECK_HEALTH_INPROGRESS = 3;
-    // FilesystemCheck CheckHealth operation was stopped by the user
-    FS_CHECK_CHECK_HEALTH_STOPPED = 4;
-    // FilesystemCheck CheckHealth operation completed successfully
-    FS_CHECK_CHECK_HEALTH_COMPLETED = 5;
-    // FilesystemCheck CheckHealth operation failed due to internal error
-    FS_CHECK_CHECK_HEALTH_FAILED = 6;
-    // FilesystemCheck FixAll operation is in progress
-    FS_CHECK_FIXALL_INPROGRESS = 7;
-    // FilesystemCheck FixAll operation was stopped by the user
-    FS_CHECK_FIXALL_STOPPED = 8;
-    // FilesystemCheck FixAll operation completed successfully
-    FS_CHECK_FIXALL_COMPLETED = 9;
-    // FilesystemCheck FixAll operation failed due to internal error
-    FS_CHECK_FIXALL_FAILED = 10;
+    // FilesystemCheck operation is in progress
+    FS_CHECK_INPROGRESS = 3;
+    // FilesystemCheck operation was stopped by the user
+    FS_CHECK_STOPPED = 4;
+    // FilesystemCheck operation completed successfully
+    FS_CHECK_COMPLETED = 5;
+    // FilesystemCheck operation failed due to internal error
+    FS_CHECK_FAILED = 6;
   }
 
-  enum CheckHealthStatus {
-    // filesystem health status is unknown
-    CHECK_HEALTH_STATUS_UNKNOWN = 0;
-    // filesystem health is healthy
-    CHECK_HEALTH_STATUS_HEALTHY = 1;
-    // filesystem health is not healthy
-    CHECK_HEALTH_STATUS_NOT_HEALTHY = 2;
-  }
-
-  enum FixAllStatus {
-    // filesystem check fixall status is unknown
-    FIXALL_STATUS_UNKNOWN = 0;
-    // filesystem check fixall is healthy
-    FIXALL_STATUS_HEALTHY = 1;
-    // check fixall is not healthy
-    FIXALL_STATUS_NOT_HEALTHY = 2;
-  }
 }
-// SdkFilesystemCheckCheckHealthRequest defines a request to report the
-// filesystem consistency issues
-message SdkFilesystemCheckCheckHealthRequest {
+// SdkFilesystemCheckStartRequest defines a request to start a background
+// filesystem consistency check operation
+message SdkFilesystemCheckStartRequest {
   // Id of the volume
   string volume_id = 1;
+  // Mode of operation
+  string mode = 2;
 }
 
-// SdkFilesystemCheckCheckHealthResponse defines the response for a
-// SdkFilesystemCheckCheckHealthRequest.
-message SdkFilesystemCheckCheckHealthResponse{
+// SdkFilesystemCheckStartResponse defines the response for a
+// SdkFilesystemCheckStartRequest.
+message SdkFilesystemCheckStartResponse{
   // Status code representing the state of the filesystem check operation
   FilesystemCheck.FilesystemCheckStatus status = 1;
   // Text blob containing ASCII text providing details of the operation
   string message = 2;
 }
 
-// SdkFilesystemCheckCheckHealthGetStatusRequest defines a request to get status of a
+// SdkFilesystemCheckStatusRequest defines a request to get status of a
 // background filesystem check operation
-message SdkFilesystemCheckCheckHealthGetStatusRequest {
+message SdkFilesystemCheckStatusRequest {
   // Id of the volume
   string volume_id = 1;
 }
 
-// SdkFilesystemCheckCheckHealthGetStatusResponse defines the response for a
-// SdkFilesystemCheckCheckHealthGetStatusRequest.
-message SdkFilesystemCheckCheckHealthGetStatusResponse{
+// SdkFilesystemCheckStatusResponse defines the response for a
+// SdkFilesystemCheckStatusRequest.
+message SdkFilesystemCheckStatusResponse{
   // Status code representing the state of the filesystem check operation
   FilesystemCheck.FilesystemCheckStatus status = 1;
   // Status code representing the health of the filesystem after a checkHealth
   // operation
-  FilesystemCheck.CheckHealthStatus health_status = 2;
+  FilesystemHealthStatus health_status = 2;
+  // Text string representing the mode of filesystem check operation
+  string mode = 3;
   // Text blob containing ASCII text providing details of the operation
-  string message = 3;
-}
-
-// SdkFilesystemCheckFixAllRequest defines a request to fix all the filesystem
-// consistency issues
-message SdkFilesystemCheckFixAllRequest {
-  // Id of the volume
-  string volume_id = 1;
-}
-
-// SdkFilesystemCheckFixAllResponse defines the response for a
-// SdkFilesystemCheckFixAllRequest.
-message SdkFilesystemCheckFixAllResponse{
-  // Status code representing the state of the filesystem check operation
-  FilesystemCheck.FilesystemCheckStatus status = 1;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 2;
-}
-
-// SdkFilesystemCheckFixAllGetStatusRequest defines a request to get status of a
-// background filesystem check operation
-message SdkFilesystemCheckFixAllGetStatusRequest {
-  // Id of the volume
-  string volume_id = 1;
-}
-
-// SdkFilesystemCheckFixAllGetStatusResponse defines the response for a
-// SdkFilesystemCheckFixAllGetStatusRequest.
-message SdkFilesystemCheckFixAllGetStatusResponse{
-  // Status code representing the state of the filesystem check operation
-  FilesystemCheck.FilesystemCheckStatus status = 1;
-  // Status code representing the health of the filesystem after FixAll operation
-  FilesystemCheck.FixAllStatus health_status = 2;
-  // Text blob containing ASCII text providing details of the operation
-  string message = 3;
+  string message = 4;
 }
 
 // SdkFilesystemCheckStopRequest defines a request to stop a background
@@ -4229,7 +4303,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 11;
+    Patch = 23;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4447,6 +4521,9 @@ message ClusterPairCreateRequest {
   bool set_default = 4;
   // The mode to use for the cluster pair
   ClusterPairMode.Mode mode = 5;
+  // Use for the cluster pairing, if given
+  // credential id will be used in ClusterPairCreate service
+  string credential_id = 6;
 }
 
 // Response for a pair request
@@ -4476,6 +4553,9 @@ message ClusterPairProcessRequest {
     string remote_cluster_token = 2;
     // The mode to use for the cluster pair
     ClusterPairMode.Mode mode = 3;
+    // Use for the cluster pairing, if given
+    // credential id will be used in ClusterPairCreate service
+    string credential_id = 4;
 }
 
 // Response after a pairing has been processed
@@ -4740,6 +4820,7 @@ message RestoreVolSnashotSchedule {
 message RestoreVolStoragePolicy {
 	string policy = 1;
 }
+
 // RestoreSpec allows some of the restore volume properties of to be modified
 // while restoring the cloud baackup. All pointer fields with nil value will
 // inherit corresponding field value from backup's spec.
@@ -4748,7 +4829,8 @@ message RestoreVolumeSpec {
   int64 ha_level = 1;
   // Cos specifies the relative class of service.
   CosType cos = 2;
-  // IoProfile provides a hint about application using this volume.
+  // IoProfile provides a hint about application using this volume. This field
+  // is ignored if IoProfileBkupSrc is set true
   IoProfile io_profile = 3;
   // SnapshotInterval in minutes, set to 0 to disable snapshots
   uint32 snapshot_interval = 4;
@@ -4787,6 +4869,15 @@ message RestoreVolumeSpec {
   ExportSpec export_spec = 20;
   // fastpath extensions
   RestoreParamBoolType fp_preference = 21;
+  // MountOptions defines the options that should be used while mounting this volume
+  MountOptions mount_options = 22;
+  // Sharedv4MountOptions defines the options that will be used while mounting a sharedv4 volume
+  // from a node where the volume replica does not exist
+  MountOptions sharedv4_mount_options = 23;
+  // IoProfileBkupSrc indicates to inherit IoProfile from cloudbackup
+  bool io_profile_bkup_src = 25;
+  // ProxySpec indicates that this volume is used for proxying an external data source
+  ProxySpec proxy_spec = 26;
 }
 
 // Request message to get the volume catalog

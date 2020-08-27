@@ -126,6 +126,12 @@ var (
 	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
 	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
 	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
+	proxyEndpointRegex          = regexp.MustCompile(api.SpecProxyEndpoint + "=([0-9A-Za-z_@:./#&+-]+),?")
+	proxyNFSSubPathRegex        = regexp.MustCompile(api.SpecProxyNFSSubPath + "=([A-Za-z]+),?")
+	proxyNFSExportPathRegex     = regexp.MustCompile(api.SpecProxyNFSExportPath + "=([A-Za-z]+),?")
+	proxyS3BucketRegex          = regexp.MustCompile(api.SpecProxyS3Bucket + "=([A-Za-z]+),?")
+	mountOptionsRegex           = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	sharedv4MountOptionsRegex   = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 )
 
@@ -167,8 +173,9 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
-		Format:  api.FSType_FS_TYPE_EXT4,
-		HaLevel: 1,
+		Format:    api.FSType_FS_TYPE_EXT4,
+		HaLevel:   1,
+		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
 	}
 }
 
@@ -389,6 +396,63 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ExportSpec = &api.ExportSpec{}
 			}
 			spec.ExportSpec.ExportOptions = v
+		case api.SpecProxyEndpoint:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			proxyProtocol, endpoint := api.ParseProxyEndpoint(v)
+			if proxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_INVALID {
+				return nil, nil, nil, fmt.Errorf("invalid proxy endpoint: %v", v)
+			}
+			spec.ProxySpec.Endpoint = endpoint
+			spec.ProxySpec.ProxyProtocol = proxyProtocol
+
+		case api.SpecProxyNFSSubPath:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.NfsSpec == nil {
+				spec.ProxySpec.NfsSpec = &api.NFSProxySpec{
+					SubPath: v,
+				}
+			} else {
+				spec.ProxySpec.NfsSpec.SubPath = v
+			}
+
+		case api.SpecProxyNFSExportPath:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.NfsSpec == nil {
+				spec.ProxySpec.NfsSpec = &api.NFSProxySpec{
+					ExportPath: v,
+				}
+			} else {
+				spec.ProxySpec.NfsSpec.ExportPath = v
+			}
+
+		case api.SpecMountOptions:
+			if spec.MountOptions == nil {
+				spec.MountOptions = &api.MountOptions{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
+			}
+			spec.MountOptions.Options = options
+		case api.SpecSharedv4MountOptions:
+			if spec.Sharedv4MountOptions == nil {
+				spec.Sharedv4MountOptions = &api.MountOptions{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 client mount options format %v", v)
+			}
+			spec.Sharedv4MountOptions.Options = options
 		case api.SpecCowOnDemand:
 			if cowOnDemand, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -397,6 +461,25 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 					spec.Xattr = api.Xattr_COW_ON_DEMAND
 				}
 			}
+		case api.SpecScanPolicyTrigger:
+			if spec.ScanPolicy == nil {
+				spec.ScanPolicy = &api.ScanPolicy{}
+			}
+			if scanTrigger, err := api.ScanPolicy_ScanTriggerSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ScanPolicy.Trigger = scanTrigger
+			}
+		case api.SpecScanPolicyAction:
+			if spec.ScanPolicy == nil {
+				spec.ScanPolicy = &api.ScanPolicy{}
+			}
+			if scanAction, err := api.ScanPolicy_ScanActionSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.ScanPolicy.Action = scanAction
+			}
+
 		default:
 			locator.VolumeLabels[k] = v
 		}
@@ -545,6 +628,30 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, exportOptions := d.getVal(exportOptionsRegex, str); ok {
 		opts[api.SpecExportOptions] = exportOptions
+	}
+	if ok, proxyEndpoint := d.getVal(proxyEndpointRegex, str); ok {
+		opts[api.SpecProxyEndpoint] = proxyEndpoint
+	}
+	if ok, proxyNFSSubPath := d.getVal(proxyNFSSubPathRegex, str); ok {
+		opts[api.SpecProxyNFSSubPath] = proxyNFSSubPath
+	}
+	if ok, proxyNFSExportPath := d.getVal(proxyNFSExportPathRegex, str); ok {
+		opts[api.SpecProxyNFSExportPath] = proxyNFSExportPath
+	}
+	if ok, proxyS3Bucket := d.getVal(proxyS3BucketRegex, str); ok {
+		opts[api.SpecProxyS3Bucket] = proxyS3Bucket
+	}
+	if ok, mountOptions := d.getVal(mountOptionsRegex, str); ok {
+		// mount options will be provided as a string in the following format
+		// mount_options=k1;k2:v2;k3:v3
+		// convert it to k1,k2=v2,k3=v3
+		opts[api.SpecMountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
+	}
+	if ok, mountOptions := d.getVal(sharedv4MountOptionsRegex, str); ok {
+		// mount options will be provided as a string in the following format
+		// mount_options=k1;k2:v2;k3:v3
+		// convert it to k1,k2=v2,k3=v3
+		opts[api.SpecSharedv4MountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
 	}
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand
