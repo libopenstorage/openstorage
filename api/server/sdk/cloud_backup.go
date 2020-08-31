@@ -74,6 +74,7 @@ func (s *CloudBackupServer) Create(
 		Name:                req.GetTaskId(),
 		Labels:              req.GetLabels(),
 		FullBackupFrequency: req.GetFullBackupFrequency(),
+		DeleteLocal:         req.GetDeleteLocal(),
 	})
 	if err != nil {
 		if err == volume.ErrExist {
