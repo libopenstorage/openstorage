@@ -183,6 +183,7 @@ func (s *CloudBackupServer) GroupCreate(
 		CredentialUUID: credId,
 		Full:           req.GetFull(),
 		Labels:         req.GetLabels(),
+		DeleteLocal:    req.GetDeleteLocal(),
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to create group backup: %v", err)

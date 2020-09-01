@@ -91,6 +91,7 @@ func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request)
 		CredentialId: backupGroupReq.CredentialUUID,
 		Full:         backupGroupReq.Full,
 		Labels:       backupGroupReq.Labels,
+		DeleteLocal:  backupGroupReq.DeleteLocal,
 	})
 	if err != nil {
 		if serverError, ok := status.FromError(err); ok {

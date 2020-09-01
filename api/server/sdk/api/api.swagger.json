@@ -1650,6 +1650,11 @@
             "title": "Credential id refers to the cloud credentials needed to backup",
             "type": "string"
           },
+          "delete_local": {
+            "format": "boolean",
+            "title": "DeleteLocal indicates if local snap created for backup must be deleted after\nthe backup is complete",
+            "type": "boolean"
+          },
           "full": {
             "format": "boolean",
             "title": "Full indicates if full backup is desired even though incremental is possible",
@@ -4863,7 +4868,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.24"
+    "version": "0.69.25"
   },
   "openapi": "3.0.0",
   "paths": {
