@@ -1856,39 +1856,39 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	// - ENUMERATE
 	// For all other routes it is expected that the REST client uses an auth token
 
-	authM := NewAuthMiddleware()
+	k8sM := NewK8sMiddleware()
 
 	// Setup middleware for Create
 	nCreate := negroni.New()
-	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	nCreate.Use(negroni.HandlerFunc(k8sM.createWithAuth))
 	createRoute := vd.volumeCreateRoute()
 	nCreate.UseHandlerFunc(createRoute.fn)
 	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
 
 	// Setup middleware for Delete
 	nDelete := negroni.New()
-	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	nDelete.Use(negroni.HandlerFunc(k8sM.deleteWithAuth))
 	deleteRoute := vd.volumeDeleteRoute()
 	nDelete.UseHandlerFunc(deleteRoute.fn)
 	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
 
 	// Setup middleware for Set
 	nSet := negroni.New()
-	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	nSet.Use(negroni.HandlerFunc(k8sM.setWithAuth))
 	setRoute := vd.volumeSetRoute()
 	nSet.UseHandlerFunc(setRoute.fn)
 	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
 
 	// Setup middleware for Inspect
 	nInspect := negroni.New()
-	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	nInspect.Use(negroni.HandlerFunc(k8sM.inspectWithAuth))
 	inspectRoute := vd.volumeInspectRoute()
 	nInspect.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	// Setup middleware for enumerate
 	nEnumerate := negroni.New()
-	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	nEnumerate.Use(negroni.HandlerFunc(k8sM.enumerateWithAuth))
 	enumerateRoute := vd.volumeEnumerateRoute()
 	nEnumerate.UseHandlerFunc(enumerateRoute.fn)
 	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
@@ -1959,7 +1959,7 @@ func GetVolumeAPIRoutesWithAuth(
 		dummyMux: runtime.NewServeMux(),
 	}
 
-	authM := NewAuthMiddleware()
+	k8sM := NewK8sMiddleware()
 
 	// We setup auth middlewares for all the APIs that get invoked
 	// from a Container Orchestrator.
@@ -1971,35 +1971,35 @@ func GetVolumeAPIRoutesWithAuth(
 
 	// Setup middleware for Create
 	nCreate := negroni.New()
-	nCreate.Use(negroni.HandlerFunc(authM.createWithAuth))
+	nCreate.Use(negroni.HandlerFunc(k8sM.createWithAuth))
 	createRoute := vd.volumeCreateRoute()
 	nCreate.UseHandlerFunc(serverRegisterRoute(createRoute.fn, preRouteCheckFn))
 	router.Methods(createRoute.verb).Path(createRoute.path).Handler(nCreate)
 
 	// Setup middleware for Delete
 	nDelete := negroni.New()
-	nDelete.Use(negroni.HandlerFunc(authM.deleteWithAuth))
+	nDelete.Use(negroni.HandlerFunc(k8sM.deleteWithAuth))
 	deleteRoute := vd.volumeDeleteRoute()
 	nDelete.UseHandlerFunc(serverRegisterRoute(deleteRoute.fn, preRouteCheckFn))
 	router.Methods(deleteRoute.verb).Path(deleteRoute.path).Handler(nDelete)
 
 	// Setup middleware for Set
 	nSet := negroni.New()
-	nSet.Use(negroni.HandlerFunc(authM.setWithAuth))
+	nSet.Use(negroni.HandlerFunc(k8sM.setWithAuth))
 	setRoute := vd.volumeSetRoute()
 	nSet.UseHandlerFunc(serverRegisterRoute(setRoute.fn, preRouteCheckFn))
 	router.Methods(setRoute.verb).Path(setRoute.path).Handler(nSet)
 
 	// Setup middleware for Inspect
 	nInspect := negroni.New()
-	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
+	nInspect.Use(negroni.HandlerFunc(k8sM.inspectWithAuth))
 	inspectRoute := vd.volumeInspectRoute()
 	nInspect.UseHandlerFunc(serverRegisterRoute(inspectRoute.fn, preRouteCheckFn))
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	// Setup middleware for Enumerate
 	nEnumerate := negroni.New()
-	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
+	nEnumerate.Use(negroni.HandlerFunc(k8sM.enumerateWithAuth))
 	enumerateRoute := vd.volumeEnumerateRoute()
 	nEnumerate.UseHandlerFunc(serverRegisterRoute(enumerateRoute.fn, preRouteCheckFn))
 	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
