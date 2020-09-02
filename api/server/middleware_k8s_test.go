@@ -254,7 +254,7 @@ func TestAuthMiddlewareIsTokenProcessingRequired(t *testing.T) {
 	}()
 	OverrideSchedDriverName = "fake"
 
-	a := NewAuthMiddleware()
+	a := NewK8sMiddleware()
 	assert.NotNil(t, a)
 
 	rNoToken, err := http.NewRequest("GET", "http://localhost:80", nil)
