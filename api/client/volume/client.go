@@ -7,6 +7,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -33,7 +34,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
-		c:                     c}
+		c: c}
 }
 
 // String description of this driver.
@@ -509,7 +510,7 @@ func (v *volumeClient) CredsDelete(uuid string) error {
 // CredsValidate validates the credential by accessuing the cloud
 // provider with the given credential
 func (v *volumeClient) CredsValidate(uuid string) error {
-	req := v.c.Put().Resource(api.OsdCredsPath + "/validate").Instance(uuid)
+	req := v.c.Put().Resource(api.OsdCredsPath + "/validate").Instance(url.QueryEscape(uuid))
 	response := req.Do()
 	if response.Error() != nil {
 		if response.StatusCode() == http.StatusUnprocessableEntity {
