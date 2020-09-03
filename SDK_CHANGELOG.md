@@ -2,6 +2,13 @@
 
 ## Releases
 
+### v0.69.28 - (09/10/2020)
+
+* Added DrainAttachments API to OpenStorageNode service to drain attachments from a node.
+* Added CordonAttachments API to OpenStorageNode service to disable new volume attachments on a node.
+* Added UncordonAttachments API to OpenStorageNode service to re-enable volume attachments on a node.
+* Added OpenstorageJob service to query running and past jobs and their states.
+
 ### v0.69.27 - (9/10/2020)
 
 * Add VolumeUsageByNode SDK API to OpenstorageNode service.
