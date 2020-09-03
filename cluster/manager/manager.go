@@ -17,6 +17,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/job"
+	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 
 	"github.com/libopenstorage/gossip"
@@ -80,6 +82,8 @@ type ClusterManager struct {
 	systemTokenManager   auth.TokenGenerator
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	storagePoolProvider  api.OpenStoragePoolServer
+	jobProvider          job.Provider
+	nodeDrainProvider    nodedrain.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1311,6 +1315,18 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.clusterDomainManager = config.ConfigClusterDomainProvider
 	}
 
+	if config.ConfigJobProvider == nil {
+		c.jobProvider = job.NewDefaultJobProvider()
+	} else {
+		c.jobProvider = config.ConfigJobProvider
+	}
+
+	if config.ConfigNodeDrainProvider == nil {
+		c.nodeDrainProvider = nodedrain.NewDefaultNodeDrainProvider()
+	} else {
+		c.nodeDrainProvider = config.ConfigNodeDrainProvider
+	}
+
 	if config.ConfigStoragePoolProvider == nil {
 		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
 	} else {
@@ -2038,4 +2054,43 @@ func (c *ClusterManager) GetRebalanceJobStatus(
 func (c *ClusterManager) EnumerateRebalanceJobs(
 	context context.Context, request *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
+}
+
+func (c *ClusterManager) DrainAttachments(ctx context.Context, in *api.SdkNodeDrainAttachmentsRequest) (*api.SdkJobResponse, error) {
+	return c.nodeDrainProvider.DrainAttachments(ctx, in)
+}
+
+func (c *ClusterManager) CordonAttachments(
+	ctx context.Context,
+	in *api.SdkNodeCordonAttachmentsRequest,
+) (*api.SdkNodeCordonAttachmentsResponse, error) {
+	return c.nodeDrainProvider.CordonAttachments(ctx, in)
+}
+
+func (c *ClusterManager) UncordonAttachments(
+	ctx context.Context,
+	in *api.SdkNodeUncordonAttachmentsRequest,
+) (*api.SdkNodeUncordonAttachmentsResponse, error) {
+	return c.nodeDrainProvider.UncordonAttachments(ctx, in)
+}
+
+func (c *ClusterManager) UpdateJobState(
+	ctx context.Context,
+	req *api.SdkUpdateJobRequest,
+) (*api.SdkUpdateJobResponse, error) {
+	return c.jobProvider.UpdateJobState(ctx, req)
+}
+
+func (c *ClusterManager) GetJobStatus(
+	ctx context.Context,
+	req *api.SdkGetJobStatusRequest,
+) (*api.SdkGetJobStatusResponse, error) {
+	return c.jobProvider.GetJobStatus(ctx, req)
+}
+
+func (c *ClusterManager) EnumerateJobs(
+	ctx context.Context,
+	req *api.SdkEnumerateJobsRequest,
+) (*api.SdkEnumerateJobsResponse, error) {
+	return c.jobProvider.EnumerateJobs(ctx, req)
 }
