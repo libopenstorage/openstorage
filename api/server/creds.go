@@ -3,6 +3,7 @@ package server
 import (
 	"encoding/json"
 	"net/http"
+	"net/url"
 
 	"github.com/gorilla/mux"
 	"github.com/libopenstorage/openstorage/api"
@@ -77,13 +78,18 @@ func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
 		vd.sendError(vd.name, method, w, "Could not parse form for uuid", http.StatusBadRequest)
 		return
 	}
+	uuidString, err := url.QueryUnescape(uuid)
+	if err != nil {
+		vd.sendError(vd.name, method, w, "Could not unescape uuid", http.StatusBadRequest)
+		return
+	}
 	d, err := vd.getVolDriver(r)
 	if err != nil {
 		notFound(w, r)
 		return
 	}
 
-	if err := d.CredsValidate(uuid); err != nil {
+	if err := d.CredsValidate(uuidString); err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
