@@ -16,7 +16,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
-	servermock "github.com/libopenstorage/openstorage/api/server/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -42,8 +41,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
-	schedopsk8s "github.com/portworx/sched-ops/k8s/core"
 )
 
 const (
@@ -65,15 +62,13 @@ var (
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service and REST server
 type testServer struct {
-	conn        *grpc.ClientConn
-	m           *mockdriver.MockVolumeDriver
-	c           cluster.Cluster
-	k8sops      *servermock.MockOps
-	originalOps schedopsk8s.Ops
-	mc          *gomock.Controller
-	sdk         *sdk.Server
-	port        string
-	gwport      string
+	conn   *grpc.ClientConn
+	m      *mockdriver.MockVolumeDriver
+	c      cluster.Cluster
+	mc     *gomock.Controller
+	sdk    *sdk.Server
+	port   string
+	gwport string
 }
 
 // Struct used for creation and setup of cluster api testing
@@ -140,10 +135,6 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.k8sops = servermock.NewMockOps(tester.mc)
-
-	tester.originalOps = schedopsk8s.Instance()
-	schedopsk8s.SetInstance(tester.k8sops)
 
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
@@ -198,10 +189,6 @@ func newTestServerSdk(t *testing.T) *testServer {
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-	tester.k8sops = servermock.NewMockOps(tester.mc)
-
-	tester.originalOps = schedopsk8s.Instance()
-	schedopsk8s.SetInstance(tester.k8sops)
 
 	// Create a role manager
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
@@ -315,10 +302,6 @@ func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
 }
 
-func (s *testServer) MockK8sOps() *servermock.MockOps {
-	return s.k8sops
-}
-
 func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
 }
@@ -427,8 +410,6 @@ func (s *testServer) Stop() {
 
 	// Remove from registry
 	volumedrivers.Remove(mockDriverName)
-
-	schedopsk8s.SetInstance(s.originalOps)
 }
 
 func createToken(name, role, secret string) (string, error) {

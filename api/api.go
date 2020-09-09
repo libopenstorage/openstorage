@@ -184,19 +184,6 @@ const (
 	AutoAggregation = math.MaxUint32
 )
 
-// The main goal of the following label keys is for the Kubernetes intree middleware
-// to keep track of the source location of the PVC with labels that cannot be modified
-// by the owner of the volume, but only by the storage administrator.
-const (
-	// KubernetesPvcNameKey is a label on the openstorage volume
-	// which tracks the source PVC for the volume.
-	KubernetesPvcNameKey = "openstorage.io/pvc-name"
-
-	// KubernetesPvcNamespaceKey is a label on the openstorage volume
-	// which tracks the source PVC namespace for the volume
-	KubernetesPvcNamespaceKey = "openstorage.io/pvc-namespace"
-)
-
 const (
 	// gRPC root path used to extract service and API information
 	SdkRootPath = "openstorage.api.OpenStorage"
@@ -1271,8 +1258,6 @@ func (v *Volume) IsAttached() bool {
 type TokenSecretContext struct {
 	SecretName      string
 	SecretNamespace string
-	PvcName         string
-	PvcNamespace    string
 }
 
 // ParseProxyEndpoint parses the proxy endpoint and returns the
