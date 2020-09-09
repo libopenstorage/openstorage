@@ -84,8 +84,6 @@ export GO15VENDOREXPERIMENT=1
 	clean \
 	generate \
 	generate-mockfiles \
-	e2e \
-	verify \
 	sdk-check-version
 
 
@@ -161,7 +159,7 @@ build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
 
 install: packr $(OSDSANITY)-install
-	go install -gcflags="all=-N -l" -tags "$(TAGS)" $(PKGS)
+	go install -tags "$(TAGS)" $(PKGS)
 	go install github.com/libopenstorage/openstorage/cmd/osd-token-generator
 
 $(OSDSANITY):
@@ -420,9 +418,4 @@ mockgen:
 	mockgen -destination=cluster/mock/cluster.mock.go -package=mock github.com/libopenstorage/openstorage/cluster Cluster
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
-	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
 
-e2e: docker-build-osd
-	cd test && ./run.bash
-
-verify: vet sdk-check-version docker-test e2e
