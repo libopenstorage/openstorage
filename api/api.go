@@ -327,6 +327,9 @@ type CloudBackupCreateRequest struct {
 	// manual/user triggerred backups and not applicable for scheduled backups.
 	// Value of 0 retains the default behavior.
 	FullBackupFrequency uint32
+	// DeleteLocal indicates if local snap must be deleted after the
+	// backup is complete
+	DeleteLocal bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -347,6 +350,9 @@ type CloudBackupGroupCreateRequest struct {
 	CredentialUUID string
 	// Full indicates if full backup is desired even though incremental is possible
 	Full bool
+	// DeleteLocal indicates if local snap must be deleted after the
+	// backup is complete
+	DeleteLocal bool
 }
 
 type CloudBackupRestoreRequest struct {

@@ -2,6 +2,14 @@
 
 ## Releases
 
+### v0.69.25 - (9/1/2020)
+
+* Added new field to CloudBackupGroupCreate api
+
+### v0.69.24 - (8/31/2020)
+
+* Added new field to CloudBackupCreate api
+
 ### v0.69.23 - (8/10/2020)
 
 * Rename reflection volumes to proxy volumes.

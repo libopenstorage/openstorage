@@ -3561,6 +3561,9 @@ message SdkCloudBackupCreateRequest {
   // manual/user triggerred backups and not applicable for scheduled backups
   // Value of 0 retains the default behavior.
   uint32 full_backup_frequency = 6;
+  // DeleteLocal indicates if local snap created for backup must be deleted after
+  // the backup is complete
+  bool delete_local = 7;
 }
 
 // Empty response
@@ -3584,6 +3587,9 @@ message SdkCloudBackupGroupCreateRequest {
     // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
+  // DeleteLocal indicates if local snap created for backup must be deleted after
+  // the backup is complete
+  bool delete_local = 6;
 }
 
 // Empty response
@@ -4303,7 +4309,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 23;
+    Patch = 25;
   }
 
   // The following cannot be set to use the enum Version because the REST
