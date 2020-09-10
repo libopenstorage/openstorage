@@ -1168,6 +1168,9 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
@@ -4532,6 +4535,11 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "format": "boolean",
+            "title": "Proxy_write if true, per volume proxy write replication enabled",
+            "type": "boolean"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
@@ -4650,6 +4658,10 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
@@ -4758,6 +4770,10 @@
           },
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
+          },
+          "proxy_write": {
+            "format": "boolean",
+            "type": "boolean"
           },
           "queue_depth": {
             "format": "int64",
@@ -4868,7 +4884,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.25"
+    "version": "0.69.26"
   },
   "openapi": "3.0.0",
   "paths": {

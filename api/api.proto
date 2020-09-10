@@ -563,6 +563,8 @@ message VolumeSpec {
   MountOptions sharedv4_mount_options = 39;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 41;
+  // Proxy_write if true, per volume proxy write replication enabled
+  bool proxy_write = 40;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -622,6 +624,8 @@ message VolumeSpecUpdate {
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 34;}
   // proxy_spec_opt provides the spec for a proxy volume
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  oneof proxy_write_opt { bool proxy_write = 35; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -699,6 +703,8 @@ message VolumeSpecPolicy {
   oneof sharedv4_mount_opt { MountOptions sharedv4_mount_opt_spec = 59;}
   // proxy_spec_opt provides the spec for a proxy volume.
   oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  oneof proxy_write_opt { bool proxy_write = 60; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4309,7 +4315,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 25;
+    Patch = 26;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -4884,6 +4890,8 @@ message RestoreVolumeSpec {
   bool io_profile_bkup_src = 25;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 26;
+  // Proxy_write is true if proxy write replication is enabled for the volume
+  RestoreParamBoolType proxy_write = 24;
 }
 
 // Request message to get the volume catalog
