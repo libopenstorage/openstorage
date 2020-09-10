@@ -1322,8 +1322,7 @@ func (vd *volAPI) volumeUsageByNode(w http.ResponseWriter, r *http.Request) {
 
 	used, err := d.VolumeUsageByNode(nodeID)
 	if err != nil {
-		e := fmt.Errorf("Failed to get VolumeUsageByNode: %s", err.Error())
-		http.Error(w, e.Error(), http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 	json.NewEncoder(w).Encode(used)

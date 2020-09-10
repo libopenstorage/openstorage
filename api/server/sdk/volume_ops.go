@@ -709,25 +709,6 @@ func (s *VolumeServer) CapacityUsage(
 	return resp, nil
 }
 
-/*
-func (s *VolumeServer) VolumeUsageByNode(
-	ctx context.Context,
-	req *api.SdkVolumeUsageByNodeRequest,
-) (*api.SdkVolumeUsageByNodeResponse, error) {
-
-	resp, err := s.driver(ctx).VolumeUsageByNode(req.GetNodeId())
-	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"Failed obtain usage stats for volumes in node:%v",
-			req.GetNodeId(),
-			err.Error())
-	}
-	//TODO check secruity ( only admin must be allowed to do this
-	resp := resp.GetVolumeUsageInfo()
-	return resp, nil
-}
-*/
-
 func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
 
 	spec := &api.VolumeSpec{}

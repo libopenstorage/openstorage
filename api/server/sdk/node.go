@@ -190,10 +190,7 @@ func (s *NodeServer) VolumeUsageByNode(
 
 	resp, err := s.server.driver(ctx).VolumeUsageByNode(req.GetNodeId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal,
-			"Failed obtain usage stats for volumes in node:%v",
-			req.GetNodeId(),
-			err.Error())
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 	//TODO check secruity ( only admin must be allowed to do this
 	sdkResp := &api.SdkVolumeUsageByNodeResponse{
