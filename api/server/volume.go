@@ -624,6 +624,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			ScanPolicy: spec.ScanPolicy,
 		}
 	}
+	if spec.ProxyWrite != vol.Spec.ProxyWrite {
+		newSpec.ProxyWriteOpt = &api.VolumeSpecUpdate_ProxyWrite{
+			ProxyWrite: spec.ProxyWrite,
+		}
+	}
 
 	return newSpec
 }

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.26 - (9/10/2020)
+
+* Added proxy write flag in volume spec
+
 ### v0.69.25 - (9/1/2020)
 
 * Added new field to CloudBackupGroupCreate api
