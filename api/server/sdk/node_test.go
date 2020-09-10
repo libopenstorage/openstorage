@@ -379,3 +379,42 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Len(t, rn.GetNodeLabels(), 1)
 	assert.Equal(t, rn.GetNodeLabels(), node.NodeLabels)
 }
+
+func TestSdkVolumeUsageByNode(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	nodeid := "nodeid"
+
+	// Create response
+	volumeUsageInfo := api.VolumeUsageByNode{
+		VolumeUsage: []*api.VolumeUsage{&api.VolumeUsage{
+			VolumeId:           "123456",
+			VolumeName:         "testvol",
+			PoolUuid:           "5868-8769-4567-9876",
+			ExclusiveBytes:     1234567,
+			TotalBytes:         12345678,
+			LocalCloudSnapshot: false,
+		}},
+	}
+	s.MockDriver().EXPECT().VolumeUsageByNode(nodeid).Return(&volumeUsageInfo, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	resp, err := c.VolumeUsageByNode(context.Background(), &api.SdkVolumeUsageByNodeRequest{NodeId: nodeid})
+	assert.NoError(t, err)
+
+	// Verify
+	for i, volUsage := range resp.VolumeUsageInfo.VolumeUsage {
+		assert.Equal(t, volUsage.GetVolumeId(), volumeUsageInfo.VolumeUsage[i].VolumeId)
+		assert.Equal(t, volUsage.GetVolumeName(), volumeUsageInfo.VolumeUsage[i].VolumeName)
+		assert.Equal(t, volUsage.GetPoolUuid(), volumeUsageInfo.VolumeUsage[i].PoolUuid)
+		assert.Equal(t, volUsage.GetExclusiveBytes(), volumeUsageInfo.VolumeUsage[i].ExclusiveBytes)
+		assert.Equal(t, volUsage.GetTotalBytes(), volumeUsageInfo.VolumeUsage[i].TotalBytes)
+		assert.Equal(t, volUsage.GetLocalCloudSnapshot(), volumeUsageInfo.VolumeUsage[i].LocalCloudSnapshot)
+	}
+}

@@ -182,3 +182,22 @@ func (s *NodeServer) EnumerateNodeDrainJobs(
 
 	return s.cluster().EnumerateNodeDrainJobs(ctx, req)
 }
+
+func (s *NodeServer) VolumeUsageByNode(
+	ctx context.Context,
+	req *api.SdkVolumeUsageByNodeRequest,
+) (*api.SdkVolumeUsageByNodeResponse, error) {
+
+	resp, err := s.server.driver(ctx).VolumeUsageByNode(req.GetNodeId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal,
+			"Failed obtain usage stats for volumes in node:%v",
+			req.GetNodeId(),
+			err.Error())
+	}
+	//TODO check secruity ( only admin must be allowed to do this
+	sdkResp := &api.SdkVolumeUsageByNodeResponse{
+		VolumeUsageInfo: resp,
+	}
+	return sdkResp, nil
+}

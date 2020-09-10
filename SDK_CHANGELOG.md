@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.100.0 - (9/10/2020)
+
+* Add VolumeUsageByNode SDK API to OpenstorageNode service.
 
 ### v0.99.0 - (8/12/2020)
 

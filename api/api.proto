@@ -890,6 +890,26 @@ message CapacityUsageInfo {
   int64 total_bytes = 3;
 }
 
+message VolumeUsage {
+   // VolumeID is the id for the volume
+  string volume_id = 1;
+  // VolumeName is name of the volume
+  string volume_name = 2;
+  // PoolUUID is the UUID of the pool that this volume belongs to
+  string pool_uuid = 3;
+  // ExclusiveBytes size exclusively used by the volume
+  uint64 exclusive_bytes = 4;
+  // TotalBytes used by the volume
+  uint64 total_bytes = 5;
+  // LocalCloudSnapshot is true if this volume is snapshot created by cloudbackups
+  bool local_cloud_snapshot = 6;
+}
+
+message VolumeUsageByNode {
+  // VolumeUsage returns list of VolumeUsage for given node
+  repeated VolumeUsage volume_usage= 1;
+}
+
 // A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
 // If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be
@@ -1824,6 +1844,13 @@ service OpenStorageNode {
       };
   }
 
+	// Returns capacity usage of all volumes/snaps for a give node
+	rpc VolumeUsageByNode(SdkVolumeUsageByNodeRequest)
+	returns (SdkVolumeUsageByNodeResponse) {
+        option(google.api.http) = {
+          get: "/v1/nodes/usage/{node_id}"
+		};
+	}
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -3206,6 +3233,19 @@ message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
 
+// Defines request to retrieve all volumes/snapshots capacity usage details
+// for a given node
+message SdkVolumeUsageByNodeRequest {
+  // Id of the node to get snapshot/volumes capacity usage details
+  string node_id = 1;
+}
+
+// Defines response containing Node's volumes/snapshot capacity usage details
+message SdkVolumeUsageByNodeResponse {
+  // VolumeUsageByNode details
+  VolumeUsageByNode volume_usage_info = 1;
+}
+
 // Empty request
 message SdkClusterDomainsEnumerateRequest {
 }
@@ -4542,7 +4582,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 99;
+    Minor = 100;
     // SDK version patch value of this specification
     Patch = 0;
   }

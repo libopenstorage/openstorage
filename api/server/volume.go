@@ -1305,6 +1305,30 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(used)
 }
 
+func (vd *volAPI) volumeUsageByNode(w http.ResponseWriter, r *http.Request) {
+	var nodeID string
+	var err error
+	if nodeID, err = vd.parseID(r); err != nil {
+		e := fmt.Errorf("Failed to parse nodeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	used, err := d.VolumeUsageByNode(nodeID)
+	if err != nil {
+		e := fmt.Errorf("Failed to get VolumeUsageByNode: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+	json.NewEncoder(w).Encode(used)
+}
+
 /*
  * Removed until we understand why this function if failing calling the SDK
  *
@@ -1788,6 +1812,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
+		{verb: "GET", path: volPath("/nodeusage/{id}", volume.APIVersion), fn: vd.volumeUsageByNode},
 	}
 }
 

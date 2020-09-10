@@ -290,6 +290,23 @@ func (v *volumeClient) CapacityUsage(
 	return requests, nil
 }
 
+func (v *volumeClient) VolumeUsageByNode(
+	nodeID string,
+) (*api.VolumeUsageByNode, error) {
+	volumeUsage := &api.VolumeUsageByNode{}
+	resp := v.c.Get().Resource(volumePath + "/nodeusage").Instance(nodeID).Do()
+
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
+
+	if err := resp.Unmarshal(volumeUsage); err != nil {
+		return nil, err
+	}
+
+	return volumeUsage, nil
+}
+
 // Shutdown and cleanup.
 func (v *volumeClient) Shutdown() {}
 
