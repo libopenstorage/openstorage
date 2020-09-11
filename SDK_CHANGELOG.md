@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.102.0 - (11/05/2020)
+
+* Add CloudDriveTransfer job type 
+
 ### v0.101.0 - (10/14/2020)
 
 * Add CredentialDeleteReferences API
