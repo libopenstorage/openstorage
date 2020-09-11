@@ -140,23 +140,14 @@ func (d *driver) Status() [][2]string {
 }
 
 func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
-	empty := make([]*api.Volume, 0, len(volumeIDs))
-
-	// The Kubernetes intree driver for portworx incorrectly requests version
-	// from Inspect, which can be interpreted as a volumd id. Instead we catch
-	// it here and return success with an empty list.
-	if len(volumeIDs) > 0 && volumeIDs[0] == "versions" {
-		return empty, nil
-	}
-
 	volumes, err := d.StoreEnumerator.Inspect(volumeIDs)
 	if err != nil {
-		return empty, err
+		return nil, err
 	} else if err == nil && len(volumes) == 0 {
-		return empty, kvdb.ErrNotFound
+		return nil, kvdb.ErrNotFound
 	}
 
-	return volumes, nil
+	return volumes, err
 }
 
 //
