@@ -34,13 +34,13 @@ var (
 	OverrideSchedDriverName = ""
 )
 
-// NewK8sMiddleware returns a negroni implementation of an http middleware
+// NewAuthMiddleware returns a negroni implementation of an http middleware
 // which will intercept the management APIs
-func NewK8sMiddleware() *k8sMiddleware {
-	return &k8sMiddleware{}
+func NewAuthMiddleware() *authMiddleware {
+	return &authMiddleware{}
 }
 
-type k8sMiddleware struct {
+type authMiddleware struct {
 }
 
 // newSecurityMiddleware based on auth configuration returns SecurityHandler or just
@@ -125,7 +125,7 @@ func SecurityHandler(authenticators map[string]auth.Authenticator, next http.Han
 	}
 }
 
-func (a *k8sMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "create"
 	_, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
@@ -184,9 +184,8 @@ func (a *k8sMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, n
 	next(w, r)
 }
 
-func (a *k8sMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "set"
-
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -199,41 +198,6 @@ func (a *k8sMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next
 		next(w, r)
 		return
 	}
-
-	var req api.VolumeSetRequest
-
-	err = json.NewDecoder(r.Body).Decode(&req)
-	if err != nil {
-		volumeResponse := &api.VolumeResponse{
-			Error: err.Error(),
-		}
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	}
-	if req.Spec != nil {
-		// A volume Set request for changing spec
-		// For requests from COs we need to reset certain fields
-		vols, err := d.Inspect([]string{volumeID})
-		if err != nil || len(vols) == 0 || vols[0] == nil {
-			next(w, r)
-			return
-		}
-		resetFields(req.Spec, vols[0].Spec)
-	}
-
-	newBody, err := json.Marshal(req)
-	if err != nil {
-		err = fmt.Errorf("failed to wrap set request: %v", err)
-		volumeResponse := &api.VolumeResponse{
-			Error: err.Error(),
-		}
-		json.NewEncoder(w).Encode(volumeResponse)
-		return
-	}
-
-	// Reset the request's Body
-	r.ContentLength = int64(len(newBody))
-	r.Body = ioutil.NopCloser(bytes.NewBuffer(newBody))
 
 	token, err := a.fetchSecretForVolume(d, volumeID)
 	if err != nil {
@@ -248,25 +212,10 @@ func (a *k8sMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next
 	}
 
 	next(w, r)
+
 }
 
-func resetFields(inputSpec *api.VolumeSpec, currentSpec *api.VolumeSpec) {
-	// If the request is coming from a container orchestrator like kubernetes
-	// we only allow setting the volume size in the Set request. All other fields
-	// should be reset to the original values. This needs to be done since kubernetes
-	// in-tree driver has older vendor'ed openstorage code, so any new boolean flags
-	// added to the VolumeSpec will always be set to false overwriting the exising value.
-
-	inputSpec.Cascaded = currentSpec.Cascaded
-	inputSpec.Journal = currentSpec.Journal
-	inputSpec.Sharedv4 = currentSpec.Sharedv4
-	inputSpec.QueueDepth = currentSpec.QueueDepth
-	inputSpec.ForceUnsupportedFsType = currentSpec.ForceUnsupportedFsType
-	inputSpec.Nodiscard = currentSpec.Nodiscard
-	inputSpec.StoragePolicy = currentSpec.StoragePolicy
-}
-
-func (a *k8sMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "delete"
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
@@ -303,7 +252,7 @@ func (a *k8sMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, n
 	next(w, r)
 }
 
-func (a *k8sMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "inspect"
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
@@ -328,7 +277,7 @@ func (a *k8sMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request, 
 	json.NewEncoder(w).Encode(dk)
 }
 
-func (a *k8sMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "enumerate"
 
 	d, authRequired := a.isTokenProcessingRequired(r)
@@ -359,7 +308,7 @@ func (a *k8sMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request
 	next(w, r)
 }
 
-func (a *k8sMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
+func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.VolumeDriver, bool) {
 	// If a token has been passed, then return here
 	if len(r.Header.Get("Authorization")) > 0 {
 		return nil, false
@@ -388,7 +337,7 @@ func (a *k8sMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volum
 	return nil, false
 }
 
-func (a *k8sMiddleware) insertToken(r *http.Request, token string) {
+func (a *authMiddleware) insertToken(r *http.Request, token string) {
 	// Set the token in header
 	if auth.IsJwtToken(token) {
 		r.Header.Set("Authorization", "bearer "+token)
@@ -397,7 +346,7 @@ func (a *k8sMiddleware) insertToken(r *http.Request, token string) {
 	}
 }
 
-func (a *k8sMiddleware) parseID(r *http.Request) (string, error) {
+func (a *authMiddleware) parseID(r *http.Request) (string, error) {
 	if id, err := a.parseParam(r, "id"); err == nil {
 		return id, nil
 	}
@@ -405,7 +354,7 @@ func (a *k8sMiddleware) parseID(r *http.Request) (string, error) {
 	return "", fmt.Errorf("could not parse snap ID")
 }
 
-func (a *k8sMiddleware) parseParam(r *http.Request, param string) (string, error) {
+func (a *authMiddleware) parseParam(r *http.Request, param string) (string, error) {
 	vars := mux.Vars(r)
 	if id, ok := vars[param]; ok {
 		return id, nil
@@ -415,7 +364,7 @@ func (a *k8sMiddleware) parseParam(r *http.Request, param string) (string, error
 
 // This functions makes it possible to secure the model of accessing the secret by allowing
 // the definition of secret access to come from the storage class, as done by CSI.
-func (a *k8sMiddleware) getSecretInformationInKubernetes(
+func (a *authMiddleware) getSecretInformationInKubernetes(
 	specLabels, locatorLabels map[string]string,
 ) (*api.TokenSecretContext, error) {
 	// Get pvc location and name
@@ -475,7 +424,7 @@ func (a *k8sMiddleware) getSecretInformationInKubernetes(
 	}, nil
 }
 
-func (a *k8sMiddleware) parseSecret(
+func (a *authMiddleware) parseSecret(
 	specLabels, locatorLabels map[string]string,
 ) (*api.TokenSecretContext, error) {
 
@@ -509,7 +458,7 @@ func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.To
 	}, nil
 }
 
-func (a *k8sMiddleware) log(id, fn string) *logrus.Entry {
+func (a *authMiddleware) log(id, fn string) *logrus.Entry {
 	return logrus.WithFields(map[string]interface{}{
 		"ID":        id,
 		"Component": "auth-middleware",
@@ -517,7 +466,7 @@ func (a *k8sMiddleware) log(id, fn string) *logrus.Entry {
 	})
 }
 
-func (a *k8sMiddleware) getBody(r *http.Request) io.ReadCloser {
+func (a *authMiddleware) getBody(r *http.Request) io.ReadCloser {
 	// Make a copy of the reader so that the next handler
 	// has access to the body
 	buf, _ := ioutil.ReadAll(r.Body)
@@ -536,7 +485,7 @@ func getVolumeLabel(key string, specLabels, locatorLabels map[string]string) (st
 	return v, ok
 }
 
-func (a *k8sMiddleware) fetchSecretForVolume(d volume.VolumeDriver, id string) (string, error) {
+func (a *authMiddleware) fetchSecretForVolume(d volume.VolumeDriver, id string) (string, error) {
 	vols, err := d.Inspect([]string{id})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
 		return "", fmt.Errorf("Volume %s does not exist", id)
