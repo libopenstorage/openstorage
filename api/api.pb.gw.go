@@ -736,7 +736,7 @@ func request_OpenStorageNode_EnumerateNodeDrainJobs_0(ctx context.Context, marsh
 }
 
 func request_OpenStorageNode_VolumeUsageByNode_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageNodeClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
-	var protoReq SdkVolumeUsageByNodeRequest
+	var protoReq SdkNodeVolumeUsageByNodeRequest
 	var metadata runtime.ServerMetadata
 
 	var (

@@ -157,10 +157,10 @@ func (mr *MockOpenStorageNodeServerMockRecorder) UpdateNodeDrainJobState(arg0, a
 }
 
 // VolumeUsageByNode mocks base method.
-func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkVolumeUsageByNodeRequest) (*api.SdkVolumeUsageByNodeResponse, error) {
+func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VolumeUsageByNode", arg0, arg1)
-	ret0, _ := ret[0].(*api.SdkVolumeUsageByNodeResponse)
+	ret0, _ := ret[0].(*api.SdkNodeVolumeUsageByNodeResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -355,14 +355,14 @@ func (mr *MockOpenStorageNodeClientMockRecorder) UpdateNodeDrainJobState(arg0, a
 }
 
 // VolumeUsageByNode mocks base method.
-func (m *MockOpenStorageNodeClient) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkVolumeUsageByNodeRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeUsageByNodeResponse, error) {
+func (m *MockOpenStorageNodeClient) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest, arg2 ...grpc.CallOption) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
 	for _, a := range arg2 {
 		varargs = append(varargs, a)
 	}
 	ret := m.ctrl.Call(m, "VolumeUsageByNode", varargs...)
-	ret0, _ := ret[0].(*api.SdkVolumeUsageByNodeResponse)
+	ret0, _ := ret[0].(*api.SdkNodeVolumeUsageByNodeResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

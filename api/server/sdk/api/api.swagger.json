@@ -2842,6 +2842,15 @@
         "title": "Defines a response when inspecting a node",
         "type": "object"
       },
+      "apiSdkNodeVolumeUsageByNodeResponse": {
+        "properties": {
+          "volume_usage_info": {
+            "$ref": "#/components/schemas/apiVolumeUsageByNode"
+          }
+        },
+        "title": "Defines response containing Node's volumes/snapshot capacity usage details",
+        "type": "object"
+      },
       "apiSdkObjectstoreCreateRequest": {
         "properties": {
           "volume_id": {
@@ -3900,15 +3909,6 @@
       },
       "apiSdkVolumeUpdateResponse": {
         "title": "Empty response",
-        "type": "object"
-      },
-      "apiSdkVolumeUsageByNodeResponse": {
-        "properties": {
-          "volume_usage_info": {
-            "$ref": "#/components/schemas/apiVolumeUsageByNode"
-          }
-        },
-        "title": "Defines response containing Node's volumes/snapshot capacity usage details",
         "type": "object"
       },
       "apiSeverityType": {
@@ -5113,38 +5113,40 @@
         "type": "string"
       },
       "apiVolumeUsage": {
+        "description": "Provides volume's exclusive bytes and its total usage. This cannot be \nretrieved individually and is obtained as part node's usage for a given\nnode.",
         "properties": {
           "exclusive_bytes": {
             "format": "uint64",
-            "title": "ExclusiveBytes size exclusively used by the volume",
+            "title": "size in bytes exclusively used by the volume/snapshot",
             "type": "string"
           },
           "local_cloud_snapshot": {
             "format": "boolean",
-            "title": "LocalCloudSnapshot is true if this volume is snapshot created by cloudbackups",
+            "title": "set to true if this volume is snapshot created by cloudbackups",
             "type": "boolean"
           },
           "pool_uuid": {
-            "title": "PoolUUID is the UUID of the pool that this volume belongs to",
+            "title": "uuid of the pool that this volume belongs to",
             "type": "string"
           },
           "total_bytes": {
             "format": "uint64",
-            "title": "TotalBytes used by the volume",
+            "title": "size in bytes by the volume/snapshot",
             "type": "string"
           },
           "volume_id": {
-            "title": "VolumeID is the id for the volume",
+            "title": "id for the volume/snapshot",
             "type": "string"
           },
           "volume_name": {
-            "title": "VolumeName is name of the volume",
+            "title": "name of the volume/snapshot",
             "type": "string"
           }
         },
         "type": "object"
       },
       "apiVolumeUsageByNode": {
+        "description": "Provides capacity usage of a node in terms of volumes. Returns VolumeUsage for\nall the volume/snapshot(s) in the node.",
         "properties": {
           "volume_usage": {
             "items": {
@@ -6772,7 +6774,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkVolumeUsageByNodeResponse"
+                  "$ref": "#/components/schemas/apiSdkNodeVolumeUsageByNodeResponse"
                 }
               }
             },

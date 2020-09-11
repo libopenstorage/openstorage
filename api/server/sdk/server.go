@@ -20,6 +20,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net"
 	"os"
 	"sync"
 
@@ -84,6 +85,9 @@ type ServerConfig struct {
 	// Address is the port number or the unix domain socket path.
 	// For the gRPC Server. This value goes together with `Net`.
 	Address string
+	// port is the port number at which remote SdkGrpcServer is running.Same
+	// across cluster. Exampl: 9020
+	port string
 	// RestAdress is the port number. Example: 9110
 	// For the gRPC REST Gateway.
 	RestPort string
@@ -147,6 +151,7 @@ type serverAccessor interface {
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
 	auditLogWriter() io.Writer
+	port() string
 }
 
 type logger struct {
@@ -234,6 +239,11 @@ func New(config *ServerConfig) (*Server, error) {
 		config.AccessOutput = accessLog
 	}
 
+	_, port, err := net.SplitHostPort(config.Address)
+	if err != nil {
+		logrus.Warnf("SDK Address NOT in host:port format, failed to get port %v", err.Error())
+	}
+	config.port = port
 	// Create a gRPC server on the network
 	netServer, err := newSdkGrpcServer(config)
 	if err != nil {
@@ -580,4 +590,8 @@ func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
 
 func (s *sdkGrpcServer) auditLogWriter() io.Writer {
 	return s.auditLogOutput
+}
+
+func (s *sdkGrpcServer) port() string {
+	return s.config.port
 }

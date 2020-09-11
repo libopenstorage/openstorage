@@ -387,7 +387,33 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 	defer s.Stop()
 
 	nodeid := "nodeid"
-
+	// Create response
+	node := api.Node{
+		Id:                nodeid,
+		SchedulerNodeName: "nodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		Avgload:           834,
+		Status:            api.Status_STATUS_MAX,
+		Disks: map[string]api.StorageResource{
+			"disk1": api.StorageResource{
+				Id:     "12345",
+				Path:   "mymount",
+				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
+				Online: true,
+			},
+		},
+		Timestamp: time.Now(),
+		StartTime: time.Now(),
+		NodeLabels: map[string]string{
+			"hello": "world",
+		},
+		HWType: api.HardwareType_BareMetalMachine,
+		MgmtIp: "127.0.0.1",
+		DataIp: "127.0.0.1",
+	}
 	// Create response
 	volumeUsageInfo := api.VolumeUsageByNode{
 		VolumeUsage: []*api.VolumeUsage{&api.VolumeUsage{
@@ -399,13 +425,22 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 			LocalCloudSnapshot: false,
 		}},
 	}
+	cluster := api.Cluster{
+		Id:     "someclusterid",
+		NodeId: nodeid,
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+		Nodes:  []*api.Node{&node},
+	}
+
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
 	s.MockDriver().EXPECT().VolumeUsageByNode(nodeid).Return(&volumeUsageInfo, nil).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageNodeClient(s.Conn())
 
 	// Get info
-	resp, err := c.VolumeUsageByNode(context.Background(), &api.SdkVolumeUsageByNodeRequest{NodeId: nodeid})
+	resp, err := c.VolumeUsageByNode(context.Background(), &api.SdkNodeVolumeUsageByNodeRequest{NodeId: nodeid})
 	assert.NoError(t, err)
 
 	// Verify
