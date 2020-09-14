@@ -890,6 +890,31 @@ message CapacityUsageInfo {
   int64 total_bytes = 3;
 }
 
+// Provides volume's exclusive bytes and its total usage. This cannot be 
+// retrieved individually and is obtained as part node's usage for a given
+// node.
+message VolumeUsage {
+   // id for the volume/snapshot
+  string volume_id = 1;
+  // name of the volume/snapshot
+  string volume_name = 2;
+  // uuid of the pool that this volume belongs to
+  string pool_uuid = 3;
+  // size in bytes exclusively used by the volume/snapshot
+  uint64 exclusive_bytes = 4;
+  //  size in bytes by the volume/snapshot
+  uint64 total_bytes = 5;
+  // set to true if this volume is snapshot created by cloudbackups
+  bool local_cloud_snapshot = 6;
+}
+
+// Provides capacity usage of a node in terms of volumes. Returns VolumeUsage for
+// all the volume/snapshot(s) in the node.
+message VolumeUsageByNode {
+  // VolumeUsage returns list of VolumeUsage for given node
+  repeated VolumeUsage volume_usage= 1;
+}
+
 // A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
 // If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be
@@ -1824,6 +1849,13 @@ service OpenStorageNode {
       };
   }
 
+	// Returns capacity usage of all volumes/snaps for a give node
+	rpc VolumeUsageByNode(SdkNodeVolumeUsageByNodeRequest)
+	returns (SdkNodeVolumeUsageByNodeResponse) {
+        option(google.api.http) = {
+          get: "/v1/nodes/usage/{node_id}"
+		};
+	}
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -3206,6 +3238,19 @@ message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
 
+// Defines request to retrieve all volumes/snapshots capacity usage details
+// for a given node
+message SdkNodeVolumeUsageByNodeRequest {
+  // Id of the node to get snapshot/volumes capacity usage details
+  string node_id = 1;
+}
+
+// Defines response containing Node's volumes/snapshot capacity usage details
+message SdkNodeVolumeUsageByNodeResponse {
+  // VolumeUsageByNode details
+  VolumeUsageByNode volume_usage_info = 1;
+}
+
 // Empty request
 message SdkClusterDomainsEnumerateRequest {
 }
@@ -4542,7 +4587,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 99;
+    Minor = 100;
     // SDK version patch value of this specification
     Patch = 0;
   }

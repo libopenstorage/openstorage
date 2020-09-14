@@ -22,7 +22,9 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/portworx/kvdb"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -181,4 +183,52 @@ func (s *NodeServer) EnumerateNodeDrainJobs(
 	}
 
 	return s.cluster().EnumerateNodeDrainJobs(ctx, req)
+}
+
+func (s *NodeServer) VolumeUsageByNode(
+	ctx context.Context,
+	req *api.SdkNodeVolumeUsageByNodeRequest,
+) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+
+	// If not a local request, proxy to the approriate node
+	nodeInspectData, err := s.Inspect(ctx, &api.SdkNodeInspectRequest{NodeId: req.GetNodeId()})
+	if err != nil {
+		return nil, err
+	}
+	curNodedata, err := s.InspectCurrent(ctx, &api.SdkNodeInspectCurrentRequest{})
+	if err != nil {
+		return nil, err
+	}
+	if curNodedata.Node.Id != nodeInspectData.Node.Id {
+		return s.proxyVolumeUsageByNode(ctx, req, nodeInspectData.Node.MgmtIp)
+	}
+	// Get the info locally
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	resp, err := s.server.driver(ctx).VolumeUsageByNode(req.GetNodeId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, " Failed to get olumeUsageByNode :%v", err.Error())
+	}
+	sdkResp := &api.SdkNodeVolumeUsageByNodeResponse{
+		VolumeUsageInfo: resp,
+	}
+	return sdkResp, nil
+}
+
+func (s *NodeServer) proxyVolumeUsageByNode(
+	ctx context.Context,
+	req *api.SdkNodeVolumeUsageByNodeRequest,
+	host string,
+) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+
+	endpoint := host + ":" + s.server.port()
+	// TODO TLS
+	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	conn, err := grpcserver.Connect(endpoint, dialOpts)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Node usage from remote node failed with :%v", err.Error())
+	}
+	proxyClient := api.NewOpenStorageNodeClient(conn)
+	return proxyClient.VolumeUsageByNode(ctx, req)
 }

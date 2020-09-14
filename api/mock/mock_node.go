@@ -6,10 +6,11 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
 // MockOpenStorageNodeServer is a mock of OpenStorageNodeServer interface.
@@ -153,6 +154,21 @@ func (m *MockOpenStorageNodeServer) UpdateNodeDrainJobState(arg0 context.Context
 func (mr *MockOpenStorageNodeServerMockRecorder) UpdateNodeDrainJobState(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeDrainJobState", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).UpdateNodeDrainJobState), arg0, arg1)
+}
+
+// VolumeUsageByNode mocks base method.
+func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumeUsageByNode", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkNodeVolumeUsageByNodeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode.
+func (mr *MockOpenStorageNodeServerMockRecorder) VolumeUsageByNode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeUsageByNode", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).VolumeUsageByNode), arg0, arg1)
 }
 
 // MockOpenStorageNodeClient is a mock of OpenStorageNodeClient interface.
@@ -336,4 +352,24 @@ func (mr *MockOpenStorageNodeClientMockRecorder) UpdateNodeDrainJobState(arg0, a
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNodeDrainJobState", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).UpdateNodeDrainJobState), varargs...)
+}
+
+// VolumeUsageByNode mocks base method.
+func (m *MockOpenStorageNodeClient) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest, arg2 ...grpc.CallOption) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VolumeUsageByNode", varargs...)
+	ret0, _ := ret[0].(*api.SdkNodeVolumeUsageByNodeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode.
+func (mr *MockOpenStorageNodeClientMockRecorder) VolumeUsageByNode(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeUsageByNode", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).VolumeUsageByNode), varargs...)
 }
