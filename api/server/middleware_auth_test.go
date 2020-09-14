@@ -12,6 +12,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type mockAuthenticator struct {
@@ -243,4 +245,40 @@ func TestNewSecurityMiddlewareCall(t *testing.T) {
 			t.Errorf("Wrong code expected %d actual %d", testCase.expectedHttpCode, rec.Code)
 		}
 	}
+}
+
+func TestAuthMiddlewareIsTokenProcessingRequired(t *testing.T) {
+	orig := OverrideSchedDriverName
+	defer func() {
+		OverrideSchedDriverName = orig
+	}()
+	OverrideSchedDriverName = "fake"
+
+	a := NewAuthMiddleware()
+	assert.NotNil(t, a)
+
+	rNoToken, err := http.NewRequest("GET", "http://localhost:80", nil)
+	assert.NoError(t, err)
+	rWithToken, err := http.NewRequest("GET", "http://localhost:80", nil)
+	assert.NoError(t, err)
+	rWithToken.Header.Set("Authorization", "bearer abcd")
+
+	d, b := a.isTokenProcessingRequired(rNoToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
+
+	d, b = a.isTokenProcessingRequired(rWithToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
+
+	rNoToken.Header.Set("User-Agent", "px-sched")
+	rWithToken.Header.Set("User-Agent", "px-sched")
+
+	d, b = a.isTokenProcessingRequired(rNoToken)
+	assert.NotNil(t, d)
+	assert.True(t, b)
+
+	d, b = a.isTokenProcessingRequired(rWithToken)
+	assert.Nil(t, d)
+	assert.False(t, b)
 }
