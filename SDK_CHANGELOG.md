@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.99.0 - (9/10/2020)
+
+* Add VolumeUsageByNode SDK API to OpenstorageNode service.
+
 ### v0.98.0 - (8/7/2020)
 
 * Rename reflection volumes to proxy volumes.

@@ -134,6 +134,9 @@ type StatsDriver interface {
 	// CapacityUsage returns both exclusive and shared usage
 	// of a snap/volume
 	CapacityUsage(ID string) (*api.CapacityUsageResponse, error)
+	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
+	// given node
+	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
 }
 
 type QuiesceDriver interface {
