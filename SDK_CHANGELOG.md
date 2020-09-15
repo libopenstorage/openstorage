@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.27 - (9/10/2020)
+
+* Add VolumeUsageByNode SDK API to OpenstorageNode service.
+
 ### v0.69.26 - (9/10/2020)
 
 * Added proxy write flag in volume spec
