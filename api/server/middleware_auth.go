@@ -146,12 +146,7 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if tokenSecretContext.SecretName == "" {
-		errorMessage := "Access denied, no secret found in the annotations of the persistent volume claim" +
-			" or storage class parameters"
-		a.log(locator.Name, fn).Error(errorMessage)
-		dcRes.VolumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(&dcRes)
-		w.WriteHeader(http.StatusUnauthorized)
+		next(w, r)
 		return
 	}
 
@@ -292,13 +287,7 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 	if tokenSecretContext.SecretName == "" {
-		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
-			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
-			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
-		a.log(volumeID, fn).Error(errorMessage)
-		volumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(volumeResponse)
-		w.WriteHeader(http.StatusInternalServerError)
+		next(w, r)
 		return
 	}
 
@@ -372,13 +361,7 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 		return
 	}
 	if tokenSecretContext.SecretName == "" {
-		errorMessage := fmt.Sprintf("Error, unable to get secret information from the volume."+
-			" You may need to re-add the following keys as volume labels to point to the secret: %s and %s",
-			osecrets.SecretNameKey, osecrets.SecretNamespaceKey)
-		a.log(volumeID, fn).Error(errorMessage)
-		volumeResponse = &api.VolumeResponse{Error: errorMessage}
-		json.NewEncoder(w).Encode(volumeResponse)
-		w.WriteHeader(http.StatusInternalServerError)
+		next(w, r)
 		return
 	}
 
@@ -488,9 +471,6 @@ func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.To
 	secretNamespace := locatorLabels[osecrets.SecretNamespaceKey]
 	if secretName == "" {
 		secretName = specLabels[osecrets.SecretNameKey]
-	}
-	if secretName == "" {
-		return nil, fmt.Errorf("secret name is empty")
 	}
 	if secretNamespace == "" {
 		secretNamespace = specLabels[osecrets.SecretNamespaceKey]
