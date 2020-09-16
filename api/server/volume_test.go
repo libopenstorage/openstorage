@@ -2750,3 +2750,127 @@ func TestVolumeInspectWithNameOfVersion(t *testing.T) {
 
 	assert.NotEqual(t, resp.StatusCode, http.StatusOK)
 }
+
+func TestRequestOnAuthWithMiddlewareForGuest(t *testing.T) {
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdkWithAuthMw(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, fakeWithSched, version, "", "", fakeWithSched)
+	assert.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// CREATE
+	driverclient := volumeclient.VolumeDriver(cl)
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	// DELETE
+	err = driverclient.Delete(id)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+}
+
+func TestRequestOnAuthWithMiddlewareForGuestWithoutGuestMode(t *testing.T) {
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdkWithAuthMw(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// create an admin context to update role
+	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
+	assert.NoError(t, err)
+
+	// Get
+	roles := api.NewOpenStorageRoleClient(testVolDriver.Conn())
+	guestRoleReq := &api.SdkRoleUpdateRequest{
+		Role: &api.SdkRole{
+			Name: "system.guest",
+			Rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{""},
+					Apis:     []string{""},
+				},
+			},
+		},
+	}
+	_, err = roles.Update(ctx, guestRoleReq)
+	assert.NoError(t, err)
+
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, fakeWithSched, version, "", "", fakeWithSched)
+	assert.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// CREATE
+	driverclient := volumeclient.VolumeDriver(cl)
+	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Error(t, err)
+}
+
+func TestRequestOnAuthWithMiddlewareForUser(t *testing.T) {
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdkWithAuthMw(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// get token
+	token, err := createToken("test", "system.user", testSharedSecret)
+	assert.NoError(t, err)
+
+	// Get client using -sched driver
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, fakeWithSched, version, token, "", fakeWithSched)
+	assert.NoError(t, err)
+
+	// Setup request
+	name := "myvol"
+	size := uint64(1234)
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{Name: name},
+		Source:  &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// CREATE
+	driverclient := volumeclient.VolumeDriver(cl)
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	// DELETE
+	err = driverclient.Delete(id)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+}
