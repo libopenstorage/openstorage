@@ -392,6 +392,44 @@ func testRestServerSdk(t *testing.T) (*httptest.Server, *testServer) {
 	return ts, testVolDriver
 }
 
+func testServerRegisterRoute(
+	routeFunc func(w http.ResponseWriter, r *http.Request),
+	preRouteCheck func(w http.ResponseWriter, r *http.Request) bool,
+) func(w http.ResponseWriter, r *http.Request) {
+	return routeFunc
+}
+
+func testpreRouteCheck(http.ResponseWriter, *http.Request) bool {
+	return true
+}
+
+func testRestServerSdkWithAuthMw(t *testing.T) (*httptest.Server, *testServer) {
+	os.Remove(testSdkSock)
+	testVolDriver := newTestServerSdk(t)
+
+	vapi := newVolumeAPI("fake", testSdkSock)
+	router := mux.NewRouter()
+
+	// Add the Middleware
+	router, err := GetVolumeAPIRoutesWithAuth("pxd",
+		testSdkSock,
+		mux.NewRouter(),
+		testServerRegisterRoute,
+		testpreRouteCheck)
+	assert.NoError(t, err)
+
+	// Register all routes from the App
+	for _, route := range vapi.Routes() {
+		router.Methods(route.verb).
+			Path(route.path).
+			Name(mockDriverName).
+			Handler(http.HandlerFunc(route.fn))
+	}
+
+	ts := httptest.NewServer(router)
+	return ts, testVolDriver
+}
+
 func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 	tc := newTestCluster(t)
 	capi := newClusterAPI()
