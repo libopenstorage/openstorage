@@ -1168,6 +1168,9 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
@@ -2589,6 +2592,15 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeVolumeUsageByNodeResponse": {
+        "properties": {
+          "volume_usage_info": {
+            "$ref": "#/components/schemas/apiVolumeUsageByNode"
+          }
+        },
+        "title": "Defines response containing Node's volumes/snapshot capacity usage details",
         "type": "object"
       },
       "apiSdkObjectstoreCreateRequest": {
@@ -4532,6 +4544,11 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "format": "boolean",
+            "title": "Proxy_write if true, per volume proxy write replication enabled",
+            "type": "boolean"
+          },
           "queue_depth": {
             "format": "int64",
             "title": "QueueDepth defines the desired block device queue depth",
@@ -4650,6 +4667,10 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
@@ -4759,6 +4780,10 @@
           "proxy_spec": {
             "$ref": "#/components/schemas/apiProxySpec"
           },
+          "proxy_write": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
@@ -4835,6 +4860,52 @@
         ],
         "type": "string"
       },
+      "apiVolumeUsage": {
+        "description": "Provides volume's exclusive bytes and its total usage. This cannot be \nretrieved individually and is obtained as part node's usage for a given\nnode.",
+        "properties": {
+          "exclusive_bytes": {
+            "format": "uint64",
+            "title": "size in bytes exclusively used by the volume/snapshot",
+            "type": "string"
+          },
+          "local_cloud_snapshot": {
+            "format": "boolean",
+            "title": "set to true if this volume is snapshot created by cloudbackups",
+            "type": "boolean"
+          },
+          "pool_uuid": {
+            "title": "uuid of the pool that this volume belongs to",
+            "type": "string"
+          },
+          "total_bytes": {
+            "format": "uint64",
+            "title": "size in bytes by the volume/snapshot",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "id for the volume/snapshot",
+            "type": "string"
+          },
+          "volume_name": {
+            "title": "name of the volume/snapshot",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiVolumeUsageByNode": {
+        "description": "Provides capacity usage of a node in terms of volumes. Returns VolumeUsage for\nall the volume/snapshot(s) in the node.",
+        "properties": {
+          "volume_usage": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumeUsage"
+            },
+            "title": "VolumeUsage returns list of VolumeUsage for given node",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "openstorageapiStatus": {
         "default": "STATUS_NONE",
         "enum": [
@@ -4868,7 +4939,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.25"
+    "version": "0.69.27"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6316,6 +6387,37 @@
           }
         },
         "summary": "InspectCurrent returns information about the storage node\nwhere the client is currently connected to.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/usage/{node_id}": {
+      "get": {
+        "operationId": "VolumeUsageByNode",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkNodeVolumeUsageByNodeResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Returns capacity usage of all volumes/snaps for a give node",
         "tags": [
           "OpenStorageNode"
         ]

@@ -102,6 +102,14 @@ func (s *statsNotSupported) CapacityUsage(
 	return nil, ErrNotSupported
 }
 
+// VolumeUsageByNode returns capacity usage of all volumes/snaps belonging to
+// a node
+func (s *statsNotSupported) VolumeUsageByNode(
+	nodeID string,
+) (*api.VolumeUsageByNode, error) {
+	return nil, ErrNotSupported
+}
+
 type quiesceNotSupported struct{}
 
 func (s *quiesceNotSupported) Quiesce(

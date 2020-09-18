@@ -83,6 +83,7 @@ func testIfVolumeCreatedSuccessfully(
 	Expect(volumesList[0].GetSpec().GetSnapshotInterval()).To(BeEquivalentTo(vr.GetSpec().GetSnapshotInterval()))
 	Expect(volumesList[0].GetSpec().GetSnapshotSchedule()).To(BeEquivalentTo(vr.GetSpec().GetSnapshotSchedule()))
 	Expect(volumesList[0].GetSpec().GetSticky()).To(BeEquivalentTo(vr.GetSpec().GetSticky()))
+	Expect(volumesList[0].GetSpec().GetProxyWrite()).To(BeEquivalentTo(vr.GetSpec().GetProxyWrite()))
 }
 
 //Returns an in between min and max. Min - included, Max excluded. So mathematically [min, max)

@@ -283,7 +283,15 @@ func TestGetTokenSecretContextFromString(t *testing.T) {
 	require.Equal(t, false, ok)
 
 }
+func TestOptProxyRepl(t *testing.T) {
+	testSpecOptString(t, api.SpecProxyWrite, "true")
 
+	spec := testSpecFromString(t, api.SpecProxyWrite, "true")
+	require.True(t, spec.ProxyWrite, "Failed to parse proxy_write option into spec")
+
+	spec = testSpecFromString(t, api.SpecProxyWrite, "false")
+	require.False(t, spec.ProxyWrite, "Failed to parse proxy_write option into spec")
+}
 func TestExportSpec(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
