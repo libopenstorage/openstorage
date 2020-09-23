@@ -14,6 +14,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
@@ -57,7 +58,7 @@ var (
 
 // ClusterManager implements the cluster interface
 type ClusterManager struct {
-	size                 int
+	size                 *int64
 	listeners            *list.List
 	config               config.ClusterConfig
 	kv                   kvdb.Kvdb
@@ -98,6 +99,7 @@ func Init(cfg config.ClusterConfig) error {
 	}
 
 	inst = &ClusterManager{
+		size:               new(int64),
 		listeners:          list.New(),
 		config:             cfg,
 		kv:                 kv,
@@ -514,7 +516,7 @@ func (c *ClusterManager) watchDB(key string, opaque interface{},
 		}
 	}
 
-	c.size = db.Size
+	atomic.StoreInt64(c.size, int64(db.Size))
 
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(db))
 
@@ -841,10 +843,11 @@ func (c *ClusterManager) updateClusterStatus() {
 		for id, gossipNodeInfo := range gossipValues {
 			numNodes = numNodes + 1
 
+			size := atomic.LoadInt64(c.size)
 			// Check to make sure we are not exceeding the size of the cluster.
-			if c.size > 0 && numNodes > c.size {
+			if size > 0 && int64(numNodes) > size {
 				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
-					"exceeded the cluster size: %d > %d", numNodes, c.size)
+					"exceeded the cluster size: %d > %d", numNodes, size)
 			}
 
 			// Special handling for self node
@@ -1128,7 +1131,7 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain strin
 		return nil, err
 	}
 	// Cluster database max size... 0 if unlimited.
-	c.size = clusterInfo.Size
+	atomic.StoreInt64(c.size, int64(clusterInfo.Size))
 	c.status = api.Status_STATUS_OK
 	return clusterInfo, nil
 }
