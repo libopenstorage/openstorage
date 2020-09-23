@@ -16,7 +16,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 
 	"github.com/libopenstorage/gossip"
@@ -80,7 +79,6 @@ type ClusterManager struct {
 	systemTokenManager   auth.TokenGenerator
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	storagePoolProvider  api.OpenStoragePoolServer
-	nodeDrainProvider    nodedrain.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1310,12 +1308,6 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.clusterDomainManager = config.ConfigClusterDomainProvider
 	}
 
-	if config.ConfigNodeDrainProvider == nil {
-		c.nodeDrainProvider = nodedrain.NewDefaultNodeDrainProvider()
-	} else {
-		c.nodeDrainProvider = config.ConfigNodeDrainProvider
-	}
-
 	if config.ConfigStoragePoolProvider == nil {
 		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
 	} else {
@@ -2043,29 +2035,4 @@ func (c *ClusterManager) GetRebalanceJobStatus(
 func (c *ClusterManager) EnumerateRebalanceJobs(
 	context context.Context, request *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
-}
-
-func (c *ClusterManager) Drain(ctx context.Context, req *api.SdkNodeDrainRequest) (*api.SdkNodeDrainResponse, error) {
-	return c.nodeDrainProvider.Drain(ctx, req)
-}
-
-func (c *ClusterManager) UpdateNodeDrainJobState(
-	ctx context.Context,
-	req *api.SdkUpdateNodeDrainJobRequest,
-) (*api.SdkUpdateNodeDrainJobResponse, error) {
-	return c.nodeDrainProvider.UpdateNodeDrainJobState(ctx, req)
-}
-
-func (c *ClusterManager) GetDrainStatus(
-	ctx context.Context,
-	req *api.SdkGetNodeDrainJobStatusRequest,
-) (*api.SdkGetNodeDrainJobStatusResponse, error) {
-	return c.nodeDrainProvider.GetDrainStatus(ctx, req)
-}
-
-func (c *ClusterManager) EnumerateNodeDrainJobs(
-	ctx context.Context,
-	req *api.SdkEnumerateNodeDrainJobsRequest,
-) (*api.SdkEnumerateNodeDrainJobsResponse, error) {
-	return c.nodeDrainProvider.EnumerateNodeDrainJobs(ctx, req)
 }
