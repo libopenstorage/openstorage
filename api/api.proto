@@ -890,7 +890,7 @@ message CapacityUsageInfo {
   int64 total_bytes = 3;
 }
 
-// Provides volume's exclusive bytes and its total usage. This cannot be 
+// Provides volume's exclusive bytes and its total usage. This cannot be
 // retrieved individually and is obtained as part node's usage for a given
 // node.
 message VolumeUsage {
@@ -1811,44 +1811,6 @@ service OpenStorageNode {
         get: "/v1/nodes/filters"
       };
     }
-
-  // Drain creates a task to drains the provided node in the cluster.
-  // The options provided in the drain request govern the drain operation.
-  rpc Drain(SdkNodeDrainRequest)
-    returns (SdkNodeDrainResponse) {
-      option(google.api.http) = {
-        put: "/v1/nodes/drain/{node_id}"
-      };
-    }
-
-  // UpdateNodeDrainJobState updates an existing node drain task
-  // Only acceptable values are
-  // NodeDrainJobState_PAUSED - acceptable only from running state
-  // NodeDrainJobState_CANCELLED - acceptable only from running/pause state
-  // NodeDrainJobState_RUNNING - acceptable only from pause state
-  rpc UpdateNodeDrainJobState(SdkUpdateNodeDrainJobRequest)
-  returns (SdkUpdateNodeDrainJobResponse) {
-    option(google.api.http) = {
-        put: "/v1/nodes/drain/job/{id}"
-      };
-  }
-
-  // GetDrainStatus gets the status of node drain request
-  rpc GetDrainStatus(SdkGetNodeDrainJobStatusRequest)
-    returns (SdkGetNodeDrainJobStatusResponse) {
-      option(google.api.http) = {
-        get: "/v1/nodes/drain/job/{id}"
-      };
-    }
-
-  // EnumerateNodeDrainJobs returns all the node drain jobs currently known to the system
-  rpc EnumerateNodeDrainJobs(SdkEnumerateNodeDrainJobsRequest)
-  returns (SdkEnumerateNodeDrainJobsResponse) {
-    option(google.api.http) = {
-        get: "/v1/nodes/drain/job"
-      };
-  }
-
 	// Returns capacity usage of all volumes/snaps for a give node
 	rpc VolumeUsageByNode(SdkNodeVolumeUsageByNodeRequest)
 	returns (SdkNodeVolumeUsageByNodeResponse) {
@@ -3312,191 +3274,6 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
-// Options for draining volume attachment from a node
-message NodeDrainAttachmentOptions {
-    // Selector is used for selecting volumes whose
-    // attachment needs to be moved from this node.
-    // The selector could be a list of volume label
-    // key value pairs to select a subset of volumes.
-    repeated LabelSelectorRequirement selector = 1;
-    // Drain only sharedv4 volumes from a node
-    // By default all volumes will be drained.
-    bool only_sharedv4 = 2;
-}
-
-// Options for draining volume replicas from a node
-message NodeDrainVolumeReplicaOptions {
-    // Selector is used for selecting volumes whose
-    // replicas need to be moved from this node to another.
-    // The selector could be a list of volume label
-    // key value pairs to select a subset of volumes.
-    repeated LabelSelectorRequirement selector = 1;
-}
-
-// Options for draining/detaching cloud drives from a node
-message NodeDrainCloudDriveOptions {
-}
-
-// Options for draining kvdb from a node
-message NodeDrainKvdbOptions {
-}
-
-
-// Options for draining a node in the cluster
-message NodeDrainOptions {
-    // Selector is a global selector used while performing
-    // a node drain sub operation. Per option selector take
-    // precedence over global selector
-    repeated LabelSelectorRequirement selector = 1;
-    // When set volume attachments will be drained from this node by moving the
-    // applications using volume
-    NodeDrainAttachmentOptions drain_attachments = 2;
-    // When set volume replicas from this node will be moved to
-    // another node
-    NodeDrainVolumeReplicaOptions drain_volume_replicas =  3;
-    // When set if this node acts as a kvdb control node, kvdb will be
-    // drained from this node and will be moved to another node.
-    NodeDrainKvdbOptions drain_kvdb = 4;
-    // When set the backing cloud storage disks will be detached from this node
-    // if the storage provider supports it
-    NodeDrainCloudDriveOptions drain_cloud_drives = 5;
-}
-
-// Defines a node drain request
-message SdkNodeDrainRequest {
-    // Id of the node to drain
-    string node_id = 1;
-    // Options that define how a node drain should be performed
-    NodeDrainOptions options = 2;
-}
-
-// NodeDrainJobState is an enum for state of a node drain operation
-enum NodeDrainJobState {
-    // Pending indicates job is still pending and has not started work
-  NODE_DRAIN_PENDING = 0;
-  // Running indicates job is actively running
-  NODE_DRAIN_RUNNING = 1;
-  // Done indicates job has finished processing
-  NODE_DRAIN_DONE = 2;
-  // Paused indicates job is paused
-  NODE_DRAIN_PAUSED = 3;
-  // Cancelled indicates job is cancelled
-  NODE_DRAIN_CANCELLED = 4;
-}
-
-// NodeDrainJob describe the node drain job's input and current state.
-message NodeDrainJob {
-  // ID of the node drain job
-  string id = 1;
-  // NodeID of the node for which this drain job is running
-  string node_id = 2;
-  // State of the current job
-  NodeDrainJobState state = 3;
-  // Parameters is the original request params for this node drain operation
-  SdkNodeDrainRequest parameters = 4;
-  // CreateTime is the time the job was created
-  google.protobuf.Timestamp create_time = 5;
-  // LastUpdateTime is the time the job was updated
-  google.protobuf.Timestamp last_update_time = 6;
-}
-
-// Defines a node drain response
-message SdkNodeDrainResponse {
-    // ID of the node drain job
-    string id = 1;
-    // Job for this node drain operation
-    NodeDrainJob job = 2 ;
-}
-
-// Defines a request to list all the node drain jobs
-message SdkEnumerateNodeDrainJobsRequest  {
-}
-
-// Defines a response will all the known node drain jobs
-message SdkEnumerateNodeDrainJobsResponse {
-  // Jobs is the list of node drain jobs in the response
-  repeated NodeDrainJob jobs = 1;
-}
-
-// Defines a request to update an existing node drain job
-message SdkUpdateNodeDrainJobRequest {
-  // ID of the rebalance job
-  string id = 1;
-  // State is the new task state to update the job to
-  NodeDrainJobState state = 2;
-}
-
-// Defines the response for an update to an existing job
-message SdkUpdateNodeDrainJobResponse {
-}
-
-// Defines a request to get the status of an existing node drain job
-message SdkGetNodeDrainJobStatusRequest {
-  // ID of the node drain job
-  string id = 1;
-}
-
-// Defines the status of an existing node drain job
-message SdkGetNodeDrainJobStatusResponse {
-  // Job for this node drain operation.
-  NodeDrainJob job = 1;
-  // Summary summarizes the node drain job
-  repeated NodeDrainSummary summary = 2;
-}
-
-// NodeDrainSubOperationState state of the node drain operation
-enum NodeDrainSubOperationState  {
-    // This node drain operation was not configured
-    NODE_DRAIN_SUB_OPERATION_NOT_CONFIGURED = 0;
-    // This node drain operation was configured but is pending
-    NODE_DRAIN_SUB_OPERATION_PENDING = 1;
-    // This node drain opeartion is running
-    NODE_DRAIN_SUB_OPERATION_RUNNING = 2;
-    // This node drain operation has completed
-    NODE_DRAIN_SUB_OPERATION_DONE = 3;
-}
-
-// NodeDrainVolumeSummary summary of the drain operation related to volumes
-message NodeDrainVolumeSummary {
-    // State of this operation
-    NodeDrainSubOperationState state = 1;
-
-    // Number of volumes which have been drained
-    uint64 num_volumes_done = 2;
-
-    // Number of volumes which have not been drained yet
-    uint64 num_volumes_pending = 3;
-}
-
-// NodeDrainKvdbSummary summary of the drain operation related to kvdb
-message NodeDrainKvdbSummary {
-    // State of this operation
-    NodeDrainSubOperationState state = 1;
-    // Message provides a helpful message about the state
-    string message = 2;
-}
-
-// NodeDrainCloudDriveSummary summary of the drain operation related to cloud drives
-message NodeDrainCloudDriveSummary {
-    // State of this operation
-    NodeDrainSubOperationState state = 1;
-    // Message provides a helpful message about the state
-    string message = 2;
-}
-
-
-// Provides a summary of  a node drain job
-message NodeDrainSummary {
-    // Attachment summary
-    NodeDrainVolumeSummary attachment_summary = 1;
-    // Volume replica summary
-    NodeDrainVolumeSummary volume_replica_summary = 2;
-    // Kvdb drain summary
-    NodeDrainKvdbSummary kvdb_summary = 3;
-    // Cloud drive summary
-    NodeDrainCloudDriveSummary cloud_drive_summary = 4;
-}
-
 // Defines a request when inspect a storage pool
 message SdkStoragePoolResizeRequest {
   // UUID of the storage pool to inspect
@@ -4587,7 +4364,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 100;
+    Minor = 99;
     // SDK version patch value of this specification
     Patch = 0;
   }
