@@ -218,7 +218,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 	}
 
-	logrus.Infof("Volume %s unmounted", req.GetVolumeId())
+	logrus.Infof("Volume %s unmounted from path %s", req.GetVolumeId(), req.GetTargetPath())
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
