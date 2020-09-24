@@ -11,7 +11,6 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
-	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/portworx/kvdb"
@@ -50,8 +49,6 @@ type ClusterServerConfiguration struct {
 	ConfigClusterDomainProvider clusterdomain.ClusterDomainProvider
 	// holds implementation to the OpenStoragePoolServer interface
 	ConfigStoragePoolProvider api.OpenStoragePoolServer
-	// holds implementation to the NodeDrainProvider interface
-	ConfigNodeDrainProvider nodedrain.Provider
 }
 
 // NodeEntry is used to discover other nodes in the cluster
@@ -384,7 +381,6 @@ type Cluster interface {
 	sched.SchedulePolicyProvider
 	objectstore.ObjectStore
 	api.OpenStoragePoolServer
-	nodedrain.Provider
 }
 
 // NullClusterListener is a NULL implementation of ClusterListener functions
