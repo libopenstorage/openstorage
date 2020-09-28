@@ -249,6 +249,19 @@ func (mr *MockVolumeDriverMockRecorder) CloudBackupSchedUpdate(arg0 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSchedUpdate", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSchedUpdate), arg0)
 }
 
+// CloudBackupSize mocks base method
+func (m *MockVolumeDriver) CloudBackupSize(arg0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
+	ret := m.ctrl.Call(m, "CloudBackupSize", arg0)
+	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CloudBackupSize indicates an expected call of CloudBackupSize
+func (mr *MockVolumeDriverMockRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSize", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSize), arg0)
+}
+
 // CloudBackupStateChange mocks base method
 func (m *MockVolumeDriver) CloudBackupStateChange(arg0 *api.CloudBackupStateChangeRequest) error {
 	ret := m.ctrl.Call(m, "CloudBackupStateChange", arg0)
@@ -310,19 +323,6 @@ func (m *MockVolumeDriver) CloudMigrateStatus(arg0 *api.CloudMigrateStatusReques
 // CloudMigrateStatus indicates an expected call of CloudMigrateStatus
 func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus), arg0)
-}
-
-// CloudBackupSize mocks base method
-func (m *MockVolumeDriver) CloudBackupSize(arg0 *api.SdkCloudBackupSizeRequest) (*api.SdkCloudBackupSizeResponse, error) {
-	ret := m.ctrl.Call(m, "CloudBackupSize", arg0)
-	ret0, _ := ret[0].(*api.SdkCloudBackupSizeResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// CloudBackupSize indicates an expected call of CloudBackupSize
-func (mr *MockVolumeDriverMockRecorder) CloudBackupSize(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudBackupSize", reflect.TypeOf((*MockVolumeDriver)(nil).CloudBackupSize), arg0)
 }
 
 // Create mocks base method
@@ -425,56 +425,30 @@ func (mr *MockVolumeDriverMockRecorder) Enumerate(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockVolumeDriver)(nil).Enumerate), arg0, arg1)
 }
 
-// FilesystemCheckCheckHealth mocks base method
-func (m *MockVolumeDriver) FilesystemCheckCheckHealth(arg0 *api.SdkFilesystemCheckCheckHealthRequest) (*api.SdkFilesystemCheckCheckHealthResponse, error) {
-	ret := m.ctrl.Call(m, "FilesystemCheckCheckHealth", arg0)
-	ret0, _ := ret[0].(*api.SdkFilesystemCheckCheckHealthResponse)
+// FilesystemCheckStart mocks base method
+func (m *MockVolumeDriver) FilesystemCheckStart(arg0 *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
+	ret := m.ctrl.Call(m, "FilesystemCheckStart", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckStartResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FilesystemCheckCheckHealth indicates an expected call of FilesystemCheckCheckHealth
-func (mr *MockVolumeDriverMockRecorder) FilesystemCheckCheckHealth(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckCheckHealth", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckCheckHealth), arg0)
+// FilesystemCheckStart indicates an expected call of FilesystemCheckStart
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckStart(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckStart", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckStart), arg0)
 }
 
-// FilesystemCheckCheckHealthGetStatus mocks base method
-func (m *MockVolumeDriver) FilesystemCheckCheckHealthGetStatus(arg0 *api.SdkFilesystemCheckCheckHealthGetStatusRequest) (*api.SdkFilesystemCheckCheckHealthGetStatusResponse, error) {
-	ret := m.ctrl.Call(m, "FilesystemCheckCheckHealthGetStatus", arg0)
-	ret0, _ := ret[0].(*api.SdkFilesystemCheckCheckHealthGetStatusResponse)
+// FilesystemCheckStatus mocks base method
+func (m *MockVolumeDriver) FilesystemCheckStatus(arg0 *api.SdkFilesystemCheckStatusRequest) (*api.SdkFilesystemCheckStatusResponse, error) {
+	ret := m.ctrl.Call(m, "FilesystemCheckStatus", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckStatusResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// FilesystemCheckCheckHealthGetStatus indicates an expected call of FilesystemCheckCheckHealthGetStatus
-func (mr *MockVolumeDriverMockRecorder) FilesystemCheckCheckHealthGetStatus(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckCheckHealthGetStatus", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckCheckHealthGetStatus), arg0)
-}
-
-// FilesystemCheckFixAll mocks base method
-func (m *MockVolumeDriver) FilesystemCheckFixAll(arg0 *api.SdkFilesystemCheckFixAllRequest) (*api.SdkFilesystemCheckFixAllResponse, error) {
-	ret := m.ctrl.Call(m, "FilesystemCheckFixAll", arg0)
-	ret0, _ := ret[0].(*api.SdkFilesystemCheckFixAllResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FilesystemCheckFixAll indicates an expected call of FilesystemCheckFixAll
-func (mr *MockVolumeDriverMockRecorder) FilesystemCheckFixAll(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckFixAll", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckFixAll), arg0)
-}
-
-// FilesystemCheckFixAllGetStatus mocks base method
-func (m *MockVolumeDriver) FilesystemCheckFixAllGetStatus(arg0 *api.SdkFilesystemCheckFixAllGetStatusRequest) (*api.SdkFilesystemCheckFixAllGetStatusResponse, error) {
-	ret := m.ctrl.Call(m, "FilesystemCheckFixAllGetStatus", arg0)
-	ret0, _ := ret[0].(*api.SdkFilesystemCheckFixAllGetStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FilesystemCheckFixAllGetStatus indicates an expected call of FilesystemCheckFixAllGetStatus
-func (mr *MockVolumeDriverMockRecorder) FilesystemCheckFixAllGetStatus(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckFixAllGetStatus", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckFixAllGetStatus), arg0)
+// FilesystemCheckStatus indicates an expected call of FilesystemCheckStatus
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckStatus(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckStatus", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckStatus), arg0)
 }
 
 // FilesystemCheckStop mocks base method
@@ -490,19 +464,6 @@ func (mr *MockVolumeDriverMockRecorder) FilesystemCheckStop(arg0 interface{}) *g
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckStop", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckStop), arg0)
 }
 
-// FilesystemTrimGetStatus mocks base method
-func (m *MockVolumeDriver) FilesystemTrimGetStatus(arg0 *api.SdkFilesystemTrimGetStatusRequest) (*api.SdkFilesystemTrimGetStatusResponse, error) {
-	ret := m.ctrl.Call(m, "FilesystemTrimGetStatus", arg0)
-	ret0, _ := ret[0].(*api.SdkFilesystemTrimGetStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// FilesystemTrimGetStatus indicates an expected call of FilesystemTrimGetStatus
-func (mr *MockVolumeDriverMockRecorder) FilesystemTrimGetStatus(arg0 interface{}) *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemTrimGetStatus", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemTrimGetStatus), arg0)
-}
-
 // FilesystemTrimStart mocks base method
 func (m *MockVolumeDriver) FilesystemTrimStart(arg0 *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
 	ret := m.ctrl.Call(m, "FilesystemTrimStart", arg0)
@@ -514,6 +475,19 @@ func (m *MockVolumeDriver) FilesystemTrimStart(arg0 *api.SdkFilesystemTrimStartR
 // FilesystemTrimStart indicates an expected call of FilesystemTrimStart
 func (mr *MockVolumeDriverMockRecorder) FilesystemTrimStart(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemTrimStart", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemTrimStart), arg0)
+}
+
+// FilesystemTrimStatus mocks base method
+func (m *MockVolumeDriver) FilesystemTrimStatus(arg0 *api.SdkFilesystemTrimStatusRequest) (*api.SdkFilesystemTrimStatusResponse, error) {
+	ret := m.ctrl.Call(m, "FilesystemTrimStatus", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemTrimStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemTrimStatus indicates an expected call of FilesystemTrimStatus
+func (mr *MockVolumeDriverMockRecorder) FilesystemTrimStatus(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemTrimStatus", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemTrimStatus), arg0)
 }
 
 // FilesystemTrimStop mocks base method
@@ -799,6 +773,19 @@ func (m *MockVolumeDriver) VolService(arg0 string, arg1 *api.VolumeServiceReques
 // VolService indicates an expected call of VolService
 func (mr *MockVolumeDriverMockRecorder) VolService(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolService", reflect.TypeOf((*MockVolumeDriver)(nil).VolService), arg0, arg1)
+}
+
+// VolumeUsageByNode mocks base method
+func (m *MockVolumeDriver) VolumeUsageByNode(arg0 string) (*api.VolumeUsageByNode, error) {
+	ret := m.ctrl.Call(m, "VolumeUsageByNode", arg0)
+	ret0, _ := ret[0].(*api.VolumeUsageByNode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode
+func (mr *MockVolumeDriverMockRecorder) VolumeUsageByNode(arg0 interface{}) *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeUsageByNode", reflect.TypeOf((*MockVolumeDriver)(nil).VolumeUsageByNode), arg0)
 }
 
 // Write mocks base method

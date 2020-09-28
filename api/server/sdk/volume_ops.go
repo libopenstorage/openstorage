@@ -25,24 +25,12 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-)
-
-var (
-	// AdminOwnedLabelKeys is a set of labels that only the storage admin
-	// can change.
-	AdminOwnedLabelKeys = []string{
-		secrets.SecretNameKey,
-		secrets.SecretNamespaceKey,
-		api.KubernetesPvcNameKey,
-		api.KubernetesPvcNamespaceKey,
-	}
 )
 
 // When create is called for an existing volume, this function is called to make sure
@@ -578,15 +566,6 @@ func (s *VolumeServer) Update(
 		return nil, err
 	}
 
-	// Only the administrator can change admin-only labels
-	if !api.IsAdminByContext(ctx) && req.GetLabels() != nil {
-		for _, adminKey := range AdminOwnedLabelKeys {
-			if _, ok := req.GetLabels()[adminKey]; ok {
-				return nil, status.Errorf(codes.PermissionDenied, "Only the administrator can update label %s", adminKey)
-			}
-		}
-	}
-
 	// Check if the caller can update the volume
 	if !resp.GetVolume().IsPermitted(ctx, api.Ownership_Write) {
 		return nil, status.Errorf(codes.PermissionDenied, "Cannot update volume")
@@ -813,6 +792,43 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ExportSpec = req.GetExportSpec()
 	} else {
 		spec.ExportSpec = vol.GetExportSpec()
+	}
+
+	// Xattr
+	if req.GetXattrOpt() != nil {
+		spec.Xattr = req.GetXattr()
+	} else {
+		spec.Xattr = vol.GetXattr()
+	}
+
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		spec.ScanPolicy = req.GetScanPolicy()
+	} else {
+		spec.ScanPolicy = vol.GetScanPolicy()
+	}
+
+	// MountOptions
+	if req.GetMountOptSpec() != nil {
+		spec.MountOptions = req.GetMountOptSpec()
+	} else {
+		spec.MountOptions = vol.GetMountOptions()
+	}
+
+	// Sharedv4MountOptions
+	if req.GetSharedv4MountOptSpec() != nil {
+		spec.Sharedv4MountOptions = req.GetSharedv4MountOptSpec()
+	} else {
+		spec.Sharedv4MountOptions = vol.GetSharedv4MountOptions()
+	}
+	// ProxyWrite
+	spec.ProxyWrite = setSpecBool(vol.GetProxyWrite(), req.GetProxyWrite(), req.GetProxyWriteOpt())
+
+	// ProxySpec
+	if req.GetProxySpec() != nil {
+		spec.ProxySpec = req.GetProxySpec()
+	} else {
+		spec.ProxySpec = vol.GetProxySpec()
 	}
 
 	return spec
@@ -1094,6 +1110,28 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			}
 		}
 	}
+
+	if req.GetProxySpecOpt() != nil {
+		if isValidate && vol.GetProxySpec() != req.GetProxySpec() {
+			return vol, errMsg
+		}
+		spec.ProxySpec = req.GetProxySpec()
+	}
+	// ScanPolicy
+	if req.GetScanPolicy() != nil {
+		if isValidate && vol.GetScanPolicy() != req.GetScanPolicy() {
+			return vol, errMsg
+		}
+		spec.ScanPolicy = req.GetScanPolicy()
+	}
+	// ProxyWrite
+	if req.GetProxyWriteOpt() != nil {
+		if isValidate && vol.GetProxyWrite() != req.GetProxyWrite() {
+			return vol, errMsg
+		}
+		spec.ProxyWrite = req.GetProxyWrite()
+	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }

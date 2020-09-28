@@ -283,7 +283,15 @@ func TestGetTokenSecretContextFromString(t *testing.T) {
 	require.Equal(t, false, ok)
 
 }
+func TestOptProxyRepl(t *testing.T) {
+	testSpecOptString(t, api.SpecProxyWrite, "true")
 
+	spec := testSpecFromString(t, api.SpecProxyWrite, "true")
+	require.True(t, spec.ProxyWrite, "Failed to parse proxy_write option into spec")
+
+	spec = testSpecFromString(t, api.SpecProxyWrite, "false")
+	require.False(t, spec.ProxyWrite, "Failed to parse proxy_write option into spec")
+}
 func TestExportSpec(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
@@ -358,4 +366,42 @@ func TestXattr(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecCowOnDemand, "true")
 	require.Equal(t, api.Xattr_COW_ON_DEMAND, spec.Xattr)
 
+}
+
+func TestMountOptions(t *testing.T) {
+	testSpecOptString(t, api.SpecMountOptions, "k")
+
+	spec := testSpecFromString(t, api.SpecRack, "ignore")
+	require.Nil(t, spec.MountOptions)
+
+	spec = testSpecFromString(t, api.SpecMountOptions, "k1;k2:v2")
+	require.NotNil(t, spec.MountOptions)
+	require.Equal(t, len(spec.MountOptions.Options), 2)
+	val, ok := spec.MountOptions.Options["k1"]
+	require.True(t, ok)
+	require.Equal(t, val, "")
+	val, ok = spec.MountOptions.Options["k2"]
+	require.True(t, ok)
+	require.Equal(t, val, "v2")
+	_, ok = spec.MountOptions.Options["k3"]
+	require.False(t, ok)
+}
+
+func TestSharedv4MountOptions(t *testing.T) {
+	testSpecOptString(t, api.SpecSharedv4MountOptions, "k")
+
+	spec := testSpecFromString(t, api.SpecRack, "ignore")
+	require.Nil(t, spec.MountOptions)
+
+	spec = testSpecFromString(t, api.SpecSharedv4MountOptions, "k1;k2:v2")
+	require.NotNil(t, spec.Sharedv4MountOptions)
+	require.Equal(t, len(spec.Sharedv4MountOptions.Options), 2)
+	val, ok := spec.Sharedv4MountOptions.Options["k1"]
+	require.True(t, ok)
+	require.Equal(t, val, "")
+	val, ok = spec.Sharedv4MountOptions.Options["k2"]
+	require.True(t, ok)
+	require.Equal(t, val, "v2")
+	_, ok = spec.Sharedv4MountOptions.Options["k3"]
+	require.False(t, ok)
 }

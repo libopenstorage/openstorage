@@ -169,7 +169,7 @@ type ClusterListenerGenericOps interface {
 	UpdateCluster(self *api.Node, clusterInfo *ClusterInfo) error
 
 	// Enumerate updates listener specific data in Enumerate.
-	Enumerate(cluster api.Cluster) error
+	Enumerate(cluster *api.Cluster) error
 }
 
 // ClusterListenerStatusOps defines APIs that a listener needs to implement
@@ -407,7 +407,7 @@ func (nc *NullClusterListener) CleanupInit(
 	return nil
 }
 
-func (nc *NullClusterListener) Enumerate(cluster api.Cluster) error {
+func (nc *NullClusterListener) Enumerate(_ *api.Cluster) error {
 	return nil
 }
 

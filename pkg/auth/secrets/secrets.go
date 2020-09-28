@@ -13,17 +13,11 @@ const (
 	// SecretNameKey is a label on the openstorage.Volume object
 	// which corresponds to the name of the secret which holds the
 	// token information. Used for all secret providers
-	// This key supports the CSI compatible value of ${pvc.annotations['team.example.com/key']}
-	// as described in https://kubernetes-csi.github.io/docs/secrets-and-credentials-storage-class.html
-	// to specify to use the annotations on the pvc.
 	SecretNameKey = "openstorage.io/auth-secret-name"
 
 	// SecretNamespaceKey is a label on the openstorage.Volume object
 	// which corresponds to the namespace of the secret which holds the
 	// token information. Used for all secret providers
-	// This key supports the CSI compatible value of ${pvc.namespace}
-	// as described in https://kubernetes-csi.github.io/docs/secrets-and-credentials-storage-class.html
-	// to specify to use the namespace of the pvc
 	SecretNamespaceKey = "openstorage.io/auth-secret-namespace"
 
 	// SecretTokenKey corresponds to the key at which the auth token is stored
@@ -86,6 +80,11 @@ func GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
 
 func requestToContext(request *api.TokenSecretContext) map[string]string {
 	context := make(map[string]string)
+
+	// Check if instance is nil
+	if lsecrets.Instance() == nil {
+		return context
+	}
 
 	// Add namespace for providers that support it.
 	switch lsecrets.Instance().String() {
