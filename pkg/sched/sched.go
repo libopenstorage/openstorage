@@ -144,6 +144,7 @@ func (s *manager) Start() {
 
 	if !s.started {
 		s.ticker = time.NewTicker(s.minimumInterval)
+		s.started = true
 	}
 }
 
