@@ -9,8 +9,8 @@ for d in $dependecies ; do
     fi
 done
 
-# Location of bats
-BATS=./node_modules/bats/bin/bats
+# Location of bart
+BART=./node_modules/bats/bin/bats
 
 # Setup
 export KIND_CLUSTER=${USER}-kind-openstorage-test
@@ -25,4 +25,4 @@ export TENANT1_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcn
 export TENANT2_TOKEN=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InN1cHBvcnRAdGVuYW50LXR3by5jb20iLCJleHAiOjE5MDE3MzA1NDksImdyb3VwcyI6WyJ0ZW5hbnQtdHdvIl0sImlhdCI6MTU4NjM3MDU0OSwiaXNzIjoib3BlbnN0b3JhZ2UuaW8iLCJuYW1lIjoiVGVuYW50IFR3byIsInJvbGVzIjpbInN5c3RlbS51c2VyIl0sInN1YiI6InN1cHBvcnRAdGVuYW50LXR3by5jb20ifQ.6t3DiToB5ttTKZ9IuSoM4XTKKltpBq84kz7HseehjFc
 
 # Set env DEBUG=1 to show output of osd::echo and osd::by
-${BATS} setup testcases && rm -rf ${TMPDIR}
+${BART} setup testcases && rm -rf ${TMPDIR}

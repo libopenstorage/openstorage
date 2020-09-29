@@ -16,6 +16,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
+	mockapi "github.com/libopenstorage/openstorage/api/mock"
 	servermock "github.com/libopenstorage/openstorage/api/server/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -33,6 +34,7 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/mock"
+	schedopsk8s "github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
 
 	"github.com/stretchr/testify/assert"
@@ -42,8 +44,6 @@ import (
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/metadata"
-
-	schedopsk8s "github.com/portworx/sched-ops/k8s/core"
 )
 
 const (
@@ -70,6 +70,7 @@ type testServer struct {
 	c           cluster.Cluster
 	k8sops      *servermock.MockOps
 	originalOps schedopsk8s.Ops
+	s           *mockapi.MockOpenStoragePoolServer
 	mc          *gomock.Controller
 	sdk         *sdk.Server
 	port        string
@@ -144,6 +145,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 	tester.originalOps = schedopsk8s.Instance()
 	schedopsk8s.SetInstance(tester.k8sops)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
@@ -202,6 +204,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 
 	tester.originalOps = schedopsk8s.Instance()
 	schedopsk8s.SetInstance(tester.k8sops)
+	tester.s = mockapi.NewMockOpenStoragePoolServer(tester.mc)
 
 	// Create a role manager
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
@@ -315,10 +318,6 @@ func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
 }
 
-func (s *testServer) MockK8sOps() *servermock.MockOps {
-	return s.k8sops
-}
-
 func (s *testServer) Conn() *grpc.ClientConn {
 	return s.conn
 }
@@ -427,8 +426,6 @@ func (s *testServer) Stop() {
 
 	// Remove from registry
 	volumedrivers.Remove(mockDriverName)
-
-	schedopsk8s.SetInstance(s.originalOps)
 }
 
 func createToken(name, role, secret string) (string, error) {
