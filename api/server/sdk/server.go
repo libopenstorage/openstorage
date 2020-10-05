@@ -462,16 +462,28 @@ func (s *sdkGrpcServer) Start() error {
 	if len(s.config.Security.Authenticators) != 0 {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
-				s.rwlockIntercepter,
+				s.rwlockUnaryIntercepter,
 				grpc_auth.UnaryServerInterceptor(s.auth),
-				s.authorizationServerInterceptor,
-				s.loggerServerInterceptor,
+				s.authorizationServerUnaryInterceptor,
+				s.loggerServerUnaryInterceptor,
+			)))
+		opts = append(opts, grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				s.rwlockStreamIntercepter,
+				grpc_auth.StreamServerInterceptor(s.auth),
+				s.authorizationServerStreamInterceptor,
+				s.loggerServerStreamInterceptor,
 			)))
 	} else {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
-				s.rwlockIntercepter,
-				s.loggerServerInterceptor,
+				s.rwlockUnaryIntercepter,
+				s.loggerServerUnaryInterceptor,
+			)))
+		opts = append(opts, grpc.StreamInterceptor(
+			grpc_middleware.ChainStreamServer(
+				s.rwlockStreamIntercepter,
+				s.loggerServerStreamInterceptor,
 			)))
 	}
 
