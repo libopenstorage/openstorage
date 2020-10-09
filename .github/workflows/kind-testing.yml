@@ -47,7 +47,7 @@ jobs:
     # Defines the matrix build for K8s versions
     strategy:
       matrix:
-        k8s-version: ['v1.16.9', 'v1.17.5', 'v1.18.6']
+        k8s-version: ['v1.17.11', 'v1.18.8', 'v1.19.1']
     
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
