@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.100.0 - (09/10/2020)
+
+* Rename NodeDrain API to RemoveVolumeAttachments API
+* Add OpenstorageJob service to query running and past jobs and their states.
+
 ### v0.99.0 - (9/10/2020)
 
 * Add VolumeUsageByNode SDK API to OpenstorageNode service.
