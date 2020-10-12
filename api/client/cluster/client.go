@@ -10,6 +10,8 @@ import (
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/job"
+	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -29,6 +31,8 @@ const (
 type clusterClient struct {
 	clusterdomain.NullClusterDomainManager
 	storagepool.UnsupportedPoolProvider
+	job.UnsupportedJobProvider
+	nodedrain.UnsupportedNodeDrainProvider
 	c *client.Client
 }
 
