@@ -648,6 +648,27 @@
         ],
         "type": "string"
       },
+      "apiDrainAttachmentsSummary": {
+        "properties": {
+          "num_volumes_done": {
+            "format": "uint64",
+            "title": "Number of volumes which have been drained",
+            "type": "string"
+          },
+          "num_volumes_pending": {
+            "format": "uint64",
+            "title": "Number of volumes which have not been drained yet",
+            "type": "string"
+          },
+          "num_volumes_total": {
+            "format": "uint64",
+            "title": "Total number of volumes that need to be drained",
+            "type": "string"
+          }
+        },
+        "title": "DrainAttachments summary of the volumes whose attachments need to be drained\nfrom a node",
+        "type": "object"
+      },
       "apiEnforcementType": {
         "default": "required",
         "description": "- required: This specifies that the rule is required and must be strictly enforced\n - preferred: This specifies that the rule is preferred and can be best effort",
@@ -850,6 +871,89 @@
         },
         "type": "object"
       },
+      "apiJob": {
+        "properties": {
+          "create_time": {
+            "format": "date-time",
+            "title": "CreateTime is the time the job was created",
+            "type": "string"
+          },
+          "drain_attachments": {
+            "$ref": "#/components/schemas/apiNodeDrainAttachmentsJob"
+          },
+          "id": {
+            "title": "ID of the job",
+            "type": "string"
+          },
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time the job was updated",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/apiJobState"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiJobType"
+          }
+        },
+        "title": "Job is a generic job object that can encapsulate other\nmessages which follow the job framework of APIs",
+        "type": "object"
+      },
+      "apiJobState": {
+        "default": "JOB_STATE_PENDING",
+        "description": "- JOB_STATE_PENDING: Pending indicates job is still pending and has not started work\n - JOB_STATE_RUNNING: Running indicates job is actively running\n - JOB_STATE_DONE: Done indicates job has finished processing\n - JOB_STATE_PAUSED: Paused indicates job is paused\n - JOB_STATE_CANCELLED: Cancelled indicates job is cancelled\n - JOB_STATE_FAILED: Failed indicates job has failed",
+        "enum": [
+          "JOB_STATE_PENDING",
+          "JOB_STATE_RUNNING",
+          "JOB_STATE_DONE",
+          "JOB_STATE_PAUSED",
+          "JOB_STATE_CANCELLED",
+          "JOB_STATE_FAILED"
+        ],
+        "title": "JobState is an enum for state of a node drain operation",
+        "type": "string"
+      },
+      "apiJobSummary": {
+        "properties": {
+          "id": {
+            "title": "ID of the job",
+            "type": "string"
+          },
+          "total_runtime_seconds": {
+            "format": "uint64",
+            "title": "Total runtime in seconds",
+            "type": "string"
+          },
+          "work_summaries": {
+            "items": {
+              "$ref": "#/components/schemas/apiJobWorkSummary"
+            },
+            "title": "Summary provides more information about the on-going job",
+            "type": "array"
+          }
+        },
+        "title": "JobSummary provides a summary of a job",
+        "type": "object"
+      },
+      "apiJobType": {
+        "default": "JobTypeNone",
+        "enum": [
+          "JobTypeNone",
+          "JobTypeDrainAttachments"
+        ],
+        "title": "JobType are the supported job types",
+        "type": "string"
+      },
+      "apiJobWorkSummary": {
+        "properties": {
+          "drain_attachments_summary": {
+            "$ref": "#/components/schemas/apiDrainAttachmentsSummary"
+          }
+        },
+        "title": "JobWorkSummary describes an action taken while performing the hob",
+        "type": "object"
+      },
       "apiLabelSelectorRequirement": {
         "description": "LabelSelectorRequirement is a selector that contains values, a key, and an operator that\nrelates the key and values.",
         "properties": {
@@ -895,6 +999,37 @@
             "type": "string"
           }
         },
+        "type": "object"
+      },
+      "apiNodeDrainAttachmentsJob": {
+        "properties": {
+          "Status": {
+            "title": "Status describes a helpful status of this node drain operation",
+            "type": "string"
+          },
+          "create_time": {
+            "format": "date-time",
+            "title": "CreateTime is the time the job was created",
+            "type": "string"
+          },
+          "issuer": {
+            "title": "Issuer is a user friendly name for the caller who is\ninvoking the API. It can be used by caller to filter out\ndrain requests from a particular issuer",
+            "type": "string"
+          },
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time the job was updated",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "NodeID of the node for which this drain job is running",
+            "type": "string"
+          },
+          "parameters": {
+            "$ref": "#/components/schemas/apiSdkNodeDrainAttachmentsRequest"
+          }
+        },
+        "title": "NodeDrainAttachmentsJob describe a job to drain volume attachments from a node",
         "type": "object"
       },
       "apiObjectstoreInfo": {
@@ -2352,6 +2487,19 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkEnumerateJobsResponse": {
+        "properties": {
+          "jobs": {
+            "items": {
+              "$ref": "#/components/schemas/apiJob"
+            },
+            "title": "Jobs is the list of jobs in the response",
+            "type": "array"
+          }
+        },
+        "title": "Defines a response will all the known jobs",
+        "type": "object"
+      },
       "apiSdkEnumerateRebalanceJobsResponse": {
         "properties": {
           "jobs": {
@@ -2483,6 +2631,18 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkGetJobStatusResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/apiJob"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/apiJobSummary"
+          }
+        },
+        "title": "Defines the status of an existing job",
+        "type": "object"
+      },
       "apiSdkGetRebalanceJobStatusResponse": {
         "properties": {
           "actions": {
@@ -2550,6 +2710,45 @@
         "title": "Defines a response containing version information",
         "type": "object"
       },
+      "apiSdkJobResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/apiJob"
+          }
+        },
+        "title": "Defines a response for an SDK request that spins up a new job\nto perform the request",
+        "type": "object"
+      },
+      "apiSdkNodeCordonAttachmentsResponse": {
+        "title": "SdkNodeCordonAttachmentsRespinse response for disabling new volume\nattachments from a node",
+        "type": "object"
+      },
+      "apiSdkNodeDrainAttachmentsRequest": {
+        "properties": {
+          "issuer": {
+            "title": "Issuer is a user friendly name for the caller who is\ninvoking the API. It can be used by caller to filter out\ndrain requests from a particular issuer",
+            "type": "string"
+          },
+          "node_id": {
+            "title": "Id of the node to drain",
+            "type": "string"
+          },
+          "only_sharedv4": {
+            "description": "Drain only sharedv4 volumes from a node\nBy default all volumes will be drained.",
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "selector": {
+            "description": "Selector is used for selecting volumes whose\nattachment needs to be moved from this node.\nThe selector could be a list of volume label\nkey value pairs to select a subset of volumes.",
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "type": "array"
+          }
+        },
+        "title": "Defines a node drain volume attachments request",
+        "type": "object"
+      },
       "apiSdkNodeEnumerateResponse": {
         "properties": {
           "node_ids": {
@@ -2592,6 +2791,10 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeUncordonAttachmentsResponse": {
+        "title": "SdkNodeUncordonAttachmentsRespinse response for enabling new volume\nattachments from a node",
         "type": "object"
       },
       "apiSdkNodeVolumeUsageByNodeResponse": {
@@ -3114,6 +3317,10 @@
         ],
         "title": "Defines times of day",
         "type": "string"
+      },
+      "apiSdkUpdateJobResponse": {
+        "title": "Defines the response for an update to an existing job",
+        "type": "object"
       },
       "apiSdkUpdateRebalanceJobResponse": {
         "type": "object"
@@ -4861,7 +5068,7 @@
         "type": "string"
       },
       "apiVolumeUsage": {
-        "description": "Provides volume's exclusive bytes and its total usage. This cannot be \nretrieved individually and is obtained as part node's usage for a given\nnode.",
+        "description": "Provides volume's exclusive bytes and its total usage. This cannot be\nretrieved individually and is obtained as part node's usage for a given\nnode.",
         "properties": {
           "exclusive_bytes": {
             "format": "uint64",
@@ -4939,7 +5146,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.27"
+    "version": "0.69.28"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6170,6 +6377,117 @@
         ]
       }
     },
+    "/v1/jobs": {
+      "get": {
+        "operationId": "EnumerateJobs",
+        "parameters": [
+          {
+            "description": "Type if specified will list the jobs of the provided type.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": "JobTypeNone",
+              "enum": [
+                "JobTypeNone",
+                "JobTypeDrainAttachments"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkEnumerateJobsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "EnumerateJobs returns all the jobs currently known to the system",
+        "tags": [
+          "OpenStorageJob"
+        ]
+      }
+    },
+    "/v1/jobs/{id}": {
+      "get": {
+        "operationId": "GetJobStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Type of the job.",
+            "in": "query",
+            "name": "type",
+            "required": false,
+            "schema": {
+              "default": "JobTypeNone",
+              "enum": [
+                "JobTypeNone",
+                "JobTypeDrainAttachments"
+              ],
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkGetJobStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "GetJobStatus gets the status of a job",
+        "tags": [
+          "OpenStorageJob"
+        ]
+      },
+      "put": {
+        "operationId": "UpdateJobState",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkUpdateJobResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "UpdateJobState updates an existing job\nOnly acceptable values are\nJobState_PAUSED - acceptable only from running state\nJobState_CANCELLED - acceptable only from running/pause state\nJobState_RUNNING - acceptable only from pause state",
+        "tags": [
+          "OpenStorageJob"
+        ]
+      }
+    },
     "/v1/mountattach/attach": {
       "post": {
         "description": "Requires access AccessType.Write of volume",
@@ -6314,6 +6632,99 @@
           }
         },
         "summary": "Enumerate returns the ids of all the nodes in the current cluster",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/attachments/disable/{node_id}": {
+      "put": {
+        "operationId": "CordonAttachments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkNodeCordonAttachmentsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "CordonAttachments disables any new volume attachments\nfrom the provided node in the cluster. Existing volume attachments\nwill stay on the node.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/attachments/drain/{node_id}": {
+      "put": {
+        "operationId": "DrainAttachments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkJobResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "DrainAttachments creates a task to drain volume attachments\nfrom the provided node in the cluster.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/attachments/enable/{node_id}": {
+      "put": {
+        "operationId": "UncordonAttachments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkNodeUncordonAttachmentsResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "UncordonAttachments re-enables volume attachments\non the provided node in the cluster.",
         "tags": [
           "OpenStorageNode"
         ]
