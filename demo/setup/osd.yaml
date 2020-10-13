@@ -47,7 +47,7 @@ spec:
       containers:
         - name: osd
           # image: quay.io/ggriffiths/osd:latest
-          image: quay.io/ggriffiths/osd:latest
+          image: ghcr.io/skhalife/openstorage:latest
           imagePullPolicy: IfNotPresent    
           args:
               [
