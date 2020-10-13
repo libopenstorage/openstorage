@@ -25,11 +25,11 @@ jobs:
       run: make docker-build-osd
     
     - name: Log into registry
-      run: echo "${{ secrets.QUAY_TOKEN }}" | docker login quay.io -u ${{ secrets.QUAY_USER }} --password-stdin
+      run: echo "${{ secrets.CR_PAT }}" | docker login quay.io -u skhalife --password-stdin
 
     - name: Push image
       run: |
-        IMAGE_ID=quay.io/ggriffiths/osd
+        IMAGE_ID=ghcr.io/skhalife/openstorage
 
         echo IMAGE_ID=$IMAGE_ID
 
