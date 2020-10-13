@@ -25,7 +25,7 @@ jobs:
       run: make docker-build-osd
     
     - name: Log into registry
-      run: echo "${{ secrets.CR_PAT }}" | docker login quay.io -u skhalife --password-stdin
+      run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u skhalife --password-stdin
 
     - name: Push image
       run: |
