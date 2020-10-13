@@ -1,0 +1,91 @@
+
+name: e2e with kind
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  pull_request:
+    branches: [ master ]
+
+env:
+  # TODO: Change variable to your image's name.
+  OSD_IMAGE: quay.io/openstorage/osd
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:    
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it 
+    - uses: actions/checkout@v2
+    - name: Build the Docker image
+      run: make docker-build-osd
+    
+    - name: Log into registry
+      run: echo "${{ secrets.CR_PAT }}" | docker login ghcr.io -u skhalife --password-stdin
+
+    - name: Push image
+      run: |
+        IMAGE_ID=ghcr.io/skhalife/openstorage
+
+        echo IMAGE_ID=$IMAGE_ID
+
+        docker tag $OSD_IMAGE $IMAGE_ID:latest
+        docker push $IMAGE_ID:latest
+  
+  # KinD Cluster Creation
+  test:
+    # this job is dependent of the previous one completing
+    needs: build
+    
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    
+    # Defines the matrix build for K8s versions
+    strategy:
+      matrix:
+        k8s-version: ['v1.17.11', 'v1.18.8', 'v1.19.1']
+    
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      
+    # Creates KinD with using k8s versions from the matrix above
+    - name: Set up kind with K8s version ${{ matrix.k8s-version }}
+      uses: engineerd/setup-kind@v0.4.0
+      with:
+          name: openstorage-test-cluster
+          config: hack/kind.yaml
+          image: kindest/node:${{ matrix.k8s-version }}
+          version: v0.8.1
+          
+    - name: Start openstorage
+      run: |
+        kubectl -n kube-system apply -f demo/setup
+
+    - name: Environment setup check
+      run: |
+        sleep 45
+        expected_running_pods=6
+        cnt=0
+        while [ "$(kubectl get pods -n kube-system | grep 'openstorage-' | grep 'Running' -c)" -lt "$expected_running_pods" ]; do
+          if [ $cnt -gt 15 ]; then
+              echo "openstorage pod status:"
+              kubectl describe pods -n kube-system
+              echo >&2 "ERROR: openstorage not ready after over 2.5 mins"
+              exit 1
+          fi
+          kubectl get pods -n kube-system | grep 'openstorage-'
+          echo "$(date +%H:%M:%S)" "waiting for openstorage deployment to complete, attempt #$cnt"
+          cnt=$((cnt + 1))
+          sleep 10   
+        done
+
+    - name: Run tests
+      run: |
+        echo "Running tests:"
+        ./demo/test.sh

@@ -1,0 +1,106 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: osd-csi-service
+  namespace: kube-system
+spec:
+  selector:
+      name: openstorage
+  clusterIP: None
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: openstorage
+  namespace: kube-system
+  labels:
+    name: openstorage
+spec:
+  selector:
+    matchLabels:
+      name: openstorage
+  minReadySeconds: 0
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: openstorage
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: osd/enabled
+                operator: NotIn
+                values:
+                - "false"
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      hostNetwork: true
+      hostPID: false
+      # imagePullSecrets: 
+      #   - name: ghpkgcred
+      containers:
+        - name: osd
+          # image: quay.io/ggriffiths/osd:latest
+          image: ghcr.io/skhalife/openstorage:latest
+          imagePullPolicy: IfNotPresent    
+          args:
+              [
+                "-d",
+                "--driver=name=fake",
+                "--jwt-issuer=openstorage.io",
+                "--csidrivername=csi.openstorage.org",
+                "--jwt-shared-secret=mysecret",
+                "--jwt-system-shared-secret=mysecret"
+              ]
+          env:
+            - name: "CSI_ENDPOINT"
+              value: "/var/lib/csi.openstorage.org/csi.sock"
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - name: csi-driver-path
+            mountPath: /var/lib/csi.openstorage.org
+          - name: csi-kubelet-path
+            mountPath: /var/lib/kubelet
+        - name: csi-node-driver-registrar
+          image: quay.io/k8scsi/csi-node-driver-registrar:v1.1.0
+          args:
+            - "--v=5"
+            - "--csi-address=$(ADDRESS)"
+            - "--kubelet-registration-path=/var/lib/csi.openstorage.org/csi.sock"
+          imagePullPolicy: Always
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+            - name: KUBE_NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: csi-driver-path
+              mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
+      restartPolicy: Always
+      serviceAccountName: osd-csi-account
+      volumes:
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: DirectoryOrCreate
+        - name: csi-kubelet-path
+          hostPath:
+            path: /var/lib/kubelet
+            type: DirectoryOrCreate
+        - name: csi-driver-path
+          hostPath:
+            path: /var/lib/csi.openstorage.org
+            type: DirectoryOrCreate

@@ -1,0 +1,94 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: openstorage-csi
+  namespace: kube-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: openstorage-csi-driver
+  template:
+    metadata:
+      labels:
+        app: openstorage-csi-driver
+    spec:
+      hostNetwork: true
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: osd/enabled
+                operator: NotIn
+                values:
+                - "false"
+              - key: node-role.kubernetes.io/master
+                operator: DoesNotExist
+      serviceAccount: osd-csi-account
+      containers:
+        - name: csi-external-provisioner
+          imagePullPolicy: Always
+          image: quay.io/openstorage/csi-provisioner:v1.4.0-1
+          args:
+            - "--v=3"
+            - "--provisioner=csi.openstorage.org"
+            - "--csi-address=$(ADDRESS)"
+            - "--enable-leader-election"
+            - "--leader-election-type=leases"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-snapshotter
+          imagePullPolicy: Always
+          image: quay.io/openstorage/csi-snapshotter:v1.2.2-1
+          args:
+            - "--v=3"
+            - "--csi-address=$(ADDRESS)"
+            - "--snapshotter=csi.openstorage.org"
+            - "--leader-election=true"
+            - "--leader-election-type=leases"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+        - name: csi-resizer
+          imagePullPolicy: Always
+          image: quay.io/k8scsi/csi-resizer:v0.3.0
+          args:
+            - "--v=3"
+            - "--csi-address=$(ADDRESS)"
+            - "--leader-election=true"
+          env:
+            - name: ADDRESS
+              value: /csi/csi.sock
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: socket-dir
+              mountPath: /csi
+      volumes:
+        - name: socket-dir
+          hostPath:
+            path: /var/lib/csi.openstorage.org
+            type: DirectoryOrCreate
+---
+apiVersion: storage.k8s.io/v1beta1
+kind: CSIDriver
+metadata:
+  name: csi.openstorage.org
+spec:
+  attachRequired: false
+  podInfoOnMount: true
+  volumeLifecycleModes:
+  - Persistent
+  - Ephemeral

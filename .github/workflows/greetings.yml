@@ -1,0 +1,17 @@
+name: Greetings
+
+on: 
+  pull_request:
+    types: [opened]
+  issues: 
+    types: [opened]
+
+jobs:
+  greeting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/first-interaction@v1
+      with:
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        issue-message: 'Welcome :partying_face:! Thank you for submitting this issue!''If you have not yet, please read through the [README](https://github.com/libopenstorage/openstorage#open-storage)'
+        pr-message: 'Welcome & thank you for submitting your first PR!''If you have not yet, please read through the [DCO](https://github.com/libopenstorage/openstorage/blob/master/DCO) and (style guide)[https://github.com/libopenstorage/openstorage/blob/master/STYLEGUIDE.md] :sparkle:'
