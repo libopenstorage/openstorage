@@ -95,3 +95,24 @@ func (vd *volAPI) credsValidate(w http.ResponseWriter, r *http.Request) {
 	}
 	w.WriteHeader(http.StatusOK)
 }
+
+func (vd *volAPI) credsDeleteRefs(w http.ResponseWriter, r *http.Request) {
+	method := "credsDeleteRefs"
+	vars := mux.Vars(r)
+	uuid, ok := vars["uuid"]
+	if !ok {
+		vd.sendError(vd.name, method, w, "Could not parse form for uuid", http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	if err := d.CredsDeleteReferences(uuid); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}

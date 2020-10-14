@@ -231,6 +231,41 @@ func (s *CredentialServer) Validate(
 
 }
 
+// DeleteReferences  removes all references to a specified Credential.
+func (s *CredentialServer) DeleteReferences(
+	ctx context.Context,
+	req *api.SdkCredentialDeleteReferencesRequest,
+) (*api.SdkCredentialDeleteReferencesResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetCredentialId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must provide credentials name/uuid")
+	}
+
+	// Check ownership
+	_, err := s.Inspect(ctx, &api.SdkCredentialInspectRequest{
+		CredentialId: req.GetCredentialId(),
+	})
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() != codes.NotFound {
+			return nil, err
+		}
+		// Ignore not found error and continue
+	}
+
+	err = s.driver(ctx).CredsDeleteReferences(req.GetCredentialId())
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to remove references: %v",
+			err.Error())
+	}
+	return &api.SdkCredentialDeleteReferencesResponse{}, nil
+
+}
+
 // Delete deletes a specified credential
 func (s *CredentialServer) Delete(
 	ctx context.Context,

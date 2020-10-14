@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.29 - (10/14/2020)
+
+* Add CredentialDeleteReferences API
+
 ### v0.69.28 - (09/10/2020)
 
 * Added DrainAttachments API to OpenStorageNode service to drain attachments from a node.
