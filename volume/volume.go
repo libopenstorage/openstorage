@@ -310,6 +310,8 @@ type CredsDriver interface {
 	CredsDelete(credUUID string) error
 	// CredsValidate validates the credential associated credUUID
 	CredsValidate(credUUID string) error
+	// CredsDeleteReferences delets any  with the creds
+	CredsDeleteReferences(credUUID string) error
 }
 
 // VolumeDriverProvider provides VolumeDrivers.
