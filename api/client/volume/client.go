@@ -529,6 +529,20 @@ func (v *volumeClient) CredsValidate(uuid string) error {
 	return nil
 }
 
+// CredsRemoveReferences removes any references the  credential specified
+// by the Name/Uuid
+func (v *volumeClient) CredsDeleteReferences(uuid string) error {
+	req := v.c.Delete().Resource(api.OsdCredsPath + "/references").Instance(uuid)
+	response := req.Do()
+	if response.Error() != nil {
+		if response.StatusCode() == http.StatusUnprocessableEntity {
+			return volume.NewCredentialError(response.Error().Error())
+		}
+		return response.FormatError()
+	}
+	return nil
+}
+
 // CloudBackupCreate uploads snapshot of a volume to cloud
 func (v *volumeClient) CloudBackupCreate(
 	input *api.CloudBackupCreateRequest,
