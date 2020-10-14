@@ -2266,6 +2266,14 @@ service OpenStorageCredentials {
         get: "/v1/credentials/validate/{credential_id}"
       };
     }
+  // DeleteReferences is used to remove references to credentials
+  rpc DeleteReferences(SdkCredentialDeleteReferencesRequest)
+    returns (SdkCredentialDeleteReferencesResponse) {
+      option(google.api.http) = {
+         delete: "/v1/credentials/references/{credential_id}"
+      };
+    }
+
 }
 
 // OpenStorageSchedulePolicy service is used to manage the automated
@@ -2920,6 +2928,17 @@ message SdkCredentialValidateRequest {
 // Empty response
 message SdkCredentialValidateResponse {
 }
+
+// Defines a request to remove any references to credentials
+message SdkCredentialDeleteReferencesRequest {
+  // Id of the credentials
+  string credential_id = 1;
+}
+
+// Empty response
+message SdkCredentialDeleteReferencesResponse {
+}
+
 
 // Options to attach device
 message SdkVolumeAttachOptions {
@@ -4618,7 +4637,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 69;
     // SDK version patch value of this specification
-    Patch = 28;
+    Patch = 29;
   }
 
   // The following cannot be set to use the enum Version because the REST
