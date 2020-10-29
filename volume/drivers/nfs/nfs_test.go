@@ -1,3 +1,5 @@
+// +build mounttest
+
 package nfs
 
 import (

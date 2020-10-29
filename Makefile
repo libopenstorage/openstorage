@@ -17,7 +17,8 @@ REGISTRY = openstorage
 IMAGE_MOCKSDKSERVER := $(REGISTRY)/mock-sdk-server:$(MOCKSDKSERVERTAG)
 
 ifndef TAGS
-TAGS := daemon
+$(error TAGS not defined)
+TAGS := daemon mounttest
 endif
 
 ifndef PKGS
@@ -290,7 +291,6 @@ docker-build: docker-build-osd-dev
 docker-test: docker-build-osd-dev
 	docker run \
 		--privileged \
-		-v /var/run/docker.sock:/var/run/docker.sock \
 		-v /mnt:/mnt \
 		-e AWS_REGION \
 		-e AWS_ZONE \
