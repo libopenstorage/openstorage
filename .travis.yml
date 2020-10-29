@@ -7,6 +7,12 @@ go:
   - 1.13.x
 install:
   - go get -u github.com/vbatts/git-validation
+  - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+  - chmod +x kubectl
+  - mv kubectl ${GOPATH}/bin
+  - curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-$(uname)-amd64
+  - chmod +x ./kind
+  - mv ./kind ${GOPATH}/bin
 script:
   - git-validation -run DCO,short-subject
   - if [[ $(go version) == *"1.13"* ]]; then
@@ -16,11 +22,8 @@ script:
   - git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
   - hack/check-api-version.sh
   - git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-  - make sdk-check-version
-  - make install
-  - make vet
+  - make install verify
   - bash hack/docker-integration-test.sh
-  - make docker-test
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
       make push-mock-sdk-server;

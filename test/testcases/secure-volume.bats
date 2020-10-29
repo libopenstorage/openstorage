@@ -66,7 +66,7 @@ ASSETS=testcases/assets
         generic k8s-user --from-literal=auth-token=${TENANT1_TOKEN}
     assert_success
 
-    storageclasses="intree-multitenant csi-multitenant"
+    storageclasses="csi-multitenant"
     for sc in $storageclasses ; do
         osd::by "deploying using storageclass ${sc}"
 
@@ -123,7 +123,30 @@ ASSETS=testcases/assets
     assert_success
 
     for drivertype in "intree" "csi" ; do
-        for sc in "noauth" "auth" "multitenant" ; do
+        for sc in "noauth" "auth" ; do
+            osd::by "testing with ${drivertype}-${sc} on namespace ${user}"
+
+            run mountAttach ${drivertype}-${sc} ${kubeconfig} ${user}
+            assert_success
+        done
+    done
+}
+
+@test "Verify pvc can be mounted securely by deploying an application (multitenant)" {
+    local pvcname="pvc-auth"
+    local user="tenant-1-$$"
+    local kubeconfig="${BATS_TMPDIR}/${user}-kubeconfig.conf"
+
+    run osd::createUserKubeconfig "${user}" "$BATS_TMPDIR"
+    assert_success
+
+    # Insert token as admin
+    run kubectl -n ${user} create secret \
+        generic k8s-user --from-literal=auth-token=${TENANT1_TOKEN}
+    assert_success
+
+    for drivertype in "csi" ; do
+        for sc in "multitenant" ; do
             osd::by "testing with ${drivertype}-${sc} on namespace ${user}"
 
             run mountAttach ${drivertype}-${sc} ${kubeconfig} ${user}

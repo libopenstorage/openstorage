@@ -1863,14 +1863,14 @@ func (vd *volAPI) SetupRoutesWithAuth(
 	nInspect := negroni.New()
 	nInspect.Use(negroni.HandlerFunc(authM.inspectWithAuth))
 	inspectRoute := vd.volumeInspectRoute()
-	nSet.UseHandlerFunc(inspectRoute.fn)
+	nInspect.UseHandlerFunc(inspectRoute.fn)
 	router.Methods(inspectRoute.verb).Path(inspectRoute.path).Handler(nInspect)
 
 	// Setup middleware for enumerate
 	nEnumerate := negroni.New()
 	nEnumerate.Use(negroni.HandlerFunc(authM.enumerateWithAuth))
 	enumerateRoute := vd.volumeEnumerateRoute()
-	nSet.UseHandlerFunc(enumerateRoute.fn)
+	nEnumerate.UseHandlerFunc(enumerateRoute.fn)
 	router.Methods(enumerateRoute.verb).Path(enumerateRoute.path).Handler(nEnumerate)
 
 	routes := []*Route{vd.versionRoute()}

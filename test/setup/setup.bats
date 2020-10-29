@@ -3,7 +3,6 @@ load ../lib/osd
 load ../node_modules/bats-assert/load
 load ../node_modules/bats-support/load
 
-KIND_IMAGE=kindest/node:v1.17.0
 ASSETS="setup/assets"
 
 @test "Setup kind cluster ${KIND_CLUSTER}" {
@@ -36,6 +35,16 @@ ASSETS="setup/assets"
 
     run kubectl -n openstorage create secret \
         generic admin-user --from-literal=auth-token=${ADMIN_TOKEN}
+    assert_success
+}
+
+@test "Wait for Kind cluster to be ready" {
+    # Wait until all the pod statuses are not in Running state
+    run timeout 120 bash -c \
+      "while kubectl get pods -A -o json | jq -r '.items[].status.phase == \"Running\"' | grep false > /dev/null 2>&1 ; do sleep 1; done"
+    assert_success
+
+    run timeout 120 bash -c "while kubectl get nodes | grep NotReady > /dev/null 2>&1; do sleep 1; done"
     assert_success
 }
 
