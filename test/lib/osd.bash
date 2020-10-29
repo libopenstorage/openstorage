@@ -34,7 +34,7 @@ function osd::by() {
 
 # Get the Kind cluster IP from docker
 function osd::clusterip() {
-    docker inspect ${CLUSTER_CONTROL_PLANE_CONTAINER} | jq -r '.[].NetworkSettings.Networks.bridge.IPAddress'
+    docker inspect ${CLUSTER_CONTROL_PLANE_CONTAINER} | jq -r '.[].NetworkSettings.Networks.kind.IPAddress'
 }
 
 # Return the SDK REST Gateway address
