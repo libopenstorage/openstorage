@@ -2875,3 +2875,43 @@ func TestRequestOnAuthWithMiddlewareForUser(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 }
+
+func TestRequestOnAuthWithMiddlewareVersions(t *testing.T) {
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdkWithAuthMw(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// Override sched driver name
+	orig := OverrideSchedDriverName
+	defer func() {
+		OverrideSchedDriverName = orig
+	}()
+	OverrideSchedDriverName = "fake"
+
+	// get token
+	token, err := createToken("test", "system.user", testSharedSecret)
+	assert.NoError(t, err)
+	assert.NotEmpty(t, token)
+
+	// Get client using -sched driver
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, fakeWithSched, version, "", "", fakeWithSched)
+	assert.NoError(t, err)
+
+	_, err = cl.Versions(api.OsdVolumePath)
+	assert.NoError(t, err)
+}
+
+func TestRequestVersions(t *testing.T) {
+	// Setup volume rest functions server
+	ts, testVolDriver := testRestServerSdk(t)
+	defer ts.Close()
+	defer testVolDriver.Stop()
+
+	// Get client using -sched driver
+	cl, err := volumeclient.NewDriverClient(ts.URL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err)
+
+	_, err = cl.Versions(api.OsdVolumePath)
+	assert.NoError(t, err)
+}
