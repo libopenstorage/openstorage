@@ -29,6 +29,11 @@ const (
 	PVCNamespaceLabelKey = "namespace"
 )
 
+var (
+	// OverrideSchedDriverName is set by osd program to override the schedule driver
+	OverrideSchedDriverName = ""
+)
+
 // NewAuthMiddleware returns a negroni implementation of an http middleware
 // which will intercept the management APIs
 func NewAuthMiddleware() *authMiddleware {
@@ -156,7 +161,6 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 		dcRes.VolumeResponse = &api.VolumeResponse{Error: "failed to get token: " + err.Error()}
 		json.NewEncoder(w).Encode(&dcRes)
 		return
-
 	} else {
 		a.insertToken(r, token)
 	}
@@ -319,6 +323,19 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
+	// There is a bug in api/client/client.go:Client.Versions() where it uses the endpoint
+	// "/v1/"+endpoint+"versions" instead of the expected enpoint of endpoint+"/versions", because
+	// it calls Get() which saves the version in the Request. This ends up calling Inspect with a
+	// volume called "versions" instead of calling the handler for volume versions.
+	//
+	// The interesting part is that the client code expects a []string{} in the json returned, not
+	// what Inspect returns which is of type []*api.Volume{}. Therefore, we need to handle
+	// this situation here.
+	if volumeID == "versions" {
+		json.NewEncoder(w).Encode([]string{})
+		return
+	}
+
 	dk, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("Failed to inspect volume")
@@ -392,7 +409,11 @@ func (a *authMiddleware) isTokenProcessingRequired(r *http.Request) (volume.Volu
 		clientName := strings.Split(userAgent, "/")
 		if len(clientName) > 0 {
 			if strings.HasSuffix(clientName[0], schedDriverPostFix) {
-				d, err := volumedrivers.Get(clientName[0])
+				driverName := clientName[0]
+				if len(OverrideSchedDriverName) != 0 {
+					driverName = OverrideSchedDriverName
+				}
+				d, err := volumedrivers.Get(driverName)
 				if err != nil {
 					return nil, false
 				}

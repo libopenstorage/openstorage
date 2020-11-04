@@ -36,7 +36,6 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/flexvolume"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	osdcli "github.com/libopenstorage/openstorage/cli"
@@ -53,6 +52,7 @@ import (
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
+	"github.com/libopenstorage/secrets"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/consul"
 	etcd "github.com/portworx/kvdb/etcd/v2"
@@ -181,6 +181,11 @@ func main() {
 		cli.StringFlag{
 			Name:  "csidrivername",
 			Usage: "CSI Driver name",
+			Value: "",
+		},
+		cli.StringFlag{
+			Name:  "secrets-type",
+			Usage: "Secrets manager type. For example \"k8s\"",
 			Value: "",
 		},
 	}
@@ -334,6 +339,19 @@ func start(c *cli.Context) error {
 		return fmt.Errorf("Failed to initialize KVDB: %v", err)
 	}
 
+	// Setup secrets type if any
+	if secretsType := c.String("secrets-type"); len(secretsType) > 0 {
+		i, err := secrets.New(secretsType, nil)
+		if err != nil {
+			return fmt.Errorf("Failed to set secrets type: %v", err)
+		}
+		err = secrets.SetInstance(i)
+		if err != nil {
+			return fmt.Errorf("Unable to create secret manager: %v", err)
+		}
+		logrus.Infof("Secrets type set to %s", secretsType)
+	}
+
 	// Get authenticators
 	authenticators := make(map[string]auth.Authenticator)
 	selfSigned, err := selfSignedAuth(c)
@@ -393,6 +411,9 @@ func start(c *cli.Context) error {
 	isDefaultSet := false
 	// Start the volume drivers.
 	for d, v := range cfg.Osd.Drivers {
+		// Override sched driver with the current one
+		server.OverrideSchedDriverName = d
+
 		logrus.Infof("Starting volume driver: %v", d)
 		if err := volumedrivers.Register(d, v); err != nil {
 			return fmt.Errorf("Unable to start volume driver: %v, %v", d, err)
@@ -436,7 +457,7 @@ func start(c *cli.Context) error {
 			d, sdksocket,
 			volume.DriverAPIBase,
 			uint16(mgmtPort),
-			false,
+			len(authenticators) > 0,
 			authenticators,
 		); err != nil {
 			return fmt.Errorf("Unable to start volume mgmt api server: %v", err)
@@ -510,10 +531,6 @@ func start(c *cli.Context) error {
 
 	if cfg.Osd.ClusterConfig.DefaultDriver != "" && !isDefaultSet {
 		return fmt.Errorf("Invalid OSD config file: Default Driver specified but driver not initialized")
-	}
-
-	if err := flexvolume.StartFlexVolumeAPI(config.FlexVolumePort, cfg.Osd.ClusterConfig.DefaultDriver); err != nil {
-		return fmt.Errorf("Unable to start flexvolume API: %v", err)
 	}
 
 	// Start the graph drivers.
