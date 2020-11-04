@@ -403,8 +403,10 @@ push-docker-images: docker-images
 # to the SDK Version.
 # For master (until released), major should be 0 and patch should be 0.
 # For release branches, major and minor should be frozen.
+#
+# If you think you need to adjust this, you are doing something wrong.
 sdk-check-version:
-	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
+	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=101
 
 mockgen:
 	go get github.com/golang/mock/gomock
