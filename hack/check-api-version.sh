@@ -9,7 +9,7 @@ fail() {
 
 # Check if the api.proto was changed
 # Don't check versions if only the comments have been updated.
-if ! git diff master..HEAD api/api.proto | grep -v "^\+\+\+../api/api.proto$" | grep "^\+" | grep -v "^\+*.//" > /dev/null 2>&1 ; then
+if ! git diff master..HEAD api/api.proto | grep -v "^\+\+\+../api/api.proto$" | grep "^\+" | grep -v "^\+.*//" > /dev/null 2>&1 ; then
 	exit 0
 fi
 
