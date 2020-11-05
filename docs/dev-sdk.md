@@ -36,10 +36,13 @@ Any changes to the protocol must bump the version by one. On the _master_ branch
 * Note that the service is a collection of APIs and are grouped as such in the documentation.
     * Here is an example for [OpenStorageClusterService](https://libopenstorage.github.io/w/release-7.0.generated-api.html#serviceopenstorageapiopenstoragevolume)
 
-##### SDK APIs
+##### SDK APIs (RPCs)
 
 * If it is a new service, then it should have `Create`, `Inspect`, `Delete`, or `Enumerate` style APIs, if possible.
 * All APIs **must** have a single message for the request and a single message for the response with the following style: `Sdk<Service Type><Api Name>Request|Response`
+* RPCs will be created as _methods_ to the service _object_, therefore there is
+  no need to add the service name as part of the RPC. For example,
+  use `Foo`, or `Bar` instead or `ServiceFoo` or `ServiceBar` as RPC names.
 
 ##### Enums
 
