@@ -52,9 +52,10 @@
         "type": "string"
       },
       "JobState": {
-        "default": "PENDING",
-        "description": "- PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
+        "default": "UNSPECIFIED_STATE",
+        "description": "- UNSPECIFIED_STATE: Unspecified\n - PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
         "enum": [
+          "UNSPECIFIED_STATE",
           "PENDING",
           "RUNNING",
           "DONE",
@@ -937,9 +938,10 @@
         "type": "object"
       },
       "apiJobType": {
-        "default": "NONE",
-        "description": "- NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
+        "default": "UNSPECIFIED_TYPE",
+        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
         "enum": [
+          "UNSPECIFIED_TYPE",
           "NONE",
           "DRAIN_ATTACHMENTS"
         ],
@@ -6454,13 +6456,14 @@
         "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.\n\n - NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "NONE",
+              "default": "UNSPECIFIED_TYPE",
               "enum": [
+                "UNSPECIFIED_TYPE",
                 "NONE",
                 "DRAIN_ATTACHMENTS"
               ],
@@ -6499,13 +6502,14 @@
             }
           },
           {
-            "description": "Type of the job.\n\n - NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
+            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "NONE",
+              "default": "UNSPECIFIED_TYPE",
               "enum": [
+                "UNSPECIFIED_TYPE",
                 "NONE",
                 "DRAIN_ATTACHMENTS"
               ],
