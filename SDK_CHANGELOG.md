@@ -1,6 +1,9 @@
 # Changelog
 
 ## Releases
+### v0.69.30 - (11/05/2020)
+
+* Change the API definitions for OpenstorageJobServer RPCs
 
 ### v0.69.29 - (10/14/2020)
 
