@@ -3358,21 +3358,38 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
-// JobType are the supported job types
-enum JobType {
-    JobTypeNone = 0;
-    JobTypeDrainAttachments = 1;
-}
-
 // Job is a generic job object that can encapsulate other
 // messages which follow the job framework of APIs
 message Job {
+    // Type are the supported job types
+    enum Type {
+        // NONE
+        NONE = 0;
+        // Job for draining volume attachments
+        DRAIN_ATTACHMENTS = 1;
+    }
+    // State is an enum for state of a node drain operation
+    enum State {
+        // Pending indicates job is still pending and has not started work
+        PENDING = 0;
+        // Running indicates job is actively running
+        RUNNING = 1;
+        // Done indicates job has finished processing
+        DONE = 2;
+        // Paused indicates job is paused
+        PAUSED = 3;
+        // Cancelled indicates job is cancelled
+        CANCELLED = 4;
+        // Failed indicates job has failed
+        FAILED = 5;
+    }
+
     // ID of the job
     string id = 1;
     // State of the current job
-    JobState state = 2;
+    State state = 2;
     // Type is the job type
-    JobType type = 3;
+    Type type = 3;
     // Job is one of the supported jobs
     oneof job {
         // NodeDrainAttachmentsJob if selected this job desribes
@@ -3416,22 +3433,6 @@ message SdkNodeDrainAttachmentsRequest {
 }
 
 
-// JobState is an enum for state of a node drain operation
-enum JobState {
-    // Pending indicates job is still pending and has not started work
-    JOB_STATE_PENDING = 0;
-    // Running indicates job is actively running
-    JOB_STATE_RUNNING = 1;
-    // Done indicates job has finished processing
-    JOB_STATE_DONE = 2;
-    // Paused indicates job is paused
-    JOB_STATE_PAUSED = 3;
-    // Cancelled indicates job is cancelled
-    JOB_STATE_CANCELLED = 4;
-    // Failed indicates job has failed
-    JOB_STATE_FAILED = 5;
-}
-
 // NodeDrainAttachmentsJob describe a job to drain volume attachments from a node
 message NodeDrainAttachmentsJob {
     // NodeID of the node for which this drain job is running
@@ -3454,7 +3455,7 @@ message NodeDrainAttachmentsJob {
 // Defines a request to list all the  jobs
 message SdkEnumerateJobsRequest  {
     // Type if specified will list the jobs of the provided type
-    JobType type = 1;
+    Job.Type type = 1;
 }
 
 // Defines a response will all the known jobs
@@ -3468,9 +3469,9 @@ message SdkUpdateJobRequest {
   // ID of the job
   string id = 1;
   // Type of the job
-  JobType type = 2;
+  Job.Type type = 2;
   // State is the new task state to update the job to
-  JobState state = 3;
+  Job.State state = 3;
 }
 
 // Defines the response for an update to an existing job
@@ -3482,7 +3483,7 @@ message SdkGetJobStatusRequest {
   // ID of the job
   string id = 1;
   // Type of the job
-  JobType type = 2;
+  Job.Type type = 2;
 }
 
 // JobAudit is an audit entry for a job describing the different operations
