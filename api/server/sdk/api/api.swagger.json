@@ -373,6 +373,23 @@
         },
         "type": "object"
       },
+      "apiCloudDriveTransferJob": {
+        "properties": {
+          "destination_driveset_id": {
+            "title": "DestinationDrivesetID is the ID of the storageless driveset that needs to take over the SourceDriveSetID",
+            "type": "string"
+          },
+          "source_driveset_id": {
+            "title": "SourceDrivesetID is the ID of the current driveset that needs to be transferred",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status describes a helpful status of this operation",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiCloudMigrateCancelRequest": {
         "properties": {
           "task_id": {
@@ -884,6 +901,9 @@
       },
       "apiJob": {
         "properties": {
+          "clouddrive_transfer": {
+            "$ref": "#/components/schemas/apiCloudDriveTransferJob"
+          },
           "create_time": {
             "format": "date-time",
             "title": "CreateTime is the time the job was created",
@@ -951,7 +971,8 @@
         "default": "JobTypeNone",
         "enum": [
           "JobTypeNone",
-          "JobTypeDrainAttachments"
+          "JobTypeDrainAttachments",
+          "JobTypeCloudDriveTransfer"
         ],
         "title": "JobType are the supported job types",
         "type": "string"
@@ -5161,7 +5182,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.0"
+    "version": "0.102.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6436,7 +6457,8 @@
               "default": "JobTypeNone",
               "enum": [
                 "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "JobTypeDrainAttachments",
+                "JobTypeCloudDriveTransfer"
               ],
               "type": "string"
             }
@@ -6481,7 +6503,8 @@
               "default": "JobTypeNone",
               "enum": [
                 "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "JobTypeDrainAttachments",
+                "JobTypeCloudDriveTransfer"
               ],
               "type": "string"
             }
