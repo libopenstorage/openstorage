@@ -2755,6 +2755,16 @@
         "title": "Defines a response for an SDK request that spins up a new job\nto perform the request",
         "type": "object"
       },
+      "apiSdkNodeCordonAttachmentsRequest": {
+        "properties": {
+          "node_id": {
+            "title": "Node ID on which any further volume attachments will be disabled",
+            "type": "string"
+          }
+        },
+        "title": "SdkNodeCordonAttachmentsRequest request for disabling new volume\nattachments from a node",
+        "type": "object"
+      },
       "apiSdkNodeCordonAttachmentsResponse": {
         "title": "SdkNodeCordonAttachmentsRespinse response for disabling new volume\nattachments from a node",
         "type": "object"
@@ -2827,6 +2837,16 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeUncordonAttachmentsRequest": {
+        "properties": {
+          "node_id": {
+            "title": "Node ID on which any further volume attachments will be enabled",
+            "type": "string"
+          }
+        },
+        "title": "SdkNodeUncordonAttachmentsRequest request for re-enabling volume\nattachments for a node",
         "type": "object"
       },
       "apiSdkNodeUncordonAttachmentsResponse": {
@@ -3353,6 +3373,22 @@
         ],
         "title": "Defines times of day",
         "type": "string"
+      },
+      "apiSdkUpdateJobRequest": {
+        "properties": {
+          "id": {
+            "title": "ID of the job",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/apiJobState"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiJobType"
+          }
+        },
+        "title": "Defines a request to update an existing job",
+        "type": "object"
       },
       "apiSdkUpdateJobResponse": {
         "title": "Defines the response for an update to an existing job",
@@ -6446,7 +6482,7 @@
     },
     "/v1/jobs": {
       "get": {
-        "operationId": "EnumerateJobs",
+        "operationId": "Enumerate",
         "parameters": [
           {
             "description": "Type if specified will list the jobs of the provided type.",
@@ -6476,7 +6512,7 @@
             "description": ""
           }
         },
-        "summary": "EnumerateJobs returns all the jobs currently known to the system",
+        "summary": "Enumerate returns all the jobs currently known to the system",
         "tags": [
           "OpenStorageJob"
         ]
@@ -6484,7 +6520,7 @@
     },
     "/v1/jobs/{id}": {
       "get": {
-        "operationId": "GetJobStatus",
+        "operationId": "GetStatus",
         "parameters": [
           {
             "in": "path",
@@ -6522,13 +6558,13 @@
             "description": ""
           }
         },
-        "summary": "GetJobStatus gets the status of a job",
+        "summary": "GetStatus gets the status of a job",
         "tags": [
           "OpenStorageJob"
         ]
       },
       "put": {
-        "operationId": "UpdateJobState",
+        "operationId": "Update",
         "parameters": [
           {
             "in": "path",
@@ -6539,6 +6575,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkUpdateJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6551,7 +6597,7 @@
             "description": ""
           }
         },
-        "summary": "UpdateJobState updates an existing job\nOnly acceptable values are\nJobState_PAUSED - acceptable only from running state\nJobState_CANCELLED - acceptable only from running/pause state\nJobState_RUNNING - acceptable only from pause state",
+        "summary": "Update updates an existing job's state\nOnly acceptable state values are\nJobState_PAUSED - acceptable only from running state\nJobState_CANCELLED - acceptable only from running/pause state\nJobState_RUNNING - acceptable only from pause state",
         "tags": [
           "OpenStorageJob"
         ]
@@ -6719,6 +6765,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeCordonAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6750,6 +6806,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeDrainAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6781,6 +6847,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeUncordonAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
