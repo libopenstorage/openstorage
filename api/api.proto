@@ -3363,25 +3363,29 @@ message SdkNodeInspectRequest {
 message Job {
     // Type are the supported job types
     enum Type {
-        // NONE
-        NONE = 0;
+        // Unspecified
+        UNSPECIFIED_TYPE = 0;
+        // None
+        NONE = 1;
         // Job for draining volume attachments
-        DRAIN_ATTACHMENTS = 1;
+        DRAIN_ATTACHMENTS = 2;
     }
     // State is an enum for state of a node drain operation
     enum State {
+        // Unspecified
+        UNSPECIFIED_STATE = 0;
         // Pending indicates job is still pending and has not started work
-        PENDING = 0;
+        PENDING = 1;
         // Running indicates job is actively running
-        RUNNING = 1;
+        RUNNING = 2;
         // Done indicates job has finished processing
-        DONE = 2;
+        DONE = 3;
         // Paused indicates job is paused
-        PAUSED = 3;
+        PAUSED = 4;
         // Cancelled indicates job is cancelled
-        CANCELLED = 4;
+        CANCELLED = 5;
         // Failed indicates job has failed
-        FAILED = 5;
+        FAILED = 6;
     }
 
     // ID of the job
