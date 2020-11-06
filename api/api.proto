@@ -1780,28 +1780,29 @@ service OpenStoragePool {
 // OpenstorageJob is a service that provides a common set of APIs for services
 // that use the asynchronous job framework
 service OpenStorageJob {
-  // UpdateJobState updates an existing job
-  // Only acceptable values are
+  // Update updates an existing job's state
+  // Only acceptable state values are
   // JobState_PAUSED - acceptable only from running state
   // JobState_CANCELLED - acceptable only from running/pause state
   // JobState_RUNNING - acceptable only from pause state
-  rpc UpdateJobState(SdkUpdateJobRequest)
+  rpc Update(SdkUpdateJobRequest)
   returns (SdkUpdateJobResponse) {
     option(google.api.http) = {
         put: "/v1/jobs/{id}"
+        body: "*"
       };
   }
 
-  // GetJobStatus gets the status of a job
-  rpc GetJobStatus(SdkGetJobStatusRequest)
+  // GetStatus gets the status of a job
+  rpc GetStatus(SdkGetJobStatusRequest)
     returns (SdkGetJobStatusResponse) {
       option(google.api.http) = {
         get: "/v1/jobs/{id}"
       };
     }
 
-  // EnumerateJobs returns all the jobs currently known to the system
-  rpc EnumerateJobs(SdkEnumerateJobsRequest)
+  // Enumerate returns all the jobs currently known to the system
+  rpc Enumerate(SdkEnumerateJobsRequest)
   returns (SdkEnumerateJobsResponse) {
     option(google.api.http) = {
         get: "/v1/jobs"
@@ -1858,6 +1859,7 @@ service OpenStorageNode {
       returns (SdkJobResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/drain/{node_id}"
+        body: "*"
       };
     }
 
@@ -1868,6 +1870,7 @@ service OpenStorageNode {
       returns (SdkNodeCordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/disable/{node_id}"
+        body: "*"
       };
     }
 
@@ -1877,6 +1880,7 @@ service OpenStorageNode {
       returns (SdkNodeUncordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/enable/{node_id}"
+        body: "*"
       };
     }
 }
@@ -4644,7 +4648,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 1;
   }
 
   // The following cannot be set to use the enum Version because the REST

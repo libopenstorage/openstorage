@@ -18,7 +18,7 @@ func (j *JobServer) cluster() cluster.Cluster {
 	return j.server.cluster()
 }
 
-func (j *JobServer) UpdateJobState(
+func (j *JobServer) Update(
 	ctx context.Context,
 	req *api.SdkUpdateJobRequest,
 ) (*api.SdkUpdateJobResponse, error) {
@@ -29,7 +29,7 @@ func (j *JobServer) UpdateJobState(
 	return j.cluster().UpdateJobState(ctx, req)
 }
 
-func (j *JobServer) GetJobStatus(
+func (j *JobServer) GetStatus(
 	ctx context.Context,
 	req *api.SdkGetJobStatusRequest,
 ) (*api.SdkGetJobStatusResponse, error) {
@@ -40,7 +40,7 @@ func (j *JobServer) GetJobStatus(
 	return j.cluster().GetJobStatus(ctx, req)
 }
 
-func (j *JobServer) EnumerateJobs(
+func (j *JobServer) Enumerate(
 	ctx context.Context,
 	req *api.SdkEnumerateJobsRequest,
 ) (*api.SdkEnumerateJobsResponse, error) {
