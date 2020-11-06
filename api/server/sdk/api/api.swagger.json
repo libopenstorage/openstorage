@@ -51,6 +51,20 @@
         "title": "FilesystemTrimStatus represents the status codes returned from\nOpenStorageFilesystemTrim service APIs()",
         "type": "string"
       },
+      "JobState": {
+        "default": "PENDING",
+        "description": "- PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "PAUSED",
+          "CANCELLED",
+          "FAILED"
+        ],
+        "title": "State is an enum for state of a node drain operation",
+        "type": "string"
+      },
       "LabelSelectorRequirementOperator": {
         "default": "In",
         "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
@@ -902,7 +916,7 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/apiJobState"
+            "$ref": "#/components/schemas/JobState"
           },
           "type": {
             "$ref": "#/components/schemas/apiJobType"
@@ -910,20 +924,6 @@
         },
         "title": "Job is a generic job object that can encapsulate other\nmessages which follow the job framework of APIs",
         "type": "object"
-      },
-      "apiJobState": {
-        "default": "JOB_STATE_PENDING",
-        "description": "- JOB_STATE_PENDING: Pending indicates job is still pending and has not started work\n - JOB_STATE_RUNNING: Running indicates job is actively running\n - JOB_STATE_DONE: Done indicates job has finished processing\n - JOB_STATE_PAUSED: Paused indicates job is paused\n - JOB_STATE_CANCELLED: Cancelled indicates job is cancelled\n - JOB_STATE_FAILED: Failed indicates job has failed",
-        "enum": [
-          "JOB_STATE_PENDING",
-          "JOB_STATE_RUNNING",
-          "JOB_STATE_DONE",
-          "JOB_STATE_PAUSED",
-          "JOB_STATE_CANCELLED",
-          "JOB_STATE_FAILED"
-        ],
-        "title": "JobState is an enum for state of a node drain operation",
-        "type": "string"
       },
       "apiJobSummary": {
         "properties": {
@@ -948,12 +948,13 @@
         "type": "object"
       },
       "apiJobType": {
-        "default": "JobTypeNone",
+        "default": "NONE",
+        "description": "- NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
         "enum": [
-          "JobTypeNone",
-          "JobTypeDrainAttachments"
+          "NONE",
+          "DRAIN_ATTACHMENTS"
         ],
-        "title": "JobType are the supported job types",
+        "title": "Type are the supported job types",
         "type": "string"
       },
       "apiJobWorkSummary": {
@@ -3360,7 +3361,7 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/apiJobState"
+            "$ref": "#/components/schemas/JobState"
           },
           "type": {
             "$ref": "#/components/schemas/apiJobType"
@@ -6464,15 +6465,15 @@
         "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "JobTypeNone",
+              "default": "NONE",
               "enum": [
-                "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "NONE",
+                "DRAIN_ATTACHMENTS"
               ],
               "type": "string"
             }
@@ -6509,15 +6510,15 @@
             }
           },
           {
-            "description": "Type of the job.",
+            "description": "Type of the job.\n\n - NONE: NONE\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "JobTypeNone",
+              "default": "NONE",
               "enum": [
-                "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "NONE",
+                "DRAIN_ATTACHMENTS"
               ],
               "type": "string"
             }
