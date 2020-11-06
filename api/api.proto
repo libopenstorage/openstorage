@@ -444,6 +444,9 @@ message FastpathReplState {
     // initiator info
     bool imported = 9;
     string devpath = 10;
+
+    // node_uuid added to enhance UI reporting
+    string node_uuid = 11;
 }
 
 // FastpathConfig part of volume
@@ -458,6 +461,8 @@ message FastpathConfig {
   repeated FastpathReplState replicas = 4;
   // Dirty flag on volume - was attached in userspace
   bool dirty = 5;
+  // fastpath coordinator node uuid to enhance reporting
+  string coord_uuid = 6;
 }
 
 // ScanPolicy defines when a filesystem check is triggered and what action to take
@@ -4649,7 +4654,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 102;
+    Minor = 103;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.103.0 - (11/05/2020)
+
+* Fastpath extend to carry node UUID instead of internal int
+
 ### v0.102.0 - (11/05/2020)
 
 * Add CloudDriveTransfer job type 
