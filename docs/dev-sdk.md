@@ -47,8 +47,10 @@ Any changes to the protocol must bump the version by one. On the _master_ branch
 ##### Enums
 
 * Follow the [Google protobuf style for enums](https://developers.google.com/protocol-buffers/docs/style#enums)
-* Enum of zero value should be labeled as `XXX_UNKNOWN`, `XXX_NONE`, or `XXX_UNDEFINED` to check if it was not set.
-* Wrap enums in messages so that their string values are clearer. Example:
+* According to the Google guide, the enum of zero value should be labeled as `UNSPECIFIED` to check if it was not set since `0` is the default value set when the client does not provide it.
+* Wrap enums in messages so that their string values are clearer. Wrapping an enum in a message also has the benefit of not needing to prefix the enums with namespaced information. For example, instead of using the enum `XATTR_UNSPECIFIED`, the example above uses just `UNSPECIFIED` since it is inide the `Xattr` message. The generated code will be namepaced:
+
+Proto:
 
 ```proto
 // Xattr defines implementation specific volume attribute
@@ -62,7 +64,16 @@ message Xattr {
 }
 ```
 
-Wrapping an enum in a message also has the benefit of not needing to prefix the enums with namespaced information. For example, instead of using the enum `XATTR_UNSPECIFIED`, the example above uses just `UNSPECIFIED` since it is inide the `Xattr` message. The generated code will be namepaced:
+Using the enum in a Proto
+
+```proto
+message VolumeSpec {
+  // Holds the extended attributes for the volume
+  Xattr.Value xattr = 1;
+}
+```
+
+Notice the namepaced and string values in the generated output code:
 
 ```go
 type Xattr_Value int32
@@ -81,6 +92,11 @@ var Xattr_Value_name = map[int32]string{
 var Xattr_Value_value = map[string]int32{
 	"UNSPECIFIED":   0,
 	"COW_ON_DEMAND": 1,
+}
+
+typedef VolueSpec struct {
+  // Holds the extended attributes for the volume
+	Xattr Xattr_Value `protobuf:"varint,36,opt,name=xattr,enum=openstorage.api.Xattr_Value" json:"xattr,omitempty"`
 }
 ```
 
