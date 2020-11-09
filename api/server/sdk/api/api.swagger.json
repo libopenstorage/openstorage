@@ -51,6 +51,21 @@
         "title": "FilesystemTrimStatus represents the status codes returned from\nOpenStorageFilesystemTrim service APIs()",
         "type": "string"
       },
+      "JobState": {
+        "default": "UNSPECIFIED_STATE",
+        "description": "- UNSPECIFIED_STATE: Unspecified\n - PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
+        "enum": [
+          "UNSPECIFIED_STATE",
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "PAUSED",
+          "CANCELLED",
+          "FAILED"
+        ],
+        "title": "State is an enum for state of a node drain operation",
+        "type": "string"
+      },
       "LabelSelectorRequirementOperator": {
         "default": "In",
         "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
@@ -902,7 +917,7 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/apiJobState"
+            "$ref": "#/components/schemas/JobState"
           },
           "type": {
             "$ref": "#/components/schemas/apiJobType"
@@ -910,20 +925,6 @@
         },
         "title": "Job is a generic job object that can encapsulate other\nmessages which follow the job framework of APIs",
         "type": "object"
-      },
-      "apiJobState": {
-        "default": "JOB_STATE_PENDING",
-        "description": "- JOB_STATE_PENDING: Pending indicates job is still pending and has not started work\n - JOB_STATE_RUNNING: Running indicates job is actively running\n - JOB_STATE_DONE: Done indicates job has finished processing\n - JOB_STATE_PAUSED: Paused indicates job is paused\n - JOB_STATE_CANCELLED: Cancelled indicates job is cancelled\n - JOB_STATE_FAILED: Failed indicates job has failed",
-        "enum": [
-          "JOB_STATE_PENDING",
-          "JOB_STATE_RUNNING",
-          "JOB_STATE_DONE",
-          "JOB_STATE_PAUSED",
-          "JOB_STATE_CANCELLED",
-          "JOB_STATE_FAILED"
-        ],
-        "title": "JobState is an enum for state of a node drain operation",
-        "type": "string"
       },
       "apiJobSummary": {
         "properties": {
@@ -948,12 +949,14 @@
         "type": "object"
       },
       "apiJobType": {
-        "default": "JobTypeNone",
+        "default": "UNSPECIFIED_TYPE",
+        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
         "enum": [
-          "JobTypeNone",
-          "JobTypeDrainAttachments"
+          "UNSPECIFIED_TYPE",
+          "NONE",
+          "DRAIN_ATTACHMENTS"
         ],
-        "title": "JobType are the supported job types",
+        "title": "Type are the supported job types",
         "type": "string"
       },
       "apiJobWorkSummary": {
@@ -2734,6 +2737,16 @@
         "title": "Defines a response for an SDK request that spins up a new job\nto perform the request",
         "type": "object"
       },
+      "apiSdkNodeCordonAttachmentsRequest": {
+        "properties": {
+          "node_id": {
+            "title": "Node ID on which any further volume attachments will be disabled",
+            "type": "string"
+          }
+        },
+        "title": "SdkNodeCordonAttachmentsRequest request for disabling new volume\nattachments from a node",
+        "type": "object"
+      },
       "apiSdkNodeCordonAttachmentsResponse": {
         "title": "SdkNodeCordonAttachmentsRespinse response for disabling new volume\nattachments from a node",
         "type": "object"
@@ -2806,6 +2819,16 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeUncordonAttachmentsRequest": {
+        "properties": {
+          "node_id": {
+            "title": "Node ID on which any further volume attachments will be enabled",
+            "type": "string"
+          }
+        },
+        "title": "SdkNodeUncordonAttachmentsRequest request for re-enabling volume\nattachments for a node",
         "type": "object"
       },
       "apiSdkNodeUncordonAttachmentsResponse": {
@@ -3332,6 +3355,22 @@
         ],
         "title": "Defines times of day",
         "type": "string"
+      },
+      "apiSdkUpdateJobRequest": {
+        "properties": {
+          "id": {
+            "title": "ID of the job",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/JobState"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiJobType"
+          }
+        },
+        "title": "Defines a request to update an existing job",
+        "type": "object"
       },
       "apiSdkUpdateJobResponse": {
         "title": "Defines the response for an update to an existing job",
@@ -5161,7 +5200,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.0"
+    "version": "0.101.1"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6425,18 +6464,19 @@
     },
     "/v1/jobs": {
       "get": {
-        "operationId": "EnumerateJobs",
+        "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "JobTypeNone",
+              "default": "UNSPECIFIED_TYPE",
               "enum": [
-                "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "UNSPECIFIED_TYPE",
+                "NONE",
+                "DRAIN_ATTACHMENTS"
               ],
               "type": "string"
             }
@@ -6454,7 +6494,7 @@
             "description": ""
           }
         },
-        "summary": "EnumerateJobs returns all the jobs currently known to the system",
+        "summary": "Enumerate returns all the jobs currently known to the system",
         "tags": [
           "OpenStorageJob"
         ]
@@ -6462,7 +6502,7 @@
     },
     "/v1/jobs/{id}": {
       "get": {
-        "operationId": "GetJobStatus",
+        "operationId": "GetStatus",
         "parameters": [
           {
             "in": "path",
@@ -6473,15 +6513,16 @@
             }
           },
           {
-            "description": "Type of the job.",
+            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments",
             "in": "query",
             "name": "type",
             "required": false,
             "schema": {
-              "default": "JobTypeNone",
+              "default": "UNSPECIFIED_TYPE",
               "enum": [
-                "JobTypeNone",
-                "JobTypeDrainAttachments"
+                "UNSPECIFIED_TYPE",
+                "NONE",
+                "DRAIN_ATTACHMENTS"
               ],
               "type": "string"
             }
@@ -6499,13 +6540,13 @@
             "description": ""
           }
         },
-        "summary": "GetJobStatus gets the status of a job",
+        "summary": "GetStatus gets the status of a job",
         "tags": [
           "OpenStorageJob"
         ]
       },
       "put": {
-        "operationId": "UpdateJobState",
+        "operationId": "Update",
         "parameters": [
           {
             "in": "path",
@@ -6516,6 +6557,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkUpdateJobRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6528,7 +6579,7 @@
             "description": ""
           }
         },
-        "summary": "UpdateJobState updates an existing job\nOnly acceptable values are\nJobState_PAUSED - acceptable only from running state\nJobState_CANCELLED - acceptable only from running/pause state\nJobState_RUNNING - acceptable only from pause state",
+        "summary": "Update updates an existing job's state\nOnly acceptable state values are\nJobState_PAUSED - acceptable only from running state\nJobState_CANCELLED - acceptable only from running/pause state\nJobState_RUNNING - acceptable only from pause state",
         "tags": [
           "OpenStorageJob"
         ]
@@ -6696,6 +6747,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeCordonAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6727,6 +6788,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeDrainAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {
@@ -6758,6 +6829,16 @@
             }
           }
         ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkNodeUncordonAttachmentsRequest"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "content": {

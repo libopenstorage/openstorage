@@ -1780,28 +1780,29 @@ service OpenStoragePool {
 // OpenstorageJob is a service that provides a common set of APIs for services
 // that use the asynchronous job framework
 service OpenStorageJob {
-  // UpdateJobState updates an existing job
-  // Only acceptable values are
+  // Update updates an existing job's state
+  // Only acceptable state values are
   // JobState_PAUSED - acceptable only from running state
   // JobState_CANCELLED - acceptable only from running/pause state
   // JobState_RUNNING - acceptable only from pause state
-  rpc UpdateJobState(SdkUpdateJobRequest)
+  rpc Update(SdkUpdateJobRequest)
   returns (SdkUpdateJobResponse) {
     option(google.api.http) = {
         put: "/v1/jobs/{id}"
+        body: "*"
       };
   }
 
-  // GetJobStatus gets the status of a job
-  rpc GetJobStatus(SdkGetJobStatusRequest)
+  // GetStatus gets the status of a job
+  rpc GetStatus(SdkGetJobStatusRequest)
     returns (SdkGetJobStatusResponse) {
       option(google.api.http) = {
         get: "/v1/jobs/{id}"
       };
     }
 
-  // EnumerateJobs returns all the jobs currently known to the system
-  rpc EnumerateJobs(SdkEnumerateJobsRequest)
+  // Enumerate returns all the jobs currently known to the system
+  rpc Enumerate(SdkEnumerateJobsRequest)
   returns (SdkEnumerateJobsResponse) {
     option(google.api.http) = {
         get: "/v1/jobs"
@@ -1858,6 +1859,7 @@ service OpenStorageNode {
       returns (SdkJobResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/drain/{node_id}"
+        body: "*"
       };
     }
 
@@ -1868,6 +1870,7 @@ service OpenStorageNode {
       returns (SdkNodeCordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/disable/{node_id}"
+        body: "*"
       };
     }
 
@@ -1877,6 +1880,7 @@ service OpenStorageNode {
       returns (SdkNodeUncordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/enable/{node_id}"
+        body: "*"
       };
     }
 }
@@ -3354,21 +3358,42 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
-// JobType are the supported job types
-enum JobType {
-    JobTypeNone = 0;
-    JobTypeDrainAttachments = 1;
-}
-
 // Job is a generic job object that can encapsulate other
 // messages which follow the job framework of APIs
 message Job {
+    // Type are the supported job types
+    enum Type {
+        // Unspecified
+        UNSPECIFIED_TYPE = 0;
+        // None
+        NONE = 1;
+        // Job for draining volume attachments
+        DRAIN_ATTACHMENTS = 2;
+    }
+    // State is an enum for state of a node drain operation
+    enum State {
+        // Unspecified
+        UNSPECIFIED_STATE = 0;
+        // Pending indicates job is still pending and has not started work
+        PENDING = 1;
+        // Running indicates job is actively running
+        RUNNING = 2;
+        // Done indicates job has finished processing
+        DONE = 3;
+        // Paused indicates job is paused
+        PAUSED = 4;
+        // Cancelled indicates job is cancelled
+        CANCELLED = 5;
+        // Failed indicates job has failed
+        FAILED = 6;
+    }
+
     // ID of the job
     string id = 1;
     // State of the current job
-    JobState state = 2;
+    State state = 2;
     // Type is the job type
-    JobType type = 3;
+    Type type = 3;
     // Job is one of the supported jobs
     oneof job {
         // NodeDrainAttachmentsJob if selected this job desribes
@@ -3412,22 +3437,6 @@ message SdkNodeDrainAttachmentsRequest {
 }
 
 
-// JobState is an enum for state of a node drain operation
-enum JobState {
-    // Pending indicates job is still pending and has not started work
-    JOB_STATE_PENDING = 0;
-    // Running indicates job is actively running
-    JOB_STATE_RUNNING = 1;
-    // Done indicates job has finished processing
-    JOB_STATE_DONE = 2;
-    // Paused indicates job is paused
-    JOB_STATE_PAUSED = 3;
-    // Cancelled indicates job is cancelled
-    JOB_STATE_CANCELLED = 4;
-    // Failed indicates job has failed
-    JOB_STATE_FAILED = 5;
-}
-
 // NodeDrainAttachmentsJob describe a job to drain volume attachments from a node
 message NodeDrainAttachmentsJob {
     // NodeID of the node for which this drain job is running
@@ -3450,7 +3459,7 @@ message NodeDrainAttachmentsJob {
 // Defines a request to list all the  jobs
 message SdkEnumerateJobsRequest  {
     // Type if specified will list the jobs of the provided type
-    JobType type = 1;
+    Job.Type type = 1;
 }
 
 // Defines a response will all the known jobs
@@ -3464,9 +3473,9 @@ message SdkUpdateJobRequest {
   // ID of the job
   string id = 1;
   // Type of the job
-  JobType type = 2;
+  Job.Type type = 2;
   // State is the new task state to update the job to
-  JobState state = 3;
+  Job.State state = 3;
 }
 
 // Defines the response for an update to an existing job
@@ -3478,7 +3487,7 @@ message SdkGetJobStatusRequest {
   // ID of the job
   string id = 1;
   // Type of the job
-  JobType type = 2;
+  Job.Type type = 2;
 }
 
 // JobAudit is an audit entry for a job describing the different operations
@@ -4644,7 +4653,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 0;
+    Patch = 1;
   }
 
   // The following cannot be set to use the enum Version because the REST

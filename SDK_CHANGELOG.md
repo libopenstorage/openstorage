@@ -1,6 +1,13 @@
 # Changelog
 
 ## Releases
+### v0.101.1 - (11/05/2020)
+
+* Change the API definitions for OpenstorageJobServer RPCs
+
+### v0.101.0 - (10/14/2020)
+
+* Add CredentialDeleteReferences API
 
 ### v0.101.0 - (10/14/2020)
 
