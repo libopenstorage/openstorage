@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.101.2 - (11/05/2020)
+
+* Fastpath extend to carry node UUID instead of internal int
+
 ### v0.101.1 - (11/05/2020)
 
 * Change the API definitions for OpenstorageJobServer RPCs

@@ -736,6 +736,10 @@
       },
       "apiFastpathConfig": {
         "properties": {
+          "coord_uuid": {
+            "title": "fastpath coordinator node uuid to enhance reporting",
+            "type": "string"
+          },
           "dirty": {
             "format": "boolean",
             "title": "Dirty flag on volume - was attached in userspace",
@@ -808,6 +812,10 @@
           "node_id": {
             "format": "int64",
             "type": "integer"
+          },
+          "node_uuid": {
+            "title": "node_uuid added to enhance UI reporting",
+            "type": "string"
           },
           "protocol": {
             "$ref": "#/components/schemas/apiFastpathProtocol"
@@ -5200,7 +5208,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.1"
+    "version": "0.101.2"
   },
   "openapi": "3.0.0",
   "paths": {
