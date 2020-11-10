@@ -1,6 +1,11 @@
 # Changelog
 
 ## Releases
+
+### v0.69.31 - (11/05/2020)
+
+* Add CloudDriveTransfer job type 
+
 ### v0.69.30 - (11/05/2020)
 
 * Change the API definitions for OpenstorageJobServer RPCs
