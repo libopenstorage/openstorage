@@ -1,6 +1,11 @@
 # Changelog
 
 ## Releases
+
+### v0.105.0 - (11/17/2020)
+
+* Use destination instance ID for cloud driver transfer job 
+
 ### v0.104.0 - (11/05/2020)
 
 * Fastpath extend to carry node UUID instead of internal int
