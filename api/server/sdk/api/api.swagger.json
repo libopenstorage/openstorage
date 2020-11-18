@@ -390,8 +390,8 @@
       },
       "apiCloudDriveTransferJob": {
         "properties": {
-          "destination_driveset_id": {
-            "title": "DestinationDrivesetID is the ID of the storageless driveset that needs to take over the SourceDriveSetID",
+          "destination_instance_id": {
+            "title": "DestinationInstanceID is the ID of the storageless instance that needs to take over the SourceDriveSetID",
             "type": "string"
           },
           "source_driveset_id": {
@@ -5210,7 +5210,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.69.31"
+    "version": "0.69.32"
   },
   "openapi": "3.0.0",
   "paths": {

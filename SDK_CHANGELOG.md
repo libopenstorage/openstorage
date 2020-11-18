@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.69.32 - (11/17/2020)
+
+* Use destination instance ID for cloud driver transfer job 
+
 ### v0.69.31 - (11/05/2020)
 
 * Add CloudDriveTransfer job type 
