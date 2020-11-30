@@ -102,22 +102,27 @@ func (c *Client) Versions(endpoint string) ([]string, error) {
 
 // Get returns a Request object setup for GET call.
 func (c *Client) Get() *Request {
-	return NewRequest(c.httpClient, c.base, "GET", c.version, c.authstring, c.userAgent)
+	return NewRequest(c.httpClient, c.base, http.MethodGet, c.version, c.authstring, c.userAgent)
 }
 
 // Post returns a Request object setup for POST call.
 func (c *Client) Post() *Request {
-	return NewRequest(c.httpClient, c.base, "POST", c.version, c.authstring, c.userAgent)
+	return NewRequest(c.httpClient, c.base, http.MethodPost, c.version, c.authstring, c.userAgent)
 }
 
 // Put returns a Request object setup for PUT call.
 func (c *Client) Put() *Request {
-	return NewRequest(c.httpClient, c.base, "PUT", c.version, c.authstring, c.userAgent)
+	return NewRequest(c.httpClient, c.base, http.MethodPut, c.version, c.authstring, c.userAgent)
+}
+
+// Patch returns a Request object setup for PATCH call.
+func (c *Client) Patch() *Request {
+	return NewRequest(c.httpClient, c.base, http.MethodPatch, c.version, c.authstring, c.userAgent)
 }
 
 // Delete returns a Request object setup for DELETE call.
 func (c *Client) Delete() *Request {
-	return NewRequest(c.httpClient, c.base, "DELETE", c.version, c.authstring, c.userAgent)
+	return NewRequest(c.httpClient, c.base, http.MethodDelete, c.version, c.authstring, c.userAgent)
 }
 
 func unix2HTTP(u *url.URL) {
