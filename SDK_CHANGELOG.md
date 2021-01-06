@@ -2,9 +2,13 @@
 
 ## Releases
 
+### v0.106.0 - (01/06/2021)
+
+* Extend volume stats structure to include discards
+
 ### v0.105.0 - (11/17/2020)
 
-* Use destination instance ID for cloud driver transfer job 
+* Use destination instance ID for cloud driver transfer job
 
 ### v0.104.0 - (11/05/2020)
 
