@@ -879,6 +879,12 @@ message Stats {
   uint64 bytes_used = 9;
   // Interval in ms during which stats were collected
   uint64 interval_ms = 10;
+  // Discards completed successfully
+  uint64 discards = 11;
+  // Time spent in discards in ms
+  uint64 discard_ms = 12;
+  // Number of bytes discarded
+  uint64 discard_bytes = 13;
 }
 
 // Provides details on exclusive and shared storage used by
@@ -4665,7 +4671,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 105;
+    Minor = 106;
     // SDK version patch value of this specification
     Patch = 0;
   }
