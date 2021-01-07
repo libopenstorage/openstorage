@@ -883,7 +883,7 @@ message Stats {
   uint64 discards = 11;
   // Time spent in discards in ms
   uint64 discard_ms = 12;
-  // Number of bytes discard
+  // Number of bytes discarded
   uint64 discard_bytes = 13;
 }
 
