@@ -3982,7 +3982,7 @@
           },
           "discard_bytes": {
             "format": "uint64",
-            "title": "Number of bytes discard",
+            "title": "Number of bytes discarded",
             "type": "string"
           },
           "discard_ms": {
