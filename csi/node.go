@@ -74,8 +74,8 @@ func (s *OsdCsiServer) NodePublishVolume(
 		return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
 	}
 
-	// Verify target location is an existing directory
-	if err := verifyTargetLocation(req.GetTargetPath()); err != nil {
+	// Ensure target location is created correctly
+	if err := ensureMountPathCreated(req.GetTargetPath()); err != nil {
 		return nil, status.Errorf(
 			codes.Aborted,
 			"Failed to use target location %s: %s",
@@ -264,18 +264,25 @@ func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientCo
 	}
 }
 
-func verifyTargetLocation(targetPath string) error {
+func ensureMountPathCreated(targetPath string) error {
 	fileInfo, err := os.Lstat(targetPath)
 	if err != nil && os.IsNotExist(err) {
-		return fmt.Errorf("Target location %s does not exist", targetPath)
+		err = os.MkdirAll(targetPath, 0750)
+		if err != nil {
+			return fmt.Errorf(
+				"Failed to create target path %s: %s",
+				targetPath,
+				err.Error())
+		}
 	} else if err != nil {
 		return fmt.Errorf(
 			"Unknown error while verifying target location %s: %s",
 			targetPath,
 			err.Error())
-	}
-	if !fileInfo.IsDir() {
-		return fmt.Errorf("Target location %s is not a directory", targetPath)
+	} else {
+		if !fileInfo.IsDir() {
+			return fmt.Errorf("Target location %s is not a directory", targetPath)
+		}
 	}
 
 	return nil
