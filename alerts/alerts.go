@@ -3,7 +3,6 @@ package alerts
 
 import (
 	"encoding/json"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -68,9 +67,6 @@ type FilterDeleter interface {
 }
 
 func newManager(options ...Option) (*manager, error) {
-	if kvdb.Instance() == nil {
-		return nil, fmt.Errorf("kvdb instance is not set")
-	}
 	m := &manager{rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
