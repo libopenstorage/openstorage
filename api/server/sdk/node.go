@@ -20,6 +20,7 @@ import (
 	"context"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/portworx/kvdb"
@@ -137,6 +138,39 @@ func (s *NodeServer) InspectCurrent(
 	return &api.SdkNodeInspectCurrentResponse{
 		Node: resp.GetNode(),
 	}, nil
+}
+
+func (s *NodeServer) DrainAttachments(
+	ctx context.Context,
+	req *api.SdkNodeDrainAttachmentsRequest,
+) (*api.SdkJobResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().DrainAttachments(ctx, req)
+}
+
+func (s *NodeServer) CordonAttachments(
+	ctx context.Context,
+	req *api.SdkNodeCordonAttachmentsRequest,
+) (*api.SdkNodeCordonAttachmentsResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().CordonAttachments(ctx, req)
+}
+
+func (s *NodeServer) UncordonAttachments(
+	ctx context.Context,
+	req *api.SdkNodeUncordonAttachmentsRequest,
+) (*api.SdkNodeUncordonAttachmentsResponse, error) {
+	if s.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+
+	return s.cluster().UncordonAttachments(ctx, req)
 }
 
 func (s *NodeServer) VolumeUsageByNode(

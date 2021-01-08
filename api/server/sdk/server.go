@@ -190,6 +190,7 @@ type sdkGrpcServer struct {
 	alertsServer          api.OpenStorageAlertsServer
 	policyServer          policy.PolicyManager
 	storagePoolServer     api.OpenStoragePoolServer
+	jobServer             api.OpenStorageJobServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 }
@@ -433,6 +434,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.storagePoolServer = &StoragePoolServer{
 		server: s,
 	}
+	s.jobServer = &JobServer{
+		server: s,
+	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
@@ -513,6 +517,9 @@ func (s *sdkGrpcServer) Start() error {
 
 		if s.config.Security.Role != nil {
 			api.RegisterOpenStorageRoleServer(grpcServer, s.roleServer)
+		}
+		if s.jobServer != nil {
+			api.RegisterOpenStorageJobServer(grpcServer, s.jobServer)
 		}
 
 		s.registerServerExtensions(grpcServer)

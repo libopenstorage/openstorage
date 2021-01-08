@@ -2,6 +2,29 @@
 
 ## Releases
 
+### v0.69.32 - (11/17/2020)
+
+* Use destination instance ID for cloud driver transfer job 
+
+### v0.69.31 - (11/05/2020)
+
+* Add CloudDriveTransfer job type 
+
+### v0.69.30 - (11/05/2020)
+
+* Change the API definitions for OpenstorageJobServer RPCs
+
+### v0.69.29 - (10/14/2020)
+
+* Add CredentialDeleteReferences API
+
+### v0.69.28 - (09/10/2020)
+
+* Added DrainAttachments API to OpenStorageNode service to drain attachments from a node.
+* Added CordonAttachments API to OpenStorageNode service to disable new volume attachments on a node.
+* Added UncordonAttachments API to OpenStorageNode service to re-enable volume attachments on a node.
+* Added OpenstorageJob service to query running and past jobs and their states.
+
 ### v0.69.27 - (9/10/2020)
 
 * Add VolumeUsageByNode SDK API to OpenstorageNode service.

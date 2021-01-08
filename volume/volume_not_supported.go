@@ -149,6 +149,12 @@ func (c *credsNotSupported) CredsValidate(
 	return ErrNotSupported
 }
 
+func (c *credsNotSupported) CredsDeleteReferences(
+	uuid string,
+) error {
+	return ErrNotSupported
+}
+
 type cloudBackupNotSupported struct{}
 
 func (cl *cloudBackupNotSupported) CloudBackupCreate(
