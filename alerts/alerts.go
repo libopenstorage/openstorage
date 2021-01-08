@@ -3,6 +3,7 @@ package alerts
 
 import (
 	"encoding/json"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"sync"
@@ -115,6 +116,11 @@ func (m *manager) Raise(alert *api.Alert) error {
 	}
 
 	key := getKey(alert.Resource.String(), alert.GetAlertType(), alert.ResourceId)
+
+	if kvdb.Instance() == nil {
+		return fmt.Errorf("kvdb instance is not set")
+	}
+
 	if _, err := kvdb.Instance().Delete(key); err != nil && err != kvdb.ErrNotFound {
 		logrus.WithField("pkg", "openstorage/alerts").WithField("func", "Raise").Error(err)
 	}
@@ -140,6 +146,10 @@ func (m *manager) Enumerate(filters ...Filter) ([]*api.Alert, error) {
 	keys, err := getUniqueKeysFromFilters(filters...)
 	if err != nil {
 		return nil, err
+	}
+
+	if kvdb.Instance() == nil {
+		return nil, fmt.Errorf("kvdb instance is not set")
 	}
 
 	// enumerate for unique keys
@@ -263,6 +273,10 @@ Loop:
 			allFiltersIndexBased = false
 			break Loop
 		}
+	}
+
+	if kvdb.Instance() == nil {
+		return fmt.Errorf("kvdb instance is not set")
 	}
 
 	if allFiltersIndexBased {
