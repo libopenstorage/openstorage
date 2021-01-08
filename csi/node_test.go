@@ -173,10 +173,6 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		targetPath            string
 	}{
 		{
-			expectedErrorContains: "does not exist",
-			targetPath:            "////a/sdf//fd/asdf/as/f/asdfasf/fds",
-		},
-		{
 			expectedErrorContains: "not a directory",
 			targetPath:            "/etc/hosts",
 		},
