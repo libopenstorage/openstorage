@@ -87,6 +87,8 @@ const (
 	SpecScanPolicyTrigger    = "scan_policy_trigger"
 	SpecScanPolicyAction     = "scan_policy_action"
 	SpecProxyWrite           = "proxy_write"
+	SpecSharedv4ServiceType  = "sharedv4_svc_type"
+	SpecSharedv4ServiceName  = "sharedv4_svc_name"
 )
 
 // OptionKey specifies a set of recognized query params.
