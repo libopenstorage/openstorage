@@ -16,6 +16,7 @@ limitations under the License.
 package manager
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -23,9 +24,9 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
+	"github.com/libopenstorage/openstorage/pkg/dbg"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -42,10 +43,10 @@ func init() {
 	var err error
 	kv, err = kvdb.New(mem.Name, "manager_test/"+testClusterId, []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
+		dbg.LogErrorAndPanicf(fmt.Errorf("failed to initialize KVDB"), "init kvdb")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
+		dbg.LogErrorAndPanicf(fmt.Errorf("failed to set KVDB instance"), "set kvdb instance")
 	}
 }
 
