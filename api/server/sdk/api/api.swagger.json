@@ -1377,6 +1377,9 @@
           "sharedv4_mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
+          "sharedv4_service_spec": {
+            "$ref": "#/components/schemas/apiSharedv4ServiceSpec"
+          },
           "snapshot_interval": {
             "format": "int64",
             "title": "SnapshotInterval in minutes, set to 0 to disable snapshots",
@@ -3970,6 +3973,31 @@
         ],
         "type": "string"
       },
+      "apiSharedv4ServiceSpec": {
+        "description": "Sharedv4ServiceSpec when set creates a service endpoint for accessing\na sharedv4 volume.",
+        "properties": {
+          "name": {
+            "title": "Name of the service. If not provided the name of the volume will be\nused for setting up a service",
+            "type": "string"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiSharedv4ServiceType"
+          }
+        },
+        "type": "object"
+      },
+      "apiSharedv4ServiceType": {
+        "default": "SHAREDV4_SERVICE_TYPE_INVALID",
+        "description": "- SHAREDV4_SERVICE_TYPE_INVALID: Invalid uninitialized value\n - SHAREDV4_SERVICE_TYPE_NODEPORT: NodePort will export the sharedv4 service on each Node's IP\nIn this mode the sharedv4 volume can be accessed from outside the\ncluster using one of the node's IPs.\n - SHAREDV4_SERVICE_TYPE_CLUSTERIP: ClusterIP will export the shared4 service on an internal cluster IP.\nIn this mode the sharedv4 volume will only be accessible\nwithin the cluster via this service\n - SHAREDV4_SERVICE_TYPE_LOADBALANCER: LoadBalancer is applicable when running in cloud and will expose the\nsharedv4 service on a cloud provider's load balancer. In this mode\nthe sharedv4 volume can be accessed from outside the cluster",
+        "enum": [
+          "SHAREDV4_SERVICE_TYPE_INVALID",
+          "SHAREDV4_SERVICE_TYPE_NODEPORT",
+          "SHAREDV4_SERVICE_TYPE_CLUSTERIP",
+          "SHAREDV4_SERVICE_TYPE_LOADBALANCER"
+        ],
+        "title": "Sharedv4ServiceType defines the type of sharedv4 service\nThe type of services are governed by the different types of services\nsupported by Container Orchestrator's like Kubernetes",
+        "type": "string"
+      },
       "apiSource": {
         "description": "Source is a structure that can be given to a volume\nto seed the volume with data.",
         "properties": {
@@ -4882,6 +4910,9 @@
           "sharedv4_mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
+          "sharedv4_service_spec": {
+            "$ref": "#/components/schemas/apiSharedv4ServiceSpec"
+          },
           "size": {
             "format": "uint64",
             "title": "Size specifies the thin provisioned volume size in bytes",
@@ -5007,6 +5038,9 @@
           "sharedv4_mount_opt_spec": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
+          "sharedv4_service_spec": {
+            "$ref": "#/components/schemas/apiSharedv4ServiceSpec"
+          },
           "size": {
             "format": "uint64",
             "type": "string"
@@ -5116,6 +5150,9 @@
           },
           "sharedv4_mount_opt_spec": {
             "$ref": "#/components/schemas/apiMountOptions"
+          },
+          "sharedv4_service_spec": {
+            "$ref": "#/components/schemas/apiSharedv4ServiceSpec"
           },
           "size": {
             "format": "uint64",
@@ -5247,7 +5284,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.5"
+    "version": "0.101.6"
   },
   "openapi": "3.0.0",
   "paths": {
