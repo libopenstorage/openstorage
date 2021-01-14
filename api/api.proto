@@ -1819,6 +1819,20 @@ service OpenStoragePool {
   }
 }
 
+// OpenStorageDiags service provides methods to manage diagnostic bundles
+service OpenStorageDiags {
+
+  // Collect diags based on the provided request
+  rpc Collect(SdkDiagsCollectRequest)
+      returns (SdkJobResponse){
+    option(google.api.http) = {
+      post: "/v1/diags"
+      body: "*"
+    };
+  }
+}
+
+
 // OpenstorageJob is a service that provides a common set of APIs for services
 // that use the asynchronous job framework
 service OpenStorageJob {
@@ -3414,6 +3428,8 @@ message Job {
         DRAIN_ATTACHMENTS = 2;
         // Job for transferring cloud drives between nodes
         CLOUD_DRIVE_TRANSFER = 3;
+        // Job for collecting diags from the cluster nodes
+        COLLECT_DIAGS = 4;
     }
     // State is an enum for state of a node drain operation
     enum State {
@@ -3447,6 +3463,8 @@ message Job {
         // CloudDriveTransferJob if selected describes the task to transfer a cloud driveset
         // from one node to another
         CloudDriveTransferJob clouddrive_transfer = 401;
+        // CollectDiagsJob if selected describes the task to collect diagnostics for the cluster
+        CollectDiagsJob collect_diags = 402;
 
     }
     // CreateTime is the time the job was created
@@ -3514,6 +3532,62 @@ message CloudDriveTransferJob {
   string status = 3;
 }
 
+message CollectDiagsJob {
+  // Request is the user request for this diags collection job
+  SdkDiagsCollectRequest request = 1;
+  // Statuses is a list of statuses for diags collection for each node that is part of the request
+  repeated DiagsCollectionStatus statuses = 2;
+}
+
+message DiagsCollectionStatus {
+  // Node is the node that's collecting the diags
+  string node = 1;
+  // State is the current state of diags collection on the node
+  State state = 2;
+  // Message is a user friendly message for current status of diags collection
+  string message = 3;
+
+  // State is an enum for state of diags collection on a given node
+  enum State {
+    // Pending indicates the diags collection is pending and hasn't started
+    PENDING = 0;
+    // Running indicates diags collection is actively running
+    RUNNING = 1;
+    // Done indicates diags collection has finished
+    DONE = 2;
+    // Failed indicates diags collection has failed
+    FAILED = 3;
+  }
+}
+
+
+message SdkDiagsCollectRequest {
+  // Selector selects an object for which diags need to be collected
+  oneof selector {
+    // Node selects the node(s) for diags collection
+    DiagsNodeSelector node = 100;
+    // Volume selects the volume(s) for diags collection
+    DiagsVolumeSelector volume = 101;
+    // All selects all nodes for diags collection
+    bool all = 102;
+  }
+  // ProfileOnly is an optional flag if true will only collect the stack and heap profile of the driver and will skip
+  // other diag components
+  bool ProfileOnly = 2;
+  // Issuer is an optional  user friendly name for the caller invoking the API
+  string issuer = 3;
+}
+
+message DiagsNodeSelector {
+  repeated LabelSelectorRequirement node_label_selector = 1;
+  repeated string node_ids = 2;
+}
+
+// DiagsVolumeSelector allows selecting
+message DiagsVolumeSelector {
+  repeated LabelSelectorRequirement volume_label_selector = 1;
+  repeated string volume_ids = 2;
+}
 // Defines a request to list all the  jobs
 message SdkEnumerateJobsRequest  {
     // Type if specified will list the jobs of the provided type

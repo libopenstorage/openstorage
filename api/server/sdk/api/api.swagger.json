@@ -51,21 +51,6 @@
         "title": "FilesystemTrimStatus represents the status codes returned from\nOpenStorageFilesystemTrim service APIs()",
         "type": "string"
       },
-      "JobState": {
-        "default": "UNSPECIFIED_STATE",
-        "description": "- UNSPECIFIED_STATE: Unspecified\n - PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
-        "enum": [
-          "UNSPECIFIED_STATE",
-          "PENDING",
-          "RUNNING",
-          "DONE",
-          "PAUSED",
-          "CANCELLED",
-          "FAILED"
-        ],
-        "title": "State is an enum for state of a node drain operation",
-        "type": "string"
-      },
       "LabelSelectorRequirementOperator": {
         "default": "In",
         "description": "- In: In means the value for 'key' should be in one of the given value(s)\n - NotIn: NotIn means the value for 'key' should NOT be in one of the given value(s)\n - Exists: Exists means the 'key' should just exist regardless of the value\n - DoesNotExist: DoesNotExist means the 'key' should NOT exist\n - Gt: Gt means the 'key' should be greater than the value(s)\n - Lt: Lt means the 'key' should be less than the value(s)",
@@ -670,6 +655,21 @@
         "title": "Response to enumerate all the cluster pairs",
         "type": "object"
       },
+      "apiCollectDiagsJob": {
+        "properties": {
+          "request": {
+            "$ref": "#/components/schemas/apiSdkDiagsCollectRequest"
+          },
+          "statuses": {
+            "items": {
+              "$ref": "#/components/schemas/apiDiagsCollectionStatus"
+            },
+            "title": "Statuses is a list of statuses for diags collection for each node that is part of the request",
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "apiCosType": {
         "default": "NONE",
         "enum": [
@@ -679,6 +679,69 @@
           "HIGH"
         ],
         "type": "string"
+      },
+      "apiDiagsCollectionStatus": {
+        "properties": {
+          "message": {
+            "title": "Message is a user friendly message for current status of diags collection",
+            "type": "string"
+          },
+          "node": {
+            "title": "Node is the node that's collecting the diags",
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/apiDiagsCollectionStatusState"
+          }
+        },
+        "type": "object"
+      },
+      "apiDiagsCollectionStatusState": {
+        "default": "PENDING",
+        "description": "- PENDING: Pending indicates the diags collection is pending and hasn't started\n - RUNNING: Running indicates diags collection is actively running\n - DONE: Done indicates diags collection has finished\n - FAILED: Failed indicates diags collection has failed",
+        "enum": [
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "FAILED"
+        ],
+        "title": "State is an enum for state of diags collection on a given node",
+        "type": "string"
+      },
+      "apiDiagsNodeSelector": {
+        "properties": {
+          "node_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "node_label_selector": {
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "apiDiagsVolumeSelector": {
+        "properties": {
+          "volume_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "volume_label_selector": {
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "type": "array"
+          }
+        },
+        "title": "DiagsVolumeSelector allows selecting",
+        "type": "object"
       },
       "apiDrainAttachmentsSummary": {
         "properties": {
@@ -927,6 +990,9 @@
           "clouddrive_transfer": {
             "$ref": "#/components/schemas/apiCloudDriveTransferJob"
           },
+          "collect_diags": {
+            "$ref": "#/components/schemas/apiCollectDiagsJob"
+          },
           "create_time": {
             "format": "date-time",
             "title": "CreateTime is the time the job was created",
@@ -945,7 +1011,7 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/JobState"
+            "$ref": "#/components/schemas/apiJobState"
           },
           "type": {
             "$ref": "#/components/schemas/apiJobType"
@@ -953,6 +1019,21 @@
         },
         "title": "Job is a generic job object that can encapsulate other\nmessages which follow the job framework of APIs",
         "type": "object"
+      },
+      "apiJobState": {
+        "default": "UNSPECIFIED_STATE",
+        "description": "- UNSPECIFIED_STATE: Unspecified\n - PENDING: Pending indicates job is still pending and has not started work\n - RUNNING: Running indicates job is actively running\n - DONE: Done indicates job has finished processing\n - PAUSED: Paused indicates job is paused\n - CANCELLED: Cancelled indicates job is cancelled\n - FAILED: Failed indicates job has failed",
+        "enum": [
+          "UNSPECIFIED_STATE",
+          "PENDING",
+          "RUNNING",
+          "DONE",
+          "PAUSED",
+          "CANCELLED",
+          "FAILED"
+        ],
+        "title": "State is an enum for state of a node drain operation",
+        "type": "string"
       },
       "apiJobSummary": {
         "properties": {
@@ -978,12 +1059,13 @@
       },
       "apiJobType": {
         "default": "UNSPECIFIED_TYPE",
-        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes",
+        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
         "enum": [
           "UNSPECIFIED_TYPE",
           "NONE",
           "DRAIN_ATTACHMENTS",
-          "CLOUD_DRIVE_TRANSFER"
+          "CLOUD_DRIVE_TRANSFER",
+          "COLLECT_DIAGS"
         ],
         "title": "Type are the supported job types",
         "type": "string"
@@ -2537,6 +2619,31 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkDiagsCollectRequest": {
+        "properties": {
+          "ProfileOnly": {
+            "format": "boolean",
+            "title": "ProfileOnly is an optional flag if true will only collect the stack and heap profile of the driver and will skip\nother diag components",
+            "type": "boolean"
+          },
+          "all": {
+            "format": "boolean",
+            "title": "All selects all nodes for diags collection",
+            "type": "boolean"
+          },
+          "issuer": {
+            "title": "Issuer is an optional  user friendly name for the caller invoking the API",
+            "type": "string"
+          },
+          "node": {
+            "$ref": "#/components/schemas/apiDiagsNodeSelector"
+          },
+          "volume": {
+            "$ref": "#/components/schemas/apiDiagsVolumeSelector"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkEnumerateJobsResponse": {
         "properties": {
           "jobs": {
@@ -3395,7 +3502,7 @@
             "type": "string"
           },
           "state": {
-            "$ref": "#/components/schemas/JobState"
+            "$ref": "#/components/schemas/apiJobState"
           },
           "type": {
             "$ref": "#/components/schemas/apiJobType"
@@ -6308,6 +6415,37 @@
         ]
       }
     },
+    "/v1/diags": {
+      "post": {
+        "operationId": "Collect",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkDiagsCollectRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkJobResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Collect diags based on the provided request",
+        "tags": [
+          "OpenStorageDiags"
+        ]
+      }
+    },
     "/v1/filesystem-check/start": {
       "post": {
         "operationId": "Start",
@@ -6552,7 +6690,7 @@
         "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -6562,7 +6700,8 @@
                 "UNSPECIFIED_TYPE",
                 "NONE",
                 "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER"
+                "CLOUD_DRIVE_TRANSFER",
+                "COLLECT_DIAGS"
               ],
               "type": "string"
             }
@@ -6599,7 +6738,7 @@
             }
           },
           {
-            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes",
+            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -6609,7 +6748,8 @@
                 "UNSPECIFIED_TYPE",
                 "NONE",
                 "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER"
+                "CLOUD_DRIVE_TRANSFER",
+                "COLLECT_DIAGS"
               ],
               "type": "string"
             }
