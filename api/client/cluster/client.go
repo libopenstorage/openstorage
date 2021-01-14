@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/diags"
+
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
@@ -33,6 +35,7 @@ type clusterClient struct {
 	storagepool.UnsupportedPoolProvider
 	job.UnsupportedJobProvider
 	nodedrain.UnsupportedNodeDrainProvider
+	diags.UnsupportedDiagsProvider
 	c *client.Client
 }
 

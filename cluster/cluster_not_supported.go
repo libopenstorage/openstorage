@@ -3,6 +3,8 @@ package cluster
 import (
 	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/diags"
+
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
@@ -32,6 +34,7 @@ type NullClusterManager struct {
 	storagepool.UnsupportedPoolProvider
 	job.UnsupportedJobProvider
 	nodedrain.UnsupportedNodeDrainProvider
+	diags.UnsupportedDiagsProvider
 }
 
 func NewDefaultClusterManager() Cluster {
