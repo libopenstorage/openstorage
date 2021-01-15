@@ -218,6 +218,20 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 	}
 
+	// Attempt to remove volume path
+	// Kubernetes handles this after NodeUnpublishVolume finishes, but this allows for cross-CO compatibility
+	if err := os.Remove(req.GetTargetPath()); err != nil && !os.IsNotExist(err) {
+		logrus.Warnf("Failed to delete mount path %s: %s", req.GetTargetPath(), err.Error())
+	}
+
+	// Return error to Kubelet if mount path still exists to force a retry
+	if _, err := os.Stat(req.GetTargetPath()); !os.IsNotExist(err) {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Mount path still exists: %s",
+			req.GetTargetPath())
+	}
+
 	logrus.Infof("Volume %s unmounted from path %s", req.GetVolumeId(), req.GetTargetPath())
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
