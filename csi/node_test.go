@@ -502,7 +502,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 	c := csi.NewNodeClient(s.Conn())
 
 	name := "myvol"
-	targetPath := "/mnt"
+	targetPath := "/tmp/mnttest2"
 	size := uint64(10)
 	gomock.InOrder(
 		s.MockDriver().
@@ -543,7 +543,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 
 	req := &csi.NodeUnpublishVolumeRequest{
 		VolumeId:   name,
-		TargetPath: "/mnt",
+		TargetPath: targetPath,
 	}
 
 	_, err := c.NodeUnpublishVolume(context.Background(), req)
@@ -622,7 +622,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 
 	name := "myvol"
 	size := uint64(10)
-	targetPath := "/mnt"
+	targetPath := "/tmp/mnttest"
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
