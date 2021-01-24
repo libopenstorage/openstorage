@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.107.0 - (12/14/2020)
+
+* Add a spec for defining a service for sharedv4 volumes. The service
+  can be used for accessing this sharedv4 volume within and from outside
+  the cluster.
+
 ### v0.106.0 - (01/06/2021)
 
 * Extend volume stats structure to include discards

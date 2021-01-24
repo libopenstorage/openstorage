@@ -395,6 +395,35 @@ message ProxySpec {
     PXDProxySpec pxd_spec = 5;
 }
 
+// Sharedv4ServiceType defines the type of sharedv4 service
+// The type of services are governed by the different types of services
+// supported by Container Orchestrator's like Kubernetes
+enum Sharedv4ServiceType {
+    // Invalid uninitialized value
+    SHAREDV4_SERVICE_TYPE_INVALID = 0;
+    // NodePort will export the sharedv4 service on each Node's IP
+    // In this mode the sharedv4 volume can be accessed from outside the
+    // cluster using one of the node's IPs.
+    SHAREDV4_SERVICE_TYPE_NODEPORT = 1;
+    // ClusterIP will export the shared4 service on an internal cluster IP.
+    // In this mode the sharedv4 volume will only be accessible
+    // within the cluster via this service
+    SHAREDV4_SERVICE_TYPE_CLUSTERIP = 2;
+    // LoadBalancer is applicable when running in cloud and will expose the
+    // sharedv4 service on a cloud provider's load balancer. In this mode
+    // the sharedv4 volume can be accessed from outside the cluster
+    SHAREDV4_SERVICE_TYPE_LOADBALANCER = 3;
+}
+// Sharedv4ServiceSpec when set creates a service endpoint for accessing
+// a sharedv4 volume.
+message Sharedv4ServiceSpec {
+    // Name of the service. If not provided the name of the volume will be
+    // used for setting up a service
+    string name = 1;
+    // Type indicates what kind of service would be created for this volume
+    Sharedv4ServiceType type = 2;
+}
+
 // MountOptions defines the mount options with which a volume is mounted.
 message MountOptions {
   // Options are opaque key value pairs that are passed as mount options when
@@ -575,6 +604,8 @@ message VolumeSpec {
   bool proxy_write = 40;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 41;
+  // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
+  Sharedv4ServiceSpec sharedv4_service_spec = 42;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -636,6 +667,8 @@ message VolumeSpecUpdate {
   oneof proxy_write_opt { bool proxy_write = 35; }
   // proxy_spec_opt provides the spec for a proxy volume
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
+  // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
+  oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -715,6 +748,8 @@ message VolumeSpecPolicy {
   oneof proxy_write_opt { bool proxy_write = 60; }
   // proxy_spec_opt provides the spec for a proxy volume.
   oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
+  // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
+  oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 62; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4671,7 +4706,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 106;
+    Minor = 107;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5250,6 +5285,8 @@ message RestoreVolumeSpec {
   bool io_profile_bkup_src = 25;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 26;
+  // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
+  Sharedv4ServiceSpec sharedv4_service_spec = 27;
 }
 
 // Request message to get the volume catalog
