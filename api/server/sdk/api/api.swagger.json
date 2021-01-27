@@ -4970,6 +4970,10 @@
           "export_spec": {
             "$ref": "#/components/schemas/apiExportSpec"
           },
+          "fastpath": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "group": {
             "$ref": "#/components/schemas/apiGroup"
           },
@@ -5281,7 +5285,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.107.0"
+    "version": "0.108.0"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -323,6 +323,7 @@ func TestGetTokenSecretContextFromString(t *testing.T) {
 	require.Equal(t, false, ok)
 
 }
+
 func TestOptProxyRepl(t *testing.T) {
 	testSpecOptString(t, api.SpecProxyWrite, "true")
 
@@ -332,6 +333,7 @@ func TestOptProxyRepl(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecProxyWrite, "false")
 	require.False(t, spec.ProxyWrite, "Failed to parse proxy_write option into spec")
 }
+
 func TestExportSpec(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
@@ -444,4 +446,14 @@ func TestSharedv4MountOptions(t *testing.T) {
 	require.Equal(t, val, "v2")
 	_, ok = spec.Sharedv4MountOptions.Options["k3"]
 	require.False(t, ok)
+}
+
+func TestOptFastpath(t *testing.T) {
+	testSpecOptString(t, api.SpecFastpath, "true")
+
+	spec := testSpecFromString(t, api.SpecFastpath, "true")
+	require.True(t, spec.FpPreference, "Failed to parse fastpath option into spec")
+
+	spec = testSpecFromString(t, api.SpecFastpath, "false")
+	require.False(t, spec.FpPreference, "Failed to parse faspath option into spec")
 }

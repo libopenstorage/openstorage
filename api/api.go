@@ -89,6 +89,7 @@ const (
 	SpecProxyWrite           = "proxy_write"
 	SpecSharedv4ServiceType  = "sharedv4_svc_type"
 	SpecSharedv4ServiceName  = "sharedv4_svc_name"
+	SpecFastpath             = "fastpath"
 )
 
 // OptionKey specifies a set of recognized query params.

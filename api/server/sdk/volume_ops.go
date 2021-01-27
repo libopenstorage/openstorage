@@ -1147,6 +1147,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		spec.Sharedv4ServiceSpec = req.GetSharedv4ServiceSpec()
 	}
 
+	// FpPreference
+	if req.GetFastpathOpt() != nil {
+		if isValidate && vol.GetFpPreference() != req.GetFastpath() {
+			return vol, errMsg
+		}
+		spec.FpPreference = req.GetFastpath()
+	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }
