@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.101.3 - (01/26/2021)
+
+* Handle volume spec update for fastpath 
+
 ### v0.101.2 - (11/05/2020)
 
 * Fastpath extend to carry node UUID instead of internal int

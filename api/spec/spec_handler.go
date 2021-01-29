@@ -135,6 +135,7 @@ var (
 	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
 	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
 	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
+	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -496,6 +497,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ProxyWrite = proxyWrite
 			}
+		case api.SpecFastpath:
+			if fastpath, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.FpPreference = fastpath
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -679,7 +686,9 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, proxyWrite := d.getVal(ProxyWriteRegex, str); ok {
 		opts[api.SpecProxyWrite] = proxyWrite
 	}
-
+	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
+		opts[api.SpecFastpath] = fastpath
+	}
 	return true, opts, name
 }
 

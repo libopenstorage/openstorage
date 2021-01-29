@@ -715,6 +715,8 @@ message VolumeSpecPolicy {
   oneof proxy_write_opt { bool proxy_write = 60; }
   // proxy_spec_opt provides the spec for a proxy volume.
   oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
+  // fastpath preference
+  oneof fastpath_opt { bool fastpath = 62; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4658,7 +4660,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 2;
+    Patch = 3;
   }
 
   // The following cannot be set to use the enum Version because the REST
