@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.108.0 - (01/26/2021)
+
+* Handle volume spec update for fastpath 
+
 ### v0.107.0 - (12/14/2020)
 
 * Add a spec for defining a service for sharedv4 volumes. The service

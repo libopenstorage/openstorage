@@ -137,6 +137,7 @@ var (
 	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
 	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
+	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -514,6 +515,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ProxyWrite = proxyWrite
 			}
+		case api.SpecFastpath:
+			if fastpath, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.FpPreference = fastpath
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -700,6 +707,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, sharedv4ServiceType := d.getVal(sharedv4ServiceTypeRegex, str); ok {
 		opts[api.SpecSharedv4ServiceType] = sharedv4ServiceType
+	}
+	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
+		opts[api.SpecFastpath] = fastpath
 	}
 	return true, opts, name
 }
