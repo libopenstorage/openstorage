@@ -17,10 +17,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/job"
-	"github.com/libopenstorage/openstorage/pkg/nodedrain"
-	"github.com/libopenstorage/openstorage/pkg/storagepool"
-
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -30,6 +26,10 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/libopenstorage/openstorage/pkg/job"
+	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
@@ -680,7 +680,7 @@ func (c *ClusterManager) joinCluster(
 	initState, err := snapAndReadClusterInfo(c.snapshotPrefixes)
 	kvdb.Unlock(kvlock)
 	if err != nil {
-		logrus.Panicf("Fatal, Unable to create snapshot: %v", err)
+		dbg.LogErrorAndPanicf(err, "fatal: unable to create snapshot")
 		return err
 	}
 	defer func() {
@@ -706,7 +706,8 @@ func (c *ClusterManager) joinCluster(
 
 	selfNodeEntry, ok := initState.ClusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
-		logrus.Panicln("Fatal, Unable to find self node entry in local cache")
+		warnMsg := "fatal: unable to find self node entry in local cache"
+		dbg.LogErrorAndPanicf(fmt.Errorf(warnMsg), warnMsg)
 	}
 
 	prevNonQuorumMemberState := selfNodeEntry.NonQuorumMember
@@ -1183,7 +1184,8 @@ func (c *ClusterManager) initListeners(
 
 	selfNodeEntry, ok := clusterInfo.NodeEntries[c.config.NodeId]
 	if !ok {
-		logrus.Panicln("Fatal, Unable to find self node entry in local cache")
+		warnMsg := "fatal: unable to find self node entry in local cache"
+		dbg.LogErrorAndPanicf(fmt.Errorf(warnMsg), warnMsg)
 	}
 
 	// the inverse value is to handle upgrades.
@@ -1228,7 +1230,8 @@ func (c *ClusterManager) initListeners(
 		return 0, nil, err
 	}
 	if kvClusterInfo.Status == api.Status_STATUS_INIT {
-		logrus.Panicln("Cluster in an unexpected state: ", kvClusterInfo.Status)
+		warnMsg := fmt.Sprintf("cluster in an unexpected state: %v", kvClusterInfo.Status)
+		dbg.LogErrorAndPanicf(fmt.Errorf(warnMsg), warnMsg)
 	}
 
 	// update node cache with entries in the database at this point since
