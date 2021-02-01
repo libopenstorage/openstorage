@@ -221,6 +221,11 @@ func (s *VolumeServer) Create(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
+	_, defaultSequential := req.GetLabels()["default_sequential"]
+	if !defaultSequential && req.GetSpec().IoProfile == api.IoProfile_IO_PROFILE_SEQUENTIAL {
+		req.GetSpec().IoProfile = api.IoProfile_IO_PROFILE_AUTO
+	}
+
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(
 			codes.InvalidArgument,
