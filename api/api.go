@@ -440,6 +440,12 @@ type CloudBackupDeleteRequest struct {
 	CredentialUUID string
 	// Force Delete cloudbackup even if there are dependencies
 	Force bool
+	// NextID indicates next valid cloudbackup for the given credentials
+	// and schedule label. If a valid value is passeds, any cloudback that lies
+	// in between chronologically gets deleted as well.
+	NextID string
+	// Schedule string specifies the schedule label that must be matched
+	Schedule string
 }
 
 type CloudBackupDeleteAllRequest struct {
