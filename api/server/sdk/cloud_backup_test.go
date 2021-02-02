@@ -400,6 +400,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 
 	id := "myvol"
 	uuid := "uuid"
+	namespace := "test-ns"
 	req := &api.SdkCloudBackupEnumerateWithFiltersRequest{
 		SrcVolumeId:  id,
 		CredentialId: uuid,
@@ -415,7 +416,9 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 				Metadata: map[string]string{
 					"hello": "world",
 				},
-				Status: "Done",
+				Status:    "Done",
+				Cluster:   api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent,
+				Namespace: namespace,
 			},
 			{
 				ID:            "two",
@@ -425,7 +428,9 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 				Metadata: map[string]string{
 					"what a": "world",
 				},
-				Status: "Failed",
+				Status:    "Failed",
+				Cluster:   api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent,
+				Namespace: namespace,
 			},
 		},
 	}
@@ -463,6 +468,8 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 		ts, err := ptypes.TimestampProto(v.Timestamp)
 		assert.NoError(t, err)
 		assert.Equal(t, r.Backups[i].Timestamp, ts)
+		assert.Equal(t, r.Backups[i].Cluster, api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent)
+		assert.Equal(t, r.Backups[i].Namespace, namespace)
 	}
 }
 
@@ -509,7 +516,8 @@ func TestSdkCloudBackupEnumerateWithFiltersSingle(t *testing.T) {
 				Metadata: map[string]string{
 					"hello": "world",
 				},
-				Status: "Done",
+				Status:  "Done",
+				Cluster: api.SdkCloudBackupClusterType_SdkCloudBackupClusterUnknown,
 			},
 		},
 	}
