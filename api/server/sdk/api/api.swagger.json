@@ -5285,7 +5285,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.108.0"
+    "version": "0.109.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5414,6 +5414,15 @@
             "schema": {
               "format": "boolean",
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Optional NextID indicates next valid cloudbackup for the given credentials\nand labels. If a valid value is passeds, any cloudback with matching \nlabels( if specified) that lies between the ID and NextID \nchronologically gets deleted as well.",
+            "in": "query",
+            "name": "next_id",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],

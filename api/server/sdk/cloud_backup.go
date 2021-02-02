@@ -271,6 +271,8 @@ func (s *CloudBackupServer) Delete(
 		ID:             req.GetBackupId(),
 		CredentialUUID: credId,
 		Force:          req.GetForce(),
+		NextID:         req.GetNextId(),
+		Labels:         req.GetLabels(),
 	}); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete backup: %v", err)
 	}

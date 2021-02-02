@@ -4043,6 +4043,14 @@ message SdkCloudBackupDeleteRequest {
   // needed if the backup is an incremental backup and subsequent backups
   // depend on this backup specified by `backup_id`.
   bool force = 3;
+  // Optional NextID indicates next valid cloudbackup for the given credentials
+  // and labels. If a valid value is passeds, any cloudback with matching 
+  // labels( if specified) that lies between the ID and NextID 
+  // chronologically gets deleted as well.
+  string next_id = 4;
+  // Labels that must be matched, for all cloudbackup that must be deleted 
+  // in case of valid NextID
+  map<string,string> labels = 5;
 }
 
 // Empty response
@@ -4708,7 +4716,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 108;
+    Minor = 109;
     // SDK version patch value of this specification
     Patch = 0;
   }

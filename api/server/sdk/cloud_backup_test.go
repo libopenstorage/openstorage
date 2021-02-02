@@ -276,10 +276,12 @@ func TestSdkCloudDeleteCreate(t *testing.T) {
 	defer s.Stop()
 
 	backupid := "backupid"
+	nextBackup := "backupid-next"
 	uuid := "uuid"
 	req := &api.SdkCloudBackupDeleteRequest{
 		BackupId:     backupid,
 		CredentialId: uuid,
+		NextId:       nextBackup,
 	}
 
 	// Create response
@@ -289,6 +291,7 @@ func TestSdkCloudDeleteCreate(t *testing.T) {
 			ID:             backupid,
 			CredentialUUID: uuid,
 			Force:          false,
+			NextID:         nextBackup,
 		}).
 		Return(nil).
 		Times(1)
