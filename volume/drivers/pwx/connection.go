@@ -29,6 +29,8 @@ type ConnectionParamsBuilderConfig struct {
 	DefaultServiceNamespaceName string
 	// DefaultRestPortName is name of Porx legacy REST API port in service
 	DefaultRestPortName string
+	// DefaultSecureRestPortName is name of Porx secure REST API port in service
+	DefaultSecureRestPortName string
 	// DefaultSDKPortName is name of Porx SDK/iSDK API port in service
 	DefaultSDKPortName string
 
@@ -61,6 +63,7 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		DefaultServiceName:          "portworx-service",
 		DefaultServiceNamespaceName: "kube-system",
 		DefaultRestPortName:         "px-api",
+		DefaultSecureRestPortName:   "px-secure-api",
 		DefaultSDKPortName:          "px-sdk",
 		EnableTLSEnv:                "PX_ENABLE_TLS",
 		NamespaceNameEnv:            "PX_NAMESPACE",
@@ -115,17 +118,31 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
 
 	var restPort int
+	var secureRestPort int
 	var sdkPort int
 
 	// Get the ports from service
 	for _, svcPort := range svc.Spec.Ports {
-		if svcPort.Name == cpb.Config.DefaultSDKPortName &&
-			svcPort.Port != 0 {
-			sdkPort = int(svcPort.Port)
-		} else if svcPort.Name == cpb.Config.DefaultRestPortName &&
-			svcPort.Port != 0 {
-			restPort = int(svcPort.Port)
+		if svcPort.Port != 0 {
+			switch svcPort.Name {
+			case cpb.Config.DefaultSDKPortName:
+				sdkPort = int(svcPort.Port)
+
+			case cpb.Config.DefaultRestPortName:
+				restPort = int(svcPort.Port)
+
+			case cpb.Config.DefaultSecureRestPortName:
+				secureRestPort = int(svcPort.Port)
+
+			default:
+				continue
+			}
 		}
+	}
+
+	// Use secure port if provided
+	if secureRestPort != 0 {
+		restPort = secureRestPort
 	}
 
 	// check if the ports were parsed

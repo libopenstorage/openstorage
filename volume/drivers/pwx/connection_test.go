@@ -2,9 +2,10 @@ package pwx_test
 
 import (
 	"fmt"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"os"
 	"testing"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
@@ -23,6 +24,7 @@ const (
 	pxEnableTLSEnv       = "PX_ENABLE_TLS"
 	pxRestPort           = "px-api"
 	pxSdkPort            = "px-sdk"
+	pxSecureRestPort     = "px-secure-api"
 	pxEndpointEnv        = "PX_ENDPOINT"
 	StaticSDKPortEnv     = "PX_API_PORT"
 	StaticRestPortEnv    = "PX_SDK_PORT"
@@ -42,6 +44,10 @@ func getSvc() *v1.Service {
 				},
 				{
 					Name: pxRestPort,
+					Port: 9901,
+				},
+				{
+					Name: pxSecureRestPort,
 					Port: 9901,
 				},
 			},
@@ -81,6 +87,28 @@ func TestMain(m *testing.M) {
 					Name: pxRestPort,
 					Port: 9901,
 				},
+				{
+					Name: pxSecureRestPort,
+					Port: 9902,
+				},
+			},
+		},
+	}, nil)
+	mockOps.EXPECT().GetService("portworx-service", "non-default-ns-non-secure").Return(&v1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "portworx-service",
+			Namespace: "non-default-ns",
+		},
+		Spec: v1.ServiceSpec{
+			Ports: []v1.ServicePort{
+				{
+					Name: pxSdkPort,
+					Port: 9999,
+				},
+				{
+					Name: pxRestPort,
+					Port: 9901,
+				},
 			},
 		},
 	}, nil)
@@ -94,6 +122,10 @@ func TestMain(m *testing.M) {
 				{
 					Name: pxRestPort,
 					Port: 9901,
+				},
+				{
+					Name: pxSecureRestPort,
+					Port: 9902,
 				},
 			},
 		},
@@ -115,6 +147,10 @@ func TestMain(m *testing.M) {
 				},
 				{
 					Name: pxRestPort,
+					Port: 0,
+				},
+				{
+					Name: pxSecureRestPort,
 					Port: 0,
 				},
 			},
@@ -202,6 +238,29 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService(t *testing.T)
 
 func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService(t *testing.T) {
 	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns")
+	defer cleaner()
+
+	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
+	if err != nil {
+		t.Fatal("ConnectionParamsBuilder creation error")
+	}
+
+	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
+	if err != nil {
+		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	}
+
+	if pxMgmtEndpoint != "http://portworx-service.non-default-ns:9902" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.non-default-ns:9901")
+	}
+
+	if sdkEndpoint != "portworx-service.non-default-ns:9999" {
+		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.non-default-ns:9999")
+	}
+}
+
+func TestPortworx_buildClientsEndpoints_OK_WithNoSecurePort(t *testing.T) {
+	cleaner := setEnvs(t, pxNamespaceNameEnv, "non-default-ns-non-secure")
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
