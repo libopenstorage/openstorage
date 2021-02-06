@@ -4053,6 +4053,11 @@
             "title": "Reads completed successfully",
             "type": "string"
           },
+          "unique_blocks": {
+            "format": "uint64",
+            "title": "Unique Blocks",
+            "type": "string"
+          },
           "write_bytes": {
             "format": "uint64",
             "title": "Number of bytes written",
@@ -4543,6 +4548,10 @@
             "title": "Volume creation time",
             "type": "string"
           },
+          "delete_time": {
+            "format": "date-time",
+            "type": "string"
+          },
           "detach_time": {
             "description": "DetachTime time this device was detached.",
             "format": "date-time",
@@ -4554,6 +4563,10 @@
           },
           "error": {
             "description": "Error is the Last recorded error.",
+            "type": "string"
+          },
+          "expiry_time": {
+            "format": "date-time",
             "type": "string"
           },
           "format": {
@@ -4592,6 +4605,9 @@
           },
           "mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
+          },
+          "prev_state": {
+            "$ref": "#/components/schemas/apiVolumeState"
           },
           "readonly": {
             "description": "Readonly is true if this volume is to be mounted with readonly access.",
@@ -5179,7 +5195,7 @@
       },
       "apiVolumeState": {
         "default": "VOLUME_STATE_NONE",
-        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore",
+        "description": "VolumeState represents the state of a volume.\n\n - VOLUME_STATE_PENDING: Volume is transitioning to new state\n - VOLUME_STATE_AVAILABLE: Volume is ready to be assigned to a container\n - VOLUME_STATE_ATTACHED: Volume is attached to container\n - VOLUME_STATE_DETACHED: Volume is detached but associated with a container\n - VOLUME_STATE_DETATCHING: Volume detach is in progress\n - VOLUME_STATE_ERROR: Volume is in error state\n - VOLUME_STATE_DELETED: Volume is deleted, it will remain in this state\nwhile resources are asynchronously reclaimed\n - VOLUME_STATE_TRY_DETACHING: Volume is trying to be detached\n - VOLUME_STATE_RESTORE: Volume is undergoing restore\n - VOLUME_STATE_IN_TRASHCAN: Volume is marked as being in the trashcan",
         "enum": [
           "VOLUME_STATE_NONE",
           "VOLUME_STATE_PENDING",
@@ -5190,7 +5206,8 @@
           "VOLUME_STATE_ERROR",
           "VOLUME_STATE_DELETED",
           "VOLUME_STATE_TRY_DETACHING",
-          "VOLUME_STATE_RESTORE"
+          "VOLUME_STATE_RESTORE",
+          "VOLUME_STATE_IN_TRASHCAN"
         ],
         "type": "string"
       },
@@ -5285,7 +5302,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.108.0"
+    "version": "0.109.0"
   },
   "openapi": "3.0.0",
   "paths": {

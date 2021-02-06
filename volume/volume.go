@@ -64,6 +64,8 @@ const (
 	LocationConstraint = "LocationConstraint"
 	// LocalNode is an alias for this node - similar to localhost.
 	LocalNode = "LocalNode"
+	// FromTrashCan is a label that specified a volume being in the TrashCan
+	FromTrashCan = "FromTrashCan"
 )
 
 // Store defines the interface for basic volume store operations
