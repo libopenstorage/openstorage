@@ -353,6 +353,15 @@ func (s *OsdCsiServer) CreateVolume(
 		locator.VolumeLabels[k] = v
 	}
 
+	// Copy all SC Parameters (from req.Parameters) to locator.VolumeLabels.
+	// This explicit copy matches the equivalent behavior in the in-tree driver
+	if len(locator.VolumeLabels) == 0 {
+		locator.VolumeLabels = make(map[string]string)
+	}
+	for k, v := range req.Parameters {
+		locator.VolumeLabels[k] = v
+	}
+
 	// Add encryption secret information to VolumeLabels
 	locator.VolumeLabels = s.addEncryptionInfoToLabels(locator.VolumeLabels, req.GetSecrets())
 
