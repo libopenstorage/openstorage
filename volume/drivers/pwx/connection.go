@@ -31,6 +31,8 @@ type ConnectionParamsBuilderConfig struct {
 	DefaultRestPortName string
 	// DefaultSDKPortName is name of Porx SDK/iSDK API port in service
 	DefaultSDKPortName string
+	// DefaultTokenIssuer is the default value for token issuer
+	DefaultTokenIssuer string
 
 	// Environment variables names to get  values config properties
 	EnableTLSEnv string
@@ -42,6 +44,8 @@ type ConnectionParamsBuilderConfig struct {
 	// containing certificate used for protecting Porx APIs
 	CaCertSecretEnv    string
 	CaCertSecretKeyEnv string
+	// TokenIssuerEnv is used to set environment variable name which should be read to fetch the token issuer
+	TokenIssuerEnv string
 
 	// StaticEndpointEnv can be used to overwrite Porx endpoint
 	StaticEndpointEnv string
@@ -61,12 +65,14 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		DefaultServiceName:          "portworx-service",
 		DefaultServiceNamespaceName: "kube-system",
 		DefaultRestPortName:         "px-api",
+		DefaultTokenIssuer:          "apps.portworx.io",
 		DefaultSDKPortName:          "px-sdk",
 		EnableTLSEnv:                "PX_ENABLE_TLS",
 		NamespaceNameEnv:            "PX_NAMESPACE",
 		ServiceNameEnv:              "PX_SERVICE_NAME",
 		CaCertSecretEnv:             "PX_CA_CERT_SECRET",
 		CaCertSecretKeyEnv:          "PX_CA_CERT_SECRET_KEY",
+		TokenIssuerEnv:              "PX_TOKEN_ISSUER",
 		StaticEndpointEnv:           "PX_ENDPOINT",
 		StaticSDKPortEnv:            "PX_API_PORT",
 		StaticRestPortEnv:           "PX_SDK_PORT",
