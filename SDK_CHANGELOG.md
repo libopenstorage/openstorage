@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.109.0 - (02/17/2021)
+
+* Add Trashcan volume objects 
+
 ### v0.108.0 - (01/26/2021)
 
 * Handle volume spec update for fastpath 
