@@ -72,7 +72,7 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		ServiceNameEnv:              "PX_SERVICE_NAME",
 		CaCertSecretEnv:             "PX_CA_CERT_SECRET",
 		CaCertSecretKeyEnv:          "PX_CA_CERT_SECRET_KEY",
-		TokenIssuerEnv:              "PX_TOKEN_ISSUER",
+		TokenIssuerEnv:              "PX_JWT_ISSUER",
 		StaticEndpointEnv:           "PX_ENDPOINT",
 		StaticSDKPortEnv:            "PX_API_PORT",
 		StaticRestPortEnv:           "PX_SDK_PORT",
@@ -247,10 +247,10 @@ func getPxNamespace(pxNamespaceEnv, defaultNamespace string) string {
 	return namespace
 }
 
-func getPxService(pxNamespaceEnv, defaultServiceName string) string {
-	namespace := os.Getenv(pxNamespaceEnv)
-	if len(namespace) == 0 {
-		namespace = defaultServiceName
+func getPxService(pxServiceEnv, defaultServiceName string) string {
+	service := os.Getenv(pxServiceEnv)
+	if len(service) == 0 {
+		service = defaultServiceName
 	}
-	return namespace
+	return service
 }
