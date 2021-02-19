@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.15 - (02/01/2022)
+
+* Add Trashcan volume objects 
+
 ### v0.101.14 - (09/28/2021)
 
 * Add sharedv4 failover strategy option

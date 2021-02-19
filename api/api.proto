@@ -138,6 +138,8 @@ enum VolumeState {
   VOLUME_STATE_TRY_DETACHING = 8;
   // Volume is undergoing restore
   VOLUME_STATE_RESTORE = 9;
+  // Volume is marked as being in the trashcan
+  VOLUME_STATE_IN_TRASHCAN = 10;
 }
 
 // VolumeStatus represents a health status for a volume.
@@ -941,6 +943,10 @@ message Volume {
   MountOptions sharedv4_mount_options = 30;
   // DerivedIoProfile the IO profile determined from the pattern
   IoProfile derived_io_profile = 31;
+  // VolumeState is the current runtime state of this volume.
+  VolumeState prev_state = 32;
+  google.protobuf.Timestamp delete_time= 33;
+  google.protobuf.Timestamp expiry_time= 34;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -965,6 +971,8 @@ message Stats {
   uint64 bytes_used = 9;
   // Interval in ms during which stats were collected
   uint64 interval_ms = 10;
+  // Unique Blocks
+  uint64 unique_blocks = 14;
 }
 
 // Provides details on exclusive and shared storage used by
@@ -4890,7 +4898,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 14;
+    Patch = 15;
   }
 
   // The following cannot be set to use the enum Version because the REST
