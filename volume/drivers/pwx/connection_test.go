@@ -24,8 +24,8 @@ const (
 	pxRestPort           = "px-api"
 	pxSdkPort            = "px-sdk"
 	pxEndpointEnv        = "PX_ENDPOINT"
-	StaticSDKPortEnv     = "PX_API_PORT"
-	StaticRestPortEnv    = "PX_SDK_PORT"
+	StaticSDKPortEnv     = "PX_SDK_PORT"
+	StaticRestPortEnv    = "PX_API_PORT"
 )
 
 func getSvc() *v1.Service {
