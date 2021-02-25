@@ -74,8 +74,8 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		CaCertSecretKeyEnv:          "PX_CA_CERT_SECRET_KEY",
 		TokenIssuerEnv:              "PX_JWT_ISSUER",
 		StaticEndpointEnv:           "PX_ENDPOINT",
-		StaticSDKPortEnv:            "PX_API_PORT",
-		StaticRestPortEnv:           "PX_SDK_PORT",
+		StaticSDKPortEnv:            "PX_SDK_PORT",
+		StaticRestPortEnv:           "PX_API_PORT",
 		AuthEnabled:                 false,
 		AuthTokenGenerator:          func() (string, error) { return "", fmt.Errorf("auth token generator func is not set") },
 	}
