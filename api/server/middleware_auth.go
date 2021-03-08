@@ -262,6 +262,7 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 
 func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "delete"
+	volumeResponse := &api.VolumeResponse{}
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -277,12 +278,10 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
-		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
-		next(w, r)
+		json.NewEncoder(w).Encode(volumeResponse)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
 	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
@@ -348,6 +347,9 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 
 func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "enumerate"
+	var emptyVols []*api.Volume
+
+	emptyVols = make([]*api.Volume, 0)
 
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
@@ -358,6 +360,7 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	volIDs, ok := r.URL.Query()[api.OptVolumeID]
 	if !ok || len(volIDs[0]) < 1 {
 		a.log("", fn).Error("Failed to parse VolumeID")
+		json.NewEncoder(w).Encode(emptyVols)
 		return
 	}
 	volumeID := volIDs[0]
@@ -365,16 +368,14 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil || len(vols) == 0 || vols[0] == nil {
 		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
-		next(w, r)
+		json.NewEncoder(w).Encode(emptyVols)
 		return
 	}
 
-	volumeResponse := &api.VolumeResponse{}
 	tokenSecretContext, err := a.parseSecret(vols[0].Spec.VolumeLabels, vols[0].Locator.VolumeLabels, false)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to parse secret")
-		volumeResponse.Error = "failed to parse secret: " + err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
+		json.NewEncoder(w).Encode(emptyVols)
 		return
 	}
 	if tokenSecretContext.SecretName == "" {
@@ -385,8 +386,7 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	token, err := osecrets.GetToken(tokenSecretContext)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("failed to get token")
-		volumeResponse.Error = "failed to get token: " + err.Error()
-		json.NewEncoder(w).Encode(volumeResponse)
+		json.NewEncoder(w).Encode(emptyVols)
 		return
 	} else {
 		a.insertToken(r, token)
