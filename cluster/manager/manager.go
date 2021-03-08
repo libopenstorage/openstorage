@@ -122,6 +122,11 @@ func clusterInst() (cluster.Cluster, error) {
 	return inst, nil
 }
 
+// ClearInst is used to clear the singleton instance. Use in Tests only
+func ClearInst() {
+	inst = nil
+}
+
 type checkFunc func(*cluster.ClusterInfo) error
 
 func ifaceToIp(iface *net.Interface) (string, error) {
