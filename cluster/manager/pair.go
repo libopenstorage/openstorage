@@ -38,8 +38,8 @@ func (c *ClusterManager) CreatePair(
 		CredentialId:       request.CredentialId,
 	}
 
-	endpoint := "http://" + remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
-	clnt, err := clusterclient.NewAuthClusterClient(endpoint, cluster.APIVersion, request.RemoteClusterToken, "")
+	endpoint := remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
+	clnt, err := clusterclient.NewInsecureTLSAuthClusterClient(endpoint, cluster.APIVersion, request.RemoteClusterToken, "")
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +70,7 @@ func (c *ClusterManager) CreatePair(
 	pairInfo := &api.ClusterPairInfo{
 		Id:               resp.RemoteClusterId,
 		Name:             resp.RemoteClusterName,
-		Endpoint:         endpoint,
+		Endpoint:         clnt.BaseURL(),
 		CurrentEndpoints: resp.RemoteClusterEndpoints,
 		Token:            request.RemoteClusterToken,
 		Options:          resp.Options,
@@ -148,7 +148,7 @@ func (c *ClusterManager) RefreshPair(
 	endpoints := pair.CurrentEndpoints
 	endpoints = append(endpoints, pair.Endpoint)
 	for _, endpoint := range endpoints {
-		clnt, err := clusterclient.NewAuthClusterClient(endpoint, cluster.APIVersion, pair.Token, "")
+		clnt, err := clusterclient.NewInsecureTLSAuthClusterClient(endpoint, cluster.APIVersion, pair.Token, "")
 		if err != nil {
 			logrus.Warnf("Unable to create cluster client for %v: %v", endpoint, err)
 			continue
@@ -249,7 +249,7 @@ func (c *ClusterManager) ValidatePair(
 	endpoints := pairResp.PairInfo.CurrentEndpoints
 	endpoints = append(endpoints, pairResp.PairInfo.Endpoint)
 	for _, endpoint := range endpoints {
-		clnt, err := clusterclient.NewAuthClusterClient(
+		clnt, err := clusterclient.NewInsecureTLSAuthClusterClient(
 			endpoint,
 			cluster.APIVersion,
 			pairResp.PairInfo.Token,
