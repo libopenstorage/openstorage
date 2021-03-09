@@ -70,7 +70,7 @@ func (c *ClusterManager) CreatePair(
 	pairInfo := &api.ClusterPairInfo{
 		Id:               resp.RemoteClusterId,
 		Name:             resp.RemoteClusterName,
-		Endpoint:         endpoint,
+		Endpoint:         clnt.BaseURL(),
 		CurrentEndpoints: resp.RemoteClusterEndpoints,
 		Token:            request.RemoteClusterToken,
 		Options:          resp.Options,

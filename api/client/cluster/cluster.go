@@ -56,7 +56,11 @@ func NewInsecureTLSAuthClusterClient(host, version, auth string, accesstoken str
 		if u.Scheme == "https" {
 			// We don't support cert validation yet
 			skipTLSVerify = true
-		}
+		} else if u.Scheme != "http" {
+			// In certain cases like AWS ELB - ae20db68c7cb34616b16837ab395fe9c-1428320453.us-east-2.elb.amazonaws.com
+			// url.Parse returns scheme as the actual endpoint
+			host = "http://" + host
+		} // else u.Scheme == http
 	} else {
 		host = "http://" + host
 	}
