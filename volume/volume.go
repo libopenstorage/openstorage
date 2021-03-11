@@ -43,6 +43,8 @@ var (
 	// ErrFsResizeFailed returned when Filesystem resize failed because of filesystem
 	// errors
 	ErrFsResizeFailed = errors.New("Filesystem Resize failed due to filesystem errors")
+	// ErrNoVolumeUpdate is returned when a volume update has no changes requested
+	ErrNoVolumeUpdate = errors.New("No change requested")
 )
 
 // Constants used by the VolumeDriver
