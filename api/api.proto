@@ -1739,17 +1739,15 @@ service OpenStorageClusterDomains {
 // OpenStoragePool is a service used to manage storage pools in the cluster
 service OpenStoragePool {
   // Resize expands the specified storage pool based on the request parameters
-  rpc Resize(SdkStoragePoolResizeRequest)
-    returns (SdkStoragePoolResizeResponse) {
-      option(google.api.http) = {
+  rpc Resize (SdkStoragePoolResizeRequest) returns (SdkStoragePoolResizeResponse) {
+    option (google.api.http) = {
         put: "/v1/storagepools/resize/{uuid}"
       };
-    }
+  }
 
   // Rebalance creates a new rebalance task
-  rpc Rebalance(SdkStorageRebalanceRequest)
-  returns (SdkStorageRebalanceResponse) {
-    option(google.api.http) = {
+  rpc Rebalance (SdkStorageRebalanceRequest) returns (SdkStorageRebalanceResponse) {
+    option (google.api.http) = {
         put: "/v1/storagepools/rebalance"
       };
   }
@@ -1759,30 +1757,26 @@ service OpenStoragePool {
   // StorageRebalanceJobState_PAUSED - acceptable only from running state
   // StorageRebalanceJobState_CANCELLED - acceptable only from running/pause state
   // StorageRebalanceJobState_RUNNING - acceptable only from pause state
-  rpc UpdateRebalanceJobState(SdkUpdateRebalanceJobRequest)
-  returns (SdkUpdateRebalanceJobResponse) {
-    option(google.api.http) = {
+  rpc UpdateRebalanceJobState (SdkUpdateRebalanceJobRequest) returns (SdkUpdateRebalanceJobResponse) {
+    option (google.api.http) = {
         put: "/v1/storagepools/rebalance/job/{id}"
       };
   }
 
   // GetRebalanceJobStatus returns rebalance status for specified job
-  rpc GetRebalanceJobStatus(SdkGetRebalanceJobStatusRequest)
-  returns (SdkGetRebalanceJobStatusResponse) {
-    option(google.api.http) = {
+  rpc GetRebalanceJobStatus (SdkGetRebalanceJobStatusRequest) returns (SdkGetRebalanceJobStatusResponse) {
+    option (google.api.http) = {
         get: "/v1/storagepools/rebalance/job/{id}"
       };
   }
 
   // EnumerateRebalanceJobs returns all rebalance jobs currently known to the system
-  rpc EnumerateRebalanceJobs(SdkEnumerateRebalanceJobsRequest)
-  returns (SdkEnumerateRebalanceJobsResponse) {
-    option(google.api.http) = {
+  rpc EnumerateRebalanceJobs (SdkEnumerateRebalanceJobsRequest) returns (SdkEnumerateRebalanceJobsResponse) {
+    option (google.api.http) = {
         get: "/v1/storagepools/rebalance/job"
       };
   }
 }
-
 
 // OpenstorageJob is a service that provides a common set of APIs for services
 // that use the asynchronous job framework
@@ -3365,6 +3359,7 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
+
 // Job is a generic job object that can encapsulate other
 // messages which follow the job framework of APIs
 message Job {
@@ -3376,6 +3371,8 @@ message Job {
         NONE = 1;
         // Job for draining volume attachments
         DRAIN_ATTACHMENTS = 2;
+        // Job for transferring cloud drives between nodes
+        CLOUD_DRIVE_TRANSFER = 3;
     }
     // State is an enum for state of a node drain operation
     enum State {
@@ -3405,7 +3402,11 @@ message Job {
     oneof job {
         // NodeDrainAttachmentsJob if selected this job desribes
         // the task for removing volume attachments from a node
-        NodeDrainAttachmentsJob drain_attachments = 4;
+        NodeDrainAttachmentsJob drain_attachments = 400;
+        // CloudDriveTransferJob if selected describes the task to transfer a cloud driveset
+        // from one node to another
+        CloudDriveTransferJob clouddrive_transfer = 401;
+
     }
     // CreateTime is the time the job was created
     google.protobuf.Timestamp create_time = 5;
@@ -3461,6 +3462,15 @@ message NodeDrainAttachmentsJob {
     google.protobuf.Timestamp create_time = 5;
     // LastUpdateTime is the time the job was updated
     google.protobuf.Timestamp last_update_time = 6;
+}
+
+message CloudDriveTransferJob {
+  // SourceDrivesetID is the ID of the current driveset that needs to be transferred
+  string source_driveset_id = 1;
+  // DestinationInstanceID is the ID of the storageless instance that needs to take over the SourceDriveSetID
+  string destination_instance_id = 2;
+  // Status describes a helpful status of this operation
+  string status = 3;
 }
 
 // Defines a request to list all the  jobs
@@ -4660,7 +4670,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 3;
+    Patch = 4;
   }
 
   // The following cannot be set to use the enum Version because the REST
