@@ -65,16 +65,65 @@ var (
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service and REST server
 type testServer struct {
-	conn        *grpc.ClientConn
-	m           *mockdriver.MockVolumeDriver
-	c           cluster.Cluster
-	k8sops      *servermock.MockOps
-	originalOps schedopsk8s.Ops
-	s           *mockapi.MockOpenStoragePoolServer
-	mc          *gomock.Controller
-	sdk         *sdk.Server
-	port        string
-	gwport      string
+	conn                    *grpc.ClientConn
+	m                       *mockdriver.MockVolumeDriver
+	c                       cluster.Cluster
+	k8sops                  *servermock.MockOps
+	originalOps             schedopsk8s.Ops
+	s                       *mockapi.MockOpenStoragePoolServer
+	mc                      *gomock.Controller
+	sdk                     *sdk.Server
+	rm                      role.RoleManager
+	port                    string
+	gwport                  string
+	overrideSchedDriverName string
+}
+
+func (s *testServer) Stop() {
+	s.conn.Close()
+	s.sdk.Stop()
+
+	// Check mocks
+	s.mc.Finish()
+
+	// Remove from registry
+	volumedrivers.Remove(mockDriverName)
+
+	if s.overrideSchedDriverName != "" {
+		OverrideSchedDriverName = s.overrideSchedDriverName
+	}
+}
+
+func (s *testServer) setPorts() {
+	source := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(source)
+	port := r.Intn(20000) + 10000
+
+	s.port = fmt.Sprintf("%d", port)
+	s.gwport = fmt.Sprintf("%d", port+1)
+}
+
+func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
+	return s.m
+}
+
+func (s *testServer) Conn() *grpc.ClientConn {
+	return s.conn
+}
+
+func (s *testServer) DisableGuestAccess() error {
+	_, err := s.rm.Update(context.Background(), &api.SdkRoleUpdateRequest{
+		Role: &api.SdkRole{
+			Name: "system.guest",
+			Rules: []*api.SdkRule{
+				&api.SdkRule{
+					Services: []string{"!*"},
+					Apis:     []string{"!*"},
+				},
+			},
+		},
+	})
+	return err
 }
 
 // Struct used for creation and setup of cluster api testing
@@ -84,8 +133,13 @@ type testCluster struct {
 	oldInst func() (cluster.Cluster, error)
 }
 
-func init() {
-	setupFakeDriver()
+func (c *testCluster) MockCluster() *mockcluster.MockCluster {
+	return c.c
+}
+
+func (c *testCluster) Finish() {
+	clustermanager.Inst = c.oldInst
+	c.mc.Finish()
 }
 
 func newTestCluster(t *testing.T) *testCluster {
@@ -117,18 +171,41 @@ func setupFakeDriver() {
 	if err := kvdb.SetInstance(kv); err != nil {
 		logrus.Panicf("Failed to set KVDB instance")
 	}
+
+	// Clear previous cluster
+	clustermanager.ClearInst()
+
 	// Need to setup a fake cluster. No need to start it.
-	clustermanager.Init(config.ClusterConfig{
+	err = clustermanager.Init(config.ClusterConfig{
 		ClusterId: "fakecluster",
 		NodeId:    "fakeNode",
 	})
+	if err != nil {
+		logrus.Panicf("Unable to initialize the cluster manager")
+	}
+
 	cm, err = clustermanager.Inst()
 	if err != nil {
 		logrus.Panicf("Unable to initialize cluster manager: %v", err)
 	}
 
-	// Requires a non-nil cluster
+	// Restart fake driver
+	volumedrivers.Remove("fake")
+	err = volumedrivers.Add("fake", fake.Init)
+	if err != nil {
+		logrus.Panicf("Unable to initialize fake driver")
+	}
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
+		logrus.Panicf("Unable to start volume driver fake: %v", err)
+	}
+
+	// Restart fakesched driver
+	volumedrivers.Remove(fakeWithSched)
+	err = volumedrivers.Add(fakeWithSched, fake.Init)
+	if err != nil {
+		logrus.Panicf("Unable to initialize fake-sched driver")
+	}
+	if err := volumedrivers.Register(fakeWithSched, map[string]string{}); err != nil {
 		logrus.Panicf("Unable to start volume driver fake: %v", err)
 	}
 }
@@ -136,6 +213,7 @@ func setupFakeDriver() {
 func newTestServerSdkNoAuth(t *testing.T) *testServer {
 	tester := &testServer{}
 	tester.setPorts()
+	setupFakeDriver()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -195,6 +273,7 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 func newTestServerSdk(t *testing.T) *testServer {
 	tester := &testServer{}
 	tester.setPorts()
+	setupFakeDriver()
 
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
@@ -212,6 +291,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 	kvdb.SetInstance(kv)
 	rm, err := role.NewSdkRoleManager(kv)
 	assert.NoError(t, err)
+	tester.rm = rm
 
 	// Do not check for error, just initialize it
 	stp, err := storagepolicy.Init()
@@ -268,20 +348,11 @@ func newTestServerSdk(t *testing.T) *testServer {
 	assert.NoError(t, err)
 	credId = resp.GetCredentialId()
 
-	// Setup fake-sched driver for REST UTs
-	// Point it to the fake driver head
-	fakeDriver, err := volumedrivers.Get(fake.Name)
-	assert.NoError(t, err)
-	volumedrivers.Add(fakeWithSched,
-		func(params map[string]string) (volume.VolumeDriver, error) {
-			return fakeDriver, nil
-		},
-	)
-	volumedrivers.Register(fakeWithSched, nil)
-
 	// Register the drivers with SDK
 	// The tests use "fake" and "mock" both interchangeably
 	// Some of the test set the UserAgent in the REST client to mock
+	fakeDriver, err := volumedrivers.Get(fake.Name)
+	assert.NoError(t, err)
 
 	driverMap := map[string]volume.VolumeDriver{
 		fake.Name:             fakeDriver,
@@ -290,6 +361,10 @@ func newTestServerSdk(t *testing.T) *testServer {
 		mockDriverName:        fakeDriver,
 	}
 	tester.sdk.UseVolumeDrivers(driverMap)
+
+	// Override sched driver name
+	tester.overrideSchedDriverName = OverrideSchedDriverName
+	OverrideSchedDriverName = "fake"
 
 	return tester
 }
@@ -303,23 +378,6 @@ func newTestServer(t *testing.T) *testServer {
 
 	setupMockDriver(tester, t)
 	return tester
-}
-
-func (s *testServer) setPorts() {
-	source := rand.NewSource(time.Now().UnixNano())
-	r := rand.New(source)
-	port := r.Intn(20000) + 10000
-
-	s.port = fmt.Sprintf("%d", port)
-	s.gwport = fmt.Sprintf("%d", port+1)
-}
-
-func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
-	return s.m
-}
-
-func (s *testServer) Conn() *grpc.ClientConn {
-	return s.conn
 }
 
 func setupMockDriver(tester *testServer, t *testing.T) {
@@ -444,26 +502,6 @@ func testClusterServer(t *testing.T) (*httptest.Server, *testCluster) {
 
 	ts := httptest.NewServer(router)
 	return ts, tc
-}
-
-func (c *testCluster) MockCluster() *mockcluster.MockCluster {
-	return c.c
-}
-
-func (c *testCluster) Finish() {
-	clustermanager.Inst = c.oldInst
-	c.mc.Finish()
-}
-
-func (s *testServer) Stop() {
-	s.conn.Close()
-	s.sdk.Stop()
-
-	// Check mocks
-	s.mc.Finish()
-
-	// Remove from registry
-	volumedrivers.Remove(mockDriverName)
 }
 
 func createToken(name, role, secret string) (string, error) {

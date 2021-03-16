@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -169,6 +170,8 @@ func TestMiddlewareVolumeCreateSuccess(t *testing.T) {
 func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
+	err := testVolDriver.DisableGuestAccess()
+	assert.NoError(t, err)
 
 	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
@@ -830,6 +833,8 @@ func TestVolumeSetFailed(t *testing.T) {
 func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
+	err := testVolDriver.DisableGuestAccess()
+	assert.NoError(t, err)
 
 	_, mockSecret, mc := getSecretsMock(t)
 	defer mc.Finish()
@@ -1225,12 +1230,14 @@ func TestVolumeStatsSuccess(t *testing.T) {
 	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
+	err = testVolDriver.DisableGuestAccess()
+	assert.NoError(t, err)
 
 	// get token
 	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
 
-	cl, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, "fake", version, token, "", "fake")
 	assert.NoError(t, err)
 
 	// Setup request
@@ -1250,11 +1257,12 @@ func TestVolumeStatsSuccess(t *testing.T) {
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
 	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
-	assert.Nil(t, err)
+	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 
 	_, err = driverclient.Stats(id, true)
-	assert.Nil(t, err)
+	assert.NoError(t, err)
+
 	// Assert volume information is correct
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
 	ctx, err := contextWithToken(context.Background(), "test", "system.admin", testSharedSecret)
@@ -1579,7 +1587,6 @@ func TestVolumeRestoreSuccess(t *testing.T) {
 
 	// create client
 
-	fmt.Println("ID and SnapID", id, res)
 	res2 := driverclient.Restore(id, res)
 	assert.Nil(t, res2)
 
@@ -1663,12 +1670,14 @@ func TestVolumeUsedSizeSuccess(t *testing.T) {
 	ts, testVolDriver := testRestServerSdk(t)
 	defer ts.Close()
 	defer testVolDriver.Stop()
+	err = testVolDriver.DisableGuestAccess()
+	assert.NoError(t, err)
 
 	// get token
 	token, err := createToken("test", "system.admin", testSharedSecret)
 	assert.NoError(t, err)
 
-	cl, err := volumeclient.NewAuthDriverClient(ts.URL, mockDriverName, version, token, "", mockDriverName)
+	cl, err := volumeclient.NewAuthDriverClient(ts.URL, "fake", version, token, "", "fake")
 	assert.NoError(t, err)
 
 	// Setup request
@@ -2418,6 +2427,112 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 
 }
 
+func TestMiddlewareVolumeInspectFailureVolumeNotFound(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	_, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	// get token
+	token, err := createToken("test", "system.admin", testSharedSecret)
+	name := "myvol"
+	size := uint64(1234)
+	secretName := "secret-name"
+	namespace := "ns"
+	tokenKey := "token-key"
+	gomock.InOrder(
+		mockSecret.EXPECT().
+			String().
+			Return(lsecrets.TypeK8s).
+			Times(3),
+		mockSecret.EXPECT().
+			GetSecret(
+				secretName,
+				map[string]string{
+					k8s.SecretNamespace: namespace,
+				}).
+			Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
+			Times(1),
+		mockSecret.EXPECT().
+			String().
+			Return(lsecrets.TypeK8s).
+			Times(3),
+		mockSecret.EXPECT().
+			GetSecret(
+				secretName,
+				map[string]string{
+					k8s.SecretNamespace: namespace,
+				}).
+			Return(nil, fmt.Errorf("ERROR")).
+			Times(1),
+	)
+
+	req := &api.VolumeCreateRequest{
+		Locator: &api.VolumeLocator{
+			Name: name,
+			VolumeLabels: map[string]string{
+				secrets.SecretNameKey:      secretName,
+				secrets.SecretTokenKey:     tokenKey,
+				secrets.SecretNamespaceKey: namespace,
+			},
+		},
+		Source: &api.Source{},
+		Spec: &api.VolumeSpec{
+			HaLevel: 3,
+			Size:    size,
+			Format:  api.FSType_FS_TYPE_EXT4,
+			Shared:  true,
+		},
+	}
+
+	// Create a volume
+	driverclient := volumeclient.VolumeDriver(c)
+	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	assert.Nil(t, err)
+	assert.NotEmpty(t, id)
+
+	// Confirm that the inspect on secret error returns to the client the correct object,
+	// which should be an empty list
+	ret, err := driverclient.Inspect([]string{id})
+	assert.Nil(t, err)
+	assert.NotNil(t, ret)
+	assert.Empty(t, ret)
+}
+
+func TestMiddlewareVolumeDeleteFailureVolumeNotFound(t *testing.T) {
+	testVolDriver := newTestServerSdk(t)
+	defer testVolDriver.Stop()
+
+	_, mockSecret, mc := getSecretsMock(t)
+	defer mc.Finish()
+	lsecrets.SetInstance(mockSecret)
+
+	unixServer, portServer, err := StartVolumeMgmtAPI(fakeWithSched, testSdkSock, testMgmtBase, testMgmtPort, true, nil)
+	assert.NoError(t, err, "Unexpected error on StartVolumeMgmtAPI")
+	defer unixServer.Close()
+	defer portServer.Close()
+
+	time.Sleep(1 * time.Second)
+	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
+	assert.NoError(t, err, "Unexpected error on NewDriverClient")
+
+	// Deleteing an ID that does not exist should return success since the call is idempotent
+	driverclient := volumeclient.VolumeDriver(c)
+	err = driverclient.Delete("fakeid")
+	assert.Nil(t, err)
+}
+
 func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 	testVolDriver := newTestServerSdk(t)
 	defer testVolDriver.Stop()
@@ -2762,7 +2877,7 @@ func TestRequestOnAuthWithMiddlewareForGuest(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Setup request
-	name := "myvol"
+	name := "myvolMiddlewareForGuest"
 	size := uint64(1234)
 	req := &api.VolumeCreateRequest{
 		Locator: &api.VolumeLocator{Name: name},
