@@ -1830,9 +1830,11 @@ service OpenStoragePool {
 // OpenStorageDiags service provides methods to manage diagnostic bundles
 service OpenStorageDiags {
 
-  // Collect diags based on the provided request
+  // Collect starts a job to collect diagnostics from set of nodes that are selected based on the selectors provided
+  // in the SdkDiagsCollectRequest. See SdkDiagsCollectRequest for more details on how to select the nodes
+  // Returns SdkDiagsCollectResponse which has the job that is responsible for collecting the diags.
   rpc Collect(SdkDiagsCollectRequest)
-      returns (SdkJobResponse){
+      returns (SdkDiagsCollectResponse){
     option(google.api.http) = {
       post: "/v1/diags"
       body: "*"
@@ -3557,28 +3559,39 @@ message DiagsCollectionStatus {
 
   // State is an enum for state of diags collection on a given node
   enum State {
+    // Unspecified means uninitialized or unknown state
+    UNSPECIFIED = 0;
     // Pending indicates the diags collection is pending and hasn't started
-    PENDING = 0;
+    PENDING = 1;
     // Running indicates diags collection is actively running
-    RUNNING = 1;
+    RUNNING = 2;
     // Done indicates diags collection has finished
-    DONE = 2;
+    DONE = 3;
     // Failed indicates diags collection has failed
-    FAILED = 3;
+    FAILED = 4;
   }
 }
 
 
 message SdkDiagsCollectRequest {
   // Node selects the node(s) for diags collection
-  DiagsNodeSelector node = 100;
+  DiagsNodeSelector node = 1;
   // Volume selects the volume(s) for diags collection
-  DiagsVolumeSelector volume = 101;
+  DiagsVolumeSelector volume = 2;
   // ProfileOnly is an optional flag if true will only collect the stack and heap profile of the driver and will skip
   // other diag components
-  bool profile_only = 2;
+  bool profile_only = 3;
   // Issuer is an optional  user friendly name for the caller invoking the API
-  string issuer = 3;
+  string issuer = 4;
+  // TimeoutMins is the timeout in minutes for the job. This is an optional field and if not provided, the
+  // implementation of the SDK will use a sane default
+  uint64 timeout_mins = 5;
+}
+
+// SdkDiagsCollectResponse defines a response for an SDK request to collect diags
+message SdkDiagsCollectResponse {
+  // Job that was created for the SDK request
+  Job job = 1;
 }
 
 // DiagsNodeSelector allows selecting nodes for diags collection

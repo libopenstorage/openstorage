@@ -697,9 +697,10 @@
         "type": "object"
       },
       "apiDiagsCollectionStatusState": {
-        "default": "PENDING",
-        "description": "- PENDING: Pending indicates the diags collection is pending and hasn't started\n - RUNNING: Running indicates diags collection is actively running\n - DONE: Done indicates diags collection has finished\n - FAILED: Failed indicates diags collection has failed",
+        "default": "UNSPECIFIED",
+        "description": "- UNSPECIFIED: Unspecified means uninitialized or unknown state\n - PENDING: Pending indicates the diags collection is pending and hasn't started\n - RUNNING: Running indicates diags collection is actively running\n - DONE: Done indicates diags collection has finished\n - FAILED: Failed indicates diags collection has failed",
         "enum": [
+          "UNSPECIFIED",
           "PENDING",
           "RUNNING",
           "DONE",
@@ -2643,10 +2644,24 @@
             "title": "ProfileOnly is an optional flag if true will only collect the stack and heap profile of the driver and will skip\nother diag components",
             "type": "boolean"
           },
+          "timeout_mins": {
+            "format": "uint64",
+            "title": "TimeoutMins is the timeout in minutes for the job. This is an optional field and if not provided, the\nimplementation of the SDK will use a sane default",
+            "type": "string"
+          },
           "volume": {
             "$ref": "#/components/schemas/apiDiagsVolumeSelector"
           }
         },
+        "type": "object"
+      },
+      "apiSdkDiagsCollectResponse": {
+        "properties": {
+          "job": {
+            "$ref": "#/components/schemas/apiJob"
+          }
+        },
+        "title": "SdkDiagsCollectResponse defines a response for an SDK request to collect diags",
         "type": "object"
       },
       "apiSdkEnumerateJobsResponse": {
@@ -6455,14 +6470,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkJobResponse"
+                  "$ref": "#/components/schemas/apiSdkDiagsCollectResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Collect diags based on the provided request",
+        "summary": "Collect starts a job to collect diagnostics from set of nodes that are selected based on the selectors provided\nin the SdkDiagsCollectRequest. See SdkDiagsCollectRequest for more details on how to select the nodes\nReturns SdkDiagsCollectResponse which has the job that is responsible for collecting the diags.",
         "tags": [
           "OpenStorageDiags"
         ]

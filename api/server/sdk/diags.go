@@ -19,7 +19,7 @@ func (s *DiagsServer) cluster() cluster.Cluster {
 	return s.server.cluster()
 }
 
-func (s *DiagsServer) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkJobResponse, error) {
+func (s *DiagsServer) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
 	if s.cluster() == nil {
 		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
 	}

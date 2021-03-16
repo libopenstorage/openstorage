@@ -85,10 +85,10 @@ func (mr *MockClusterMockRecorder) ClusterNotifyNodeDown(arg0 interface{}) *gomo
 }
 
 // Collect mocks base method.
-func (m *MockCluster) Collect(arg0 context.Context, arg1 *api.SdkDiagsCollectRequest) (*api.SdkJobResponse, error) {
+func (m *MockCluster) Collect(arg0 context.Context, arg1 *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Collect", arg0, arg1)
-	ret0, _ := ret[0].(*api.SdkJobResponse)
+	ret0, _ := ret[0].(*api.SdkDiagsCollectResponse)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }

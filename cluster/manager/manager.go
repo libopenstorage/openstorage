@@ -2073,7 +2073,7 @@ func (c *ClusterManager) EnumerateRebalanceJobs(
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
 }
 
-func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkJobResponse, error) {
+func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
 	return c.diagsProvider.Collect(ctx, in)
 }
 
