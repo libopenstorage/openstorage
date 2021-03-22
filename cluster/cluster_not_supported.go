@@ -3,13 +3,12 @@ package cluster
 import (
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/diags"
-
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"

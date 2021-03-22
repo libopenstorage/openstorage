@@ -17,8 +17,6 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/diags"
-
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -29,6 +27,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"

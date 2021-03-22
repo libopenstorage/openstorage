@@ -3572,7 +3572,9 @@ message DiagsCollectionStatus {
   }
 }
 
-
+// SdkDiagsCollectRequest is the request object that specifies what should be part of the diags that are collected
+// User can specify both Node and Volume or just one of them. If both are provided, the implementation will select
+// nodes based on both and also handle overlaps
 message SdkDiagsCollectRequest {
   // Node selects the node(s) for diags collection
   DiagsNodeSelector node = 1;
@@ -3585,7 +3587,7 @@ message SdkDiagsCollectRequest {
   string issuer = 4;
   // TimeoutMins is the timeout in minutes for the job. This is an optional field and if not provided, the
   // implementation of the SDK will use a sane default
-  uint64 timeout_mins = 5;
+  int64 timeout_mins = 5;
 }
 
 // SdkDiagsCollectResponse defines a response for an SDK request to collect diags
@@ -3595,6 +3597,9 @@ message SdkDiagsCollectResponse {
 }
 
 // DiagsNodeSelector allows selecting nodes for diags collection
+// User can select NodeLabelSelector AND/OR NodeIDs. If both are provided, the implementation will select nodes based on
+// both labels and IDs and also handle overlaps
+// If All is set to true, other selectors are ignored since it selects all nodes
 message DiagsNodeSelector {
   // NodeLabelSelector is a label selector used to select the nodes for which diags will be collected
   repeated LabelSelectorRequirement node_label_selector = 1;
@@ -3605,6 +3610,8 @@ message DiagsNodeSelector {
 }
 
 // DiagsVolumeSelector allows selecting volumes for diags collection
+// User can select VolumeLabelSelector AND/OR VolumeIDs. If both are provided, the implementation will select nodes
+// based on both labels and IDs and also handle overlaps
 message DiagsVolumeSelector {
   // VolumeLabelSelector selects volumes by their labels and then uses replica and attached nodes for those volumes for
   // diags collection

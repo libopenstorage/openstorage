@@ -8,8 +8,7 @@ import (
 
 // Provider is collection of APIs that implement the SDK OpenStorageDiags service
 type Provider interface {
-	// Collect collects diagnostics based on the provided request
-	Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error)
+	api.OpenStorageDiagsServer
 }
 
 // NewDefaultDiagsProvider returns all diags provider APIs as unsupported

@@ -731,7 +731,7 @@
             "type": "array"
           }
         },
-        "title": "DiagsNodeSelector allows selecting nodes for diags collection",
+        "title": "DiagsNodeSelector allows selecting nodes for diags collection\nUser can select NodeLabelSelector AND/OR NodeIDs. If both are provided, the implementation will select nodes based on\nboth labels and IDs and also handle overlaps\nIf All is set to true, other selectors are ignored since it selects all nodes",
         "type": "object"
       },
       "apiDiagsVolumeSelector": {
@@ -751,7 +751,7 @@
             "type": "array"
           }
         },
-        "title": "DiagsVolumeSelector allows selecting volumes for diags collection",
+        "title": "DiagsVolumeSelector allows selecting volumes for diags collection\nUser can select VolumeLabelSelector AND/OR VolumeIDs. If both are provided, the implementation will select nodes\nbased on both labels and IDs and also handle overlaps",
         "type": "object"
       },
       "apiDrainAttachmentsSummary": {
@@ -2645,7 +2645,7 @@
             "type": "boolean"
           },
           "timeout_mins": {
-            "format": "uint64",
+            "format": "int64",
             "title": "TimeoutMins is the timeout in minutes for the job. This is an optional field and if not provided, the\nimplementation of the SDK will use a sane default",
             "type": "string"
           },
@@ -2653,6 +2653,7 @@
             "$ref": "#/components/schemas/apiDiagsVolumeSelector"
           }
         },
+        "title": "SdkDiagsCollectRequest is the request object that specifies what should be part of the diags that are collected\nUser can specify both Node and Volume or just one of them. If both are provided, the implementation will select\nnodes based on both and also handle overlaps",
         "type": "object"
       },
       "apiSdkDiagsCollectResponse": {
