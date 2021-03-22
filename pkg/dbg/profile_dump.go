@@ -16,6 +16,21 @@ const (
 	fnameFmt = "2006-01-02T15:04:05.999999-0700MST"
 )
 
+func getTimeStamp() string {
+	tnow := time.Now()
+	return fmt.Sprintf("%d%02d%02d%02d%02d%02d",
+		tnow.Year(), tnow.Month(), tnow.Day(),
+		tnow.Hour(), tnow.Minute(), tnow.Second())
+}
+
+func getHostNamePrefix() string {
+	hname, _ := os.Hostname()
+	if len(hname) > 0 {
+		hname = hname + "-"
+	}
+	return hname
+}
+
 // DumpGoMemoryTrace output memory profile to logs.
 func DumpGoMemoryTrace() {
 	m := &runtime.MemStats{}
@@ -29,11 +44,11 @@ func DumpGoMemoryTrace() {
 func DumpGoProfile() error {
 	trace := make([]byte, 5120*1024)
 	len := runtime.Stack(trace, true)
-	return ioutil.WriteFile(path+time.Now().Format(fnameFmt)+".stack", trace[:len], 0644)
+	return ioutil.WriteFile(path+getHostNamePrefix()+getTimeStamp()+".stack", trace[:len], 0644)
 }
 
 func DumpHeap() {
-	f, err := os.Create(path + time.Now().Format(fnameFmt) + ".heap")
+	f, err := os.Create(path + getHostNamePrefix() + getTimeStamp() + ".heap")
 	if err != nil {
 		logrus.Errorf("could not create memory profile: %v", err)
 		return
