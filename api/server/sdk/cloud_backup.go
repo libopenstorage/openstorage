@@ -336,13 +336,13 @@ func (s *CloudBackupServer) EnumerateWithFilters(
 
 	enumerateReq := &api.CloudBackupEnumerateRequest{
 		CloudBackupGenericRequest: api.CloudBackupGenericRequest{
-			SrcVolumeID:    req.GetSrcVolumeId(),
-			ClusterID:      req.GetClusterId(),
-			CredentialUUID: credId,
-			All:            req.GetAll(),
-			MetadataFilter: req.MetadataFilter,
-			CloudBackupID:  req.CloudBackupId,
-			MissingSrcVol:  req.MissingSrcVol,
+			SrcVolumeID:       req.GetSrcVolumeId(),
+			ClusterID:         req.GetClusterId(),
+			CredentialUUID:    credId,
+			All:               req.GetAll(),
+			MetadataFilter:    req.MetadataFilter,
+			CloudBackupID:     req.CloudBackupId,
+			MissingSrcVolumes: req.MissingSrcVolumes,
 		},
 		ContinuationToken: req.ContinuationToken,
 		MaxBackups:        req.MaxBackups,

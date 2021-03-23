@@ -212,7 +212,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 		MetadataFilter:    enumerateReq.MetadataFilter,
 		StatusFilter:      api.CloudBackupStatusTypeToSdkCloudBackupStatusType(enumerateReq.StatusFilter),
 		CloudBackupId:     enumerateReq.CloudBackupID,
-		MissingSrcVol:     enumerateReq.MissingSrcVol,
+		MissingSrcVolumes: enumerateReq.MissingSrcVolumes,
 	})
 	if err != nil {
 		vd.sendError(method, "", w, err.Error(), http.StatusInternalServerError)
@@ -227,7 +227,7 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 			Timestamp:     prototime.TimestampToTime(v.Timestamp),
 			Metadata:      v.Metadata,
 			Status:        api.SdkCloudBackupStatusTypeToCloudBackupStatusString(v.Status),
-			Cluster:       v.Cluster,
+			ClusterType:   v.ClusterType,
 			Namespace:     v.Namespace,
 		}
 		enumerateResp.Backups = append(enumerateResp.Backups, item)

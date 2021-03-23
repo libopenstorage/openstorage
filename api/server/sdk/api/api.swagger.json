@@ -1905,7 +1905,7 @@
             "title": "(optional) Enumerates backups that have tags of this type",
             "type": "object"
           },
-          "missing_src_vol": {
+          "missing_src_volumes": {
             "format": "boolean",
             "title": "To enumerate cloudbackups for which source volumes do not exist in this\ncluster",
             "type": "boolean"
@@ -2025,7 +2025,7 @@
       },
       "apiSdkCloudBackupInfo": {
         "properties": {
-          "cluster": {
+          "cluster_type": {
             "$ref": "#/components/schemas/apiSdkCloudBackupClusterType"
           },
           "id": {

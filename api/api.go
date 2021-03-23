@@ -398,16 +398,16 @@ type CloudBackupGenericRequest struct {
 	// MetadataFilter indicates backups whose metadata has these kv pairs
 	MetadataFilter map[string]string
 	// CloudBackupID must be specified if one needs to enumerate known single
-	// backup( format is clusteruuidORBucketName/srcVolId-SnapId(-incr). If t\
+	// backup (format is clusteruuidORBucketName/srcVolId-SnapId(-incr). If t\
 	// this is specified, everything else n the command is ignored
 	CloudBackupID string
 	// MissingSrcVol set to true enumerates cloudbackups for which srcVol is not
 	// present in the cluster. Either the source volume is deleted or the
 	// cloudbackup belongs to other cluster.( with older version this
 	// information may be missing, and in such a case these will list as
-	// missing cluster info field in enumeration. Specifying SrcVolumeID and
+	// missing cluster info field in enumeration). Specifying SrcVolumeID and
 	// this flag at the same time is an error
-	MissingSrcVol bool
+	MissingSrcVolumes bool
 }
 
 type CloudBackupInfo struct {
@@ -424,9 +424,9 @@ type CloudBackupInfo struct {
 	Metadata map[string]string
 	// Status indicates the status of the backup
 	Status string
-	// Cluster indicates if the cloudbackup was uploaded by this
+	// ClusterType indicates if the cloudbackup was uploaded by this
 	// cluster. Could be unknown with older version cloudbackups
-	Cluster SdkCloudBackupClusterType
+	ClusterType SdkCloudBackupClusterType
 	// Namespace to which this cloudbackup belongs to
 	Namespace string
 }
@@ -1043,7 +1043,7 @@ func (b *CloudBackupInfo) ToSdkCloudBackupInfo() *SdkCloudBackupInfo {
 		SrcVolumeId:   b.SrcVolumeID,
 		SrcVolumeName: b.SrcVolumeName,
 		Metadata:      b.Metadata,
-		Cluster:       b.Cluster,
+		ClusterType:   b.ClusterType,
 		Namespace:     b.Namespace,
 	}
 

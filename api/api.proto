@@ -4204,7 +4204,7 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   string cloud_backup_id = 9;
   // To enumerate cloudbackups for which source volumes do not exist in this
   // cluster
-  bool missing_src_vol = 10;
+  bool missing_src_volumes = 10;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -4224,7 +4224,7 @@ message SdkCloudBackupInfo {
   SdkCloudBackupStatusType status = 6;
   // cluster indicates if the cloudbackup belongs to current cluster,
   // with older cluster this value may be unknown
-  SdkCloudBackupClusterType cluster = 7;
+  SdkCloudBackupClusterType cluster_type = 7;
   // k8s namespace to which this backup belongs to
   string namespace = 8; 
 }
