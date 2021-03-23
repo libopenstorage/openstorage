@@ -2,8 +2,12 @@
 
 ## Releases
 
-### v0.101.6 - (04/14/2021)
+### v0.101.7 - (04/22/2021)
 
+* Add SDK for diags collection
+
+
+### v0.101.6 - (04/14/2021)
 * Add a spec for defining a service for sharedv4 volumes. The service
   can be used for accessing this sharedv4 volume within and from outside
   the cluster.
