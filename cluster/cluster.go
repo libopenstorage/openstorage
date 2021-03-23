@@ -5,6 +5,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/libopenstorage/openstorage/pkg/diags"
+
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/objectstore"
@@ -55,6 +57,8 @@ type ClusterServerConfiguration struct {
 	ConfigJobProvider job.Provider
 	// holds implementation to the NodeDrainProvider interface
 	ConfigNodeDrainProvider nodedrain.Provider
+	// holds the actual implementation to the SDK OpenStorageDiags interface
+	ConfigDiagsProvider diags.Provider
 }
 
 // NodeEntry is used to discover other nodes in the cluster
@@ -389,6 +393,7 @@ type Cluster interface {
 	api.OpenStoragePoolServer
 	job.Provider
 	nodedrain.Provider
+	diags.Provider
 }
 
 // NullClusterListener is a NULL implementation of ClusterListener functions
