@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.110.0 - (02/22/2021)
+
+* Add SDK for diags collection
+
 ### v0.109.0 - (02/17/2021)
 
 * Add Trashcan volume objects 
