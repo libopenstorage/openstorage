@@ -10,6 +10,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/client"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
@@ -33,6 +34,7 @@ type clusterClient struct {
 	storagepool.UnsupportedPoolProvider
 	job.UnsupportedJobProvider
 	nodedrain.UnsupportedNodeDrainProvider
+	diags.UnsupportedDiagsProvider
 	c *client.Client
 }
 

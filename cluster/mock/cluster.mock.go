@@ -84,6 +84,21 @@ func (mr *MockClusterMockRecorder) ClusterNotifyNodeDown(arg0 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterNotifyNodeDown", reflect.TypeOf((*MockCluster)(nil).ClusterNotifyNodeDown), arg0)
 }
 
+// Collect mocks base method.
+func (m *MockCluster) Collect(arg0 context.Context, arg1 *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "Collect", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkDiagsCollectResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// Collect indicates an expected call of Collect.
+func (mr *MockClusterMockRecorder) Collect(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Collect", reflect.TypeOf((*MockCluster)(nil).Collect), arg0, arg1)
+}
+
 // CordonAttachments mocks base method.
 func (m *MockCluster) CordonAttachments(arg0 context.Context, arg1 *api.SdkNodeCordonAttachmentsRequest) (*api.SdkNodeCordonAttachmentsResponse, error) {
 	m.ctrl.T.Helper()
