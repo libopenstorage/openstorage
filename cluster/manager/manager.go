@@ -27,6 +27,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
@@ -84,6 +85,7 @@ type ClusterManager struct {
 	storagePoolProvider  api.OpenStoragePoolServer
 	jobProvider          job.Provider
 	nodeDrainProvider    nodedrain.Provider
+	diagsProvider        diags.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1335,6 +1337,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.nodeDrainProvider = config.ConfigNodeDrainProvider
 	}
 
+	if config.ConfigDiagsProvider == nil {
+		c.diagsProvider = diags.NewDefaultDiagsProvider()
+	} else {
+		c.diagsProvider = config.ConfigDiagsProvider
+	}
+
 	if config.ConfigStoragePoolProvider == nil {
 		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
 	} else {
@@ -2062,6 +2070,10 @@ func (c *ClusterManager) GetRebalanceJobStatus(
 func (c *ClusterManager) EnumerateRebalanceJobs(
 	context context.Context, request *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
+}
+
+func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
+	return c.diagsProvider.Collect(ctx, in)
 }
 
 func (c *ClusterManager) DrainAttachments(ctx context.Context, in *api.SdkNodeDrainAttachmentsRequest) (*api.SdkJobResponse, error) {
