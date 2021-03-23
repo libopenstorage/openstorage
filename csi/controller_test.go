@@ -2088,6 +2088,7 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 		SourceVolumeId: volume,
 		Secrets:        map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
+	size := int64(1024)
 	snapInfo := &api.Volume{
 		Id: name,
 		Source: &api.Source{
@@ -2096,6 +2097,9 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 		Ctime: ptypes.TimestampNow(),
 		Locator: &api.VolumeLocator{
 			Name: name,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(size),
 		},
 	}
 
@@ -2119,6 +2123,7 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 	r, err := c.CreateSnapshot(context.Background(), req)
 	assert.NoError(t, err)
 	assert.Equal(t, name, r.GetSnapshot().GetSnapshotId())
+	assert.Equal(t, size, r.GetSnapshot().GetSizeBytes())
 	assert.Equal(t, snapInfo.Source.Parent, r.GetSnapshot().GetSourceVolumeId())
 }
 
@@ -2139,6 +2144,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
+	size := uint64(1024)
 	snapInfo := &api.Volume{
 		Id: name,
 		Source: &api.Source{
@@ -2147,6 +2153,9 @@ func TestControllerCreateSnapshot(t *testing.T) {
 		Ctime: ptypes.TimestampNow(),
 		Locator: &api.VolumeLocator{
 			Name: name,
+		},
+		Spec: &api.VolumeSpec{
+			Size: size,
 		},
 	}
 
@@ -2167,7 +2176,9 @@ func TestControllerCreateSnapshot(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{volume},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: volume}}, nil).
+			Return([]*api.Volume{&api.Volume{Id: volume, Spec: &api.VolumeSpec{
+				Size: size,
+			}}}, nil).
 			Times(1),
 
 		// snapshot
