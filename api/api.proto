@@ -4222,6 +4222,9 @@ message SdkCloudBackupEnumerateWithFiltersRequest {
   // If one wants to enumerate known backup, set this field to the backup ID
   // naming format :clusteruuidORbicketname/srcVolId-snapId(-incr)
   string cloud_backup_id = 9;
+  // To enumerate cloudbackups for which source volumes do not exist in this
+  // cluster
+  bool missing_src_volumes = 10;
 }
 
 // SdkCloudBackupInfo has information about a backup stored by a cloud provider
@@ -4239,6 +4242,21 @@ message SdkCloudBackupInfo {
   map<string, string> metadata = 5;
   // Status indicates the status of the backup
   SdkCloudBackupStatusType status = 6;
+  // cluster indicates if the cloudbackup belongs to current cluster,
+  // with older cluster this value may be unknown
+  SdkCloudBackupClusterType cluster_type = 7;
+  // k8s namespace to which this backup belongs to
+  string namespace = 8; 
+}
+
+// CloudBackup operations types
+enum SdkCloudBackupClusterType {
+  // Unknown
+  SdkCloudBackupClusterUnknown = 0;
+  // Beongs to this cluster
+  SdkCloudBackupClusterCurrent = 1;
+  // not this. other cluster
+  SdkCloudBackupClusterOther = 2;
 }
 
 // Defines a response which lists all the backups stored by a cloud provider
@@ -4837,7 +4855,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 10;
+    Patch = 11;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -1829,6 +1829,17 @@
         "title": "Defines a response containing the contents of a backup stored by a cloud provider",
         "type": "object"
       },
+      "apiSdkCloudBackupClusterType": {
+        "default": "SdkCloudBackupClusterUnknown",
+        "description": "- SdkCloudBackupClusterUnknown: Unknown\n - SdkCloudBackupClusterCurrent: Beongs to this cluster\n - SdkCloudBackupClusterOther: not this. other cluster",
+        "enum": [
+          "SdkCloudBackupClusterUnknown",
+          "SdkCloudBackupClusterCurrent",
+          "SdkCloudBackupClusterOther"
+        ],
+        "title": "CloudBackup operations types",
+        "type": "string"
+      },
       "apiSdkCloudBackupCreateRequest": {
         "properties": {
           "credential_id": {
@@ -1936,6 +1947,11 @@
             },
             "title": "(optional) Enumerates backups that have tags of this type",
             "type": "object"
+          },
+          "missing_src_volumes": {
+            "format": "boolean",
+            "title": "To enumerate cloudbackups for which source volumes do not exist in this\ncluster",
+            "type": "boolean"
           },
           "src_volume_id": {
             "description": "(optional) Source id of the volume for the request.",
@@ -2052,6 +2068,9 @@
       },
       "apiSdkCloudBackupInfo": {
         "properties": {
+          "cluster_type": {
+            "$ref": "#/components/schemas/apiSdkCloudBackupClusterType"
+          },
           "id": {
             "title": "This is the id as represented by the cloud provider",
             "type": "string"
@@ -2062,6 +2081,10 @@
             },
             "title": "Metadata associated with the backup",
             "type": "object"
+          },
+          "namespace": {
+            "title": "k8s namespace to which this backup belongs to",
+            "type": "string"
           },
           "src_volume_id": {
             "title": "Source volumeID of the backup",
@@ -5437,7 +5460,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.10"
+    "version": "0.101.11"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.101.11 - (08/18/2021)
+
+* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups 
+* with whose source volumes are missing in the cluster. Also indicate if
+* cloudbackup belongs to current cluster with enumerate data.
+
 ### v0.101.10 - (05/06/2021)
 
 * Change sharedv4 servicey type enum to conform to the style guilde
