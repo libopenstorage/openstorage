@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.111.0 - (03/24/2021)
+
+* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups 
+* with whose source volumes are missing in the cluster. Also indicate if
+* cloudbackup belongs to current cluster with enumerate data.
+
 ### v0.110.0 - (02/22/2021)
 
 * Add SDK for diags collection
