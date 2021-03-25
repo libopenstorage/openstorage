@@ -6,6 +6,7 @@ go:
   - 1.14.x
   - 1.15.x
 install:
+  - echo "$DOCKER_USER"
   - go get -u github.com/vbatts/git-validation
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
   - chmod +x kubectl
@@ -14,6 +15,7 @@ install:
   - chmod +x ./kind
   - mv ./kind ${GOPATH}/bin
 script:
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
   - git-validation -run DCO,short-subject
   - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
   - make docker-proto
@@ -33,3 +35,8 @@ notifications:
       - eng@portworx.com
     on_success: change
     on_failure: always
+env:
+  global:
+  - secure: TRnwmG2zCKzHSxuGohfNP94uVhThA6wTdaYPjfP3OSxVy6d3tldD8M7ZZtJoZOKRDDmRjDzo8msxhE78Ad6UTk4ZmeYm5WMtpKlftMKaTQfsVQCNEE/WY6AnBs7KMU6Mg/xsk8YUA6jjYoT/q+oKJBy9XOMUrXLqn0dgOcRU2EJXPpj4PMnXScIxk10kE5FX0JNRv66weu0+5+4Fm6WxD4lG9PqBc2RCh7fMCc6Ery9VTkCtN+byKownrA//k7doVsxBtGNGUUnWNVLJ0LIvfHXXSEY0IKzhDLvhVcnve/aSKW/6osYy3oTPo017FFgmSn7UEsGawgJlA+dBcu7Fxtba64BCGwLm8iH5RlhKiYvf6mtUuqCJ9rXWne6shJRi7ONI59xJMRkrJTPABVRQflE5V3TfVfEn2d+kdotMPqBPLzmvf1Bik587SwIUbHwENjSLw0cNmwkU/hVoZlCOfex8npXO582NgMFpRN+4sQB+4zG0wHzqvjLspgWr1QkfF2E+um/7MQCcb2pu5X6vRGzDhxmEGg2DEDcP3Kufar0M8hf6VcXbOj/OAXL5rOm+6umfA7/DZteuWDcfuk91Sz7uBeDykyADaYTUwXeQScKCEBcwYDHte5vrKzcjuq9vUr8w4MhbmUm0LYBZZJRfaX6Ww/eoYKec/GuuJ2w9aME=
+  - secure: BfOqruIYQmEBgX55K1uQ0lioSUvup9ztYHLhwZYaP+21MJ/t4ByMS45bbQrZQ+n4yswkJIDUUhrKKovsoJMh6/QMuMifJ8/ujF74XNJup+RIOyvkelSFmBUluIusuQ+c12R5XOfi0YJWVhJcfhkMA2wE5cT7+n9StQK+9whhUtLOKDBUmxQFZ/437Uj4LogjzM4b19OR+x9iqGC8MPCvhb7RyvHer1Y9w/5zR9UNm63xB6BeJ4t1ReSXGt2PxCpFdBKLNG7jp5YAmU+u0H6KVGcFblLp4afrNkI4z9sRc0eTDR51oi+p/XRXfKlHpm0XWDi/dYy5ihAp92G8h3yIuXFKus0PnTAW21uIiCCAUQ8HFLzkF68A1ZCo6Tug4RiuZ8HDdT9leik75wgXQi1v4u41lltvH/uTktE7u3EXSXO6ANZagHF1UR8xYBzbQ1Ydscw4G3nh2nEBD204lPMN7lrt+cFn+zJjwi2W36EVavHlTrHX0ROrFeVeo98oBDjw/7PfBRFVj1FNImFmyTh+dnz/c+B//HdY9/SMBi4+/SuXV1P3w04hGr97DB+Igwpo5p+Z3xPT4r6aRCbtEdwwOWKu/VQtEbSut5JFiMwNW1VRVGwWMPbqbtRGfuW/inllCngYcpeCbVCivCO/OS9La7bfVwhP8s4X+/PHUSV97+8=
+  
