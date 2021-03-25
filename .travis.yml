@@ -1,35 +1,27 @@
 sudo: required
 services:
-  - docker
+- docker
 language: go
 go:
-  - 1.14.x
-  - 1.15.x
+- 1.14.x
+- 1.15.x
 install:
-  - go get -u github.com/vbatts/git-validation
-  - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-  - chmod +x kubectl
-  - mv kubectl ${GOPATH}/bin
-  - curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-$(uname)-amd64
-  - chmod +x ./kind
-  - mv ./kind ${GOPATH}/bin
-script:
-  - git-validation -run DCO,short-subject
-  - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
-  - make docker-proto
-  - git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
-  - hack/check-api-version.sh
-  - git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-  - bash hack/docker-integration-test.sh
-  - make install verify
-  - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
-      echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
-      make push-mock-sdk-server;
-    fi
+- go get -u github.com/vbatts/git-validation
+- curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+- chmod +x kubectl
+- mv kubectl ${GOPATH}/bin
+- curl -Lo ./kind https://github.com/kubernetes-sigs/kind/releases/download/v0.9.0/kind-$(uname)-amd64
+- chmod +x ./kind
+- mv ./kind ${GOPATH}/bin
+script: bash script.sh
 notifications:
   email:
     recipients:
-      - aditya@portworx.com
-      - eng@portworx.com
+    - aditya@portworx.com
+    - eng@portworx.com
     on_success: change
     on_failure: always
+env:
+  global:
+  - secure: p3GiuhNxgdk44yMS4VU1kJvIzqSATsq+umu7TTHi4WF+oZLyMzB8300exn/W4r4b86VA4cigJJi6USoYdWVHlNu5NBHjx45Zj5FqV2UbZveWgRhMVupskloa+9Rw4rsxvY1VrIRTCbY1coUzpvT071GjUhZBuXsnHuv9gzo7P13VGsN1sG3jbI1SJ/ak9VYqcZlSKMRN61niQQJyeKVcn0tKdSEigOUmjAFmwykROVOjAZ6vurTPlHoVPtop79UaDOzg3b6jxClSX5FGIZ9nUeVrXxDcQoK9Mtfl5fhuuOjf2jaxr9zVIsMhsJc7fu1uaBo0xR9PZGkTl+grVLGObbGafRkRaGBA5faXS2tkwstDhXOeAD7sKmIvpwm0fQzazmvrefbOupQNCVHwDYTFTHqz42X3quPCakH6tRZ+3qHg3OtC8gphsUhZAYV0KkbnMwUXUnFU+jRZw9LnqGfhEM62cKaUhonqXBuP1IJYNPMnZemkpC+2wQofKIs9tR5d+tAEwCH7zTdGuHe59idxbuNsSVKWnDrB29o7NvoDfpjbVw7bS14MkUT/6FMQkT42pOgg0UNzpB9+oiRedunzP3XUrmvtuHXG6hiUDvfwwosmz/YMft1w0T2xD3i7R5+poayZg+4LajhQuAiaXPVgjwLx5Iz8etTXnS3nWN18WWI=
+  - secure: TmP5zEKbNwRQhSQ75gUxzDe/Ih6tcgp1r14jVyJuLJUDcYkuxp+3I9sNMPT3RM7QimY23kwCQ5otdMVYfcDwxQUfYrn0HwouscyahJLDXCTUmvlL5kU5/Z26g/Je/4b3coC3XR4VnATi+9OcU6kBM1sqebtO8h0zNXRbjMRO/HaIP9ra5oUa5eV8BGV2Va3hYsuKq7cFYnCSyED5WzNj90PnysO+urm8kR5JfiIXeZZUyRUItXAvldmIRd2jwth2DFdW88/zoqUi9Bskt7qmhpIrQM+HSpzKj4XVICq9UxNgJLqghjV5ggJzzQO8M9CqKILO/5wmgeA0LWDLTIwpXMBQIgn4657YrISN8vh8h7aCE+3pR0vOb94+qRaWUVZgteoVr+hOCulLZ677gq8poM2/8w1G8wH3y98oBr2xYxDAtPnLD6y9Jgi4bpQofguhIoMrYwSnLo6oRXCz80r6LF544lUpoNko/60mge4WlSUa4h1vyhAp/YWhq6LuEkSoJYsqBfX67Wa3t81S3b5T9r5e+Z9HI2uMJZfSXfQRvGLNY5AL3csKSL39QSBdGJErmfqDAjB0euA7ixBIKbF7ixi/Ky2zz4mNthpL0t7SjOLLnltaJ6SKckt14EqDc7F7Act97o3Tuj+aW5isj7m7hkqETavhJkh8WFTYTDrf1Ic=
