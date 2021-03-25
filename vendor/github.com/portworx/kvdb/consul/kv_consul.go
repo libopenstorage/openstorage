@@ -840,6 +840,14 @@ func (kv *consulKV) EnumerateWithSelect(
 	return nil, kvdb.ErrNotSupported
 }
 
+func (kv *consulKV) EnumerateKVPWithSelect(
+	prefix string,
+	enumerateSelect kvdb.EnumerateKVPSelect,
+	copySelect kvdb.CopyKVPSelect,
+) (kvdb.KVPairs, error) {
+	return nil, kvdb.ErrNotSupported
+}
+
 func (kv *consulKV) GetWithCopy(
 	key string,
 	copySelect kvdb.CopySelect,
