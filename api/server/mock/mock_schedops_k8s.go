@@ -116,19 +116,34 @@ func (mr *MockOpsMockRecorder) CreateEvent(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEvent", reflect.TypeOf((*MockOps)(nil).CreateEvent), arg0)
 }
 
-// CreateNamespace mocks base method.
-func (m *MockOps) CreateNamespace(arg0 string, arg1 map[string]string) (*v1.Namespace, error) {
+// CreateLimitRange mocks base method.
+func (m *MockOps) CreateLimitRange(arg0 *v1.LimitRange) (*v1.LimitRange, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateNamespace", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateLimitRange", arg0)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateLimitRange indicates an expected call of CreateLimitRange.
+func (mr *MockOpsMockRecorder) CreateLimitRange(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLimitRange", reflect.TypeOf((*MockOps)(nil).CreateLimitRange), arg0)
+}
+
+// CreateNamespace mocks base method.
+func (m *MockOps) CreateNamespace(arg0 *v1.Namespace) (*v1.Namespace, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNamespace", arg0)
 	ret0, _ := ret[0].(*v1.Namespace)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateNamespace indicates an expected call of CreateNamespace.
-func (mr *MockOpsMockRecorder) CreateNamespace(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockOpsMockRecorder) CreateNamespace(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNamespace", reflect.TypeOf((*MockOps)(nil).CreateNamespace), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNamespace", reflect.TypeOf((*MockOps)(nil).CreateNamespace), arg0)
 }
 
 // CreateNode mocks base method.
@@ -264,6 +279,20 @@ func (mr *MockOpsMockRecorder) DeleteEndpoints(arg0, arg1 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEndpoints", reflect.TypeOf((*MockOps)(nil).DeleteEndpoints), arg0, arg1)
 }
 
+// DeleteLimitRange mocks base method.
+func (m *MockOps) DeleteLimitRange(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteLimitRange indicates an expected call of DeleteLimitRange.
+func (mr *MockOpsMockRecorder) DeleteLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLimitRange", reflect.TypeOf((*MockOps)(nil).DeleteLimitRange), arg0, arg1)
+}
+
 // DeleteNamespace mocks base method.
 func (m *MockOps) DeleteNamespace(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -276,6 +305,20 @@ func (m *MockOps) DeleteNamespace(arg0 string) error {
 func (mr *MockOpsMockRecorder) DeleteNamespace(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNamespace", reflect.TypeOf((*MockOps)(nil).DeleteNamespace), arg0)
+}
+
+// DeleteNode mocks base method.
+func (m *MockOps) DeleteNode(arg0 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteNode", arg0)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteNode indicates an expected call of DeleteNode.
+func (mr *MockOpsMockRecorder) DeleteNode(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNode", reflect.TypeOf((*MockOps)(nil).DeleteNode), arg0)
 }
 
 // DeletePersistentVolume mocks base method.
@@ -463,6 +506,21 @@ func (m *MockOps) GetLabelsOnNode(arg0 string) (map[string]string, error) {
 func (mr *MockOpsMockRecorder) GetLabelsOnNode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLabelsOnNode", reflect.TypeOf((*MockOps)(nil).GetLabelsOnNode), arg0)
+}
+
+// GetLimitRange mocks base method.
+func (m *MockOps) GetLimitRange(arg0, arg1 string) (*v1.LimitRange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLimitRange indicates an expected call of GetLimitRange.
+func (mr *MockOpsMockRecorder) GetLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitRange", reflect.TypeOf((*MockOps)(nil).GetLimitRange), arg0, arg1)
 }
 
 // GetNamespace mocks base method.
@@ -1000,6 +1058,21 @@ func (mr *MockOpsMockRecorder) ListEvents(arg0, arg1 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEvents", reflect.TypeOf((*MockOps)(nil).ListEvents), arg0, arg1)
 }
 
+// ListLimitRange mocks base method.
+func (m *MockOps) ListLimitRange(arg0 string, arg1 v11.ListOptions) (*v1.LimitRangeList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(*v1.LimitRangeList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListLimitRange indicates an expected call of ListLimitRange.
+func (mr *MockOpsMockRecorder) ListLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLimitRange", reflect.TypeOf((*MockOps)(nil).ListLimitRange), arg0, arg1)
+}
+
 // ListNamespaces mocks base method.
 func (m *MockOps) ListNamespaces(arg0 map[string]string) (*v1.NamespaceList, error) {
 	m.ctrl.T.Helper()
@@ -1031,33 +1104,43 @@ func (mr *MockOpsMockRecorder) ListServices(arg0, arg1 interface{}) *gomock.Call
 }
 
 // PatchEndpoints mocks base method.
-func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 []byte) (*v1.Endpoints, error) {
+func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 []byte, arg4 ...string) (*v1.Endpoints, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PatchEndpoints", arg0, arg1, arg2, arg3)
+	varargs := []interface{}{arg0, arg1, arg2, arg3}
+	for _, a := range arg4 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PatchEndpoints", varargs...)
 	ret0, _ := ret[0].(*v1.Endpoints)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PatchEndpoints indicates an expected call of PatchEndpoints.
-func (mr *MockOpsMockRecorder) PatchEndpoints(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockOpsMockRecorder) PatchEndpoints(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchEndpoints", reflect.TypeOf((*MockOps)(nil).PatchEndpoints), arg0, arg1, arg2, arg3)
+	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchEndpoints", reflect.TypeOf((*MockOps)(nil).PatchEndpoints), varargs...)
 }
 
 // PatchService mocks base method.
-func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte) (*v1.Service, error) {
+func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte, arg3 ...string) (*v1.Service, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PatchService", arg0, arg1, arg2)
+	varargs := []interface{}{arg0, arg1, arg2}
+	for _, a := range arg3 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "PatchService", varargs...)
 	ret0, _ := ret[0].(*v1.Service)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PatchService indicates an expected call of PatchService.
-func (mr *MockOpsMockRecorder) PatchService(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockOpsMockRecorder) PatchService(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchService", reflect.TypeOf((*MockOps)(nil).PatchService), arg0, arg1, arg2)
+	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchService", reflect.TypeOf((*MockOps)(nil).PatchService), varargs...)
 }
 
 // RecordEvent mocks base method.
@@ -1172,6 +1255,51 @@ func (mr *MockOpsMockRecorder) UpdateConfigMap(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConfigMap", reflect.TypeOf((*MockOps)(nil).UpdateConfigMap), arg0)
 }
 
+// UpdateEndpoints mocks base method.
+func (m *MockOps) UpdateEndpoints(arg0 *v1.Endpoints) (*v1.Endpoints, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEndpoints", arg0)
+	ret0, _ := ret[0].(*v1.Endpoints)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEndpoints indicates an expected call of UpdateEndpoints.
+func (mr *MockOpsMockRecorder) UpdateEndpoints(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEndpoints", reflect.TypeOf((*MockOps)(nil).UpdateEndpoints), arg0)
+}
+
+// UpdateLimitRange mocks base method.
+func (m *MockOps) UpdateLimitRange(arg0 *v1.LimitRange) (*v1.LimitRange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLimitRange", arg0)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateLimitRange indicates an expected call of UpdateLimitRange.
+func (mr *MockOpsMockRecorder) UpdateLimitRange(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLimitRange", reflect.TypeOf((*MockOps)(nil).UpdateLimitRange), arg0)
+}
+
+// UpdateNamespace mocks base method.
+func (m *MockOps) UpdateNamespace(arg0 *v1.Namespace) (*v1.Namespace, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateNamespace", arg0)
+	ret0, _ := ret[0].(*v1.Namespace)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNamespace indicates an expected call of UpdateNamespace.
+func (mr *MockOpsMockRecorder) UpdateNamespace(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNamespace", reflect.TypeOf((*MockOps)(nil).UpdateNamespace), arg0)
+}
+
 // UpdateNode mocks base method.
 func (m *MockOps) UpdateNode(arg0 *v1.Node) (*v1.Node, error) {
 	m.ctrl.T.Helper()
@@ -1245,6 +1373,21 @@ func (m *MockOps) UpdateSecretData(arg0, arg1 string, arg2 map[string][]byte) (*
 func (mr *MockOpsMockRecorder) UpdateSecretData(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSecretData", reflect.TypeOf((*MockOps)(nil).UpdateSecretData), arg0, arg1, arg2)
+}
+
+// UpdateService mocks base method.
+func (m *MockOps) UpdateService(arg0 *v1.Service) (*v1.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateService", arg0)
+	ret0, _ := ret[0].(*v1.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateService indicates an expected call of UpdateService.
+func (mr *MockOpsMockRecorder) UpdateService(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateService", reflect.TypeOf((*MockOps)(nil).UpdateService), arg0)
 }
 
 // UpdateServiceAccount mocks base method.
@@ -1344,6 +1487,20 @@ func (m *MockOps) WatchConfigMap(arg0 *v1.ConfigMap, arg1 core.WatchFunc) error 
 func (mr *MockOpsMockRecorder) WatchConfigMap(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchConfigMap", reflect.TypeOf((*MockOps)(nil).WatchConfigMap), arg0, arg1)
+}
+
+// WatchLimitRange mocks base method.
+func (m *MockOps) WatchLimitRange(arg0 *v1.LimitRange, arg1 core.WatchFunc) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WatchLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WatchLimitRange indicates an expected call of WatchLimitRange.
+func (mr *MockOpsMockRecorder) WatchLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchLimitRange", reflect.TypeOf((*MockOps)(nil).WatchLimitRange), arg0, arg1)
 }
 
 // WatchNode mocks base method.
