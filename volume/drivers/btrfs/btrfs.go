@@ -7,8 +7,6 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"go.pedge.io/proto/time"
-
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
 	"github.com/libopenstorage/openstorage/api"
