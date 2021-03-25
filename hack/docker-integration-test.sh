@@ -82,7 +82,7 @@ assert_attached false
 
 # Run app with our  volume
 app_name="APP_TEST_$volume_name"
-sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}:/app nginx:latest
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_name}:/app k8s.gcr.io/nginx-slim:0.8
 assert_success
 assert_attached true
 
@@ -93,7 +93,7 @@ assert_attached false
 
 # Run app based on volume ID
 sudo docker rm $app_name
-sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_id}:/app nginx:latest
+sudo docker run -d --name $app_name --volume-driver fake -v size=12345,token=$token,name=${volume_id}:/app k8s.gcr.io/nginx-slim:0.8
 assert_success
 assert_attached true
 
