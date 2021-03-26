@@ -1,0 +1,17 @@
+name: 'Mark stale issues PR that need review'
+on:
+  schedule:
+    - cron: '30 1 * * *'
+
+jobs:
+  stale-in-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v3
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-pr-message: 'This issue is stale because it has been in review for 5 days with no activity.'
+          only-pr-labels: stage/in-review
+          days-before-stale: 5
+          stale-pr-label: stage/in-review-stale
+          
