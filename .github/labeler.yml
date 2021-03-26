@@ -1,0 +1,11 @@
+area/csi:
+- csi/**/*
+area/ci:
+- .travis
+- .github/**/*
+area/osd-cmd:
+- osd/**/*
+area/api:
+- api/**/*
+area/sdk-server:
+- api/server/sdk/**/*
