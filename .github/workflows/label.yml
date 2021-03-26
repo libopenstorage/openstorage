@@ -10,12 +10,6 @@ on: [pull_request]
 
 jobs:
   label:
-    ci:
-      - .github
-      - .travis
-    csi:
-      - csi/*
-      - csi/**/*
     runs-on: ubuntu-latest
 
     steps:
