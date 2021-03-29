@@ -8,10 +8,13 @@
 name: Labeler
 on: [pull_request_target]
 jobs:
-  size-label:
+  labels:
     runs-on: ubuntu-latest
     name: Label the PR size
     steps:
+      - uses: actions/labeler@v2
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
       - uses: codelytv/pr-size-labeler@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -25,9 +28,3 @@ jobs:
             Please make sure you are NOT addressing multiple issues with one PR.
             Note this PR might be rejected due to its size.’
           github_api_url: 'api.github.com'
-  area-label:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/labeler@v2
-      with:
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
