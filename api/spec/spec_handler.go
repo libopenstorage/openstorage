@@ -138,6 +138,7 @@ var (
 	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
+	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -521,6 +522,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.FpPreference = fastpath
 			}
+		case api.SpecAutoFstrim:
+			if autoFstrim, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.AutoFstrim = autoFstrim
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -710,6 +717,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
+	}
+	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
+		opts[api.SpecAutoFstrim] = autoFstrim
 	}
 	return true, opts, name
 }

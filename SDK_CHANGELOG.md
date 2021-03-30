@@ -2,9 +2,13 @@
 
 ## Releases
 
+### v0.112.0 - (03/30/2021)
+
+* auto fstrim flag in volume spec
+
 ### v0.111.0 - (03/24/2021)
 
-* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups 
+* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups
 * with whose source volumes are missing in the cluster. Also indicate if
 * cloudbackup belongs to current cluster with enumerate data.
 
@@ -14,11 +18,11 @@
 
 ### v0.109.0 - (02/17/2021)
 
-* Add Trashcan volume objects 
+* Add Trashcan volume objects
 
 ### v0.108.0 - (01/26/2021)
 
-* Handle volume spec update for fastpath 
+* Handle volume spec update for fastpath
 
 ### v0.107.0 - (12/14/2020)
 

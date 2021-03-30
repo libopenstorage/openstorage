@@ -608,6 +608,8 @@ message VolumeSpec {
   ProxySpec proxy_spec = 41;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
+  // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
+  bool auto_fstrim = 43;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -671,6 +673,8 @@ message VolumeSpecUpdate {
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
   // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 38; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -754,6 +758,8 @@ message VolumeSpecPolicy {
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 62; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 63; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 64; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4226,7 +4232,7 @@ message SdkCloudBackupInfo {
   // with older cluster this value may be unknown
   SdkCloudBackupClusterType cluster_type = 7;
   // k8s namespace to which this backup belongs to
-  string namespace = 8; 
+  string namespace = 8;
 }
 
 // CloudBackup operations types
@@ -4832,7 +4838,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 111;
+    Minor = 112;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5413,6 +5419,8 @@ message RestoreVolumeSpec {
   ProxySpec proxy_spec = 26;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 27;
+  // Autofstrim is true if automatic fstrim is enabled for the volume
+  RestoreParamBoolType auto_fstrim = 28;
 }
 
 // Request message to get the volume catalog
