@@ -644,6 +644,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
+	if spec.AutoFstrim != vol.Spec.AutoFstrim {
+		newSpec.AutoFstrimOpt = &api.VolumeSpecUpdate_AutoFstrim{
+			AutoFstrim: spec.AutoFstrim,
+		}
+	}
+
 	return newSpec
 }
 

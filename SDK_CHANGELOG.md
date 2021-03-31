@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.101.15 - (02/01/2022)
+
+* auto fstrim flag in volume spec
 ### v0.101.14 - (09/28/2021)
 
 * Add sharedv4 failover strategy option

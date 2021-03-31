@@ -494,3 +494,13 @@ func TestOptFastpath(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecFastpath, "false")
 	require.False(t, spec.FpPreference, "Failed to parse faspath option into spec")
 }
+
+func TestOptAutoFstrim(t *testing.T) {
+	testSpecOptString(t, api.SpecAutoFstrim, "true")
+
+	spec := testSpecFromString(t, api.SpecAutoFstrim, "true")
+	require.True(t, spec.AutoFstrim, "Failed to parse auto_fstrim option into spec")
+
+	spec = testSpecFromString(t, api.SpecAutoFstrim, "false")
+	require.False(t, spec.AutoFstrim, "Failed to parse auto_fstrim option into spec")
+}

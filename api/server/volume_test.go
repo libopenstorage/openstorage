@@ -772,6 +772,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 			GroupEnforced: true,
 			IoStrategy:    &api.IoStrategy{},
 			ProxyWrite:    false,
+			AutoFstrim:    false,
 		},
 	}
 

@@ -649,6 +649,8 @@ message VolumeSpec {
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 43;
+  // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
+  bool auto_fstrim = 44;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -714,6 +716,8 @@ message VolumeSpecUpdate {
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 38; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 39; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -799,6 +803,8 @@ message VolumeSpecPolicy {
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 63; }
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 64; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 65; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4890,7 +4896,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 14;
+    Patch = 15;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -5471,6 +5477,8 @@ message RestoreVolumeSpec {
   Sharedv4ServiceSpec sharedv4_service_spec = 27;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 28;
+  // Autofstrim is true if automatic fstrim is enabled for the volume
+  RestoreParamBoolType auto_fstrim = 29;
 }
 
 // Request message to get the volume catalog

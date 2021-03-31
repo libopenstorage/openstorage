@@ -139,6 +139,7 @@ var (
 	sharedv4ServiceTypeRegex      = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex      = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 	Sharedv4FailoverStrategyRegex = regexp.MustCompile(api.SpecSharedv4FailoverStrategy + "=([A-Za-z]+),?")
+	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -558,6 +559,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.ExportRules = v
+		case api.SpecAutoFstrim:
+			if autoFstrim, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.AutoFstrim = autoFstrim
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -751,7 +758,9 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, failoverStrategy := d.getVal(Sharedv4FailoverStrategyRegex, str); ok {
 		opts[api.SpecSharedv4FailoverStrategy] = failoverStrategy
 	}
-
+	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
+		opts[api.SpecAutoFstrim] = autoFstrim
+	}
 	return true, opts, name
 }
 

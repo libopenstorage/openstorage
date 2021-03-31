@@ -99,6 +99,7 @@ const (
 	SpecBackendPureBlock                    = "pure_block"
 	SpecBackendPureFile                     = "pure_file"
 	SpecPureFileExportRules                 = "pure_export_rules"
+	SpecAutoFstrim           = "auto_fstrim"
 )
 
 // OptionKey specifies a set of recognized query params.
