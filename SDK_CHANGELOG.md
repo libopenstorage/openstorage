@@ -2,13 +2,13 @@
 
 ## Releases
 
+### v0.101.5 - (04/06/2021)
+
+* auto fstrim flag in volume spec
+
 ### v0.101.4 - (02/17/2021)
 
 * Add CloudDriveTransfer job type
-
-### v0.101.3 - (01/26/2021)
-
-* Handle volume spec update for fastpath 
 
 ### v0.101.2 - (11/05/2020)
 
