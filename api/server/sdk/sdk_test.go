@@ -40,6 +40,7 @@ import (
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -175,7 +176,9 @@ func newTestServerAuth(t *testing.T) *testServer {
 	sp, err := policy.Inst()
 	assert.NotNil(t, sp)
 
-	rm, err := role.NewSdkRoleManager(kv)
+	ds, err := role.NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	rm, err := role.NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{

@@ -29,6 +29,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
@@ -62,7 +63,10 @@ func TestCSISanity(t *testing.T) {
 		stp, _ = storagepolicy.Inst()
 	}
 	assert.NotNil(t, stp)
-	rm, err := role.NewSdkRoleManager(kv)
+
+	ds, err := role.NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	rm, err := role.NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{

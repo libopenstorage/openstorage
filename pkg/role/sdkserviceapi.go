@@ -22,148 +22,27 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 )
 
 const (
-	rolePrefix   = "cluster/roles"
 	invalidChars = "/ "
 	negMatchChar = "!"
-
-	SystemAdminRoleName = "system.admin"
-	SystemViewRoleName  = "system.view"
-	SystemUserRoleName  = "system.user"
-	SystemGuestRoleName = "system.guest"
-)
-
-// DefaultRole is a role loaded into the system on startup
-type DefaultRole struct {
-	Rules   []*api.SdkRule
-	Mutable bool
-}
-
-var (
-	// DefaultRoles are the default roles to load on system startup
-	// Should be prefixed by `system.` to avoid collisions
-	DefaultRoles = map[string]*DefaultRole{
-		// system:admin role can run any command
-		SystemAdminRoleName: &DefaultRole{
-			Rules: []*api.SdkRule{
-				&api.SdkRule{
-					Services: []string{"*"},
-					Apis:     []string{"*"},
-				},
-			},
-			Mutable: false,
-		},
-
-		// system:view role can only run read-only commands
-		SystemViewRoleName: &DefaultRole{
-			Rules: []*api.SdkRule{
-				&api.SdkRule{
-					Services: []string{"*"},
-					Apis: []string{
-						"*enumerate*",
-						"inspect*",
-						"stats",
-						"status",
-						"validate",
-						"capacityusage",
-					},
-				},
-				&api.SdkRule{
-					Services: []string{"identity"},
-					Apis:     []string{"*"},
-				},
-			},
-			Mutable: false,
-		},
-		// system:user role can only access volume lifecycle commands
-		SystemUserRoleName: &DefaultRole{
-			Rules: []*api.SdkRule{
-				&api.SdkRule{
-					Services: []string{
-						"volume",
-						"cloudbackup",
-						"credentials",
-						"objectstore",
-						"schedulepolicy",
-						"mountattach",
-						"migrate",
-					},
-					Apis: []string{"*"},
-				},
-				&api.SdkRule{
-					Services: []string{
-						"cluster",
-						"node",
-					},
-					Apis: []string{
-						"inspect*",
-						"enumerate*",
-					},
-				},
-				&api.SdkRule{
-					Services: []string{"identity"},
-					Apis:     []string{"*"},
-				},
-				&api.SdkRule{
-					Services: []string{"policy"},
-					Apis: []string{
-						"*enumerate*",
-						// This will allow system.user to view default policy also
-						"*inspect*",
-					},
-				},
-			},
-			Mutable: false,
-		},
-
-		// system:guest role is used for any unauthenticated user.
-		// They can only use standard volume lifecycle commands.
-		SystemGuestRoleName: &DefaultRole{
-			Rules: []*api.SdkRule{
-				&api.SdkRule{
-					Services: []string{"mountattach", "volume", "cloudbackup", "migrate"},
-					Apis:     []string{"*"},
-				},
-				&api.SdkRule{
-					Services: []string{"identity"},
-					Apis:     []string{"version"},
-				},
-				&api.SdkRule{
-					Services: []string{
-						"cluster",
-						"node",
-					},
-					Apis: []string{
-						"inspect*",
-						"enumerate*",
-					},
-				},
-			},
-			Mutable: true,
-		},
-	}
 )
 
 // SdkRoleManager is an implementation of the RoleManager for the SDK
 type SdkRoleManager struct {
-	kv kvdb.Kvdb
+	ds           Datastore
+	defaultRoles map[string]*defaults.DefaultRole
 }
 
 // Check interface
 var _ RoleManager = &SdkRoleManager{}
-
-// Simple function which creates key for Kvdb
-func prefixWithName(name string) string {
-	return rolePrefix + "/" + name
-}
 
 // Determines if the rules deny string s
 func denyRule(rule, s string) bool {
@@ -216,16 +95,18 @@ func matchRule(rule, s string) bool {
 }
 
 // NewSdkRoleManager returns a new SDK role manager
-func NewSdkRoleManager(kv kvdb.Kvdb) (*SdkRoleManager, error) {
+func NewSdkRoleManager(ds Datastore, defaultRoles map[string]*defaults.DefaultRole) (*SdkRoleManager, error) {
 	s := &SdkRoleManager{
-		kv: kv,
+		ds:           ds,
+		defaultRoles: defaultRoles,
 	}
 
 	// Load all default roles
-	for roleName, defaultRole := range DefaultRoles {
-		roleExists := false
-		if _, err := kv.Get(prefixWithName(roleName)); err == nil {
-			roleExists = true
+	for roleName, defaultRole := range defaultRoles {
+
+		roleExists, err := ds.Exists(roleName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check if default role exists in datastore: %v", err)
 		}
 
 		// always re-initialize immutable default roles.
@@ -235,7 +116,7 @@ func NewSdkRoleManager(kv kvdb.Kvdb) (*SdkRoleManager, error) {
 				Name:  roleName,
 				Rules: defaultRole.Rules,
 			}
-			if _, err := kv.Put(prefixWithName(roleName), role, 0); err != nil {
+			if err := ds.Put(roleName, role); err != nil {
 				return nil, err
 			}
 		}
@@ -258,15 +139,15 @@ func (r *SdkRoleManager) Create(
 	}
 
 	// Determine if there is collision with default roles
-	if _, ok := DefaultRoles[req.GetRole().GetName()]; ok {
+	if _, ok := r.defaultRoles[req.GetRole().GetName()]; ok {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"Name %s already used by system role", req.GetRole().GetName())
 	}
 
 	// Save value in kvdb
-	_, err := r.kv.Create(prefixWithName(req.GetRole().GetName()), req.GetRole(), 0)
-	if err == kvdb.ErrExist {
+	err := r.ds.Create(req.GetRole().GetName(), req.GetRole())
+	if err == ErrRoleExists {
 		// Idempotency check.
 		// Check that the new rules are the same.
 		oldrole, err := r.Inspect(ctx, &api.SdkRoleInspectRequest{
@@ -294,14 +175,9 @@ func (r *SdkRoleManager) Enumerate(
 	ctx context.Context,
 	req *api.SdkRoleEnumerateRequest,
 ) (*api.SdkRoleEnumerateResponse, error) {
-	kvPairs, err := r.kv.Enumerate(rolePrefix + "/")
+	names, err := r.ds.EnumerateRoleNames()
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to access roles from database: %v", err)
-	}
-
-	var names []string
-	for _, kvPair := range kvPairs {
-		names = append(names, strings.TrimPrefix(kvPair.Key, rolePrefix+"/"))
+		return nil, status.Errorf(codes.Internal, err.Error())
 	}
 
 	return &api.SdkRoleEnumerateResponse{
@@ -318,9 +194,8 @@ func (r *SdkRoleManager) Inspect(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a name for role")
 	}
 
-	elem := &api.SdkRole{}
-	_, err := r.kv.GetVal(prefixWithName(req.GetName()), elem)
-	if err == kvdb.ErrNotFound {
+	elem, err := r.ds.Get(req.GetName())
+	if err == ErrRoleNotFound {
 		return nil, status.Errorf(codes.NotFound, "Role %s not found", req.GetName())
 	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get role %s information: %v", req.GetName(), err)
@@ -341,14 +216,14 @@ func (r *SdkRoleManager) Delete(
 	}
 
 	// Determine if there is collision with default roles
-	if _, ok := DefaultRoles[req.GetName()]; ok {
+	if _, ok := r.defaultRoles[req.GetName()]; ok {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"Cannot delete system role %s", req.GetName())
 	}
 
-	_, err := r.kv.Delete(prefixWithName(req.GetName()))
-	if err != kvdb.ErrNotFound && err != nil {
+	err := r.ds.Delete(req.GetName())
+	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to delete role %s: %v", req.GetName(), err)
 	}
 
@@ -369,14 +244,14 @@ func (r *SdkRoleManager) Update(
 
 	// Determine if there is collision with default roles.
 	// We can still update mutable default roles.
-	if defaultRole, ok := DefaultRoles[req.GetRole().GetName()]; ok && !defaultRole.Mutable {
+	if defaultRole, ok := r.defaultRoles[req.GetRole().GetName()]; ok && !defaultRole.Mutable {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
 			"System role %s cannot be updated", req.GetRole().GetName())
 	}
 
-	_, err := r.kv.Update(prefixWithName(req.GetRole().GetName()), req.GetRole(), 0)
-	if err == kvdb.ErrNotFound {
+	err := r.ds.Update(req.GetRole().GetName(), req.GetRole())
+	if err == ErrRoleNotFound {
 		return nil, status.Errorf(codes.NotFound, "Role %s not found", req.GetRole())
 	} else if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get role %s information: %v", req.GetRole().GetName(), err)

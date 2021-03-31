@@ -48,6 +48,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -497,7 +498,11 @@ func start(c *cli.Context) error {
 		}
 
 		// Create a role manager
-		rm, err := role.NewSdkRoleManager(kv)
+		ds, err := role.NewKvdbRoleDatastore()
+		if err != nil {
+			return fmt.Errorf("failed to create a role datastore: %v", err)
+		}
+		rm, err := role.NewSdkRoleManager(ds, defaults.Roles)
 		if err != nil {
 			return fmt.Errorf("Failed to create a role manager")
 		}

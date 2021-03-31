@@ -37,6 +37,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -157,7 +158,10 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	// Initialise storage policy manager
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
-	rm, err := role.NewSdkRoleManager(kv)
+	kvdb.SetInstance(kv)
+	ds, err := role.NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	rm, err := role.NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	// Setup storage policy

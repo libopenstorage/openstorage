@@ -27,6 +27,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -146,8 +147,11 @@ func TestMatchRule(t *testing.T) {
 func TestSdkRuleCreateBadArguments(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	req := &api.SdkRoleCreateRequest{}
@@ -232,11 +236,14 @@ func TestSdkRuleCreateBadArguments(t *testing.T) {
 func TestSdkRuleCreateCollisionSystemRole(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
-	for roleName, defaultRole := range DefaultRoles {
+	for roleName, defaultRole := range defaults.Roles {
 		req := &api.SdkRoleCreateRequest{
 			Role: &api.SdkRole{
 				Name:  roleName,
@@ -256,8 +263,11 @@ func TestSdkRuleCreateCollisionSystemRole(t *testing.T) {
 func TestSdkRuleCreate(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	name := "test.volume"
@@ -285,7 +295,7 @@ func TestSdkRuleCreate(t *testing.T) {
 
 	// Assert the information is in kvdb
 	var elem *api.SdkRole
-	_, err = kv.GetVal(prefixWithName(name), &elem)
+	_, err = kvdb.Instance().GetVal(prefixWithName(name), &elem)
 	assert.NoError(t, err)
 	assert.Equal(t, elem.GetName(), name)
 	assert.Len(t, elem.Rules, len(req.GetRole().GetRules()))
@@ -307,8 +317,11 @@ func TestSdkRuleCreate(t *testing.T) {
 func TestSdkRuleEnumerate(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	req := &api.SdkRoleCreateRequest{
@@ -331,7 +344,7 @@ func TestSdkRuleEnumerate(t *testing.T) {
 
 	r, err := s.Enumerate(context.Background(), &api.SdkRoleEnumerateRequest{})
 	assert.NoError(t, err)
-	assert.Len(t, r.GetNames(), 2+len(DefaultRoles))
+	assert.Len(t, r.GetNames(), 2+len(defaults.Roles))
 	assert.Contains(t, r.GetNames(), "one")
 	assert.Contains(t, r.GetNames(), "two")
 }
@@ -339,8 +352,11 @@ func TestSdkRuleEnumerate(t *testing.T) {
 func TestSdkRuleInspectBadArgument(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	// Not name passed in
@@ -365,8 +381,11 @@ func TestSdkRuleInspectBadArgument(t *testing.T) {
 func TestSdkRuleInspectDelete(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	req := &api.SdkRoleCreateRequest{
@@ -410,12 +429,14 @@ func TestSdkRuleInspectDelete(t *testing.T) {
 
 func TestSdkRuleDeleteCollisionSystemRole(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
+	kvdb.SetInstance(kv)
+
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
-	s, err := NewSdkRoleManager(kv)
-	assert.NoError(t, err)
-
-	for systemRole, _ := range DefaultRoles {
+	for systemRole, _ := range defaults.Roles {
 		req := &api.SdkRoleDeleteRequest{
 			Name: systemRole,
 		}
@@ -431,9 +452,11 @@ func TestSdkRuleDeleteCollisionSystemRole(t *testing.T) {
 
 func TestSdkRuleUpdateBadArguments(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
-	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	req := &api.SdkRoleUpdateRequest{}
@@ -486,11 +509,14 @@ func TestSdkRuleUpdateBadArguments(t *testing.T) {
 func TestSdkRuleUpdateCollisionSystemRole(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
-	for roleName, defaultRole := range DefaultRoles {
+	for roleName, defaultRole := range defaults.Roles {
 		req := &api.SdkRoleUpdateRequest{
 			Role: &api.SdkRole{
 				Name:  roleName,
@@ -514,8 +540,11 @@ func TestSdkRuleUpdateCollisionSystemRole(t *testing.T) {
 func TestSdkRuleUpdate(t *testing.T) {
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	role := &api.SdkRole{
@@ -745,8 +774,11 @@ func TestSdkRoleVerifyRules(t *testing.T) {
 
 	kv, err := kvdb.New(mem.Name, "role", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
+	kvdb.SetInstance(kv)
 
-	s, err := NewSdkRoleManager(kv)
+	ds, err := NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	s, err := NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 
 	for _, test := range tests {

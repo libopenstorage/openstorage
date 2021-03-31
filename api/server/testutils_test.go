@@ -27,6 +27,7 @@ import (
 	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/role/defaults"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -289,7 +290,9 @@ func newTestServerSdk(t *testing.T) *testServer {
 	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
 	assert.NoError(t, err)
 	kvdb.SetInstance(kv)
-	rm, err := role.NewSdkRoleManager(kv)
+	ds, err := role.NewKvdbRoleDatastore()
+	assert.NoError(t, err)
+	rm, err := role.NewSdkRoleManager(ds, defaults.Roles)
 	assert.NoError(t, err)
 	tester.rm = rm
 
