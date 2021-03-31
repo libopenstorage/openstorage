@@ -956,6 +956,35 @@
         "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem is a healthy\n - FS_HEALTH_STATUS_SAFE_TO_FIX: filesystem has errors, but can be fixed safely\n - FS_HEALTH_STATUS_NEEDS_INSPECTION: filesystem has errors, these cannot be fixed automatically,\nuser needs to review the reported errors and take appropriate action",
         "type": "string"
       },
+      "apiFstrimVolumeUsageInfo": {
+        "properties": {
+          "du_usage": {
+            "format": "uint64",
+            "title": "Disk usage in bytes",
+            "type": "string"
+          },
+          "perform_auto_fstrim": {
+            "title": "If auto fstrim is performed to the volume, if not, why",
+            "type": "string"
+          },
+          "px_usage": {
+            "format": "uint64",
+            "title": "Disk usage seen in Portworx in bytes",
+            "type": "string"
+          },
+          "volume_name": {
+            "title": "Volume name",
+            "type": "string"
+          },
+          "volume_size": {
+            "format": "uint64",
+            "title": "Volume size",
+            "type": "string"
+          }
+        },
+        "title": "FstrimVolUsageInfo",
+        "type": "object"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -1009,6 +1038,28 @@
             "type": "boolean"
           }
         },
+        "type": "object"
+      },
+      "apiIoThrottle": {
+        "properties": {
+          "read_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read_iops": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_iops": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "IoThrottle defines IO throttle limits for a volume\nread_iops : maximum read iops this volume is allowed\nwrite_iops : maximum write iops this volume is allowed\nread_bw_mbytes  : maximum read bandwidth this volume is allowed in MegaBytes\nwrite_bw_mbytes : maximum write bandwidth this volume is allowed in MegaBytes",
         "type": "object"
       },
       "apiJob": {
@@ -1424,6 +1475,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -1456,6 +1510,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
@@ -1706,6 +1763,40 @@
             "format": "date-time",
             "title": "Start timestamp when Alert occured",
             "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimStatusResponse": {
+        "description": "SdkAutoFSTrimStatusResponse defines the response for a\nSdkAutoFSTrimStatusRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "trim_status": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+            },
+            "title": "map of volume id and the state of the filesystem trim operation",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimUsageResponse": {
+        "description": "SdkAutoFSTrimUsageResponse defines the response for a\nSdkAutoFSTrimUsageRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "usage": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/apiFstrimVolumeUsageInfo"
+            },
+            "title": "map of fstrim disk usage and volume name",
+            "type": "object"
           }
         },
         "type": "object"
@@ -4985,6 +5076,11 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "format": "boolean",
+            "title": "Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention",
+            "type": "boolean"
+          },
           "block_size": {
             "description": "BlockSize for the filesystem.",
             "format": "int64",
@@ -5052,6 +5148,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "description": "Journal is true if data for the volume goes into the journal.",
@@ -5161,6 +5260,10 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -5194,6 +5297,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "format": "boolean",
@@ -5284,6 +5390,10 @@
       },
       "apiVolumeSpecUpdate": {
         "properties": {
+          "auto_fstrim": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -5310,6 +5420,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "format": "boolean",
@@ -5506,7 +5619,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.17"
+    "version": "0.101.21"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6651,6 +6764,47 @@
         "summary": "Stop a filesystem check background operation on an unmounted volume, if any",
         "tags": [
           "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-status": {
+      "get": {
+        "operationId": "AutoFSTrimStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-usage": {
+      "get": {
+        "operationId": "AutoFSTrimUsage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimUsageResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Usage of a filesystem Trim background operation on all locally mounted\nvolume",
+        "tags": [
+          "OpenStorageFilesystemTrim"
         ]
       }
     },

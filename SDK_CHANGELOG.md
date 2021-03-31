@@ -2,6 +2,22 @@
 
 ## Releases
 
+### v0.101.21 - (02/01/2022)
+
+* Add support for per-volume throttling of IOPS and/or bandwidth
+
+### v0.101.20 - (02/01/2022)
+
+* Add api for auto fstrim disk usage report 
+
+### v0.101.19 - (02/01/2022)
+
+* Added api for auto fs trim status
+
+### v0.101.18 - (02/01/2022)
+
+* auto fstrim flag in volume spec
+
 ### v0.101.17 - (02/02/2022)
 
 * Added a new cluster pairing mode for OneTimeMigration.

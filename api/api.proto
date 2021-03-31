@@ -562,6 +562,18 @@ message ScanPolicy {
     ScanAction action = 2;
 }
 
+// IoThrottle defines IO throttle limits for a volume
+// read_iops : maximum read iops this volume is allowed
+// write_iops : maximum write iops this volume is allowed
+// read_bw_mbytes  : maximum read bandwidth this volume is allowed in MegaBytes
+// write_bw_mbytes : maximum write bandwidth this volume is allowed in MegaBytes
+message IoThrottle {
+    uint32 read_iops = 1;
+    uint32 write_iops = 2;
+    uint32 read_bw_mbytes = 3;
+    uint32 write_bw_mbytes = 4;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -649,6 +661,10 @@ message VolumeSpec {
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 43;
+  // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
+  bool auto_fstrim = 44;
+  // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
+  IoThrottle io_throttle = 45;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -714,6 +730,10 @@ message VolumeSpecUpdate {
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 38; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 39; }
+  // io_throttle_opt defines the io throttle limits for the volume
+  oneof io_throttle_opt { IoThrottle io_throttle = 40;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -799,6 +819,10 @@ message VolumeSpecPolicy {
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 63; }
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 64; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 65; }
+  // io_throttle_opt defines the io throttle limits for the volume
+  oneof io_throttle_opt { IoThrottle io_throttle = 66;}
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -1008,6 +1032,26 @@ message VolumeUsage {
 message VolumeUsageByNode {
   // VolumeUsage returns list of VolumeUsage for given node
   repeated VolumeUsage volume_usage= 1;
+}
+
+// FstrimVolUsageInfo
+message FstrimVolumeUsageInfo {
+  // Volume name
+  string volume_name = 1;
+  // Volume size
+  uint64 volume_size = 2;
+  // Disk usage in bytes 
+  uint64 du_usage = 3;
+  // Disk usage seen in Portworx in bytes
+  uint64 px_usage = 4;
+  // If auto fstrim is performed to the volume, if not, why   
+  string perform_auto_fstrim = 5; 
+}
+
+// Purges the RelaxedReclaim queue
+message RelaxedReclaimPurge {
+  // num_purged returns number of volumes purged
+  uint64 num_purged = 1;
 }
 
 // A SdkStoragePolicy represents minimum set of volume specs to be
@@ -1608,6 +1652,22 @@ service OpenStorageFilesystemTrim {
         get: "/v1/filesystem-trim/status"
       };
     }
+
+  rpc AutoFSTrimStatus(SdkAutoFSTrimStatusRequest)
+    returns (SdkAutoFSTrimStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-trim/auto-fstrim-status"
+      };
+    }
+
+  // Usage of a filesystem Trim background operation on all locally mounted
+  // volume
+  rpc AutoFSTrimUsage(SdkAutoFSTrimUsageRequest)
+  returns (SdkAutoFSTrimUsageResponse){
+    option(google.api.http) = {
+      get: "/v1/filesystem-trim/auto-fstrim-usage"
+    };
+  }
 
   // Stop a filesystem Trim background operation on a mounted volume, if any
   rpc Stop(SdkFilesystemTrimStopRequest)
@@ -4721,6 +4781,32 @@ message SdkFilesystemTrimStatusResponse{
   string message = 2;
 }
 
+// SdkAutoFSTrimStatusRequest defines a request to get status of autofs trim operation
+message SdkAutoFSTrimStatusRequest {
+}
+
+// SdkAutoFSTrimStatusResponse defines the response for a
+// SdkAutoFSTrimStatusRequest.
+message SdkAutoFSTrimStatusResponse {
+  // map of volume id and the state of the filesystem trim operation
+  map<string, FilesystemTrim.FilesystemTrimStatus> trim_status = 1;
+  // Text blob containing ASCII text providing details of the operation
+  string message = 2;
+}
+
+// SdkAutoFSTrimUsageRequest defines a request to get status of autofs trim operation
+message SdkAutoFSTrimUsageRequest {
+}
+
+// SdkAutoFSTrimUsageResponse defines the response for a
+// SdkAutoFSTrimUsageRequest.
+message SdkAutoFSTrimUsageResponse {
+  // map of fstrim disk usage and volume name
+  map<string, FstrimVolumeUsageInfo> usage = 1;
+  // Text blob containing ASCII text providing details of the operation
+  string message = 2;
+}
+
 // SdkFilesystemTrimStopRequest defines a request to stop a background
 // filesystem trim operation
 message SdkFilesystemTrimStopRequest {
@@ -4894,7 +4980,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 17;
+    Patch = 21;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -5477,6 +5563,10 @@ message RestoreVolumeSpec {
   Sharedv4ServiceSpec sharedv4_service_spec = 27;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 28;
+  // Autofstrim is true if automatic fstrim is enabled for the volume
+  RestoreParamBoolType auto_fstrim = 29;
+  // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
+  IoThrottle io_throttle = 30;
 }
 
 // Request message to get the volume catalog

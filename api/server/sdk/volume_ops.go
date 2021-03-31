@@ -844,6 +844,16 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.Sharedv4Spec = vol.GetSharedv4Spec()
 	}
 
+	// AutoFstrim
+	spec.AutoFstrim = setSpecBool(vol.GetAutoFstrim(), req.GetAutoFstrim(), req.GetAutoFstrimOpt())
+
+	// ProxySpec
+	if req.GetIoThrottle() != nil {
+		spec.IoThrottle = req.GetIoThrottle()
+	} else {
+		spec.IoThrottle = vol.GetIoThrottle()
+	}
+
 	return spec
 }
 
@@ -1167,6 +1177,21 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.Sharedv4Spec = req.GetSharedv4Spec()
+	}
+	// IoThrottle
+	if req.GetIoThrottleOpt() != nil {
+		if isValidate && vol.GetIoThrottle() != req.GetIoThrottle() {
+			return vol, errMsg
+		}
+		spec.IoThrottle = req.GetIoThrottle()
+	}
+
+	// AutoFstrim
+	if req.GetAutoFstrimOpt() != nil {
+		if isValidate && vol.GetAutoFstrim() != req.GetAutoFstrim() {
+			return vol, errMsg
+		}
+		spec.AutoFstrim = req.GetAutoFstrim()
 	}
 
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
