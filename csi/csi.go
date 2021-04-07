@@ -21,10 +21,15 @@ import (
 	"sync"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
+	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -85,7 +90,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 
 	// Create server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "CSI 1.1",
+		Name:    "CSI 1.4",
 		Net:     config.Net,
 		Address: config.Address,
 	})
@@ -117,6 +122,29 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 		}
 	}
 	return s.conn, nil
+}
+
+// driverGetVolume returns a volume for a given ID. This function skips
+// PX security authentication and should be used only when a CSI request
+// does not support secrets as a field
+func (s *OsdCsiServer) driverGetVolume(id string) (*api.Volume, error) {
+	vols, err := s.driver.Inspect([]string{id})
+	if err != nil || len(vols) < 1 {
+		if err == kvdb.ErrNotFound {
+			logrus.Infof("Volume %s cannot be found: %s", id, err.Error())
+			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
+		} else if err != nil {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
+				id,
+				err.Error())
+		} else {
+			logrus.Infof("Volume %s cannot be found", id)
+			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
+		}
+	}
+	vol := vols[0]
+
+	return vol, nil
 }
 
 // Gets token from the secrets. In Kubernetes, the side car containers copy

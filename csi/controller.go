@@ -58,51 +58,38 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 	req *csi.ControllerGetCapabilitiesRequest,
 ) (*csi.ControllerGetCapabilitiesResponse, error) {
 
-	// Cloning: creation of volumes from snapshots, supported
-	capClone := &csi.ControllerServiceCapability{
-		Type: &csi.ControllerServiceCapability_Rpc{
-			Rpc: &csi.ControllerServiceCapability_RPC{
-				Type: csi.ControllerServiceCapability_RPC_CLONE_VOLUME,
-			},
-		},
+	caps := []csi.ControllerServiceCapability_RPC_Type{
+		// Creating and deleting volumes supported
+		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
+
+		// Cloning: creation of volumes from snapshots, supported
+		csi.ControllerServiceCapability_RPC_CLONE_VOLUME,
+
+		// Resizing volumes supported
+		csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
+
+		// Creating and deleting snapshots
+		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
+
+		// Get single volume
+		csi.ControllerServiceCapability_RPC_GET_VOLUME,
 	}
 
-	// Creating and deleting volumes supported
-	capCreateDeleteVolume := &csi.ControllerServiceCapability{
-		Type: &csi.ControllerServiceCapability_Rpc{
-			Rpc: &csi.ControllerServiceCapability_RPC{
-				Type: csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
-			},
-		},
-	}
+	var serviceCapabilities []*csi.ControllerServiceCapability
 
-	// Resizing volumes supported
-	capExpandVolume := &csi.ControllerServiceCapability{
-		Type: &csi.ControllerServiceCapability_Rpc{
-			Rpc: &csi.ControllerServiceCapability_RPC{
-				Type: csi.ControllerServiceCapability_RPC_EXPAND_VOLUME,
+	for _, cap := range caps {
+		serviceCapabilities = append(serviceCapabilities, &csi.ControllerServiceCapability{
+			Type: &csi.ControllerServiceCapability_Rpc{
+				Rpc: &csi.ControllerServiceCapability_RPC{
+					Type: cap,
+				},
 			},
-		},
-	}
-
-	// Creating and deleting snapshots
-	capCreateDeleteSnapshot := &csi.ControllerServiceCapability{
-		Type: &csi.ControllerServiceCapability_Rpc{
-			Rpc: &csi.ControllerServiceCapability_RPC{
-				Type: csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
-			},
-		},
+		})
 	}
 
 	return &csi.ControllerGetCapabilitiesResponse{
-		Capabilities: []*csi.ControllerServiceCapability{
-			capClone,
-			capCreateDeleteVolume,
-			capExpandVolume,
-			capCreateDeleteSnapshot,
-		},
+		Capabilities: serviceCapabilities,
 	}, nil
-
 }
 
 // ControllerPublishVolume is a CSI API implements the attachment of a volume
@@ -121,6 +108,27 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 	*csi.ControllerUnpublishVolumeRequest,
 ) (*csi.ControllerUnpublishVolumeResponse, error) {
 	return nil, status.Error(codes.Unimplemented, "This request is not supported")
+}
+
+// ControllerGetVolume is a CSI API which implements getting a single volume
+func (s *OsdCsiServer) ControllerGetVolume(
+	ctx context.Context,
+	req *csi.ControllerGetVolumeRequest,
+) (*csi.ControllerGetVolumeResponse, error) {
+	vol, err := s.driverGetVolume(req.GetVolumeId())
+	if err != nil {
+		return nil, err
+	}
+
+	return &csi.ControllerGetVolumeResponse{
+		Volume: &csi.Volume{
+			CapacityBytes: int64(vol.Spec.Size),
+			VolumeId:      vol.Id,
+		},
+		Status: &csi.ControllerGetVolumeResponse_VolumeStatus{
+			VolumeCondition: getVolumeCondition(vol),
+		},
+	}, nil
 }
 
 // ValidateVolumeCapabilities is a CSI API used by container orchestration systems
