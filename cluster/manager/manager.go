@@ -279,6 +279,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			n.Hostname = v.Hostname
 			n.NodeLabels = v.NodeLabels
 			n.HWType = v.HWType
+			n.SecurityStatus = v.SecurityStatus
 		} else {
 			logrus.Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
@@ -579,6 +580,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 		GossipPort:        c.selfNode.GossipPort,
 		ClusterDomain:     c.selfClusterDomain,
 		HWType:            c.config.HWType,
+		SecurityStatus:    c.selfNode.SecurityStatus,
 	}
 
 	db.NodeEntries[c.config.NodeId] = nodeEntry
@@ -588,6 +590,7 @@ func (c *ClusterManager) initNode(db *cluster.ClusterInfo) (*api.Node, bool) {
 	logrus.Infof("Node Mgmt IP: %s", c.selfNode.MgmtIp)
 	logrus.Infof("Node Data IP: %s", c.selfNode.DataIp)
 	logrus.Infof("Node HWType: %s", c.config.HWType.String())
+	logrus.Infof("Node SecurityStatus: %v", c.selfNode.SecurityStatus.String())
 	if len(c.selfClusterDomain) > 0 {
 		logrus.Infof("Node's Cluster Domain: %s", c.selfClusterDomain)
 	}
@@ -1408,6 +1411,15 @@ func (c *ClusterManager) StartWithConfiguration(
 		return err
 	}
 
+	// Set the security status for othis node
+	if auth.Enabled() && !c.config.AllowSecurityRemoval {
+		c.selfNode.SecurityStatus = api.StorageNode_SECURED
+	} else if auth.Enabled() && c.config.AllowSecurityRemoval {
+		c.selfNode.SecurityStatus = api.StorageNode_SECURED_ALLOW_SECURITY_REMOVAL
+	} else {
+		c.selfNode.SecurityStatus = api.StorageNode_UNSECURED
+	}
+
 	c.selfNode.NodeData = make(map[string]interface{})
 	c.system = systemutils.New()
 
@@ -1550,6 +1562,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []*api.Node {
 			node.DataIp = n.DataIp
 			node.Hostname = n.Hostname
 			node.NodeLabels = n.NodeLabels
+			node.SecurityStatus = n.SecurityStatus
 		}
 		nodes = append(nodes, &node)
 	}

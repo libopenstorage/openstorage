@@ -78,6 +78,9 @@ type NodeEntry struct {
 	GossipPort        string
 	ClusterDomain     string
 	HWType            api.HardwareType
+
+	// Determine if the node is secure with authentication and authorization
+	SecurityStatus api.StorageNode_SecurityStatus
 }
 
 // ClusterInfo is the basic info about the cluster and its nodes
