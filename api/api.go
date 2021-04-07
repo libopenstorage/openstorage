@@ -238,6 +238,8 @@ type Node struct {
 	GossipPort string
 	// HWType is the type of the underlying hardware used by the node
 	HWType HardwareType
+	// Determine if the node is secure with authentication and authorization
+	SecurityStatus StorageNode_SecurityStatus
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -925,6 +927,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		DataIp:            s.DataIp,
 		Hostname:          s.Hostname,
 		HWType:            s.HWType,
+		SecurityStatus:    s.SecurityStatus,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
