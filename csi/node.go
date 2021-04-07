@@ -246,16 +246,98 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 
 	logrus.Debugf("NodeGetCapabilities req[%#v]", req)
 
-	return &csi.NodeGetCapabilitiesResponse{
-		Capabilities: []*csi.NodeServiceCapability{
-			{
-				Type: &csi.NodeServiceCapability_Rpc{
-					Rpc: &csi.NodeServiceCapability_RPC{
-						Type: csi.NodeServiceCapability_RPC_UNKNOWN,
-					},
+	caps := []csi.NodeServiceCapability_RPC_Type{
+		// Getting volume stats for volume health monitoring
+		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
+		// Indicates that the Node service can report volume conditions.
+		csi.NodeServiceCapability_RPC_VOLUME_CONDITION,
+	}
+
+	var serviceCapabilities []*csi.NodeServiceCapability
+	for _, cap := range caps {
+		serviceCapabilities = append(serviceCapabilities, &csi.NodeServiceCapability{
+			Type: &csi.NodeServiceCapability_Rpc{
+				Rpc: &csi.NodeServiceCapability_RPC{
+					Type: cap,
 				},
 			},
+		})
+	}
+
+	return &csi.NodeGetCapabilitiesResponse{
+		Capabilities: serviceCapabilities,
+	}, nil
+}
+
+func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
+	condition := &csi.VolumeCondition{}
+	if vol.Status != api.VolumeStatus_VOLUME_STATUS_UP {
+		condition.Abnormal = true
+
+		switch vol.Status {
+		case api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT:
+			condition.Message = "Volume status is not present"
+
+		case api.VolumeStatus_VOLUME_STATUS_DOWN:
+			condition.Message = "Volume status is down"
+
+		case api.VolumeStatus_VOLUME_STATUS_DEGRADED:
+			condition.Message = "Volume status is degraded"
+
+		default:
+			condition.Message = "Volume status is unknown"
+		}
+	}
+
+	return condition
+}
+
+// NodeGetVolumeStats get volume stats for a given node
+func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	logrus.Debugf("NodeGetVolumeStats req[%#v]", req)
+
+	// Check arguments
+	id := req.GetVolumeId()
+	if len(id) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
+	}
+	path := req.GetVolumePath()
+	if len(path) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Volume path must be provided")
+	}
+
+	// Driver inspect as NodeGetVolumeStatsRequest does not support secrets
+	vol, err := s.driverGetVolume(req.GetVolumeId())
+	if err != nil {
+		return nil, err
+	}
+
+	var attachPathMatch bool
+	for _, attachPath := range vol.AttachPath {
+		if attachPath == path {
+			attachPathMatch = true
+		}
+	}
+	if !attachPathMatch {
+		return nil, status.Errorf(codes.NotFound, "Volume %s not mounted on path %s", id, path)
+	}
+
+	// Define volume usage
+	total := int64(vol.Spec.Size)
+	used := int64(vol.Usage)
+	usage := &csi.VolumeUsage{
+		Available: total - used,
+		Total:     total,
+		Used:      used,
+		Unit:      csi.VolumeUsage_BYTES,
+	}
+
+	// Define volume condition
+	return &csi.NodeGetVolumeStatsResponse{
+		Usage: []*csi.VolumeUsage{
+			usage,
 		},
+		VolumeCondition: getVolumeCondition(vol),
 	}, nil
 }
 

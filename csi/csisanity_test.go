@@ -39,6 +39,11 @@ import (
 )
 
 func TestCSISanity(t *testing.T) {
+	// Skip until k8s 1.20/go modules update happens.
+	// For now, we will run CSI Sanity tests as part of CI via
+	// https://github.com/libopenstorage/csi-test/blob/v4.1.0-1/run_test.sh
+	t.Skip()
+
 	tester := &testServer{}
 	tester.setPorts()
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})

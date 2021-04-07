@@ -68,13 +68,100 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	assert.Len(t, resp.GetCapabilities(), 4)
+	assert.Len(t, resp.GetCapabilities(), 5)
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_GET_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CLONE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_EXPAND_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT, resp))
 
 	assert.False(t, containsCap(csi.ControllerServiceCapability_RPC_UNKNOWN, resp))
+}
+
+func TestControllerGetVolume(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	size := int64(4 * 1024 * 1024)
+	used := int64(1 * 1024 * 1024)
+	id := "myvol123"
+	vol := &api.Volume{
+		Id: id,
+		Locator: &api.VolumeLocator{
+			Name: id,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(size),
+		},
+		Usage:  uint64(used),
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
+	)
+
+	// Make a call
+	c := csi.NewControllerClient(s.Conn())
+
+	// Get Capabilities - all OK
+	resp, err := c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, false, resp.Status.VolumeCondition.Abnormal)
+	assert.Equal(t, "", resp.Status.VolumeCondition.Message)
+
+	// Get Capabilities - down
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
+	resp, err = c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
+	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+
+	// Get Capabilities - down
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
+	resp, err = c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
+	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+
+	// Get Capabilities - degraded
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_DEGRADED
+	resp, err = c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
+	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+
+	// Get Capabilities - none
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_NONE
+	resp, err = c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
+	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+
+	// Get Capabilities - not present
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT
+	resp, err = c.ControllerGetVolume(
+		context.Background(),
+		&csi.ControllerGetVolumeRequest{VolumeId: id})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
+	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
 }
 
 func TestControllerPublishVolume(t *testing.T) {
