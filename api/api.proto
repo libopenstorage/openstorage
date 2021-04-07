@@ -1356,6 +1356,20 @@ message GroupSnapCreateResponse {
 
 // StorageNode describes the state of the node
 message StorageNode {
+
+  enum SecurityStatus {
+    // Security status type is unknown
+    UNSPECIFIED = 0;
+    // Node is unsecure
+    UNSECURED = 1;
+    // Node is secured with authentication and authorization
+    SECURED = 2;
+    // Node is secured, but in the process of removing security. This state allows
+    // other unsecured nodes to join the cluster since the cluster is in the process
+    // of removing secuirty authenticaiton and authorization.
+    SECURED_ALLOW_SECURITY_REMOVAL = 3;
+  }
+
   // Id of the node
   string id = 1;
   // Cpu usage of the node
@@ -1387,6 +1401,8 @@ message StorageNode {
   string scheduler_node_name = 17;
   // HardwareType is the type of the hardware the node has
   HardwareType HWType = 18;
+  // Determine if the node is secured
+  SecurityStatus security_status = 19;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -4670,7 +4686,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 4;
+    Patch = 5;
   }
 
   // The following cannot be set to use the enum Version because the REST

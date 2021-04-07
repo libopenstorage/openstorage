@@ -2,13 +2,17 @@
 
 ## Releases
 
+### v0.101.5 - (04/07/2021)
+
+* StorageNodes now have security status
+
 ### v0.101.4 - (02/17/2021)
 
 * Add CloudDriveTransfer job type
 
 ### v0.101.3 - (01/26/2021)
 
-* Handle volume spec update for fastpath 
+* Handle volume spec update for fastpath
 
 ### v0.101.2 - (11/05/2020)
 
