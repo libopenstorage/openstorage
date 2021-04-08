@@ -40,8 +40,8 @@ import (
 
 func TestCSISanity(t *testing.T) {
 	// Skip until k8s 1.20/go modules update happens.
-	// For now, we will run CSI Sanity tests as part of CI via
-	// https://github.com/libopenstorage/csi-test/blob/v4.1.0-1/run_test.sh
+	// For now, we will run CSI Sanity tests via a binary in hack/csi-sanity-test.sh
+	// We'll keep this code here for later down the line when we upgrade to go modules.
 	t.Skip()
 
 	tester := &testServer{}
