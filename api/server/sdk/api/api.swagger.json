@@ -2647,6 +2647,11 @@
             "title": "Issuer is an optional  user friendly name for the caller invoking the API",
             "type": "string"
           },
+          "live": {
+            "format": "boolean",
+            "title": "Live is an optional flag if true will collect live cores from running processes of the driver",
+            "type": "boolean"
+          },
           "node": {
             "$ref": "#/components/schemas/apiDiagsNodeSelector"
           },
@@ -5412,7 +5417,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.7"
+    "version": "0.101.8"
   },
   "openapi": "3.0.0",
   "paths": {

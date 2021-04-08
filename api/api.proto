@@ -3590,6 +3590,8 @@ message SdkDiagsCollectRequest {
   // TimeoutMins is the timeout in minutes for the job. This is an optional field and if not provided, the
   // implementation of the SDK will use a sane default
   int64 timeout_mins = 5;
+  // Live is an optional flag if true will collect live cores from running processes of the driver
+  bool live = 6;
 }
 
 // SdkDiagsCollectResponse defines a response for an SDK request to collect diags
@@ -4819,7 +4821,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 7;
+    Patch = 8;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -2,10 +2,13 @@
 
 ## Releases
 
+### v0.101.8 - (04/22/2021)
+
+* Add live option to diags collection SDK to collect live cores
+
 ### v0.101.7 - (04/22/2021)
 
 * Add SDK for diags collection
-
 
 ### v0.101.6 - (04/14/2021)
 * Add a spec for defining a service for sharedv4 volumes. The service
