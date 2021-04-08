@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.113.0 - (04/06/2021)
+
+* Add live option to diags collection SDK to collect live cores
+
 ### v0.112.0 - (03/30/2021)
 
 * auto fstrim flag in volume spec
