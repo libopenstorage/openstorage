@@ -140,7 +140,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	}
 
 	// Log request
-	logrus.Debugf("csi.ValidateVolumeCapabilities of id %s "+
+	logrus.Debugf("ValidateVolumeCapabilities of id %s "+
 		"capabilities %#v "+
 		id,
 		capabilities)
@@ -324,7 +324,7 @@ func (s *OsdCsiServer) CreateVolume(
 ) (*csi.CreateVolumeResponse, error) {
 
 	// Log request
-	logrus.Debugf("csi.CreateVolume request received. Volume: %s", req.GetName())
+	logrus.Debugf("CreateVolume req[%#v]", *req)
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
@@ -451,7 +451,7 @@ func (s *OsdCsiServer) DeleteVolume(
 ) (*csi.DeleteVolumeResponse, error) {
 
 	// Log request
-	logrus.Debugf("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
+	logrus.Debugf("DeleteVolume req[%#v]", *req)
 
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
