@@ -273,28 +273,34 @@ func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
 	condition := &csi.VolumeCondition{}
 	if vol.Status != api.VolumeStatus_VOLUME_STATUS_UP {
 		condition.Abnormal = true
+	}
 
-		switch vol.Status {
-		case api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT:
-			condition.Message = "Volume status is not present"
+	switch vol.Status {
+	case api.VolumeStatus_VOLUME_STATUS_UP:
+		condition.Message = "Volume status is up"
 
-		case api.VolumeStatus_VOLUME_STATUS_DOWN:
-			condition.Message = "Volume status is down"
+	case api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT:
+		condition.Message = "Volume status is not present"
 
-		case api.VolumeStatus_VOLUME_STATUS_DEGRADED:
-			condition.Message = "Volume status is degraded"
+	case api.VolumeStatus_VOLUME_STATUS_DOWN:
+		condition.Message = "Volume status is down"
 
-		default:
-			condition.Message = "Volume status is unknown"
-		}
+	case api.VolumeStatus_VOLUME_STATUS_DEGRADED:
+		condition.Message = "Volume status is degraded"
+
+	default:
+		condition.Message = "Volume status is unknown"
 	}
 
 	return condition
 }
 
-// NodeGetVolumeStats get volume stats for a given node
+// NodeGetVolumeStats get volume stats for a given node.
+// This function skips auth and directly hits the driver as it is read-only
+// and only exposed via the CSI unix domain socket. If a secrets field is added
+// in csi.NodeGetVolumeStatsRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
-	logrus.Debugf("NodeGetVolumeStats req[%#v]", req)
+	logrus.Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
 
 	// Check arguments
 	id := req.GetVolumeId()

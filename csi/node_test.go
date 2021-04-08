@@ -684,11 +684,15 @@ func TestNodeGetCapabilities(t *testing.T) {
 		context.Background(),
 		&csi.NodeGetCapabilitiesRequest{})
 	assert.NoError(t, err)
-	assert.Len(t, r.GetCapabilities(), 1)
+	assert.Len(t, r.GetCapabilities(), 2)
 	assert.Equal(
 		t,
 		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
 		r.GetCapabilities()[0].GetRpc().GetType())
+	assert.Equal(
+		t,
+		csi.NodeServiceCapability_RPC_VOLUME_CONDITION,
+		r.GetCapabilities()[1].GetRpc().GetType())
 }
 
 func TestNodeGetVolumeStats(t *testing.T) {
@@ -735,7 +739,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 	assert.Equal(t, used, resp.Usage[0].Used)
 	assert.Equal(t, available, resp.Usage[0].Available)
 	assert.Equal(t, false, resp.VolumeCondition.Abnormal)
-	assert.Equal(t, "", resp.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is up", resp.VolumeCondition.Message)
 
 	// Get VolumeStats - down
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
@@ -744,16 +748,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.VolumeCondition.Message)
-
-	// Get VolumeStats - down
-	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
-	resp, err = c.NodeGetVolumeStats(
-		context.Background(),
-		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
-	assert.NoError(t, err)
-	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is down", resp.VolumeCondition.Message)
 
 	// Get VolumeStats - degraded
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_DEGRADED
@@ -762,7 +757,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is degraded", resp.VolumeCondition.Message)
 
 	// Get VolumeStats - none
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_NONE
@@ -771,7 +766,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is unknown", resp.VolumeCondition.Message)
 
 	// Get VolumeStats - not present
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT
@@ -780,7 +775,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is not present", resp.VolumeCondition.Message)
 }
 
 func TestNodeGetVolumeStats_NotFound(t *testing.T) {

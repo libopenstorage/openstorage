@@ -116,7 +116,7 @@ func TestControllerGetVolume(t *testing.T) {
 		&csi.ControllerGetVolumeRequest{VolumeId: id})
 	assert.NoError(t, err)
 	assert.Equal(t, false, resp.Status.VolumeCondition.Abnormal)
-	assert.Equal(t, "", resp.Status.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is up", resp.Status.VolumeCondition.Message)
 
 	// Get Capabilities - down
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
@@ -125,16 +125,7 @@ func TestControllerGetVolume(t *testing.T) {
 		&csi.ControllerGetVolumeRequest{VolumeId: id})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
-
-	// Get Capabilities - down
-	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
-	resp, err = c.ControllerGetVolume(
-		context.Background(),
-		&csi.ControllerGetVolumeRequest{VolumeId: id})
-	assert.NoError(t, err)
-	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is down", resp.Status.VolumeCondition.Message)
 
 	// Get Capabilities - degraded
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_DEGRADED
@@ -143,7 +134,7 @@ func TestControllerGetVolume(t *testing.T) {
 		&csi.ControllerGetVolumeRequest{VolumeId: id})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is degraded", resp.Status.VolumeCondition.Message)
 
 	// Get Capabilities - none
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_NONE
@@ -152,7 +143,7 @@ func TestControllerGetVolume(t *testing.T) {
 		&csi.ControllerGetVolumeRequest{VolumeId: id})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is unknown", resp.Status.VolumeCondition.Message)
 
 	// Get Capabilities - not present
 	vol.Status = api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT
@@ -161,7 +152,7 @@ func TestControllerGetVolume(t *testing.T) {
 		&csi.ControllerGetVolumeRequest{VolumeId: id})
 	assert.NoError(t, err)
 	assert.Equal(t, true, resp.Status.VolumeCondition.Abnormal)
-	assert.NotEmpty(t, resp.Status.VolumeCondition.Message)
+	assert.Equal(t, "Volume status is not present", resp.Status.VolumeCondition.Message)
 }
 
 func TestControllerPublishVolume(t *testing.T) {

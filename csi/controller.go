@@ -110,11 +110,16 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 	return nil, status.Error(codes.Unimplemented, "This request is not supported")
 }
 
-// ControllerGetVolume is a CSI API which implements getting a single volume
+// ControllerGetVolume is a CSI API which implements getting a single volume.
+// This function skips auth and directly hits the driver as it is read-only
+// and only exposed via the CSI unix domain socket. If a secrets field is added
+// in csi.ControllerGetVolumeRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) ControllerGetVolume(
 	ctx context.Context,
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
+	logrus.Debugf("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
+
 	vol, err := s.driverGetVolume(req.GetVolumeId())
 	if err != nil {
 		return nil, err
