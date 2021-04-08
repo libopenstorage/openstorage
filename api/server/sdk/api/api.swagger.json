@@ -198,6 +198,17 @@
         "title": "Defines the operation types available to resize a storage pool",
         "type": "string"
       },
+      "StorageNodeSecurityStatus": {
+        "default": "UNSPECIFIED",
+        "description": " - UNSPECIFIED: Security status type is unknown\n - UNSECURED: Node is unsecure\n - SECURED: Node is secured with authentication and authorization\n - SECURED_ALLOW_SECURITY_REMOVAL: Node is secured, but in the process of removing security. This state allows\nother unsecured nodes to join the cluster since the cluster is in the process\nof removing secuirty authenticaiton and authorization.",
+        "enum": [
+          "UNSPECIFIED",
+          "UNSECURED",
+          "SECURED",
+          "SECURED_ALLOW_SECURITY_REMOVAL"
+        ],
+        "type": "string"
+      },
       "StorageRebalanceAuditStorageRebalanceAction": {
         "default": "ADD_REPLICA",
         "description": "- ADD_REPLICA: Indicates new replica was added\n - REMOVE_REPLICA: Indicates existing replica was removed",
@@ -4334,6 +4345,9 @@
             "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler.",
             "type": "string"
           },
+          "security_status": {
+            "$ref": "#/components/schemas/StorageNodeSecurityStatus"
+          },
           "status": {
             "$ref": "#/components/schemas/openstorageapiStatus"
           }
@@ -5474,7 +5488,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.113.0"
+    "version": "0.114.0"
   },
   "openapi": "3.0.0",
   "paths": {

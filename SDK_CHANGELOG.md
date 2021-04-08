@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.114.0 - (04/07/2021)
+
+* StorageNode now have security status
+
 ### v0.113.0 - (04/06/2021)
 
 * Add live option to diags collection SDK to collect live cores
