@@ -26,6 +26,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/portworx/kvdb"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -683,9 +684,158 @@ func TestNodeGetCapabilities(t *testing.T) {
 		context.Background(),
 		&csi.NodeGetCapabilitiesRequest{})
 	assert.NoError(t, err)
-	assert.Len(t, r.GetCapabilities(), 1)
+	assert.Len(t, r.GetCapabilities(), 2)
 	assert.Equal(
 		t,
-		csi.NodeServiceCapability_RPC_UNKNOWN,
+		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
 		r.GetCapabilities()[0].GetRpc().GetType())
+	assert.Equal(
+		t,
+		csi.NodeServiceCapability_RPC_VOLUME_CONDITION,
+		r.GetCapabilities()[1].GetRpc().GetType())
+}
+
+func TestNodeGetVolumeStats(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	size := int64(4 * 1024 * 1024)
+	used := int64(1 * 1024 * 1024)
+	available := size - used
+	id := "myvol123"
+	vol := &api.Volume{
+		AttachPath: []string{"/test"},
+		Id:         id,
+		Locator: &api.VolumeLocator{
+			Name: id,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(size),
+		},
+		Usage:  uint64(used),
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
+	)
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	// Get VolumeStats - all OK
+	resp, err := c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(resp.Usage))
+	assert.Equal(t, size, resp.Usage[0].Total)
+	assert.Equal(t, used, resp.Usage[0].Used)
+	assert.Equal(t, available, resp.Usage[0].Available)
+	assert.Equal(t, false, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is up", resp.VolumeCondition.Message)
+
+	// Get VolumeStats - down
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_DOWN
+	resp, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is down", resp.VolumeCondition.Message)
+
+	// Get VolumeStats - degraded
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_DEGRADED
+	resp, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is degraded", resp.VolumeCondition.Message)
+
+	// Get VolumeStats - none
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_NONE
+	resp, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is unknown", resp.VolumeCondition.Message)
+
+	// Get VolumeStats - not present
+	vol.Status = api.VolumeStatus_VOLUME_STATUS_NOT_PRESENT
+	resp, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is not present", resp.VolumeCondition.Message)
+}
+
+func TestNodeGetVolumeStats_NotFound(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	c := csi.NewNodeClient(s.Conn())
+
+	// Get Capabilities - no volumes found
+	id := "myvol123"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+	)
+	_, err := c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.Error(t, err)
+	statusErr, ok := status.FromError(err)
+	assert.Equal(t, true, ok)
+	assert.Equal(t, codes.NotFound.String(), statusErr.Code().String())
+
+	// Get Capabilities - err not found
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{}, kvdb.ErrNotFound).
+			Times(1),
+	)
+	_, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.Error(t, err)
+	statusErr, ok = status.FromError(err)
+	assert.Equal(t, true, ok)
+	assert.Equal(t, codes.NotFound.String(), statusErr.Code().String())
+
+	// Get Capabilities - attach path does not match VolumePath
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{{
+				Id:         id,
+				AttachPath: []string{"bad-test", "test-2"},
+			}}, nil).
+			Times(1),
+	)
+	_, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.Error(t, err)
+	statusErr, ok = status.FromError(err)
+	assert.Equal(t, true, ok)
+	assert.Equal(t, codes.NotFound.String(), statusErr.Code().String())
+	assert.Contains(t, statusErr.Err().Error(), "not mounted on path")
+
 }
