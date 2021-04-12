@@ -1322,6 +1322,11 @@
       },
       "apiReplicaSet": {
         "properties": {
+          "id": {
+            "format": "int64",
+            "title": "ID is the unique ID of this replica set",
+            "type": "integer"
+          },
           "nodes": {
             "items": {
               "type": "string"
@@ -5058,6 +5063,11 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "number_of_chunks": {
+            "format": "int64",
+            "title": "NumberOfChunks indicates how many chunks must be created, 0 and 1 both mean 1",
+            "type": "integer"
+          },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
           },
@@ -5488,7 +5498,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.114.0"
+    "version": "0.115.0"
   },
   "openapi": "3.0.0",
   "paths": {

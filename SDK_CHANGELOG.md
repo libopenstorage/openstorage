@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.115.0 - (04/12/2021)
+
+* Add new fields to VolumeInfo and ReplicaSet to enable dynamic volume chunking
+
 ### v0.114.0 - (04/07/2021)
 
 * StorageNode now have security status
