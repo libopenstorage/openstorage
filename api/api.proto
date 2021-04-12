@@ -610,6 +610,8 @@ message VolumeSpec {
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
   // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
   bool auto_fstrim = 43;
+  // NumberOfChunks indicates how many chunks must be created, 0 and 1 both mean 1
+  uint32 number_of_chunks = 44;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -768,6 +770,8 @@ message ReplicaSet {
   repeated string nodes = 1;
   // Unique IDs of the storage pools for this replica set
   repeated string pool_uuids = 2;
+  // ID is the unique ID of this replica set
+  uint32 id = 3;
 }
 
 // RuntimeStateMap is a list of name value mapping of driver specific runtime
@@ -4856,7 +4860,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 114;
+    Minor = 115;
     // SDK version patch value of this specification
     Patch = 0;
   }
