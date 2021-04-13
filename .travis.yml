@@ -21,6 +21,7 @@ script:
   - hack/check-api-version.sh
   - git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
   - bash hack/docker-integration-test.sh
+  - bash hack/csi-sanity-test.sh
   - make install verify
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
       echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
