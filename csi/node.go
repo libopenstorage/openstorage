@@ -58,7 +58,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	req *csi.NodePublishVolumeRequest,
 ) (*csi.NodePublishVolumeResponse, error) {
 
-	logrus.Debugf("NodePublishVolume req[%#v]", req)
+	logrus.Debugf("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", req.GetVolumeId(), req.GetTargetPath())
 
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
@@ -162,7 +162,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		return nil, err
 	}
 
-	logrus.Infof("Volume %s mounted on %s",
+	logrus.Infof("CSI Volume %s mounted on %s",
 		volumeId,
 		req.GetTargetPath())
 
@@ -175,7 +175,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	req *csi.NodeUnpublishVolumeRequest,
 ) (*csi.NodeUnpublishVolumeResponse, error) {
 
-	logrus.Debugf("NodeUnPublishVolume req[%#v]", req)
+	logrus.Debugf("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", req.GetVolumeId(), req.GetTargetPath())
 
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
@@ -232,7 +232,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 			req.GetTargetPath())
 	}
 
-	logrus.Infof("Volume %s unmounted from path %s", req.GetVolumeId(), req.GetTargetPath())
+	logrus.Infof("CSI Volume %s unmounted from path %s", req.GetVolumeId(), req.GetTargetPath())
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -244,7 +244,7 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	req *csi.NodeGetCapabilitiesRequest,
 ) (*csi.NodeGetCapabilitiesResponse, error) {
 
-	logrus.Debugf("NodeGetCapabilities req[%#v]", req)
+	logrus.Debugf("csi.NodeGetCapabilities request received")
 
 	caps := []csi.NodeServiceCapability_RPC_Type{
 		// Getting volume stats for volume health monitoring
