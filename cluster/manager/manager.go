@@ -427,8 +427,12 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			continue
 		}
+		dataIp := nodeEntry.DataIp
+		if strings.Contains(dataIp, ":") {
+			dataIp = fmt.Sprintf("[%s]", dataIp)
+		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:          nodeEntry.DataIp + ":" + c.gossipPort,
+			Addr:          dataIp + ":" + c.gossipPort,
 			QuorumMember:  !nodeEntry.NonQuorumMember,
 			ClusterDomain: nodeEntry.ClusterDomain,
 		}
@@ -802,13 +806,17 @@ func (c *ClusterManager) startHeartBeat(
 			gossipPort = c.gossipPort
 		}
 
-		nodeIp := nodeEntry.DataIp + ":" + gossipPort
+		dataIp := nodeEntry.DataIp
+		if strings.Contains(dataIp, ":") {
+			dataIp = fmt.Sprintf("[%s]", dataIp)
+		}
+		nodeIp := dataIp + ":" + gossipPort
 		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
 			KnownUrl:      nodeIp,
 			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 
-		nodeIps = append(nodeIps, nodeEntry.DataIp+":"+gossipPort)
+		nodeIps = append(nodeIps, dataIp+":"+gossipPort)
 	}
 	if len(nodeIps) > 0 {
 		logrus.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -1433,8 +1441,16 @@ func (c *ClusterManager) StartWithConfiguration(
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
 		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
+
+	dataIp := c.selfNode.DataIp
+	if strings.Contains(dataIp, ":") {
+		dataIp = fmt.Sprintf("[%s]", dataIp)
+	}
+
+	logrus.Infoln("Init gossip: ", dataIp+":"+c.gossipPort)
+
 	c.gossip = gossip.New(
-		c.selfNode.DataIp+":"+c.gossipPort,
+		dataIp+":"+c.gossipPort,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
