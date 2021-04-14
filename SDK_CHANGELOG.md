@@ -2,6 +2,12 @@
 
 ## Releases
 
+### v0.101.6 - (04/14/2021)
+
+* Add a spec for defining a service for sharedv4 volumes. The service
+  can be used for accessing this sharedv4 volume within and from outside
+  the cluster.
+
 ### v0.101.5 - (04/07/2021)
 
 * StorageNodes now have security status
