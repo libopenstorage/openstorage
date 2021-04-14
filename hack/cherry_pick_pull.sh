@@ -34,8 +34,8 @@ declare -r STARTINGBRANCH
 declare -r REBASEMAGIC="${REPO_ROOT}/.git/rebase-apply"
 DRY_RUN=${DRY_RUN:-""}
 REGENERATE_DOCS=${REGENERATE_DOCS:-""}
-UPSTREAM_REMOTE=${UPSTREAM_REMOTE:-upstream}
-FORK_REMOTE=${FORK_REMOTE:-origin}
+UPSTREAM_REMOTE=${UPSTREAM_REMOTE:-origin}
+FORK_REMOTE=${FORK_REMOTE:-fork}
 MAIN_REPO_ORG=${MAIN_REPO_ORG:-$(git remote get-url "$UPSTREAM_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $3}')}
 MAIN_REPO_NAME=${MAIN_REPO_NAME:-$(git remote get-url "$UPSTREAM_REMOTE" | awk '{gsub(/http[s]:\/\/|git@/,"")}1' | awk -F'[@:./]' 'NR==1{print $4}')}
 
