@@ -419,8 +419,10 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return nodeCopy
 }
 
+// Return ip:port string
 func getPeerAddress(ip string, port string) string {
 	if strings.Contains(ip, ":") {
+		// IPv6 addresses and '[]'
 		ip = fmt.Sprintf("[%s]", ip)
 	}
 	return fmt.Sprintf("%s:%s", ip, port)
