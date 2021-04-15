@@ -419,6 +419,13 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return nodeCopy
 }
 
+func getPeerAddress(ip string, port string) string {
+	if strings.Contains(ip, ":") {
+		ip = fmt.Sprintf("[%s]", ip)
+	}
+	return fmt.Sprintf("%s:%s", ip, port)
+}
+
 func (c *ClusterManager) getNonDecommisionedPeers(
 	db cluster.ClusterInfo,
 ) map[types.NodeId]types.NodeUpdate {
@@ -427,12 +434,8 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 		if nodeEntry.Status == api.Status_STATUS_DECOMMISSION {
 			continue
 		}
-		dataIp := nodeEntry.DataIp
-		if strings.Contains(dataIp, ":") {
-			dataIp = fmt.Sprintf("[%s]", dataIp)
-		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:          dataIp + ":" + c.gossipPort,
+			Addr:          getPeerAddress(nodeEntry.DataIp, c.gossipPort),
 			QuorumMember:  !nodeEntry.NonQuorumMember,
 			ClusterDomain: nodeEntry.ClusterDomain,
 		}
@@ -806,17 +809,13 @@ func (c *ClusterManager) startHeartBeat(
 			gossipPort = c.gossipPort
 		}
 
-		dataIp := nodeEntry.DataIp
-		if strings.Contains(dataIp, ":") {
-			dataIp = fmt.Sprintf("[%s]", dataIp)
-		}
-		nodeIp := dataIp + ":" + gossipPort
+		nodeIp := getPeerAddress(nodeEntry.DataIp, gossipPort)
 		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
 			KnownUrl:      nodeIp,
 			ClusterDomain: nodeEntry.ClusterDomain,
 		}
 
-		nodeIps = append(nodeIps, dataIp+":"+gossipPort)
+		nodeIps = append(nodeIps, nodeIp)
 	}
 	if len(nodeIps) > 0 {
 		logrus.Infof("Starting Gossip... Gossiping to these nodes : %v", nodeIps)
@@ -1442,15 +1441,11 @@ func (c *ClusterManager) StartWithConfiguration(
 		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
 	}
 
-	dataIp := c.selfNode.DataIp
-	if strings.Contains(dataIp, ":") {
-		dataIp = fmt.Sprintf("[%s]", dataIp)
-	}
-
-	logrus.Infoln("Init gossip: ", dataIp+":"+c.gossipPort)
+	nodeIp := getPeerAddress(c.selfNode.DataIp, c.gossipPort)
+	logrus.Infoln("Init gossip: ", nodeIp)
 
 	c.gossip = gossip.New(
-		dataIp+":"+c.gossipPort,
+		nodeIp,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
 		gossipIntervals,
