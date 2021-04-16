@@ -21,11 +21,10 @@ import (
 	"os"
 	"strings"
 
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/portworx/kvdb"
-
-	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -68,29 +67,33 @@ func (s *OsdCsiServer) NodePublishVolume(
 	ctx context.Context,
 	req *csi.NodePublishVolumeRequest,
 ) (*csi.NodePublishVolumeResponse, error) {
+	volumeId := req.GetVolumeId()
+	targetPath := req.GetTargetPath()
 
-	logrus.Debugf("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", req.GetVolumeId(), req.GetTargetPath())
+	logrus.Debugf("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
-	if len(req.GetVolumeId()) == 0 {
+	if len(volumeId) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
-	if len(req.GetTargetPath()) == 0 {
+	if len(targetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
-	if req.GetVolumeCapability() == nil || req.GetVolumeCapability().GetAccessMode() == nil {
+	if req.GetVolumeCapability() == nil || req.GetVolumeCapability().GetAccessMode() == nil ||
+		req.GetVolumeCapability().GetAccessMode().Mode == csi.VolumeCapability_AccessMode_UNKNOWN {
 		return nil, status.Error(codes.InvalidArgument, "Volume access mode must be provided")
-	}
-	if req.GetVolumeCapability().GetBlock() != nil {
-		return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
 	}
 
 	// Ensure target location is created correctly
-	if err := ensureMountPathCreated(req.GetTargetPath()); err != nil {
+	isBlockAccessType := false
+	if req.GetVolumeCapability().GetBlock() != nil {
+		isBlockAccessType = true
+	}
+	if err := ensureMountPathCreated(targetPath, isBlockAccessType); err != nil {
 		return nil, status.Errorf(
 			codes.Aborted,
 			"Failed to use target location %s: %s",
-			req.GetTargetPath(),
+			targetPath,
 			err.Error())
 	}
 
@@ -135,14 +138,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 	}
 
-	// prepare for mount/attaching
-	mounts := api.NewOpenStorageMountAttachClient(conn)
-	opts := &api.SdkVolumeAttachOptions{
-		SecretName: spec.GetPassphrase(),
-	}
-
 	// can use either spec.Ephemeral or VolumeContext label
-	volumeId := req.GetVolumeId()
 	if req.GetVolumeContext()["csi.storage.k8s.io/ephemeral"] == "true" || spec.Ephemeral {
 		if !s.allowInlineVolumes {
 			return nil, status.Error(codes.InvalidArgument, "CSI ephemeral inline volumes are disabled on this cluster")
@@ -155,7 +151,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		spec.Ephemeral = true
 		volumes := api.NewOpenStorageVolumeClient(conn)
 		resp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
-			Name:   req.GetVolumeId(),
+			Name:   volumeId,
 			Spec:   spec,
 			Labels: locator.GetVolumeLabels(),
 		})
@@ -165,7 +161,14 @@ func (s *OsdCsiServer) NodePublishVolume(
 		volumeId = resp.VolumeId
 	}
 
+	// prepare for mount/attaching
+	opts := &api.SdkVolumeAttachOptions{
+		SecretName: spec.GetPassphrase(),
+	}
+	mounts := api.NewOpenStorageMountAttachClient(conn)
 	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
+		// attach is assumed to be idempotent
+		// attach is assumed to return the same DevicePath on each call
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
 			VolumeId:      volumeId,
 			Options:       opts,
@@ -179,10 +182,10 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 	}
 
-	// Mount volume onto the path
+	// for volumes with mount access type just mount volume onto the path
 	if _, err := mounts.Mount(ctx, &api.SdkVolumeMountRequest{
 		VolumeId:      volumeId,
-		MountPath:     req.GetTargetPath(),
+		MountPath:     targetPath,
 		Options:       opts,
 		DriverOptions: driverOpts,
 	}); err != nil {
@@ -205,14 +208,16 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	ctx context.Context,
 	req *csi.NodeUnpublishVolumeRequest,
 ) (*csi.NodeUnpublishVolumeResponse, error) {
+	volumeId := req.GetVolumeId()
+	targetPath := req.GetTargetPath()
 
-	logrus.Debugf("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", req.GetVolumeId(), req.GetTargetPath())
+	logrus.Debugf("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
-	if len(req.GetVolumeId()) == 0 {
+	if len(volumeId) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	}
-	if len(req.GetTargetPath()) == 0 {
+	if len(targetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
 
@@ -232,16 +237,16 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 	}
 
-	// Mount volume onto the path
 	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-		logrus.Infof("Unable to unmount volume %s onto %s: %s",
+		logrus.Infof("unable to unmount volume %s onto %s: %s",
 			req.GetVolumeId(),
 			req.GetTargetPath(),
-			err.Error())
+			err.Error(),
+		)
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
+		if err = s.driver.Detach(volumeId, nil); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to detach volume: %s",
@@ -252,18 +257,18 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	// Attempt to remove volume path
 	// Kubernetes handles this after NodeUnpublishVolume finishes, but this allows for cross-CO compatibility
 	if err := os.Remove(req.GetTargetPath()); err != nil && !os.IsNotExist(err) {
-		logrus.Warnf("Failed to delete mount path %s: %s", req.GetTargetPath(), err.Error())
+		logrus.Warnf("Failed to delete mount path %s: %s", targetPath, err.Error())
 	}
 
 	// Return error to Kubelet if mount path still exists to force a retry
-	if _, err := os.Stat(req.GetTargetPath()); !os.IsNotExist(err) {
+	if _, err := os.Stat(targetPath); !os.IsNotExist(err) {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Mount path still exists: %s",
-			req.GetTargetPath())
+			targetPath)
 	}
 
-	logrus.Infof("CSI Volume %s unmounted from path %s", req.GetVolumeId(), req.GetTargetPath())
+	logrus.Infof("CSI Volume %s unmounted from path %s", volumeId, targetPath)
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -397,21 +402,38 @@ func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientCo
 	}
 }
 
-func ensureMountPathCreated(targetPath string) error {
+func ensureMountPathCreated(targetPath string, isBlock bool) error {
+	// Check if targetpath exists
 	fileInfo, err := os.Lstat(targetPath)
 	if err != nil && os.IsNotExist(err) {
-		err = os.MkdirAll(targetPath, 0750)
-		if err != nil {
-			return fmt.Errorf(
-				"Failed to create target path %s: %s",
-				targetPath,
-				err.Error())
+		// Create if does not exist
+		// 1. Block - create targetPath file
+		// 2. Mount - create targetpath directory
+		if isBlock {
+			if err = makeFile(targetPath); err != nil {
+				return err
+			}
+		} else {
+			if err = makeDir(targetPath); err != nil {
+				return err
+			}
 		}
+
+		return nil
 	} else if err != nil {
 		return fmt.Errorf(
-			"Unknown error while verifying target location %s: %s",
+			"unknown error while verifying target location %s: %s",
 			targetPath,
 			err.Error())
+	}
+
+	// Check for directory or file.
+	// 1. Block - should be file
+	// 2. Mount - should be directory
+	if isBlock {
+		if fileInfo.IsDir() {
+			return fmt.Errorf("Target location %s is not a file", targetPath)
+		}
 	} else {
 		if !fileInfo.IsDir() {
 			return fmt.Errorf("Target location %s is not a directory", targetPath)
@@ -429,6 +451,35 @@ func validateEphemeralVolumeAttributes(volumeAttributes map[string]string) error
 					"Volume attributes %v are not allowed for ephemeral volumes", ephemeralDenyList)
 			}
 		}
+	}
+
+	return nil
+}
+
+func makeFile(pathname string) error {
+	f, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0644))
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			logrus.Warnf("failed to close file: %s", err.Error())
+		}
+	}()
+	if err != nil {
+		if !os.IsExist(err) {
+			return fmt.Errorf("failed to create block file: %s", err.Error())
+		}
+	}
+
+	return nil
+}
+
+func makeDir(targetPath string) error {
+	err := os.MkdirAll(targetPath, 0750)
+	if err != nil {
+		return fmt.Errorf(
+			"failed to create target path %s: %s",
+			targetPath,
+			err.Error())
 	}
 
 	return nil

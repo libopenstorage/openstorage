@@ -226,9 +226,6 @@ func (d *driver) Unmount(volumeID string, mountpath string, options map[string]s
 	if err != nil {
 		return err
 	}
-	if len(v.AttachPath) == 0 {
-		return fmt.Errorf("Device %v not mounted", volumeID)
-	}
 
 	v.AttachPath = nil
 	return d.UpdateVol(v)
