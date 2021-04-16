@@ -113,7 +113,12 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "/",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -147,7 +152,12 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "mypath",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 
 		// This will cause an error
@@ -190,7 +200,9 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId: name,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 			AccessType: &csi.VolumeCapability_Mount{
 				Mount: &csi.VolumeCapability_MountVolume{},
 			},
@@ -255,7 +267,12 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: "/mnt",
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -313,7 +330,12 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -327,9 +349,6 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 }
 
 func TestNodePublishVolumeBlock(t *testing.T) {
-	// Skipping for now - issues with symlink
-	t.Skip()
-
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -361,9 +380,11 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: name,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -376,13 +397,30 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_BLOCK).
+			Attach(name, gomock.Any()).
+			Return("", nil).
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
-			Return(devicePath, nil).
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
+			Return([]*api.Volume{
+				{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Mount(name, targetPath, nil).
+			Return(nil).
 			Times(1),
 	)
 
@@ -390,7 +428,9 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 			AccessType: &csi.VolumeCapability_Block{
 				Block: &csi.VolumeCapability_BlockVolume{},
 			},
@@ -402,10 +442,9 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, r)
 
-	// Check that the symlink was created
-	fileInfo, err := os.Lstat(targetPath)
+	// Check that the targetpath exists
+	_, err = os.Lstat(targetPath)
 	assert.NoError(t, err)
-	assert.Equal(t, fileInfo.Mode()&os.ModeSymlink, os.ModeSymlink)
 }
 
 func TestNodePublishVolumeMount(t *testing.T) {
@@ -454,7 +493,12 @@ func TestNodePublishVolumeMount(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{},
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -512,8 +556,9 @@ func TestNodePublishPureVolumeMountOptions(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
-			AccessType: &csi.VolumeCapability_Mount{
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			}, AccessType: &csi.VolumeCapability_Mount{
 				Mount: &csi.VolumeCapability_MountVolume{
 					MountFlags: mountFlags,
 				},
@@ -590,7 +635,9 @@ func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		VolumeContext: map[string]string{
 			"csi.storage.k8s.io/ephemeral": "true",
@@ -628,7 +675,9 @@ func TestNodePublishVolumeEphemeralDisabled(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			},
 		},
 		VolumeContext: map[string]string{
 			"csi.storage.k8s.io/ephemeral": "true",
@@ -666,8 +715,9 @@ func TestNodePublishVolumeEphemeralDenyList(t *testing.T) {
 		VolumeId:   name,
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
-			AccessMode: &csi.VolumeCapability_AccessMode{},
-		},
+			AccessMode: &csi.VolumeCapability_AccessMode{
+				Mode: csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER,
+			}},
 		VolumeContext: map[string]string{
 			"csi.storage.k8s.io/ephemeral": "true",
 			api.SpecPriority:               "high",
@@ -747,16 +797,6 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 			Unmount(name, targetPath, nil).
 			Return(fmt.Errorf("TEST")).
 			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
-		s.MockDriver().
-			EXPECT().
-			Detach(name, gomock.Any()).
-			Return(nil).
-			Times(1),
 	)
 
 	req := &csi.NodeUnpublishVolumeRequest{
@@ -765,7 +805,8 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 	}
 
 	_, err := c.NodeUnpublishVolume(context.Background(), req)
-	assert.Nil(t, err)
+	assert.NotNil(t, err)
+	assert.Contains(t, err.Error(), "unable to unmount volume myvol onto /tmp/mnttest2: TEST")
 }
 
 func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {

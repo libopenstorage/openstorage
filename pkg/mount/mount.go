@@ -92,6 +92,8 @@ const (
 	CustomMount
 	// BindMount indicates a bind mount point
 	BindMount
+	// RawMount indicates a raw mount point
+	RawMount
 )
 
 const (
@@ -535,7 +537,7 @@ func (m *Mounter) Mount(
 			}
 		}
 
-		return err
+		return fmt.Errorf("%s", err)
 	}
 
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
@@ -814,6 +816,8 @@ func New(
 		return NewBindMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case CustomMount:
 		return NewCustomMounter(identifiers, mountImpl, customMounter, allowedDirs)
+	case RawMount:
+		return NewRawBindMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	}
 	return nil, ErrUnsupported
 }
