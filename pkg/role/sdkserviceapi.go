@@ -400,7 +400,7 @@ func (r *SdkRoleManager) Verify(ctx context.Context, roles []string, fullmethod 
 			continue
 		}
 
-		if err := r.verifyRules(resp.GetRole().GetRules(), fullmethod); err == nil {
+		if err := VerifyRules(resp.GetRole().GetRules(), api.SdkRootPath, fullmethod); err == nil {
 			return nil
 		}
 	}
@@ -408,10 +408,10 @@ func (r *SdkRoleManager) Verify(ctx context.Context, roles []string, fullmethod 
 	return status.Errorf(codes.PermissionDenied, "Access denied to roles: %+s", roles)
 }
 
-// verifyRules checks if the rules authorize use of the API called `fullmethod`
-func (r *SdkRoleManager) verifyRules(rules []*api.SdkRule, fullmethod string) error {
+// VerifyRules checks if the rules authorize use of the API called `fullmethod`
+func VerifyRules(rules []*api.SdkRule, rootPath, fullmethod string) error {
 
-	reqService, reqApi := grpcserver.GetMethodInformation(api.SdkRootPath, fullmethod)
+	reqService, reqApi := grpcserver.GetMethodInformation(rootPath, fullmethod)
 
 	// Look for denials first
 	for _, rule := range rules {
