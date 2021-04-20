@@ -182,6 +182,7 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 		Format:    api.FSType_FS_TYPE_EXT4,
 		HaLevel:   1,
 		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
+		Xattr:     api.Xattr_COW_ON_DEMAND,
 	}
 }
 
@@ -481,6 +482,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				if cowOnDemand {
 					spec.Xattr = api.Xattr_COW_ON_DEMAND
+				} else if spec.Xattr == api.Xattr_COW_ON_DEMAND {
+					spec.Xattr = api.Xattr_UNSPECIFIED
 				}
 			}
 		case api.SpecDirectIo:
