@@ -400,7 +400,7 @@ func TestXattr(t *testing.T) {
 	testSpecOptString(t, api.SpecCowOnDemand, "true")
 
 	spec := testSpecFromString(t, api.SpecRack, "ignore")
-	require.Equal(t, api.Xattr_UNSPECIFIED, spec.Xattr)
+	require.Equal(t, api.Xattr_COW_ON_DEMAND, spec.Xattr)
 
 	spec = testSpecFromString(t, api.SpecCowOnDemand, "false")
 	require.Equal(t, api.Xattr_UNSPECIFIED, spec.Xattr)
