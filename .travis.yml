@@ -30,7 +30,6 @@ script:
 notifications:
   email:
     recipients:
-      - aditya@portworx.com
-      - eng@portworx.com
+      - cnbu-controlplane@purestorage.com
     on_success: change
     on_failure: always
