@@ -51,6 +51,10 @@ type OsdCsiServerConfig struct {
 	// Name to be reported back to the CO. If not provided,
 	// the name will be in the format of <driver>.openstorage.org
 	CsiDriverName string
+
+	// EnableInlineVolumes decides whether or not we will allow
+	// creation of inline volumes.
+	EnableInlineVolumes bool
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -61,13 +65,14 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler   spec.SpecHandler
-	driver        volume.VolumeDriver
-	cluster       cluster.Cluster
-	sdkUds        string
-	conn          *grpc.ClientConn
-	mu            sync.Mutex
-	csiDriverName string
+	specHandler        spec.SpecHandler
+	driver             volume.VolumeDriver
+	cluster            cluster.Cluster
+	sdkUds             string
+	conn               *grpc.ClientConn
+	mu                 sync.Mutex
+	csiDriverName      string
+	allowInlineVolumes bool
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -81,6 +86,9 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 	}
 	if len(config.DriverName) == 0 {
 		return nil, fmt.Errorf("OSD Driver name must be provided")
+	}
+	if config.EnableInlineVolumes {
+		logrus.Warnf("CSI ephemeral inline volumes are deprecated and will be disabled by default in the future")
 	}
 	// Save the driver for future calls
 	d, err := volumedrivers.Get(config.DriverName)
@@ -99,12 +107,13 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 	}
 
 	return &OsdCsiServer{
-		specHandler:   spec.NewSpecHandler(),
-		GrpcServer:    gServer,
-		driver:        d,
-		cluster:       config.Cluster,
-		sdkUds:        config.SdkUds,
-		csiDriverName: config.CsiDriverName,
+		specHandler:        spec.NewSpecHandler(),
+		GrpcServer:         gServer,
+		driver:             d,
+		cluster:            config.Cluster,
+		sdkUds:             config.SdkUds,
+		csiDriverName:      config.CsiDriverName,
+		allowInlineVolumes: config.EnableInlineVolumes,
 	}, nil
 }
 
