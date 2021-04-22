@@ -463,6 +463,159 @@ func TestNodePublishVolumeMount(t *testing.T) {
 	assert.NotNil(t, r)
 }
 
+func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
+	// Create server and client connection
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:          mockDriverName,
+		EnableInlineVolumes: true,
+	})
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	name := "csi-12345"
+	size := uint64(10)
+	targetPath := "/mnt"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_NONE).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(name, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Mount(name, targetPath, nil).
+			Return(nil).
+			Times(1),
+	)
+
+	req := &csi.NodePublishVolumeRequest{
+		VolumeId:   name,
+		TargetPath: targetPath,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessMode: &csi.VolumeCapability_AccessMode{},
+		},
+		VolumeContext: map[string]string{
+			"csi.storage.k8s.io/ephemeral": "true",
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	}
+
+	r, err := c.NodePublishVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+}
+
+func TestNodePublishVolumeEphemeralDisabled(t *testing.T) {
+	// Create server and client connection
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:          mockDriverName,
+		EnableInlineVolumes: false,
+	})
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	name := "csi-12345"
+	targetPath := "/mnt"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_NONE).
+			Times(1),
+	)
+
+	req := &csi.NodePublishVolumeRequest{
+		VolumeId:   name,
+		TargetPath: targetPath,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessMode: &csi.VolumeCapability_AccessMode{},
+		},
+		VolumeContext: map[string]string{
+			"csi.storage.k8s.io/ephemeral": "true",
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	}
+
+	_, err := c.NodePublishVolume(context.Background(), req)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "CSI ephemeral inline volumes are disabled on this cluster")
+}
+
+func TestNodePublishVolumeEphemeralDenyList(t *testing.T) {
+	// Create server and client connection
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:          mockDriverName,
+		EnableInlineVolumes: true,
+	})
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	name := "csi-12345"
+	targetPath := "/mnt"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_NONE).
+			Times(1),
+	)
+
+	req := &csi.NodePublishVolumeRequest{
+		VolumeId:   name,
+		TargetPath: targetPath,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessMode: &csi.VolumeCapability_AccessMode{},
+		},
+		VolumeContext: map[string]string{
+			"csi.storage.k8s.io/ephemeral": "true",
+			api.SpecPriority:               "high",
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	}
+
+	_, err := c.NodePublishVolume(context.Background(), req)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid ephemeral volume attribute provided")
+}
+
 func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)

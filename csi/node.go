@@ -31,6 +31,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+var (
+	ephemeralDenyList = []string{
+		api.SpecPriorityAlias,
+		api.SpecPriority,
+		api.SpecSticky,
+		api.SpecScale,
+	}
+)
+
 func (s *OsdCsiServer) NodeGetInfo(
 	ctx context.Context,
 	req *csi.NodeGetInfoRequest,
@@ -122,6 +131,14 @@ func (s *OsdCsiServer) NodePublishVolume(
 	// can use either spec.Ephemeral or VolumeContext label
 	volumeId := req.GetVolumeId()
 	if req.GetVolumeContext()["csi.storage.k8s.io/ephemeral"] == "true" || spec.Ephemeral {
+		if !s.allowInlineVolumes {
+			return nil, status.Error(codes.InvalidArgument, "CSI ephemeral inline volumes are disabled on this cluster")
+		}
+
+		if err := validateEphemeralVolumeAttributes(req.GetVolumeContext()); err != nil {
+			return nil, status.Error(codes.InvalidArgument, err.Error())
+		}
+
 		spec.Ephemeral = true
 		volumes := api.NewOpenStorageVolumeClient(conn)
 		resp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
@@ -384,6 +401,19 @@ func ensureMountPathCreated(targetPath string) error {
 	} else {
 		if !fileInfo.IsDir() {
 			return fmt.Errorf("Target location %s is not a directory", targetPath)
+		}
+	}
+
+	return nil
+}
+
+func validateEphemeralVolumeAttributes(volumeAttributes map[string]string) error {
+	for attr := range volumeAttributes {
+		for _, deny := range ephemeralDenyList {
+			if attr == deny {
+				return fmt.Errorf("invalid ephemeral volume attribute provided. "+
+					"Volume attributes %v are not allowed for ephemeral volumes", ephemeralDenyList)
+			}
 		}
 	}
 
