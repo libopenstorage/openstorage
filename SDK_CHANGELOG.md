@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.116.0 - (04/26/2021)
+
+* Add Pure pass through volume specs into ProxySpec
+* Parse mountOptions flag from storage class for Pure pass through volumes
+
 ### v0.115.0 - (04/12/2021)
 
 * Add new fields to VolumeInfo and ReplicaSet to enable dynamic volume chunking

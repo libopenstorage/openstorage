@@ -19,6 +19,7 @@ package csi
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/portworx/kvdb"
@@ -113,6 +114,15 @@ func (s *OsdCsiServer) NodePublishVolume(
 	// Get volume encryption info from req.Secrets
 	driverOpts := s.addEncryptionInfoToLabels(make(map[string]string), req.GetSecrets())
 
+	// Parse storage class 'mountOptions' flags from CSI req
+	// flags from 'mountOptions' will be used as the only source of truth for Pure volumes upon mounting
+	if req.GetVolumeCapability() != nil && req.GetVolumeCapability().GetMount() != nil {
+		mountFlags := strings.Join(req.GetVolumeCapability().GetMount().GetMountFlags(), ",")
+		if mountFlags != "" {
+			driverOpts[api.SpecCSIMountOptions] = mountFlags
+		}
+	}
+
 	// prepare for mount/attaching
 	mounts := api.NewOpenStorageMountAttachClient(conn)
 	opts := &api.SdkVolumeAttachOptions{
@@ -151,9 +161,10 @@ func (s *OsdCsiServer) NodePublishVolume(
 
 	// Mount volume onto the path
 	if _, err := mounts.Mount(ctx, &api.SdkVolumeMountRequest{
-		VolumeId:  volumeId,
-		MountPath: req.GetTargetPath(),
-		Options:   opts,
+		VolumeId:      volumeId,
+		MountPath:     req.GetTargetPath(),
+		Options:       opts,
+		DriverOptions: driverOpts,
 	}); err != nil {
 		if spec.Ephemeral {
 			logrus.Errorf("Failed to mount ephemeral volume %s: %v", volumeId, err.Error())
