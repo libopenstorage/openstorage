@@ -314,6 +314,7 @@ docker-test: docker-build-osd-dev
 		-e "PKGS=$(PKGS)" \
 		-e "BUILDFLAGS=$(BUILDFLAGS)" \
 		-e "TESTFLAGS=$(TESTFLAGS)" \
+		-e "GO111MODULE=auto" \
 		openstorage/osd-dev \
 			make test
 

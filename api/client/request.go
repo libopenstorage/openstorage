@@ -2,6 +2,7 @@ package client
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,6 +16,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 )
 
 const (
@@ -41,6 +43,7 @@ type Request struct {
 	timeout     time.Duration
 	authstring  string
 	accesstoken string
+	ctx         context.Context
 }
 
 // Response is a representation of HTTP response received from the server.
@@ -59,6 +62,19 @@ type Status struct {
 
 // NewRequest instance
 func NewRequest(client *http.Client, base *url.URL, verb string, version string, authstring, userAgent string) *Request {
+	return NewRequestWithContext(nil, client, base, verb, version, authstring, userAgent)
+}
+
+// NewRequestWithContext takes in context which may describe a timeout
+func NewRequestWithContext(
+	ctx context.Context,
+	client *http.Client,
+	base *url.URL,
+	verb string,
+	version string,
+	authstring,
+	userAgent string,
+) *Request {
 	r := &Request{
 		client:     client,
 		verb:       verb,
@@ -66,6 +82,7 @@ func NewRequest(client *http.Client, base *url.URL, verb string, version string,
 		path:       base.Path,
 		version:    version,
 		authstring: authstring,
+		ctx:        ctx,
 	}
 	r.SetHeader("User-Agent", userAgent)
 	return r
@@ -245,12 +262,19 @@ func (r *Request) Do() *Response {
 		return &Response{err: r.err}
 	}
 
+	// Get a context timeout if non provided
+	if r.ctx == nil {
+		ctx, cancel := grpcutil.WithDefaultTimeout(context.Background())
+		r.ctx = ctx
+		defer cancel()
+	}
+
 	url = r.URL().String()
 	start := time.Now()
 	attemptNum := 0
 	for {
 		// Re-create Request for every call to make sure body isn't empty.
-		req, err = http.NewRequest(r.verb, url, bytes.NewBuffer(r.body))
+		req, err = http.NewRequestWithContext(r.ctx, r.verb, url, bytes.NewBuffer(r.body))
 		if err != nil {
 			return &Response{err: err}
 		}

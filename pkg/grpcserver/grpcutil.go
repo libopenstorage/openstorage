@@ -25,12 +25,14 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
-	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/connectivity"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
+)
+
+var (
+	DefaultConnectionTimeout = 1 * time.Minute
 )
 
 // GetTlsDialOptions returns the appropriate gRPC dial options to connect to a gRPC server over TLS.
@@ -57,39 +59,35 @@ func GetTlsDialOptions(caCertData []byte) ([]grpc.DialOption, error) {
 
 // Connect to address by grpc
 func Connect(address string, dialOptions []grpc.DialOption) (*grpc.ClientConn, error) {
-	return ConnectWithTimeout(address, dialOptions, 1*time.Minute)
+	return ConnectWithTimeout(address, dialOptions, DefaultConnectionTimeout)
 }
 
 // ConnectWithTimeout to address by grpc with timeout
 func ConnectWithTimeout(address string, dialOptions []grpc.DialOption, timeout time.Duration) (*grpc.ClientConn, error) {
 	u, err := url.Parse(address)
-	if err == nil && (!u.IsAbs() || u.Scheme == "unix") {
-		dialOptions = append(dialOptions,
-			grpc.WithDialer(
-				func(addr string, timeout time.Duration) (net.Conn, error) {
-					return net.DialTimeout("unix", u.Path, timeout)
-				}))
+	if err == nil {
+		// Check if host just has an IP
+		if u.Scheme == "unix" ||
+			(!u.IsAbs() && net.ParseIP(address) == nil) {
+			dialOptions = append(dialOptions,
+				grpc.WithDialer(
+					func(addr string, timeout time.Duration) (net.Conn, error) {
+						return net.DialTimeout("unix", u.Path, timeout)
+					}))
+		}
 	}
 
-	dialOptions = append(dialOptions, grpc.WithBackoffMaxDelay(time.Second))
-	conn, err := grpc.Dial(address, dialOptions...)
+	dialOptions = append(dialOptions,
+		grpc.WithBackoffMaxDelay(time.Second),
+		grpc.WithBlock(),
+	)
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	conn, err := grpc.DialContext(ctx, address, dialOptions...)
 	if err != nil {
-		return nil, err
-	}
-
-	// We wait for given timeout until conn.GetState() is READY.
-	// The interval for this check is 10 ms.
-	if err := util.WaitFor(timeout, 10*time.Millisecond, func() (bool, error) {
-		if conn.GetState() == connectivity.Ready {
-			return false, nil
-		}
-		return true, nil
-	}); err != nil {
-		// Clean up the connection
-		if err := conn.Close(); err != nil {
-			logrus.Warnf("Failed to close connection to %v: %v", address, err)
-		}
-		return nil, fmt.Errorf("Connection timed out")
+		return nil, fmt.Errorf("Failed to connect gRPC server %s: %v", address, err)
 	}
 
 	return conn, nil
