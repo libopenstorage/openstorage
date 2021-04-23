@@ -19,6 +19,7 @@ package csi
 import (
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -454,6 +455,69 @@ func TestNodePublishVolumeMount(t *testing.T) {
 		TargetPath: targetPath,
 		VolumeCapability: &csi.VolumeCapability{
 			AccessMode: &csi.VolumeCapability_AccessMode{},
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	}
+
+	r, err := c.NodePublishVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+}
+
+func TestNodePublishPureVolumeMountOptions(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	name := "myvol"
+	size := uint64(10)
+	targetPath := "/mnt"
+	mountFlags := []string{"nfsvers=4.1", "tcp"}
+	options := strings.Join(mountFlags, ",")
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Type().
+			Return(api.DriverType_DRIVER_TYPE_NONE).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{name},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: name,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: size,
+					},
+				},
+			}, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Mount(name, targetPath, map[string]string{api.SpecCSIMountOptions: options}).
+			Return(nil).
+			Times(1),
+	)
+
+	req := &csi.NodePublishVolumeRequest{
+		VolumeId:   name,
+		TargetPath: targetPath,
+		VolumeCapability: &csi.VolumeCapability{
+			AccessMode: &csi.VolumeCapability_AccessMode{},
+			AccessType: &csi.VolumeCapability_Mount{
+				Mount: &csi.VolumeCapability_MountVolume{
+					MountFlags: mountFlags,
+				},
+			},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}

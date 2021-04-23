@@ -61,6 +61,7 @@ const (
 	SpecExportOptions        = "export_options"
 	SpecExportOptionsEmpty   = "empty_export_options"
 	SpecMountOptions         = "mount_options"
+	SpecCSIMountOptions      = "csi_mount_options"
 	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	SpecProxyProtocolS3      = "s3"
 	SpecProxyProtocolPXD     = "pxd"
@@ -90,6 +91,10 @@ const (
 	SpecFastpath             = "fastpath"
 	SpecSharedv4ServiceType  = "sharedv4_svc_type"
 	SpecSharedv4ServiceName  = "sharedv4_svc_name"
+	SpecBackendType          = "backend"
+	SpecBackendPureBlock     = "pure_block"
+	SpecBackendPureFile      = "pure_file"
+	SpecPureFileExportRules  = "pure_export_rules"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -759,6 +764,17 @@ func (x IoProfile) SimpleString() string {
 	return simpleString("io_profile", IoProfile_name, int32(x))
 }
 
+// ProxyProtocolSimpleValueOf returns the string format of ProxyProtocol
+func ProxyProtocolSimpleValueOf(s string) (ProxyProtocol, error) {
+	obj, err := simpleValueOf("proxy_protocol", ProxyProtocol_value, s)
+	return ProxyProtocol(obj), err
+}
+
+// SimpleString returns the string format of ProxyProtocol
+func (x ProxyProtocol) SimpleString() string {
+	return simpleString("proxy_protocol", ProxyProtocol_name, int32(x))
+}
+
 func simpleValueOf(typeString string, valueMap map[string]int32, s string) (int32, error) {
 	obj, ok := valueMap[strings.ToUpper(fmt.Sprintf("%s_%s", typeString, s))]
 	if !ok {
@@ -1289,4 +1305,9 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 		}
 	}
 	return ProxyProtocol_PROXY_PROTOCOL_INVALID, ""
+}
+
+func (s *ProxySpec) IsPureBackend() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
+		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
 }

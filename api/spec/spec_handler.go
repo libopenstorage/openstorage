@@ -524,6 +524,25 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.FpPreference = fastpath
 			}
+		case api.SpecBackendType:
+			// Treat Pure FlashArray and FlashBlade volumes as proxy volumes and store the backend type as ProxyProtocol
+			// in the spec, but the key to pass this value in is specified as 'backend' to reduce confusions
+			if backendType, err := api.ProxyProtocolSimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				if spec.ProxySpec == nil {
+					spec.ProxySpec = &api.ProxySpec{}
+				}
+				spec.ProxySpec.ProxyProtocol = backendType
+			}
+		case api.SpecPureFileExportRules:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.PureFileSpec == nil {
+				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			spec.ProxySpec.PureFileSpec.ExportRules = v
 
 		default:
 			locator.VolumeLabels[k] = v
