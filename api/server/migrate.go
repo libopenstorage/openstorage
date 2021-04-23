@@ -19,7 +19,8 @@ func (vd *volAPI) cloudMigrateStart(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -84,7 +85,8 @@ func (vd *volAPI) cloudMigrateCancel(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -123,7 +125,8 @@ func (vd *volAPI) cloudMigrateStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return

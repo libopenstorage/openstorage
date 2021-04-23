@@ -23,7 +23,8 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -71,7 +72,8 @@ func (vd *volAPI) cloudBackupGroupCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -188,7 +190,8 @@ func (vd *volAPI) cloudBackupEnumerate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -246,7 +249,8 @@ func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -353,7 +357,8 @@ func (vd *volAPI) cloudBackupStateChange(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -389,7 +394,8 @@ func (vd *volAPI) cloudBackupSchedCreate(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -431,7 +437,8 @@ func (vd *volAPI) cloudBackupSchedUpdate(w http.ResponseWriter, r *http.Request)
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return

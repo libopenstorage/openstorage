@@ -234,7 +234,7 @@ func newTestServerAuth(t *testing.T) *testServer {
 func (s *testServer) setPorts() {
 	source := rand.NewSource(time.Now().UnixNano())
 	r := rand.New(source)
-	port := r.Intn(20000) + 10000
+	port := r.Intn(1000) + 30000
 
 	s.port = fmt.Sprintf("%d", port)
 	s.gwport = fmt.Sprintf("%d", port+1)

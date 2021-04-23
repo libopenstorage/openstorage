@@ -23,6 +23,7 @@ import (
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
@@ -106,6 +107,8 @@ func (s *OsdCsiServer) NodePublishVolume(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check if block device
 	driverType := s.driver.Type()

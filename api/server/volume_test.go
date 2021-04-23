@@ -5,13 +5,17 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"net/http/httptest"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/defaultcontext"
 	"github.com/libopenstorage/openstorage/volume"
 	lsecrets "github.com/libopenstorage/secrets"
 	"github.com/libopenstorage/secrets/k8s"
@@ -20,6 +24,68 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+func TestAnnotateContextWithoutCancelFromRequest(t *testing.T) {
+	v := &volAPI{
+		dummyMux: runtime.NewServeMux(),
+	}
+
+	dtimeout := defaultcontext.Inst().GetDefaultTimeout()
+
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel, err := v.annotateContext(r)
+		defer cancel()
+		assert.NoError(t, err)
+
+		timeout, ok := ctx.Deadline()
+		assert.True(t, ok)
+		assert.True(t, timeout.After(time.Now().Add(dtimeout-(time.Second))))
+	}))
+	defer ts.Close()
+
+	_, err := http.Get(ts.URL)
+	assert.NoError(t, err)
+}
+
+func TestAnnotateContextWithCancelFromRequest(t *testing.T) {
+	v := &volAPI{
+		dummyMux: runtime.NewServeMux(),
+	}
+
+	deadlineTimeout := time.Millisecond * 10
+	var wg sync.WaitGroup
+	wg.Add(1)
+	ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ctx, cancel, err := v.annotateContext(r)
+		assert.NoError(t, err)
+
+		// Work
+		time.Sleep(deadlineTimeout * 10)
+
+		// Check that this is more
+		timeoutChan := time.After(2*time.Second + deadlineTimeout)
+
+		select {
+		case <-ctx.Done():
+			cancel()
+		case <-timeoutChan:
+			t.Errorf("request did not timeout according to the context")
+		}
+
+		wg.Done()
+	}))
+	defer ts.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), deadlineTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", ts.URL, nil)
+	assert.NoError(t, err)
+	client := http.Client{}
+	_, err = client.Do(req)
+	assert.Error(t, err)
+	wg.Wait()
+}
 
 func TestVolumeNoAuth(t *testing.T) {
 	var err error
