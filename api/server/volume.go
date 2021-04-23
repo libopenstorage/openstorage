@@ -23,6 +23,7 @@ import (
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -83,12 +84,22 @@ func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
 	return vd.conn, nil
 }
 
-func (vd *volAPI) annotateContext(r *http.Request) (context.Context, error) {
+// caller must still call defer cancel() on error
+func (vd *volAPI) annotateContext(r *http.Request) (context.Context, context.CancelFunc, error) {
+
+	// Get the context if any passed over the request Headers
+	ctx := r.Context()
+
+	// Set the timeout if non set. context.WithTimeout will set the soonest of the
+	// two, either the amount requested in the second argument, or the timeout
+	// already set in the context 'ctx'.
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+
 	// This creates a context and populates the authentication token
 	// using the same function as the SDK REST Gateway
-	ctx, err := runtime.AnnotateContext(context.Background(), vd.dummyMux, r)
+	ctx, err := runtime.AnnotateContext(ctx, vd.dummyMux, r)
 	if err != nil {
-		return ctx, err
+		return ctx, cancel, err
 	}
 	// If a header exists in the request fetch the requested driver name if provided
 	// and pass it in the grpc context as a metadata key value
@@ -97,10 +108,10 @@ func (vd *volAPI) annotateContext(r *http.Request) (context.Context, error) {
 		// Check if the request is coming from a container orchestrator
 		clientName := strings.Split(userAgent, "/")
 		if len(clientName) > 0 {
-			return grpcserver.AddMetadataToContext(ctx, sdk.ContextDriverKey, clientName[0]), nil
+			ctx = grpcserver.AddMetadataToContext(ctx, sdk.ContextDriverKey, clientName[0])
 		}
 	}
-	return ctx, nil
+	return ctx, cancel, nil
 }
 
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
@@ -198,7 +209,8 @@ func (vd *volAPI) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -303,7 +315,8 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -638,7 +651,8 @@ func (vd *volAPI) inspect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -723,7 +737,8 @@ func (vd *volAPI) delete(w http.ResponseWriter, r *http.Request) {
 	volumeResponse := &api.VolumeResponse{}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -794,7 +809,8 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 	method := "enumerate"
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -918,7 +934,8 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 	vd.logRequest(method, string(snapReq.Id)).Infoln("")
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -999,7 +1016,8 @@ func (vd *volAPI) restore(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -1094,7 +1112,8 @@ func (vd *volAPI) snapEnumerate(w http.ResponseWriter, r *http.Request) {
 		request.Labels = labels
 	}
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -1214,7 +1233,8 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return
@@ -1293,7 +1313,8 @@ func (vd *volAPI) usedsize(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Get context with auth token
-	ctx, err := vd.annotateContext(r)
+	ctx, cancel, err := vd.annotateContext(r)
+	defer cancel()
 	if err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
 		return

@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
@@ -171,6 +172,8 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
@@ -446,6 +449,8 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
@@ -518,6 +523,8 @@ func (s *OsdCsiServer) DeleteVolume(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
@@ -569,6 +576,8 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// If the new size is greater than the current size, a volume update
 	// should be issued. Otherwise, no operation should occur.
@@ -709,6 +718,8 @@ func (s *OsdCsiServer) CreateSnapshot(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
@@ -788,6 +799,8 @@ func (s *OsdCsiServer) DeleteSnapshot(
 
 	// Get secret if any was passed
 	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
