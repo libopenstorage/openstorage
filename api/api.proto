@@ -359,6 +359,10 @@ enum ProxyProtocol {
     PROXY_PROTOCOL_S3 = 2;
     // PXD indicates that the external data source is a Portworx block volume.
     PROXY_PROTOCOL_PXD = 3;
+    // PURE_BLOCK indicates that the external data source is a pure_block volume.
+    PROXY_PROTOCOL_PURE_BLOCK = 4;
+    // PURE_FILE indicates that the external data source is a pure_file volume.
+    PROXY_PROTOCOL_PURE_FILE = 5;
 }
 
 // NFSProxySpec is the spec for proxying an NFS share.
@@ -381,6 +385,14 @@ message PXDProxySpec {
     string id = 1;
 }
 
+// PureBlockSpec is the spec for proxying a volume on pure_block backends
+message PureBlockSpec {
+}
+
+// PureFileSpec is the spec for proxying a volume on pure_file backends
+message PureFileSpec {
+  string export_rules = 1;
+}
 
 // ProxySpec defines how this volume will reflect an external data source.
 message ProxySpec {
@@ -395,6 +407,10 @@ message ProxySpec {
     S3ProxySpec s3_spec = 4;
     // PXDProxySpec is the spec for proxying a Portworx volume
     PXDProxySpec pxd_spec = 5;
+    // PureFileSpec is the spec for proxying a volume on pure_file backends
+    PureBlockSpec pure_block_spec = 6;
+    // PureFileSpec is the spec for proxying a volume on pure_file backends
+    PureFileSpec pure_file_spec = 7;
 }
 
 // Sharedv4ServiceType defines the type of sharedv4 service
@@ -4860,7 +4876,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 115;
+    Minor = 116;
     // SDK version patch value of this specification
     Patch = 0;
   }

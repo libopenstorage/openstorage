@@ -396,6 +396,43 @@ func TestExportSpec(t *testing.T) {
 	require.Equal(t, "exportOptions", exportSpec.ExportOptions)
 }
 
+func TestPureBackendSpec(t *testing.T) {
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecBackendType: api.SpecBackendPureBlock,
+	})
+	require.NoError(t, err)
+	proxySpec := spec.GetProxySpec()
+	require.NotNil(t, proxySpec)
+	require.Equal(t, api.SpecBackendPureBlock, proxySpec.ProxyProtocol.SimpleString())
+	require.True(t, proxySpec.IsPureBackend())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecBackendType: api.SpecBackendPureFile,
+	})
+	require.NoError(t, err)
+	proxySpec = spec.GetProxySpec()
+	require.NotNil(t, proxySpec)
+	require.Equal(t, api.SpecBackendPureFile, proxySpec.ProxyProtocol.SimpleString())
+	require.True(t, proxySpec.IsPureBackend())
+
+	rule := "*(rw)"
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecPureFileExportRules: rule,
+	})
+	require.NoError(t, err)
+	proxySpec = spec.GetProxySpec()
+	require.NotNil(t, proxySpec)
+	require.NotNil(t, proxySpec.PureFileSpec)
+	require.Equal(t, rule, proxySpec.PureFileSpec.ExportRules)
+	require.False(t, proxySpec.IsPureBackend())
+
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecBackendType: "unknown_backend",
+	})
+	require.Error(t, err, "Failed to parse backend parameter")
+}
+
 func TestXattr(t *testing.T) {
 	testSpecOptString(t, api.SpecCowOnDemand, "true")
 

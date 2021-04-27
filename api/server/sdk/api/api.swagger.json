@@ -1260,12 +1260,14 @@
       },
       "apiProxyProtocol": {
         "default": "PROXY_PROTOCOL_INVALID",
-        "description": "ProxyProtocol defines the protocol used for proxy.\n\n - PROXY_PROTOCOL_INVALID: Invalid uninitialized value\n - PROXY_PROTOCOL_NFS: NFS indicates that the external data source is NFS and the volume\nwill be reflected over NFS protocol\n - PROXY_PROTOCOL_S3: S3 indicates that the external data source is an object store.\n - PROXY_PROTOCOL_PXD: PXD indicates that the external data source is a Portworx block volume.",
+        "description": "ProxyProtocol defines the protocol used for proxy.\n\n - PROXY_PROTOCOL_INVALID: Invalid uninitialized value\n - PROXY_PROTOCOL_NFS: NFS indicates that the external data source is NFS and the volume\nwill be reflected over NFS protocol\n - PROXY_PROTOCOL_S3: S3 indicates that the external data source is an object store.\n - PROXY_PROTOCOL_PXD: PXD indicates that the external data source is a Portworx block volume.\n - PROXY_PROTOCOL_PURE_BLOCK: PURE_BLOCK indicates that the external data source is a pure_block volume.\n - PROXY_PROTOCOL_PURE_FILE: PURE_FILE indicates that the external data source is a pure_file volume.",
         "enum": [
           "PROXY_PROTOCOL_INVALID",
           "PROXY_PROTOCOL_NFS",
           "PROXY_PROTOCOL_S3",
-          "PROXY_PROTOCOL_PXD"
+          "PROXY_PROTOCOL_PXD",
+          "PROXY_PROTOCOL_PURE_BLOCK",
+          "PROXY_PROTOCOL_PURE_FILE"
         ],
         "type": "string"
       },
@@ -1282,6 +1284,12 @@
           "proxy_protocol": {
             "$ref": "#/components/schemas/apiProxyProtocol"
           },
+          "pure_block_spec": {
+            "$ref": "#/components/schemas/apiPureBlockSpec"
+          },
+          "pure_file_spec": {
+            "$ref": "#/components/schemas/apiPureFileSpec"
+          },
           "pxd_spec": {
             "$ref": "#/components/schemas/apiPXDProxySpec"
           },
@@ -1289,6 +1297,19 @@
             "$ref": "#/components/schemas/apiS3ProxySpec"
           }
         },
+        "type": "object"
+      },
+      "apiPureBlockSpec": {
+        "title": "PureBlockSpec is the spec for proxying a volume on pure_block backends",
+        "type": "object"
+      },
+      "apiPureFileSpec": {
+        "properties": {
+          "export_rules": {
+            "type": "string"
+          }
+        },
+        "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",
         "type": "object"
       },
       "apiReplicaPlacementSpec": {
@@ -5498,7 +5519,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.115.0"
+    "version": "0.116.0"
   },
   "openapi": "3.0.0",
   "paths": {
