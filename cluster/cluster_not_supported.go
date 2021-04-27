@@ -8,6 +8,7 @@ import (
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
@@ -32,6 +33,7 @@ type NullClusterManager struct {
 	storagepool.UnsupportedPoolProvider
 	job.UnsupportedJobProvider
 	nodedrain.UnsupportedNodeDrainProvider
+	diags.UnsupportedDiagsProvider
 }
 
 func NewDefaultClusterManager() Cluster {

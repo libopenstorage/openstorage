@@ -136,6 +136,8 @@ var (
 	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
 	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
 	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
+	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
+	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -179,6 +181,7 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 		Format:    api.FSType_FS_TYPE_EXT4,
 		HaLevel:   1,
 		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
+		Xattr:     api.Xattr_COW_ON_DEMAND,
 	}
 }
 
@@ -433,6 +436,22 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.ProxySpec.NfsSpec.ExportPath = v
 			}
+		case api.SpecSharedv4ServiceType:
+			if spec.Sharedv4ServiceSpec == nil {
+				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
+			}
+			if v == "NodePort" || v == "nodePort" {
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_NODEPORT
+			} else if v == "ClusterIP" || v == "clusterIP" {
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_CLUSTERIP
+			} else if v == "LoadBalancer" || v == "loadBalancer" {
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_LOADBALANCER
+			}
+		case api.SpecSharedv4ServiceName:
+			if spec.Sharedv4ServiceSpec == nil {
+				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
+			}
+			spec.Sharedv4ServiceSpec.Name = v
 
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
@@ -462,6 +481,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				if cowOnDemand {
 					spec.Xattr = api.Xattr_COW_ON_DEMAND
+				} else if spec.Xattr == api.Xattr_COW_ON_DEMAND {
+					spec.Xattr = api.Xattr_UNSPECIFIED
 				}
 			}
 		case api.SpecDirectIo:
@@ -677,6 +698,7 @@ func (d *specHandler) SpecOptsFromString(
 		// convert it to k1,k2=v2,k3=v3
 		opts[api.SpecSharedv4MountOptions] = strings.Replace(strings.Replace(mountOptions, ":", "=", -1), ";", ",", -1)
 	}
+
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand
 	}
@@ -689,6 +711,10 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
 	}
+	if ok, sharedv4ServiceType := d.getVal(sharedv4ServiceTypeRegex, str); ok {
+		opts[api.SpecSharedv4ServiceType] = sharedv4ServiceType
+	}
+
 	return true, opts, name
 }
 
