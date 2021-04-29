@@ -1184,6 +1184,10 @@ func (v *VolumeSpec) IsPublic(accessType Ownership_AccessType) bool {
 	return v.GetOwnership() == nil || v.GetOwnership().IsPublic(accessType)
 }
 
+func (v *VolumeSpec) IsPureVolume() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBackend()
+}
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
