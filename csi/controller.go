@@ -591,6 +591,11 @@ func resolveBlockSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.
 // 1. When a volume is set to RWX or a similar multi-node access mode, we default to Sharedv4
 // 2. If a user prefers shared over sharedv4, they may still use it by explicity declaring "shared": true
 func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
+	// shared or sharedv4 parameter doesn't apply to pure backends so don't set them
+	if spec.IsPureVolume() {
+		return spec, nil
+	}
+
 	var shared bool
 	for _, cap := range req.GetVolumeCapabilities() {
 		mode := cap.GetAccessMode().GetMode()
