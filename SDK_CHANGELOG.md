@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.101.9 - (04/30/2021)
+
+* Add Pure pass through volume specs into ProxySpec
+* Parse mountOptions flag from storage class for Pure pass through volumes
+
 ### v0.101.8 - (04/22/2021)
 
 * Add live option to diags collection SDK to collect live cores

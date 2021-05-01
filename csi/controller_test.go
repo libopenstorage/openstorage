@@ -2444,7 +2444,6 @@ func TestResolveSpecFromCSI(t *testing.T) {
 				Sharedv4: true,
 			},
 		},
-
 		{
 			name: "Should accept shared instead of sharedv4 if explicitly provided already",
 			req: &csi.CreateVolumeRequest{
@@ -2513,6 +2512,30 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			existingSpec: &api.VolumeSpec{},
 
 			expectedError: "rpc error: code = Unimplemented desc = CSI raw block is not supported",
+		},
+		{
+			name: "Should not set shared flag to true when using pure backends RWX",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					&csi.VolumeCapability{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Shared: false,
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
 		},
 	}
 
