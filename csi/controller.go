@@ -331,6 +331,35 @@ func cleanupVolumeLabels(labels map[string]string) map[string]string {
 	return labels
 }
 
+func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
+	if len(caps) == 0 {
+		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	}
+
+	var shared bool
+	var block bool
+	for _, cap := range caps {
+		mode := cap.GetAccessMode().GetMode()
+		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
+			shared = true
+		}
+
+		if cap.GetBlock() != nil {
+			block = true
+		}
+
+		if block && shared {
+			return status.Errorf(
+				codes.InvalidArgument,
+				"Shared raw block volumes are not supported")
+		}
+	}
+
+	return nil
+}
+
 // CreateVolume is a CSI API which creates a volume on OSD
 // This function supports snapshots if the parent volume id is supplied
 // in the parameters.
@@ -345,8 +374,8 @@ func (s *OsdCsiServer) CreateVolume(
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
-	if req.GetVolumeCapabilities() == nil || len(req.GetVolumeCapabilities()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	if err := validateCreateVolumeCapabilities(req.GetVolumeCapabilities()); err != nil {
+		return nil, err
 	}
 
 	// Get parameters
@@ -574,20 +603,7 @@ func isFilesystemSpecSet(params map[string]string) bool {
 	return fsSet
 }
 
-// resolveBlockSpec makes the following assumptions:
-// 1. This CSI driver does not yet support raw block
-// 2. CSI Drivers that do not support raw block should not allow raw block requests
-func resolveBlockSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
-	for _, cap := range req.GetVolumeCapabilities() {
-		if block := cap.GetBlock(); block != nil {
-			return nil, status.Errorf(codes.Unimplemented, "CSI raw block is not supported")
-		}
-	}
-
-	return spec, nil
-}
-
-// resolveFSTypeSpec makes the following assumptions:
+// resolveSharedSpec makes the following assumptions:
 // 1. When a volume is set to RWX or a similar multi-node access mode, we default to Sharedv4
 // 2. If a user prefers shared over sharedv4, they may still use it by explicity declaring "shared": true
 func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
@@ -622,8 +638,12 @@ func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 // 2. The default value for spec.Format is determined upstream by SpecFromOpts(req.GetParameters())
 func resolveFSTypeSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
 	var csiFsType string
-
 	for _, cap := range req.GetVolumeCapabilities() {
+		if cap.GetBlock() != nil {
+			spec.Format = api.FSType_FS_TYPE_NONE
+			return spec, nil
+		}
+
 		// Get FsType according to CSI spec
 		if mount := cap.GetMount(); mount != nil {
 			csiFsType = mount.FsType
@@ -647,14 +667,8 @@ func resolveFSTypeSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 // resolveSpecFromCSI alters the api.VolumeSpec based on any CSI parameters passed in.
 // Various volume spec fields have CSI equivalents. This function resolves each one.
 func resolveSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
-	// Handles whether or not we support CSI raw block
-	spec, err := resolveBlockSpec(spec, req)
-	if err != nil {
-		return nil, err
-	}
-
 	// Handles shared vs. sharedv4 resolution. We default to Sharedv4
-	spec, err = resolveSharedSpec(spec, req)
+	spec, err := resolveSharedSpec(spec, req)
 	if err != nil {
 		return nil, err
 	}

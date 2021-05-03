@@ -6,6 +6,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
 
@@ -13,28 +14,36 @@ const (
 	source        = "/mnt/ost/mount_test_src"
 	dest          = "/mnt/ost/mount_test_dest"
 	trashLocation = "/tmp/.trash"
+	rawSource     = "/mnt/rawtests/test_src_raw"
+	rawDest       = "/mnt/rawtests/test_dest_raw"
 )
 
 var m Manager
 
 func TestNFSMounter(t *testing.T) {
 	setupNFS(t)
-	allTests(t)
+	allTests(t, source, dest)
 }
 
 func TestBindMounter(t *testing.T) {
 	setupBindMounter(t)
-	allTests(t)
+	allTests(t, source, dest)
 }
-func allTests(t *testing.T) {
-	load(t)
-	mountTest(t)
-	inspect(t)
-	reload(t)
-	hasMounts(t)
-	refcounts(t)
-	exists(t)
-	shutdown(t)
+
+func TestRawMounter(t *testing.T) {
+	setupRawMounter(t)
+	allTests(t, rawSource, rawDest)
+}
+
+func allTests(t *testing.T, source, dest string) {
+	load(t, source, dest)
+	mountTest(t, source, dest)
+	inspect(t, source, dest)
+	reload(t, source, dest)
+	hasMounts(t, source, dest)
+	refcounts(t, source, dest)
+	exists(t, source, dest)
+	shutdown(t, source, dest)
 }
 
 func setupNFS(t *testing.T) {
@@ -57,24 +66,34 @@ func setupBindMounter(t *testing.T) {
 	cleandir(dest)
 }
 
+func setupRawMounter(t *testing.T) {
+	var err error
+	m, err = New(RawMount, nil, []string{""}, nil, []string{}, trashLocation)
+	if err != nil {
+		t.Fatalf("Failed to setup test %v", err)
+	}
+	cleandir(rawSource)
+	cleandir(rawDest)
+}
+
 func cleandir(dir string) {
 	syscall.Unmount(dir, 0)
 	os.RemoveAll(dir)
 	os.MkdirAll(dir, 0755)
 }
 
-func load(t *testing.T) {
+func load(t *testing.T, source, dest string) {
 	require.NoError(t, m.Load([]string{""}), "Failed in load")
 }
 
-func mountTest(t *testing.T) {
+func mountTest(t *testing.T, source, dest string) {
 	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
 	require.NoError(t, err, "Failed in mount")
 	err = m.Unmount(source, dest, 0, 0, nil)
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func inspect(t *testing.T) {
+func inspect(t *testing.T, source, dest string) {
 	p := m.Inspect(source)
 	require.Equal(t, 0, len(p), "Expect 0 mounts actual %v mounts", len(p))
 
@@ -89,7 +108,7 @@ func inspect(t *testing.T) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func reload(t *testing.T) {
+func reload(t *testing.T, source, dest string) {
 	p := m.Inspect(source)
 	require.Equal(t, 0, len(p), "Expect 0 mounts actual %v mounts", len(p))
 
@@ -105,7 +124,7 @@ func reload(t *testing.T) {
 	require.Equal(t, 0, len(p), "Expect 0 mounts actual %v mounts", len(p))
 }
 
-func hasMounts(t *testing.T) {
+func hasMounts(t *testing.T, source, dest string) {
 	count := m.HasMounts(source)
 	require.Equal(t, 0, count, "Expect 0 mounts actual %v mounts", count)
 
@@ -139,7 +158,7 @@ func hasMounts(t *testing.T) {
 	require.Equal(t, mounts, 0, "Expect 0 mounts actual %v mounts", mounts)
 }
 
-func refcounts(t *testing.T) {
+func refcounts(t *testing.T, source, dest string) {
 	require.Equal(t, m.HasMounts(source) == 0, true, "Don't expect mounts in the beginning")
 	for i := 0; i < 10; i++ {
 		err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
@@ -155,7 +174,7 @@ func refcounts(t *testing.T) {
 	require.Error(t, err, "Unmount should fail")
 }
 
-func exists(t *testing.T) {
+func exists(t *testing.T, source, dest string) {
 	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
 	require.NoError(t, err, "Failed in mount")
 	exists, _ := m.Exists(source, "foo")
@@ -166,7 +185,24 @@ func exists(t *testing.T) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func shutdown(t *testing.T) {
+func shutdown(t *testing.T, source, dest string) {
 	os.RemoveAll(dest)
 	os.RemoveAll(source)
+}
+
+func makeFile(pathname string) error {
+	f, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0644))
+	defer func() {
+		err := f.Close()
+		if err != nil {
+			logrus.Warnf("failed to close file: %s", err.Error())
+		}
+	}()
+	if err != nil {
+		if !os.IsExist(err) {
+			return err
+		}
+	}
+
+	return nil
 }
