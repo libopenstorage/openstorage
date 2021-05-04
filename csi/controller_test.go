@@ -1947,6 +1947,129 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
 }
 
+func TestControllerCreateVolumeBlock(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+	secretKeyForLabels := "key123"
+	secretValForLabels := "val123"
+
+	// Setup request
+	name := "myvol"
+	size := int64(1234)
+	secretsMap := map[string]string{
+		authsecrets.SecretTokenKey: systemUserToken,
+		secretKeyForLabels:         secretValForLabels,
+	}
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{
+				AccessType: &csi.VolumeCapability_Block{
+					Block: &csi.VolumeCapability_BlockVolume{},
+				},
+			},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Secrets: secretsMap,
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name:         name,
+						VolumeLabels: secretsMap,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
+}
+
+func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+	secretKeyForLabels := "key123"
+	secretValForLabels := "val123"
+
+	// Setup request
+	name := "myvol"
+	size := int64(1234)
+	secretsMap := map[string]string{
+		authsecrets.SecretTokenKey: systemUserToken,
+		secretKeyForLabels:         secretValForLabels,
+	}
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{
+				AccessType: &csi.VolumeCapability_Block{
+					Block: &csi.VolumeCapability_BlockVolume{},
+				},
+			},
+			&csi.VolumeCapability{
+				AccessMode: &csi.VolumeCapability_AccessMode{
+					Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+				},
+			},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Secrets: secretsMap,
+	}
+
+	// Setup mock functions
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "Shared raw block volumes are not supported")
+
+}
+
 func TestControllerDeleteVolumeInvalidArguments(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -2494,7 +2617,7 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			expectedError: "no openstorage.FS_TYPE for badfs",
 		},
 		{
-			name: "Should not accept block volume",
+			name: "Should accept block volumes",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
 					&csi.VolumeCapability{
@@ -2510,8 +2633,10 @@ func TestResolveSpecFromCSI(t *testing.T) {
 				},
 			},
 			existingSpec: &api.VolumeSpec{},
-
-			expectedError: "rpc error: code = Unimplemented desc = CSI raw block is not supported",
+			expectedSpec: &api.VolumeSpec{
+				Format:   api.FSType_FS_TYPE_NONE,
+				Sharedv4: true,
+			},
 		},
 		{
 			name: "Should not set shared flag to true when using pure backends RWX",
