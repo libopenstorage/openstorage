@@ -423,12 +423,11 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Get Size
 	if req.GetCapacityRange() != nil && req.GetCapacityRange().GetRequiredBytes() != 0 {
-		sizeQuantity := resource.NewQuantity(req.GetCapacityRange().GetRequiredBytes(), resource.BinarySI)
-		sizeGiB, err := roundUpToGiB(*sizeQuantity)
+		size, err := roundUpToNearestGiB(req.GetCapacityRange().GetRequiredBytes())
 		if err != nil {
 			return nil, fmt.Errorf("failed to round volume size up to nearest GiB: %v", err.Error())
 		}
-		spec.Size = uint64(sizeGiB) * units.GiB
+		spec.Size = size
 
 	} else {
 		spec.Size = defaultCSIVolumeSize
@@ -552,7 +551,10 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 
 	// Get Size
 	spec := &api.VolumeSpecUpdate{}
-	newSize := uint64(req.GetCapacityRange().GetRequiredBytes())
+	newSize, err := roundUpToNearestGiB(req.GetCapacityRange().GetRequiredBytes())
+	if err != nil {
+		return nil, fmt.Errorf("failed to round volume size up to nearest GiB: %v", err.Error())
+	}
 	spec.SizeOpt = &api.VolumeSpecUpdate_Size{
 		Size: newSize,
 	}
@@ -813,9 +815,15 @@ func (s *OsdCsiServer) ListSnapshots(
 	return nil, status.Error(codes.Unimplemented, "ListSnapshots is not implemented")
 }
 
-// roundUpToGiB rounds up given quantity upto chunks of GiB
-func roundUpToGiB(size resource.Quantity) (int64, error) {
-	return roundUpSizeInt64(size, units.GiB)
+// roundUpToNearestGiB rounds up given quantity upto chunks of GiB
+func roundUpToNearestGiB(sizeBytes int64) (uint64, error) {
+	sizeGiB, err := roundUpSizeInt64(*resource.NewQuantity(sizeBytes, resource.BinarySI), units.GiB)
+	if err != nil {
+		return 0, err
+	}
+	sizeGiBRounded := uint64(sizeGiB) * units.GiB
+
+	return sizeGiBRounded, nil
 }
 
 // roundUpSizeInt64 calculates how many allocation units are needed to accommodate

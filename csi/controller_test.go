@@ -2318,14 +2318,16 @@ func TestControllerExpandVolume(t *testing.T) {
 				&api.Volume{
 					Id: myid,
 					Spec: &api.VolumeSpec{
-						Size: uint64(50),
+						Size: uint64(units.GiB),
 					},
 				},
 			}, nil).
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Set(gomock.Any(), gomock.Any(), &api.VolumeSpec{
+				Size: 46 * units.GiB, // Round up from 45.5 to 46
+			}).
 			Return(nil).
 			Times(1),
 	)
@@ -2333,7 +2335,7 @@ func TestControllerExpandVolume(t *testing.T) {
 	_, err := c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{
 		VolumeId: myid,
 		CapacityRange: &csi.CapacityRange{
-			RequiredBytes: int64(100),
+			RequiredBytes: int64(45.5 * units.GiB),
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
