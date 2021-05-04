@@ -132,6 +132,13 @@ func (c *credsNotSupported) CredsCreate(
 	return "", ErrNotSupported
 }
 
+func (c *credsNotSupported) CredsUpdate(
+	name string,
+	params map[string]string,
+) error {
+	return ErrNotSupported
+}
+
 func (c *credsNotSupported) CredsDelete(
 	uuid string,
 ) error {
