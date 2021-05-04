@@ -19,10 +19,13 @@ package csi
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 
 	"github.com/portworx/kvdb"
+	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
@@ -48,7 +51,7 @@ const (
 	volumeCapabilityMessageNotMultinodeVolume = "Volume is not a multinode volume"
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
-	defaultCSIVolumeSize                      = uint64(1024 * 1024 * 1024)
+	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -420,7 +423,13 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Get Size
 	if req.GetCapacityRange() != nil && req.GetCapacityRange().GetRequiredBytes() != 0 {
-		spec.Size = uint64(req.GetCapacityRange().GetRequiredBytes())
+		sizeQuantity := resource.NewQuantity(req.GetCapacityRange().GetRequiredBytes(), resource.BinarySI)
+		sizeGiB, err := roundUpToGiB(*sizeQuantity)
+		if err != nil {
+			return nil, fmt.Errorf("failed to round volume size up to nearest GiB: %v", err.Error())
+		}
+		spec.Size = uint64(sizeGiB) * units.GiB
+
 	} else {
 		spec.Size = defaultCSIVolumeSize
 	}
@@ -802,4 +811,35 @@ func (s *OsdCsiServer) ListSnapshots(
 	// The function ListSnapshots is also not published as
 	// supported by this implementation
 	return nil, status.Error(codes.Unimplemented, "ListSnapshots is not implemented")
+}
+
+// roundUpToGiB rounds up given quantity upto chunks of GiB
+func roundUpToGiB(size resource.Quantity) (int64, error) {
+	return roundUpSizeInt64(size, units.GiB)
+}
+
+// roundUpSizeInt64 calculates how many allocation units are needed to accommodate
+// a volume of a given size. It returns an int64 and an error if there's overflow
+// Borrowed from https://github.com/kubernetes/cloud-provider/blob/master/volume/helpers/rounding.go
+// until we migrate to Go Modules and can pull this directly.
+// TODO: During go modules migration, move to direct import of this function.
+func roundUpSizeInt64(size resource.Quantity, allocationUnitBytes int64) (int64, error) {
+	// Use CmpInt64() to find out if the value of "size" would overflow an
+	// int64 and therefore have Value() return a wrong result. Then, retrieve
+	// the value as int64 and perform the rounding.
+	// It's not convenient to use AsScale() and related functions as they don't
+	// support BinarySI format, nor can we use AsInt64() directly since it's
+	// only implemented for int64 scaled numbers (int64Amount).
+
+	// CmpInt64() actually returns 0 when comparing an amount bigger than MaxInt64.
+	if size.CmpInt64(math.MaxInt64) >= 0 {
+		return 0, fmt.Errorf("quantity %s is too great, overflows int64", size.String())
+	}
+	volumeSizeBytes := size.Value()
+
+	roundedUp := volumeSizeBytes / allocationUnitBytes
+	if volumeSizeBytes%allocationUnitBytes > 0 {
+		roundedUp++
+	}
+	return roundedUp, nil
 }

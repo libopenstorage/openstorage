@@ -25,6 +25,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/units"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/golang/mock/gomock"
@@ -1073,7 +1074,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 
 	// Setup request
 	name := "myvol"
-	size := int64(1234)
+	size := 2 * int64(units.GiB)
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
@@ -1145,7 +1146,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 				},
 				Status: api.VolumeStatus_VOLUME_STATUS_UP,
 				Spec: &api.VolumeSpec{
-					Size: uint64(1234),
+					Size: uint64(size),
 				},
 			}}, nil).
 			Times(1),
@@ -1648,6 +1649,92 @@ func TestControllerCreateVolume(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name:         name,
+						VolumeLabels: secretsMap,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
+}
+
+func TestControllerCreateVolumeRoundUp(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+	secretKeyForLabels := "key123"
+	secretValForLabels := "val123"
+
+	// Setup request
+	name := "myvol"
+	size := int64(units.GiB * 1.5)
+	secretsMap := map[string]string{
+		authsecrets.SecretTokenKey: systemUserToken,
+		secretKeyForLabels:         secretValForLabels,
+	}
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Secrets: secretsMap,
+	}
+
+	// Setup mock functions
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), &api.VolumeSpec{
+				Size:      uint64(units.GiB) * 2, // round up to 2GiB from 1.5 GiB
+				Format:    api.FSType_FS_TYPE_EXT4,
+				HaLevel:   1,
+				IoProfile: api.IoProfile_IO_PROFILE_AUTO,
+				Ownership: &api.Ownership{
+					Owner: "user1",
+				},
+				Xattr: api.Xattr_COW_ON_DEMAND,
+			}).
 			Return(id, nil).
 			Times(1),
 
