@@ -283,7 +283,7 @@ func (s *CloudBackupServer) Delete(
 		Force:          req.GetForce(),
 	}); err != nil {
 		if err == api_err.ErrResourceBusy {
-			return nil, status.Errorf(codes.Unavailable, "Resource busy, active Backups in progress")
+			return nil, status.Errorf(codes.Unavailable, "Resource busy, other backup deletes in progress")
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to delete backup: %v", err)
 	}
