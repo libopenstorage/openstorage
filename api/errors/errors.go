@@ -11,6 +11,8 @@ import (
 var (
 	// ErrResourceNotInitialized is error string to return when SDK resources are not yet initialized
 	ErrResourceNotInitialized = fmt.Errorf("resource has not been initialized")
+	// ErrResourceBusy is error string to return when resources are curerntly being used and busy
+	ErrResourceBusy = fmt.Errorf("resource busy")
 )
 
 // ErrNotFound error type for objects not found

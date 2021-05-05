@@ -24,6 +24,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/api"
+	api_err "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
@@ -131,15 +132,48 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 
-	req := &api.SdkCloudBackupCreateRequest{}
-	req.TaskId = "backup-task"
+	id := "myvol"
+	uuid := "uuid"
+	taskId := "backup-task"
+	full := false
+	labels := map[string]string{"foo": "bar"}
+	busyReq := &api.SdkCloudBackupCreateRequest{
+		VolumeId:     id,
+		CredentialId: uuid,
+		Full:         full,
+		TaskId:       taskId,
+		Labels:       labels,
+		DeleteLocal:  true,
+	}
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:       id,
+			CredentialUUID: uuid,
+			Full:           false,
+			Name:           taskId,
+			Labels:         labels,
+			DeleteLocal:    true,
+		}).
+		Return(nil, api_err.ErrResourceBusy).
+		Times(1)
+	setupExpectedCredentialsPassing(s, uuid)
 
 	// Setup client
 	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+	// resource busy
+	_, err := c.Create(context.Background(), busyReq)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Unavailable)
+
+	req := &api.SdkCloudBackupCreateRequest{}
+	req.TaskId = "backup-task"
 
 	// volume id missing
-	_, err := c.Create(context.Background(), req)
-	serverError, ok := status.FromError(err)
+	_, err = c.Create(context.Background(), req)
+	serverError, ok = status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "volume id")
