@@ -81,8 +81,8 @@ func (s *CloudBackupServer) Create(
 		if err == volume.ErrExist {
 			return nil, status.Errorf(codes.AlreadyExists, "Backup with this name already exists: %v", err)
 		}
-		if err == api_err.ErrResourceBusy {
-			return nil, status.Errorf(codes.Unavailable, "Resource busy, active Backups in progress")
+		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
 	}
@@ -190,8 +190,8 @@ func (s *CloudBackupServer) GroupCreate(
 		DeleteLocal:    req.GetDeleteLocal(),
 	})
 	if err != nil {
-		if err == api_err.ErrResourceBusy {
-			return nil, status.Errorf(codes.Unavailable, "Resource busy, active Backups in progress")
+		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to create group backup: %v", err)
 	}
@@ -240,8 +240,8 @@ func (s *CloudBackupServer) Restore(
 		if err == volume.ErrExist {
 			return nil, status.Errorf(codes.AlreadyExists, "Restore task with this name already exists: %v", err)
 		}
-		if err == api_err.ErrResourceBusy {
-			return nil, status.Errorf(codes.Unavailable, "Resource busy, active restores in progress")
+		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to restore backup: %v", err)
 	}
@@ -282,8 +282,8 @@ func (s *CloudBackupServer) Delete(
 		CredentialUUID: credId,
 		Force:          req.GetForce(),
 	}); err != nil {
-		if err == api_err.ErrResourceBusy {
-			return nil, status.Errorf(codes.Unavailable, "Resource busy, other backup deletes in progress")
+		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
+			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to delete backup: %v", err)
 	}

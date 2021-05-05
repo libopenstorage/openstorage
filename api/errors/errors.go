@@ -11,8 +11,6 @@ import (
 var (
 	// ErrResourceNotInitialized is error string to return when SDK resources are not yet initialized
 	ErrResourceNotInitialized = fmt.Errorf("resource has not been initialized")
-	// ErrResourceBusy is error string to return when resources are curerntly being used and busy
-	ErrResourceBusy = fmt.Errorf("resource busy")
 )
 
 // ErrNotFound error type for objects not found
@@ -75,4 +73,18 @@ func IsAccessDenied(err error) bool {
 	}
 
 	return false
+}
+
+// ErrCloudBackupServerBusy indicates server being busy with too many
+// requests
+type ErrCloudBackupServerBusy struct {
+	// object ID for which server is busy
+	ID string
+}
+
+func (e *ErrCloudBackupServerBusy) Error() string {
+	if len(e.ID) > 0 {
+		return fmt.Sprintf("cloud backup server busy: concurrent backup limit for volume %v reached", e.ID)
+	}
+	return fmt.Sprintf("cloud backup server busy")
 }
