@@ -156,7 +156,7 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 			Labels:         labels,
 			DeleteLocal:    true,
 		}).
-		Return(nil, api_err.ErrResourceBusy).
+		Return(nil, &api_err.ErrCloudBackupServerBusy{ID: id}).
 		Times(1)
 	setupExpectedCredentialsPassing(s, uuid)
 
@@ -167,6 +167,7 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.Unavailable)
+	assert.Contains(t, serverError.Message(), "cloud backup server busy")
 
 	req := &api.SdkCloudBackupCreateRequest{}
 	req.TaskId = "backup-task"
