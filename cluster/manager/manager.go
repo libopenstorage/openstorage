@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -44,6 +45,8 @@ const (
 	gossipVersionKey   = "Gossip Version"
 	decommissionErrMsg = "Node %s must be offline or in maintenance " +
 		"mode to be decommissioned."
+	defaultClusterLockTryDuration = 90 * time.Minute
+	defaultQuorumRetries          = 600
 )
 
 var (
@@ -671,6 +674,7 @@ func (c *ClusterManager) initNodeInCluster(
 func (c *ClusterManager) joinCluster(
 	self *api.Node,
 ) error {
+	fn := "joinCluster"
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).PreJoin(self)
@@ -689,15 +693,24 @@ func (c *ClusterManager) joinCluster(
 	// there may be a mismatch between db updates from listeners and
 	// cluster db state.
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	lockKey := path.Join(c.config.NodeId, self.DataIp, fn)
+	lockTryDuration := defaultClusterLockTryDuration
+	if c.config.SnapLockTryDurationInMinutes > 0 {
+		lockTryDuration = time.Duration(c.config.SnapLockTryDurationInMinutes) * time.Minute
+	}
+	kvlock, err := kvdb.Instance().LockWithTimeout(
+		clusterLockKey,
+		lockKey,
+		lockTryDuration,
+		kvdb.Instance().GetLockTimeout(),
+	)
 	if err != nil {
 		logrus.Warnln("Unable to obtain cluster lock before creating snapshot: ",
 			err)
 		return err
 	}
 	initState, err := snapAndReadClusterInfo(c.snapshotPrefixes)
-	kvdb.Unlock(kvlock)
+	kvdb.Instance().Unlock(kvlock)
 	if err != nil {
 		dbg.LogErrorAndPanicf(err, "fatal: unable to create snapshot")
 		return err
@@ -743,7 +756,7 @@ func (c *ClusterManager) joinCluster(
 		db.NodeEntries[selfNodeEntry.Id] = selfNodeEntry
 		return true, nil
 	}
-	return updateDB("joinCluster", selfNodeEntry.Id, updateCallbackFn)
+	return updateDB(fn, selfNodeEntry.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) initClusterForListeners(
@@ -1062,9 +1075,18 @@ func (c *ClusterManager) GetGossipState() *cluster.ClusterState {
 	return &cluster.ClusterState{NodeStatus: nodes}
 }
 
-func (c *ClusterManager) waitForQuorum(exist bool) error {
+func (c *ClusterManager) getMaxQuorumRetries() int {
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
+	quorumRetries := defaultQuorumRetries
+	if c.config.QuorumTimeoutInSeconds > 0 {
+		quorumRetries = c.config.QuorumTimeoutInSeconds / 2
+	}
+	return quorumRetries
+}
+
+func (c *ClusterManager) waitForQuorum(exist bool) error {
+	maxQuorumRetries := c.getMaxQuorumRetries()
 	quorumRetries := 0
 	for {
 		gossipSelfStatus := c.gossip.GetSelfStatus()
@@ -1084,9 +1106,9 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
-			if quorumRetries == 600 {
-				err := fmt.Errorf("Unable to achieve Quorum." +
-					" Timeout 20 minutes exceeded.")
+			if quorumRetries == maxQuorumRetries {
+				err := fmt.Errorf("Unable to achieve Quorum."+
+					" Timeout %v minutes exceeded.", (maxQuorumRetries*2)/60)
 				logrus.Warnln("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM
 				c.selfNode.Status = api.Status_STATUS_OFFLINE
@@ -1433,14 +1455,17 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.system = systemutils.New()
 
 	// Start the gossip protocol.
-	// XXX Make the port configurable.
 	gob.Register(api.Node{})
+	quorumTimeout := types.DEFAULT_QUORUM_TIMEOUT
+	if c.config.QuorumTimeoutInSeconds > 0 {
+		quorumTimeout = time.Duration(c.config.QuorumTimeoutInSeconds) * time.Second
+	}
 	gossipIntervals := types.GossipIntervals{
 		GossipInterval:   types.DEFAULT_GOSSIP_INTERVAL,
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
-		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
+		QuorumTimeout:    quorumTimeout,
 	}
 
 	nodeIp := getPeerAddress(c.selfNode.DataIp, c.gossipPort)
