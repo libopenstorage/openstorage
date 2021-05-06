@@ -413,33 +413,33 @@ message ProxySpec {
     PureFileSpec pure_file_spec = 7;
 }
 
-// Sharedv4ServiceType defines the type of sharedv4 service
-// The type of services are governed by the different types of services
-// supported by Container Orchestrator's like Kubernetes
-enum Sharedv4ServiceType {
-    // Invalid uninitialized value
-    SHAREDV4_SERVICE_TYPE_INVALID = 0;
-    // NodePort will export the sharedv4 service on each Node's IP
-    // In this mode the sharedv4 volume can be accessed from outside the
-    // cluster using one of the node's IPs.
-    SHAREDV4_SERVICE_TYPE_NODEPORT = 1;
-    // ClusterIP will export the shared4 service on an internal cluster IP.
-    // In this mode the sharedv4 volume will only be accessible
-    // within the cluster via this service
-    SHAREDV4_SERVICE_TYPE_CLUSTERIP = 2;
-    // LoadBalancer is applicable when running in cloud and will expose the
-    // sharedv4 service on a cloud provider's load balancer. In this mode
-    // the sharedv4 volume can be accessed from outside the cluster
-    SHAREDV4_SERVICE_TYPE_LOADBALANCER = 3;
-}
-// Sharedv4ServiceSpec when set creates a service endpoint for accessing
+// Sharedv4ServiceSpec when set, creates a service endpoint for accessing
 // a sharedv4 volume.
 message Sharedv4ServiceSpec {
     // Name of the service. If not provided the name of the volume will be
     // used for setting up a service
     string name = 1;
-    // Type indicates what kind of service would be created for this volume
-    Sharedv4ServiceType type = 2;
+    // Indicates what kind of service would be created for this volume.
+    ServiceType type = 2;
+
+    // Type of sharedv4 service. Values are governed by the different types
+    // of services supported by container orchestrators such as Kubernetes.
+    enum ServiceType {
+      // Unspecified
+      UNSPECIFIED = 0;
+      // Export the sharedv4 service on each Node's IP.
+      // In this mode the sharedv4 volume can be accessed from outside the
+      // cluster using one of the node's IPs.
+      NODEPORT = 1;
+      // Export the shared4 service on an internal cluster IP.
+      // In this mode the sharedv4 volume will only be accessible
+      // within the cluster via this service.
+      CLUSTERIP = 2;
+      // Expose the sharedv4 service on cloud provider's load balancer.
+      // Applicable when running in cloud. In this mode the sharedv4 volume
+      // can be accessed from outside the cluster.
+      LOADBALANCER = 3;
+    }
 }
 
 // MountOptions defines the mount options with which a volume is mounted.
@@ -4876,7 +4876,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 116;
+    Minor = 117;
     // SDK version patch value of this specification
     Patch = 0;
   }
