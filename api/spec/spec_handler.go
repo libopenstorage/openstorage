@@ -441,11 +441,11 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
 			}
 			if v == "NodePort" || v == "nodePort" {
-				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_NODEPORT
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_NODEPORT
 			} else if v == "ClusterIP" || v == "clusterIP" {
-				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_CLUSTERIP
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
 			} else if v == "LoadBalancer" || v == "loadBalancer" {
-				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceType_SHAREDV4_SERVICE_TYPE_LOADBALANCER
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_LOADBALANCER
 			}
 		case api.SpecSharedv4ServiceName:
 			if spec.Sharedv4ServiceSpec == nil {
