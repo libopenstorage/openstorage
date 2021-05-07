@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.10 - (05/06/2021)
+
+* Change sharedv4 servicey type enum to conform to the style guilde
+
 ### v0.101.9 - (04/30/2021)
 
 * Add Pure pass through volume specs into ProxySpec
