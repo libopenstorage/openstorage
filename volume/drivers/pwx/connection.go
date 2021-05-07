@@ -32,6 +32,8 @@ type ConnectionParamsBuilderConfig struct {
 	DefaultServiceNamespaceName string
 	// DefaultRestPortName is name of Porx legacy REST API port in service
 	DefaultRestPortName string
+	// DefaultRestPortNameSecured is the name of the TLS Secured (if enabled) Porx legacy REST API port in service
+	DefaultRestPortNameSecured string
 	// DefaultSDKPortName is name of Porx SDK/iSDK API port in service
 	DefaultSDKPortName string
 	// DefaultTokenIssuer is the default value for token issuer
@@ -68,7 +70,8 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 	return &ConnectionParamsBuilderConfig{
 		DefaultServiceName:          "portworx-service",
 		DefaultServiceNamespaceName: "kube-system",
-		DefaultRestPortName:         "px-api-tls",
+		DefaultRestPortName:         "px-api",
+		DefaultRestPortNameSecured:  "px-api-tls",
 		DefaultTokenIssuer:          "apps.portworx.io",
 		DefaultSDKPortName:          "px-sdk",
 		EnableTLSEnv:                "PX_ENABLE_TLS",
@@ -125,6 +128,8 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
 
 	var restPort int
+	var restPortSecured int
+	var finalRestPort int // the port passed to the caller (restPortSecured if available, else restPort)
 	var sdkPort int
 
 	// Get the ports from service
@@ -135,23 +140,32 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 		} else if svcPort.Name == cpb.Config.DefaultRestPortName &&
 			svcPort.Port != 0 {
 			restPort = int(svcPort.Port)
+		} else if svcPort.Name == cpb.Config.DefaultRestPortNameSecured &&
+			svcPort.Port != 0 {
+			restPortSecured = int(svcPort.Port)
 		}
+	}
+	// if secured REST port (9023) is available, use it instead of legacy 9001
+	if restPortSecured != 0 {
+		finalRestPort = restPortSecured
+	} else {
+		finalRestPort = restPort
 	}
 
 	// check if the ports were parsed
-	if sdkPort == 0 || restPort == 0 {
-		err := fmt.Errorf("%s in %s namespace does not contain %s and %s ports set", serviceName, ns, cpb.Config.DefaultSDKPortName, cpb.Config.DefaultRestPortName)
+	if sdkPort == 0 || finalRestPort == 0 {
+		err := fmt.Errorf("%s in %s namespace does not contain %s and either of %s or %s ports set", serviceName, ns, cpb.Config.DefaultSDKPortName, cpb.Config.DefaultRestPortName, cpb.Config.DefaultRestPortNameSecured)
 		logrus.Errorf(err.Error())
 		return "", "", err
 	}
 
 	scheme := "http"
 	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
-	if isTLSEnabled {
-		scheme = "https"
+	if isTLSEnabled && finalRestPort == restPortSecured {
+		scheme = "https" // legacy 9001 port is never TLS secured, irrespective of the value of PX_ENABLE_TLS
 	}
-	pxMgmtEndpoint = fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(endpoint, strconv.Itoa(restPort)))
-	sdkEndpoint := net.JoinHostPort(endpoint, strconv.Itoa(sdkPort))
+	pxMgmtEndpoint = fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(endpoint, strconv.Itoa(finalRestPort)))
+	sdkEndpoint = net.JoinHostPort(endpoint, strconv.Itoa(sdkPort))
 
 	logrus.Infof("Using %s as endpoint for portworx REST API", pxMgmtEndpoint)
 	logrus.Infof("Using %s as endpoint for portworx gRPC API", sdkEndpoint)
