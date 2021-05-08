@@ -770,7 +770,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &csi.Snapshot{
-			SizeBytes:      int64(v.GetSpec().GetSize()),
+			SizeBytes:      int64(snapInfo.GetSpec().GetSize()),
 			SnapshotId:     snapshotID,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			CreationTime:   snapInfo.GetCtime(),
