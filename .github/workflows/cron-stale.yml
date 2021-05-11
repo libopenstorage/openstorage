@@ -10,9 +10,9 @@ jobs:
       - uses: actions/stale@v3
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
-          stale-pr-message: 'This PR is stale because it has been in review for 2 days with no activity.'
+          stale-pr-message: 'This PR is stale because it has been in review for 3 days with no activity.'
           only-pr-labels: stage/in-review
-          days-before-stale: 2
+          days-before-stale: 3
           stale-pr-label: stage/in-review-stale
           days-before-pr-close: -1
       - uses: actions/stale@v3
