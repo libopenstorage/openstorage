@@ -618,7 +618,7 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
-	if spec.IoThrottle != vol.Spec.IoThrottle {
+	if spec.IoThrottle != nil {
 		newSpec.IoThrottleOpt = &api.VolumeSpecUpdate_IoThrottle{
 			IoThrottle: spec.IoThrottle,
 		}
