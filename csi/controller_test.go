@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/libopenstorage/openstorage/api"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -69,12 +70,13 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	assert.Len(t, resp.GetCapabilities(), 5)
+	assert.Len(t, resp.GetCapabilities(), 6)
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_GET_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CLONE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_EXPAND_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS, resp))
 
 	assert.False(t, containsCap(csi.ControllerServiceCapability_RPC_UNKNOWN, resp))
 }
@@ -2563,6 +2565,85 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
 		SnapshotId: id,
 		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	})
+	assert.NoError(t, err)
+}
+
+func TestControllerListSnapshots(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	volId := "id"
+	volName := "volName"
+	ts := &timestamp.Timestamp{
+		Seconds: 1620340488,
+	}
+	vol := &api.Volume{
+		Id: volId,
+		Locator: &api.VolumeLocator{
+			Name: volName,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(units.GiB),
+		},
+		Ctime: ts,
+		Source: &api.Source{
+			Parent: "srcVol",
+		},
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{volId},
+			}, nil).
+			Return([]*api.Volume{vol}, nil).
+			Times(1),
+	)
+
+	resp, err := c.ListSnapshots(context.Background(), &csi.ListSnapshotsRequest{
+		SnapshotId: volId,
+		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	})
+	assert.NoError(t, err)
+	assert.Equal(t, true, resp.Entries[0].Snapshot.ReadyToUse)
+	assert.Equal(t, int64(units.GiB), resp.Entries[0].Snapshot.SizeBytes)
+	assert.Equal(t, ts.Seconds, resp.Entries[0].Snapshot.CreationTime.Seconds)
+	assert.Equal(t, volId, resp.Entries[0].Snapshot.SnapshotId)
+	assert.Equal(t, "srcVol", resp.Entries[0].Snapshot.SourceVolumeId)
+
+	secondVol := &api.Volume{
+		Id: "volId2",
+		Locator: &api.VolumeLocator{
+			Name: "volName2",
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(units.GiB),
+		},
+		Ctime: ts,
+		Source: &api.Source{
+			Parent: "srcVol",
+		},
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			SnapEnumerate(nil, nil).
+			Return([]*api.Volume{vol, secondVol}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(nil, nil).
+			Return([]*api.Volume{vol, secondVol}, nil).
+			Times(1),
+	)
+
+	_, err = c.ListSnapshots(context.Background(), &csi.ListSnapshotsRequest{
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
 	assert.NoError(t, err)
 }

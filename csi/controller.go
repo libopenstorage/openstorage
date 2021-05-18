@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"sort"
 
 	"github.com/portworx/kvdb"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -74,6 +75,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// Creating and deleting snapshots
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
+
+		// Listing snapshots
+		csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS,
 
 		// Get single volume
 		csi.ControllerServiceCapability_RPC_GET_VOLUME,
@@ -817,15 +821,183 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	return &csi.DeleteSnapshotResponse{}, nil
 }
 
-// ListSnapshots is not supported (we can add this later)
+// ListSnapshots lists all snapshots in a cluster.
+// This is mainly implemented for Nomad, as Kubernetes will not call
+// list snapshots for drivers which have synchronous snapshot creation.
+// This is because ReadyToUse is set to true immediately upon on our snapshot creation.
 func (s *OsdCsiServer) ListSnapshots(
 	ctx context.Context,
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
+	if len(req.GetSnapshotId()) > 0 {
+		return s.listSingleSnapshot(ctx, req)
+	}
 
-	// The function ListSnapshots is also not published as
-	// supported by this implementation
-	return nil, status.Error(codes.Unimplemented, "ListSnapshots is not implemented")
+	return s.listMultipleSnapshots(ctx, req)
+}
+
+func (s *OsdCsiServer) listSingleSnapshot(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
+	snapshotId := req.GetSnapshotId()
+
+	logrus.Debugf("ListSnapshots for a single snapshot %s received", req.GetSnapshotId())
+
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	sdkRequest := &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetSnapshotId(),
+	}
+
+	// Snapshots are treated as volume, inspect for this volume.
+	resp, err := volumes.Inspect(ctx, sdkRequest)
+	if err != nil {
+		status, ok := status.FromError(err)
+		if ok && status.Code() == codes.NotFound {
+			return &csi.ListSnapshotsResponse{
+				Entries: []*csi.ListSnapshotsResponse_Entry{},
+			}, nil
+		}
+
+		return nil, err
+	}
+
+	snap := csi.Snapshot{
+		SizeBytes:      int64(resp.Volume.GetSpec().GetSize()),
+		SnapshotId:     snapshotId,
+		SourceVolumeId: resp.Volume.GetSource().Parent,
+		CreationTime:   resp.Volume.Ctime,
+		ReadyToUse:     true,
+	}
+
+	return &csi.ListSnapshotsResponse{
+		Entries: []*csi.ListSnapshotsResponse_Entry{
+			{
+				Snapshot: &snap,
+			},
+		},
+	}, nil
+}
+
+// listMultipleSnapshots gets all snapshots for a given
+// volumeId or all snapshots if no volumeId is provided.
+// This involves calling both InspectWithFilters and SnapshotEnumerateWithFilters
+// as SnapshotEnumerateWithFilters only returns all snapshotIds.
+// TODO: optimize this function if a SnapshotInspectWithFilters with pagination is implemented.
+func (s *OsdCsiServer) listMultipleSnapshots(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
+	sourceVolumeId := req.GetSourceVolumeId()
+	startingToken := req.GetStartingToken()
+	maxEntries := req.GetMaxEntries()
+
+	logrus.Debugf("ListSnapshots for multiple snapshots received. sourceVolumeId: %s, startingToken: %s, maxEntries: %v",
+		sourceVolumeId,
+		startingToken,
+		maxEntries,
+	)
+
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	// Get secret if any was passed
+	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	// Get all SnapshotIDs. Filter by source ID if provided.
+	snapshotsReq := &api.SdkVolumeSnapshotEnumerateWithFiltersRequest{
+		VolumeId: sourceVolumeId,
+	}
+	snapshotsResp, err := volumes.SnapshotEnumerateWithFilters(ctx, snapshotsReq)
+	if err != nil {
+		errStatus, ok := status.FromError(err)
+		if ok && errStatus.Code() == codes.NotFound {
+			return &csi.ListSnapshotsResponse{}, nil
+		}
+		return nil, status.Errorf(codes.Internal, "Unable to get all snapshots: %v", err)
+	}
+
+	// InspectWithFilters for all volumes
+	volumesResp, err := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{})
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to get all volumes: %v", err)
+	}
+
+	// Sort snapshot IDs for repeatable results
+	sortedSnapshotIds := sort.StringSlice(snapshotsResp.VolumeSnapshotIds)
+	sort.Sort(sortedSnapshotIds)
+
+	// Keep track of which volumes are snapshots
+	volumeForSnapId := make(map[string]*api.Volume)
+	for _, volResp := range volumesResp.Volumes {
+		for _, snapId := range sortedSnapshotIds {
+			if volResp.Volume.Id == snapId {
+				volumeForSnapId[snapId] = volResp.Volume
+			}
+		}
+	}
+
+	// Generate response for all snapshots.
+	listSnapshotsResp := &csi.ListSnapshotsResponse{}
+
+	// If starting token is provided, start skipping entries
+	// until we hit the starting token.
+	var skipEntries bool
+	if len(startingToken) > 0 {
+		skipEntries = true
+	}
+	for _, snapId := range sortedSnapshotIds {
+		// Skip entries until we hit the starting token.
+		if skipEntries && startingToken != snapId {
+			continue
+		}
+		skipEntries = false
+
+		// Before adding new object to response, check if we're at the max entries.
+		// If we are at max entries, return with current iteration as NextToken.
+		// This allows for calls to ListSnapshots to begin where we left off.
+		vol := volumeForSnapId[snapId]
+		if maxEntries > 0 && len(listSnapshotsResp.Entries) >= int(maxEntries) {
+			listSnapshotsResp.NextToken = vol.Id
+			return listSnapshotsResp, nil
+		}
+
+		// Populate entry with volume info
+		entry := &csi.ListSnapshotsResponse_Entry{
+			Snapshot: &csi.Snapshot{
+				SizeBytes:      int64(vol.GetSpec().GetSize()),
+				SnapshotId:     vol.Id,
+				SourceVolumeId: vol.GetSource().Parent,
+				CreationTime:   vol.Ctime,
+				ReadyToUse:     true,
+			},
+		}
+
+		listSnapshotsResp.Entries = append(listSnapshotsResp.Entries, entry)
+	}
+
+	return listSnapshotsResp, nil
 }
 
 // roundUpToNearestGiB rounds up given quantity upto chunks of GiB
