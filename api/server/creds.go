@@ -49,6 +49,28 @@ func (vd *volAPI) credsCreate(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+func (vd *volAPI) credsUpdate(w http.ResponseWriter, r *http.Request) {
+	method := "credsUpdate"
+	var input api.CredUpdateRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	err = d.CredsUpdate(input.Name, input.InputParams)
+	if err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusOK)
+}
+
 func (vd *volAPI) credsDelete(w http.ResponseWriter, r *http.Request) {
 	method := "credsDelete"
 	vars := mux.Vars(r)
