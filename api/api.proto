@@ -1015,6 +1015,12 @@ message VolumeUsageByNode {
   repeated VolumeUsage volume_usage= 1;
 }
 
+// Purges the RelaxedReclaim queue
+message RelaxedReclaimPurge {
+  // num_purged returns number of volumes purged
+  uint64 num_purged = 1;
+}
+
 // A SdkStoragePolicy represents minimum set of volume specs to be
 // follow while creating volumes.
 // If storage policy is set default in OpenStoragePolicy service, VolumeSpecPolicy will be
@@ -1974,6 +1980,14 @@ service OpenStorageNode {
   // Returns capacity usage of all volumes/snaps for a give node
   rpc VolumeUsageByNode(SdkNodeVolumeUsageByNodeRequest)
     returns (SdkNodeVolumeUsageByNodeResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/usage/{node_id}"
+      };
+    }
+  
+  // Triggers RelaxedReclaim purge for a give node
+  rpc RelaxedReclaimPurge(SdkNodeRelaxedReclaimPurgeRequest)
+    returns (SdkNodeRelaxedReclaimPurgeResponse) {
       option(google.api.http) = {
         get: "/v1/nodes/usage/{node_id}"
       };
@@ -3440,6 +3454,19 @@ message SdkNodeVolumeUsageByNodeRequest {
 message SdkNodeVolumeUsageByNodeResponse {
   // VolumeUsageByNode details
   VolumeUsageByNode volume_usage_info = 1;
+}
+
+// Defines request to trigger RelaxedReclaim purge
+// for a given node
+message SdkNodeRelaxedReclaimPurgeRequest {
+  // Id of the node to trigger the purge
+  string node_id = 1;
+}
+
+// Defines response containing status of the trigger
+message SdkNodeRelaxedReclaimPurgeResponse {
+  // status returns true on successful purge
+  RelaxedReclaimPurge status = 1;
 }
 
 // Empty request
@@ -4913,7 +4940,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 119;
+    Minor = 120;
     // SDK version patch value of this specification
     Patch = 0;
   }

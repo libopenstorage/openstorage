@@ -298,6 +298,12 @@ func (v *volumeClient) VolumeUsageByNode(
 
 }
 
+func (v *volumeClient) RelaxedReclaimPurge(
+	nodeID string,
+) (*api.RelaxedReclaimPurge, error) {
+	return nil, volume.ErrNotSupported
+}
+
 // Shutdown and cleanup.
 func (v *volumeClient) Shutdown() {}
 
