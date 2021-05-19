@@ -141,6 +141,9 @@ type StatsDriver interface {
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
 	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	// RelaxedReclaimPurge triggers the purge of RelaxedReclaim queue for a
+	// given node
+	RelaxedReclaimPurge(nodeID string) (*api.RelaxedReclaimPurge, error)
 }
 
 type QuiesceDriver interface {

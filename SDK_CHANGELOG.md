@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.120.0 - (05/12/2021)
+
+* Add RelaxedReclaimPurge SDK API to OpenstorageNode service.
+
 ### v0.119.0 - (05/03/2021)
 
 * Add new api to upadte existing credentials

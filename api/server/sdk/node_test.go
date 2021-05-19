@@ -212,13 +212,13 @@ func TestSdkNodeInspect(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "disk1",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
 				Online: true,
 			},
-			"disk2": api.StorageResource{
+			"disk2": {
 				Id:     "disk2",
 				Path:   "anothermount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -326,7 +326,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "12345",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -398,7 +398,7 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "12345",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -416,7 +416,7 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 	}
 	// Create response
 	volumeUsageInfo := api.VolumeUsageByNode{
-		VolumeUsage: []*api.VolumeUsage{&api.VolumeUsage{
+		VolumeUsage: []*api.VolumeUsage{{
 			VolumeId:           "123456",
 			VolumeName:         "testvol",
 			PoolUuid:           "5868-8769-4567-9876",
@@ -452,4 +452,64 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 		assert.Equal(t, volUsage.GetTotalBytes(), volumeUsageInfo.VolumeUsage[i].TotalBytes)
 		assert.Equal(t, volUsage.GetLocalCloudSnapshot(), volumeUsageInfo.VolumeUsage[i].LocalCloudSnapshot)
 	}
+}
+
+func TestSdkRelaxedReclaimPurge(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	nodeid := "nodeid"
+	// Create response
+	node := api.Node{
+		Id:                nodeid,
+		SchedulerNodeName: "nodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		Avgload:           834,
+		Status:            api.Status_STATUS_MAX,
+		Disks: map[string]api.StorageResource{
+			"disk1": {
+				Id:     "12345",
+				Path:   "mymount",
+				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
+				Online: true,
+			},
+		},
+		Timestamp: time.Now(),
+		StartTime: time.Now(),
+		NodeLabels: map[string]string{
+			"hello": "world",
+		},
+		HWType: api.HardwareType_BareMetalMachine,
+		MgmtIp: "127.0.0.1",
+		DataIp: "127.0.0.1",
+	}
+	// Create response
+	relaxedReclaimPurge := api.RelaxedReclaimPurge{
+		NumPurged: 10,
+	}
+	cluster := api.Cluster{
+		Id:     "someclusterid",
+		NodeId: nodeid,
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+		Nodes:  []*api.Node{&node},
+	}
+
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
+	s.MockDriver().EXPECT().RelaxedReclaimPurge(nodeid).Return(&relaxedReclaimPurge, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	resp, err := c.RelaxedReclaimPurge(context.Background(), &api.SdkNodeRelaxedReclaimPurgeRequest{NodeId: nodeid})
+	assert.NoError(t, err)
+
+	// Verify
+	assert.Equal(t, resp.Status.NumPurged, relaxedReclaimPurge.NumPurged)
 }

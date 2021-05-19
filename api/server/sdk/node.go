@@ -178,17 +178,12 @@ func (s *NodeServer) VolumeUsageByNode(
 	req *api.SdkNodeVolumeUsageByNodeRequest,
 ) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 
-	// If not a local request, proxy to the approriate node
-	nodeInspectData, err := s.Inspect(ctx, &api.SdkNodeInspectRequest{NodeId: req.GetNodeId()})
+	useProxy, host, err := s.needsProxyRequest(ctx, req.GetNodeId())
 	if err != nil {
 		return nil, err
 	}
-	curNodedata, err := s.InspectCurrent(ctx, &api.SdkNodeInspectCurrentRequest{})
-	if err != nil {
-		return nil, err
-	}
-	if curNodedata.Node.Id != nodeInspectData.Node.Id {
-		return s.proxyVolumeUsageByNode(ctx, req, nodeInspectData.Node.MgmtIp)
+	if useProxy {
+		return s.proxyVolumeUsageByNode(ctx, req, host)
 	}
 	// Get the info locally
 	if s.server.driver(ctx) == nil {
@@ -196,7 +191,7 @@ func (s *NodeServer) VolumeUsageByNode(
 	}
 	resp, err := s.server.driver(ctx).VolumeUsageByNode(req.GetNodeId())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, " Failed to get olumeUsageByNode :%v", err.Error())
+		return nil, status.Errorf(codes.Internal, " Failed to get VolumeUsageByNode :%v", err.Error())
 	}
 	sdkResp := &api.SdkNodeVolumeUsageByNodeResponse{
 		VolumeUsageInfo: resp,
@@ -210,6 +205,32 @@ func (s *NodeServer) proxyVolumeUsageByNode(
 	host string,
 ) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 
+	proxyClient, err := s.getProxyClient(host)
+	if err != nil {
+		return nil, err
+	}
+	return proxyClient.VolumeUsageByNode(ctx, req)
+}
+
+func (s *NodeServer) needsProxyRequest(
+	ctx context.Context,
+	NodeID string,
+) (bool, string, error) {
+	// If not a local request, proxy to the approriate node
+	nodeInspectData, err := s.Inspect(ctx, &api.SdkNodeInspectRequest{NodeId: NodeID})
+	if err != nil {
+		return false, "", err
+	}
+	curNodedata, err := s.InspectCurrent(ctx, &api.SdkNodeInspectCurrentRequest{})
+	if err != nil {
+		return false, "", err
+	}
+	return (curNodedata.Node.Id != nodeInspectData.Node.Id), nodeInspectData.Node.MgmtIp, nil
+}
+
+func (s *NodeServer) getProxyClient(
+	host string,
+) (api.OpenStorageNodeClient, error) {
 	endpoint := host + ":" + s.server.port()
 	// TODO TLS
 	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
@@ -217,6 +238,43 @@ func (s *NodeServer) proxyVolumeUsageByNode(
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Node usage from remote node failed with :%v", err.Error())
 	}
-	proxyClient := api.NewOpenStorageNodeClient(conn)
-	return proxyClient.VolumeUsageByNode(ctx, req)
+	return api.NewOpenStorageNodeClient(conn), nil
+}
+
+func (s *NodeServer) RelaxedReclaimPurge(
+	ctx context.Context,
+	req *api.SdkNodeRelaxedReclaimPurgeRequest,
+) (*api.SdkNodeRelaxedReclaimPurgeResponse, error) {
+
+	useProxy, host, err := s.needsProxyRequest(ctx, req.GetNodeId())
+	if err != nil {
+		return nil, err
+	}
+	if useProxy {
+		return s.proxyRelaxedReclaimPurge(ctx, req, host)
+	}
+	// Get the info locally
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	resp, err := s.server.driver(ctx).RelaxedReclaimPurge(req.GetNodeId())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, " Failed to trigger RelaxedReclaimPurge :%v", err.Error())
+	}
+	sdkResp := &api.SdkNodeRelaxedReclaimPurgeResponse{
+		Status: resp,
+	}
+	return sdkResp, nil
+}
+
+func (s *NodeServer) proxyRelaxedReclaimPurge(
+	ctx context.Context,
+	req *api.SdkNodeRelaxedReclaimPurgeRequest,
+	host string,
+) (*api.SdkNodeRelaxedReclaimPurgeResponse, error) {
+	proxyClient, err := s.getProxyClient(host)
+	if err != nil {
+		return nil, err
+	}
+	return proxyClient.RelaxedReclaimPurge(ctx, req)
 }

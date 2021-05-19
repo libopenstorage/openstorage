@@ -1345,6 +1345,17 @@
         "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",
         "type": "object"
       },
+      "apiRelaxedReclaimPurge": {
+        "properties": {
+          "num_purged": {
+            "format": "uint64",
+            "title": "num_purged returns number of volumes purged",
+            "type": "string"
+          }
+        },
+        "title": "Purges the RelaxedReclaim queue",
+        "type": "object"
+      },
       "apiReplicaPlacementSpec": {
         "properties": {
           "affected_replicas": {
@@ -3099,6 +3110,15 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeRelaxedReclaimPurgeResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/apiRelaxedReclaimPurge"
+          }
+        },
+        "title": "Defines response containing status of the trigger",
         "type": "object"
       },
       "apiSdkNodeUncordonAttachmentsRequest": {
@@ -5568,7 +5588,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.119.0"
+    "version": "0.120.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7374,7 +7394,7 @@
     },
     "/v1/nodes/usage/{node_id}": {
       "get": {
-        "operationId": "VolumeUsageByNode",
+        "operationId": "RelaxedReclaimPurge",
         "parameters": [
           {
             "in": "path",
@@ -7390,14 +7410,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkNodeVolumeUsageByNodeResponse"
+                  "$ref": "#/components/schemas/apiSdkNodeRelaxedReclaimPurgeResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Returns capacity usage of all volumes/snaps for a give node",
+        "summary": "Triggers RelaxedReclaim purge for a give node",
         "tags": [
           "OpenStorageNode"
         ]
