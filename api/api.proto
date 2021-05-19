@@ -2425,6 +2425,15 @@ service OpenStorageCredentials {
         body: "*"
       };
     }
+ 
+  // input is very same as credential create
+  rpc Update(SdkCredentialUpdateRequest)
+    returns (SdkCredentialUpdateResponse) {
+      option(google.api.http) = {
+        put: "/v1/credentials/{credential_id}"
+        body: "*"
+      };
+    }
 
   // Enumerate returns a list of credential ids
   rpc Enumerate(SdkCredentialEnumerateRequest)
@@ -2994,6 +3003,16 @@ message SdkCredentialCreateRequest {
 message SdkCredentialCreateResponse {
   // Id of the credentials
   string credential_id = 1;
+}
+
+// Defines request for credential update
+message SdkCredentialUpdateRequest {
+  string credential_id = 1;
+  SdkCredentialCreateRequest update_req= 2;
+
+}
+// Defines response for credential update
+message SdkCredentialUpdateResponse {
 }
 
 // Defines credentials for Aws/S3 endpoints
@@ -4980,7 +4999,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 21;
+    Patch = 22;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -303,6 +303,14 @@ type CredCreateResponse struct {
 	UUID string
 }
 
+// CredUpdateRequest is the input for CredsUpdate command
+type CredUpdateRequest struct {
+	// Name or the UUID of the credential being updated
+	Name string
+	// InputParams is map describing cloud provide
+	InputParams map[string]string
+}
+
 // StatPoint represents the basic structure of a single Stat reported
 // TODO: This is the first step to introduce stats in openstorage.
 //       Follow up task is to introduce an API for logging stats

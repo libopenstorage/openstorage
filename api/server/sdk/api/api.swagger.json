@@ -2778,6 +2778,22 @@
         },
         "type": "object"
       },
+      "apiSdkCredentialUpdateRequest": {
+        "properties": {
+          "credential_id": {
+            "type": "string"
+          },
+          "update_req": {
+            "$ref": "#/components/schemas/apiSdkCredentialCreateRequest"
+          }
+        },
+        "title": "Defines request for credential update",
+        "type": "object"
+      },
+      "apiSdkCredentialUpdateResponse": {
+        "title": "Defines response for credential update",
+        "type": "object"
+      },
       "apiSdkCredentialValidateResponse": {
         "title": "Empty response",
         "type": "object"
@@ -5619,7 +5635,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.21"
+    "version": "0.101.22"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6637,6 +6653,45 @@
           }
         },
         "summary": "Delete a specified credential",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkCredentialUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCredentialUpdateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "input is very same as credential create",
         "tags": [
           "OpenStorageCredentials"
         ]
