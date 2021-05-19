@@ -1018,6 +1018,28 @@
         },
         "type": "object"
       },
+      "apiIoThrottle": {
+        "properties": {
+          "read_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read_iops": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_iops": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "IoThrottle defines IO throttle limits for a volume\nread_iops : maximum read iops this volume is allowed\nwrite_iops : maximum write iops this volume is allowed\nread_bw_mbytes  : maximum read bandwidth this volume is allowed in MegaBytes\nwrite_bw_mbytes : maximum write bandwidth this volume is allowed in MegaBytes",
+        "type": "object"
+      },
       "apiJob": {
         "properties": {
           "clouddrive_transfer": {
@@ -1471,6 +1493,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
@@ -5070,6 +5095,9 @@
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
           },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
+          },
           "journal": {
             "description": "Journal is true if data for the volume goes into the journal.",
             "format": "boolean",
@@ -5218,6 +5246,9 @@
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
           },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
+          },
           "journal": {
             "format": "boolean",
             "type": "boolean"
@@ -5334,6 +5365,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "format": "boolean",
@@ -5518,7 +5552,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.117.0"
+    "version": "0.118.0"
   },
   "openapi": "3.0.0",
   "paths": {
