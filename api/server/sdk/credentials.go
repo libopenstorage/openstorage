@@ -706,14 +706,6 @@ func (s *CredentialServer) googleUpdate(
 	credId string,
 ) (*api.SdkCredentialUpdateResponse, error) {
 
-	if len(google.GetJsonKey()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply JSON Key")
-	}
-
-	if len(google.GetProjectId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply Project ID")
-	}
-
 	params := make(map[string]string)
 
 	params[api.OptCredType] = "google"
