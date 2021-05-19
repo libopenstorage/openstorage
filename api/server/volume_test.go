@@ -773,6 +773,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 			IoStrategy:    &api.IoStrategy{},
 			ProxyWrite:    false,
 			AutoFstrim:    false,
+			IoThrottle:    &api.IoThrottle{},
 		},
 	}
 

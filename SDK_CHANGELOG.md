@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.101.18 - (02/01/2022)
+* Add support for per-volume throttling of IOPS and/or bandwidth
+
 ### v0.101.17 - (02/01/2022)
 
 * Add api for auto fstrim disk usage report 

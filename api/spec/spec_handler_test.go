@@ -510,3 +510,25 @@ func TestOptAutoFstrim(t *testing.T) {
 	spec = testSpecFromString(t, api.SpecNodiscard, "false")
 	require.Equal(t, spec.AutoFstrim, false, "AutoFstrim value does not match Nodiscard")
 }
+
+func TestIoThrottleSpec(t *testing.T) {
+	testSpecOptString(t, api.SpecIoThrottleRdIOPS, "128")
+	testSpecOptString(t, api.SpecIoThrottleWrIOPS, "128")
+	testSpecOptString(t, api.SpecIoThrottleRdBW, "1024")
+	testSpecOptString(t, api.SpecIoThrottleWrBW, "1024")
+
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecIoThrottleRdIOPS: "-128",
+	})
+	//value of err should be nil
+	require.NotNil(t, err, "Negative numbers cannot be given as IoThrottleRdIOPS")
+
+	s = NewSpecHandler()
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecIoThrottleRdIOPS: "128",
+	})
+	ioThrottleSpec := spec.GetIoThrottle()
+	require.NotNil(t, ioThrottleSpec)
+	require.Equal(t, uint32(128), ioThrottleSpec.ReadIops)
+}
