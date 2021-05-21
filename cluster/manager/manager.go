@@ -845,28 +845,15 @@ func (c *ClusterManager) startHeartBeat(
 	}
 }
 
-func (c *ClusterManager) updateClusterStatus() {
+func (c *ClusterManager) notifyListeners() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	for {
-		node := c.getCurrentState()
-		c.putNodeCacheEntry(node.Id, *node)
-
 		// Process heartbeats from other nodes...
 		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
 
-		numNodes := 0
 		for id, gossipNodeInfo := range gossipValues {
-			numNodes = numNodes + 1
-
-			size := atomic.LoadInt64(c.size)
-			// Check to make sure we are not exceeding the size of the cluster.
-			if size > 0 && int64(numNodes) > size {
-				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
-					"exceeded the cluster size: %d > %d", numNodes, size)
-			}
-
 			// Special handling for self node
-			if id == types.NodeId(node.Id) {
+			if id == types.NodeId(c.selfNode.Id) {
 				// TODO: Implement State Machine for node statuses similar to the one in gossip
 				if c.selfNode.Status == api.Status_STATUS_OK &&
 					gossipNodeInfo.Status == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM {
@@ -918,19 +905,7 @@ func (c *ClusterManager) updateClusterStatus() {
 			}
 
 			// Notify node status change if required.
-			peerNodeInCache := api.Node{}
-			if gossipNodeInfo.Value != nil {
-				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
-				if ok {
-					// pre-populate the in cache object with the info
-					// we have from gossip
-					peerNodeInCache = peerNodeInGossip
-				}
-			}
-			peerNodeInCache.Id = string(id)
-
-			// overwrite the cache object with latest data
-			peerNodeInCache.Status = api.Status_STATUS_OK
+			peerNode, _ := c.gossipNodeToAPINode(id, &gossipNodeInfo)
 
 			// Initialize a no-op notify listeners function
 			notifyListenerFn := func() {}
@@ -938,8 +913,6 @@ func (c *ClusterManager) updateClusterStatus() {
 
 			switch {
 			case gossipNodeInfo.Status == types.NODE_STATUS_DOWN:
-				// Replace the status of this node in cache to offline
-				peerNodeInCache.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
 				if !ok {
 					// This node was probably added recently into gossip node
@@ -949,15 +922,15 @@ func (c *ClusterManager) updateClusterStatus() {
 						" to be offline due to inactivity.")
 
 				} else {
-					if lastStatus == peerNodeInCache.Status {
+					if lastStatus == peerNode.Status {
 						break
 					}
 					logrus.Warnln("Detected node ", id,
 						" to be offline due to inactivity.")
 				}
 
-				c.nodeStatuses[string(id)] = peerNodeInCache.Status
-				peerNodeCopy = peerNodeInCache.Copy()
+				c.nodeStatuses[string(id)] = peerNode.Status
+				peerNodeCopy = peerNode.Copy()
 				notifyListenerFn = func() {
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(cluster.ClusterListener).Update(peerNodeCopy)
@@ -969,18 +942,17 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 
 			case gossipNodeInfo.Status == types.NODE_STATUS_UP:
-				peerNodeInCache.Status = api.Status_STATUS_OK
 				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == peerNodeInCache.Status {
+				if ok && lastStatus == peerNode.Status {
 					break
 				}
-				c.nodeStatuses[string(id)] = peerNodeInCache.Status
+				c.nodeStatuses[string(id)] = peerNode.Status
 
 				// A node discovered in the cluster.
-				logrus.Infoln("Detected node", peerNodeInCache.Id,
+				logrus.Infoln("Detected node", peerNode.Id,
 					" to be in the cluster.")
 
-				peerNodeCopy = peerNodeInCache.Copy()
+				peerNodeCopy = peerNode.Copy()
 				notifyListenerFn = func() {
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(cluster.ClusterListener).Add(peerNodeCopy)
@@ -992,35 +964,74 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 			}
 
-			// Update cache with gossip data
-			if gossipNodeInfo.Value != nil {
-				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
-				if ok {
-					if peerNodeInCache.Status == api.Status_STATUS_OFFLINE {
-						// Overwrite the status of Node in Gossip data with Down
-						peerNodeInGossip.Status = peerNodeInCache.Status
-					} else {
-						if peerNodeInGossip.Status == api.Status_STATUS_MAINTENANCE {
-							// If the node sent its status as Maintenance
-							// do not overwrite it with online
-						} else {
-							peerNodeInGossip.Status = peerNodeInCache.Status
-						}
-					}
-					c.putNodeCacheEntry(peerNodeInGossip.Id, peerNodeInGossip)
-				} else {
-					logrus.Errorln("Unable to get node info from gossip")
-					c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
-				}
-			} else {
-				c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
-			}
-
 			// Notify the listeners
 			notifyListenerFn()
 		}
 		time.Sleep(2 * time.Second)
 	}
+}
+
+func (c *ClusterManager) updateNodesInCache() {
+	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	for {
+		// Process self node
+		node := c.getCurrentState()
+		c.putNodeCacheEntry(node.Id, *node)
+
+		// Process heartbeats from other nodes...
+		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
+
+		numNodes := 0
+		for id, gossipNodeInfo := range gossipValues {
+			numNodes = numNodes + 1
+
+			size := atomic.LoadInt64(c.size)
+			// Check to make sure we are not exceeding the size of the cluster.
+			if size > 0 && int64(numNodes) > size {
+				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
+					"exceeded the cluster size: %d > %d", numNodes, size)
+			}
+
+			// Ignore self node
+			if id == types.NodeId(node.Id) {
+				continue
+			}
+
+			// Update cache with gossip data
+			peerNode, maintenance := c.gossipNodeToAPINode(id, &gossipNodeInfo)
+			if maintenance {
+				// restore the maintenance status which was overwritten by gossipNodeToAPINode()
+				peerNode.Status = api.Status_STATUS_MAINTENANCE
+			}
+			c.putNodeCacheEntry(peerNode.Id, *peerNode)
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func (c *ClusterManager) gossipNodeToAPINode(id types.NodeId, gossipNodeInfo *types.NodeValue) (*api.Node, bool) {
+	maintenance := false
+	apiNode := api.Node{}
+
+	// pre-populate apiNode object with the info we have from gossip, if available
+	if gossipNodeInfo.Value != nil {
+		nodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
+		if ok {
+			apiNode = nodeInGossip
+		} else {
+			logrus.Errorln("Unable to get node info from gossip")
+		}
+	}
+	apiNode.Id = string(id)
+	if gossipNodeInfo.Status == types.NODE_STATUS_DOWN {
+		apiNode.Status = api.Status_STATUS_OFFLINE
+	} else {
+		if apiNode.Status == api.Status_STATUS_MAINTENANCE {
+			maintenance = true
+		}
+		apiNode.Status = api.Status_STATUS_OK
+	}
+	return &apiNode, maintenance
 }
 
 // DisableUpdates disables gossip updates
@@ -1470,7 +1481,8 @@ func (c *ClusterManager) StartWithConfiguration(
 		return err
 	}
 
-	go c.updateClusterStatus()
+	go c.updateNodesInCache()
+	go c.notifyListeners()
 	go c.replayNodeDecommission()
 
 	return nil
