@@ -1018,6 +1018,28 @@
         },
         "type": "object"
       },
+      "apiIoThrottle": {
+        "properties": {
+          "read_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "read_iops": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_bw_mbytes": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "write_iops": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "title": "IoThrottle defines IO throttle limits for a volume\nread_iops : maximum read iops this volume is allowed\nwrite_iops : maximum write iops this volume is allowed\nread_bw_mbytes  : maximum read bandwidth this volume is allowed in MegaBytes\nwrite_bw_mbytes : maximum write bandwidth this volume is allowed in MegaBytes",
+        "type": "object"
+      },
       "apiJob": {
         "properties": {
           "clouddrive_transfer": {
@@ -1323,6 +1345,17 @@
         "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",
         "type": "object"
       },
+      "apiRelaxedReclaimPurge": {
+        "properties": {
+          "num_purged": {
+            "format": "uint64",
+            "title": "num_purged returns number of volumes purged",
+            "type": "string"
+          }
+        },
+        "title": "Purges the RelaxedReclaim queue",
+        "type": "object"
+      },
       "apiReplicaPlacementSpec": {
         "properties": {
           "affected_replicas": {
@@ -1471,6 +1504,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "$ref": "#/components/schemas/apiRestoreParamBoolType"
@@ -2700,6 +2736,22 @@
         },
         "type": "object"
       },
+      "apiSdkCredentialUpdateRequest": {
+        "properties": {
+          "credential_id": {
+            "type": "string"
+          },
+          "update_req": {
+            "$ref": "#/components/schemas/apiSdkCredentialCreateRequest"
+          }
+        },
+        "title": "Defines request for credential update",
+        "type": "object"
+      },
+      "apiSdkCredentialUpdateResponse": {
+        "title": "Defines response for credential update",
+        "type": "object"
+      },
       "apiSdkCredentialValidateResponse": {
         "title": "Empty response",
         "type": "object"
@@ -3058,6 +3110,15 @@
           }
         },
         "title": "Defines a response when inspecting a node",
+        "type": "object"
+      },
+      "apiSdkNodeRelaxedReclaimPurgeResponse": {
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/apiRelaxedReclaimPurge"
+          }
+        },
+        "title": "Defines response containing status of the trigger",
         "type": "object"
       },
       "apiSdkNodeUncordonAttachmentsRequest": {
@@ -5070,6 +5131,9 @@
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
           },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
+          },
           "journal": {
             "description": "Journal is true if data for the volume goes into the journal.",
             "format": "boolean",
@@ -5218,6 +5282,9 @@
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
           },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
+          },
           "journal": {
             "format": "boolean",
             "type": "boolean"
@@ -5334,6 +5401,9 @@
           },
           "io_strategy": {
             "$ref": "#/components/schemas/apiIoStrategy"
+          },
+          "io_throttle": {
+            "$ref": "#/components/schemas/apiIoThrottle"
           },
           "journal": {
             "format": "boolean",
@@ -5518,7 +5588,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.117.0"
+    "version": "0.120.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6539,6 +6609,45 @@
         "tags": [
           "OpenStorageCredentials"
         ]
+      },
+      "put": {
+        "operationId": "Update",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "credential_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkCredentialUpdateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCredentialUpdateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "input is very same as credential create",
+        "tags": [
+          "OpenStorageCredentials"
+        ]
       }
     },
     "/v1/diags": {
@@ -7285,7 +7394,7 @@
     },
     "/v1/nodes/usage/{node_id}": {
       "get": {
-        "operationId": "VolumeUsageByNode",
+        "operationId": "RelaxedReclaimPurge",
         "parameters": [
           {
             "in": "path",
@@ -7301,14 +7410,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/apiSdkNodeVolumeUsageByNodeResponse"
+                  "$ref": "#/components/schemas/apiSdkNodeRelaxedReclaimPurgeResponse"
                 }
               }
             },
             "description": ""
           }
         },
-        "summary": "Returns capacity usage of all volumes/snaps for a give node",
+        "summary": "Triggers RelaxedReclaim purge for a give node",
         "tags": [
           "OpenStorageNode"
         ]

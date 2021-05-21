@@ -139,6 +139,10 @@ var (
 	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
 	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
+	SpecIoThrottleRdIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
+	SpecIoThrottleWrIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
+	SpecIoThrottleRdBWRegex     = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
+	SpecIoThrottleWrBWRegex     = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
 )
 
 type specHandler struct {
@@ -550,6 +554,42 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.ExportRules = v
+		case api.SpecIoThrottleRdIOPS:
+			if spec.IoThrottle == nil {
+				spec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleIOPS, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.IoThrottle.ReadIops = uint32(throttleIOPS)
+			}
+		case api.SpecIoThrottleWrIOPS:
+			if spec.IoThrottle == nil {
+				spec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleIOPS, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.IoThrottle.WriteIops = uint32(throttleIOPS)
+			}
+		case api.SpecIoThrottleRdBW:
+			if spec.IoThrottle == nil {
+				spec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleBW, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.IoThrottle.ReadBwMbytes = uint32(throttleBW)
+			}
+		case api.SpecIoThrottleWrBW:
+			if spec.IoThrottle == nil {
+				spec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleBW, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.IoThrottle.WriteBwMbytes = uint32(throttleBW)
+			}
 
 		default:
 			locator.VolumeLabels[k] = v
@@ -742,6 +782,18 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
+	}
+	if ok, ioThrottleIOPS := d.getVal(SpecIoThrottleRdIOPSRegex, str); ok {
+		opts[api.SpecIoThrottleRdIOPS] = ioThrottleIOPS
+	}
+	if ok, ioThrottleIOPS := d.getVal(SpecIoThrottleWrIOPSRegex, str); ok {
+		opts[api.SpecIoThrottleWrIOPS] = ioThrottleIOPS
+	}
+	if ok, ioThrottleBW := d.getVal(SpecIoThrottleRdBWRegex, str); ok {
+		opts[api.SpecIoThrottleRdBW] = ioThrottleBW
+	}
+	if ok, ioThrottleBW := d.getVal(SpecIoThrottleWrBWRegex, str); ok {
+		opts[api.SpecIoThrottleWrBW] = ioThrottleBW
 	}
 	return true, opts, name
 }

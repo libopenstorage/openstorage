@@ -841,6 +841,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	// AutoFstrim
 	spec.AutoFstrim = setSpecBool(vol.GetAutoFstrim(), req.GetAutoFstrim(), req.GetAutoFstrimOpt())
 
+	// ProxySpec
+	if req.GetIoThrottle() != nil {
+		spec.IoThrottle = req.GetIoThrottle()
+	} else {
+		spec.IoThrottle = vol.GetIoThrottle()
+	}
+
 	return spec
 }
 
@@ -1156,6 +1163,13 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.FpPreference = req.GetFastpath()
+	}
+	// IoThrottle
+	if req.GetIoThrottleOpt() != nil {
+		if isValidate && vol.GetIoThrottle() != req.GetIoThrottle() {
+			return vol, errMsg
+		}
+		spec.IoThrottle = req.GetIoThrottle()
 	}
 
 	// AutoFstrim
