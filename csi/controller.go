@@ -315,8 +315,14 @@ func addJsonMapToMetadata(params string, metadata map[string]string) (map[string
 func getPVCMetadata(params map[string]string) (map[string]string, error) {
 	metadata := make(map[string]string)
 
-	metadata[intreePvcNameKey] = params[osdPvcNameKey]
-	metadata[intreePvcNamespaceKey] = params[osdPvcNamespaceKey]
+	// Only add PVC name/namespace if present. Do not add empty values.
+	// This is useful for non-k8s schedulers.
+	if pvcName, ok := params[osdPvcNameKey]; ok {
+		metadata[intreePvcNameKey] = pvcName
+	}
+	if pvcNamespace, ok := params[osdPvcNamespaceKey]; ok {
+		metadata[intreePvcNamespaceKey] = pvcNamespace
+	}
 	metadata, err := addJsonMapToMetadata(params[osdPvcAnnotationsKey], metadata)
 	if err != nil {
 		return nil, err
