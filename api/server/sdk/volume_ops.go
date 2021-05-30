@@ -831,6 +831,9 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ProxySpec = vol.GetProxySpec()
 	}
 
+	// AutoFstrim
+	spec.AutoFstrim = setSpecBool(vol.GetAutoFstrim(), req.GetAutoFstrim(), req.GetAutoFstrimOpt())
+
 	return spec
 }
 
@@ -1138,6 +1141,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.FpPreference = req.GetFastpath()
+	}
+
+	// AutoFstrim
+	if req.GetAutoFstrimOpt() != nil {
+		if isValidate && vol.GetAutoFstrim() != req.GetAutoFstrim() {
+			return vol, errMsg
+		}
+		spec.AutoFstrim = req.GetAutoFstrim()
 	}
 
 	logrus.Debugf("Updated VolumeSpecs %v", spec)

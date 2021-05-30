@@ -575,6 +575,8 @@ message VolumeSpec {
   bool proxy_write = 40;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 41;
+  // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
+  bool auto_fstrim = 42;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -636,6 +638,8 @@ message VolumeSpecUpdate {
   oneof proxy_write_opt { bool proxy_write = 35; }
   // proxy_spec_opt provides the spec for a proxy volume
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 37; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -717,6 +721,8 @@ message VolumeSpecPolicy {
   oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
   // fastpath preference
   oneof fastpath_opt { bool fastpath = 62; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 63; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -5263,6 +5269,8 @@ message RestoreVolumeSpec {
   bool io_profile_bkup_src = 25;
   // ProxySpec indicates that this volume is used for proxying an external data source
   ProxySpec proxy_spec = 26;
+  // Autofstrim is true if automatic fstrim is enabled for the volume
+  RestoreParamBoolType auto_fstrim = 27;
 }
 
 // Request message to get the volume catalog

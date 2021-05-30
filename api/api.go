@@ -88,6 +88,7 @@ const (
 	SpecScanPolicyAction     = "scan_policy_action"
 	SpecProxyWrite           = "proxy_write"
 	SpecFastpath             = "fastpath"
+	SpecAutoFstrim           = "auto_fstrim"
 )
 
 // OptionKey specifies a set of recognized query params.

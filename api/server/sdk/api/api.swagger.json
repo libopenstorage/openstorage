@@ -1306,6 +1306,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -4754,6 +4757,11 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "format": "boolean",
+            "title": "Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention",
+            "type": "boolean"
+          },
           "block_size": {
             "description": "BlockSize for the filesystem.",
             "format": "int64",
@@ -4924,6 +4932,10 @@
             "format": "int64",
             "type": "integer"
           },
+          "auto_fstrim": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -5041,6 +5053,10 @@
       },
       "apiVolumeSpecUpdate": {
         "properties": {
+          "auto_fstrim": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
