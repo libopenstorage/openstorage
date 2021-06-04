@@ -57,7 +57,7 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 			}
 
 			// Check if the volume is ready
-			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_UP {
+			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_UP && v.GetState() != api.VolumeState_VOLUME_STATE_ATTACHED {
 				return false, nil
 			}
 
