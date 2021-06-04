@@ -96,6 +96,10 @@ const (
 	SpecBackendPureBlock     = "pure_block"
 	SpecBackendPureFile      = "pure_file"
 	SpecPureFileExportRules  = "pure_export_rules"
+	SpecIoThrottleRdIOPS     = "io_throttle_rd_iops"
+	SpecIoThrottleWrIOPS     = "io_throttle_wr_iops"
+	SpecIoThrottleRdBW       = "io_throttle_rd_bw"
+	SpecIoThrottleWrBW       = "io_throttle_wr_bw"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -293,6 +297,14 @@ type CredCreateRequest struct {
 type CredCreateResponse struct {
 	// UUID of the credential that was just created
 	UUID string
+}
+
+// CredUpdateRequest is the input for CredsUpdate command
+type CredUpdateRequest struct {
+	// Name or the UUID of the credential being updated
+	Name string
+	// InputParams is map describing cloud provide
+	InputParams map[string]string
 }
 
 // StatPoint represents the basic structure of a single Stat reported

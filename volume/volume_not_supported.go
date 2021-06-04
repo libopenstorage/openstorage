@@ -110,6 +110,12 @@ func (s *statsNotSupported) VolumeUsageByNode(
 	return nil, ErrNotSupported
 }
 
+func (v *statsNotSupported) RelaxedReclaimPurge(
+	nodeID string,
+) (*api.RelaxedReclaimPurge, error) {
+	return nil, ErrNotSupported
+}
+
 type quiesceNotSupported struct{}
 
 func (s *quiesceNotSupported) Quiesce(
@@ -130,6 +136,13 @@ func (c *credsNotSupported) CredsCreate(
 	params map[string]string,
 ) (string, error) {
 	return "", ErrNotSupported
+}
+
+func (c *credsNotSupported) CredsUpdate(
+	name string,
+	params map[string]string,
+) error {
+	return ErrNotSupported
 }
 
 func (c *credsNotSupported) CredsDelete(

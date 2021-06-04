@@ -12,6 +12,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -44,6 +45,8 @@ const (
 	gossipVersionKey   = "Gossip Version"
 	decommissionErrMsg = "Node %s must be offline or in maintenance " +
 		"mode to be decommissioned."
+	defaultClusterLockTryDuration = 90 * time.Minute
+	defaultQuorumRetries          = 600
 )
 
 var (
@@ -671,6 +674,7 @@ func (c *ClusterManager) initNodeInCluster(
 func (c *ClusterManager) joinCluster(
 	self *api.Node,
 ) error {
+	fn := "joinCluster"
 	// Alert all listeners that we are joining the cluster.
 	for e := c.listeners.Front(); e != nil; e = e.Next() {
 		err := e.Value.(cluster.ClusterListener).PreJoin(self)
@@ -689,15 +693,24 @@ func (c *ClusterManager) joinCluster(
 	// there may be a mismatch between db updates from listeners and
 	// cluster db state.
 
-	kvdb := kvdb.Instance()
-	kvlock, err := kvdb.LockWithID(clusterLockKey, c.config.NodeId)
+	lockKey := path.Join(c.config.NodeId, self.DataIp, fn)
+	lockTryDuration := defaultClusterLockTryDuration
+	if c.config.SnapLockTryDurationInMinutes > 0 {
+		lockTryDuration = time.Duration(c.config.SnapLockTryDurationInMinutes) * time.Minute
+	}
+	kvlock, err := kvdb.Instance().LockWithTimeout(
+		clusterLockKey,
+		lockKey,
+		lockTryDuration,
+		kvdb.Instance().GetLockTimeout(),
+	)
 	if err != nil {
 		logrus.Warnln("Unable to obtain cluster lock before creating snapshot: ",
 			err)
 		return err
 	}
 	initState, err := snapAndReadClusterInfo(c.snapshotPrefixes)
-	kvdb.Unlock(kvlock)
+	kvdb.Instance().Unlock(kvlock)
 	if err != nil {
 		dbg.LogErrorAndPanicf(err, "fatal: unable to create snapshot")
 		return err
@@ -743,7 +756,7 @@ func (c *ClusterManager) joinCluster(
 		db.NodeEntries[selfNodeEntry.Id] = selfNodeEntry
 		return true, nil
 	}
-	return updateDB("joinCluster", selfNodeEntry.Id, updateCallbackFn)
+	return updateDB(fn, selfNodeEntry.Id, updateCallbackFn)
 }
 
 func (c *ClusterManager) initClusterForListeners(
@@ -854,28 +867,15 @@ func (c *ClusterManager) startHeartBeat(
 	}
 }
 
-func (c *ClusterManager) updateClusterStatus() {
+func (c *ClusterManager) notifyListeners() {
 	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
 	for {
-		node := c.getCurrentState()
-		c.putNodeCacheEntry(node.Id, *node)
-
 		// Process heartbeats from other nodes...
 		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
 
-		numNodes := 0
 		for id, gossipNodeInfo := range gossipValues {
-			numNodes = numNodes + 1
-
-			size := atomic.LoadInt64(c.size)
-			// Check to make sure we are not exceeding the size of the cluster.
-			if size > 0 && int64(numNodes) > size {
-				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
-					"exceeded the cluster size: %d > %d", numNodes, size)
-			}
-
 			// Special handling for self node
-			if id == types.NodeId(node.Id) {
+			if id == types.NodeId(c.selfNode.Id) {
 				// TODO: Implement State Machine for node statuses similar to the one in gossip
 				if c.selfNode.Status == api.Status_STATUS_OK &&
 					gossipNodeInfo.Status == types.NODE_STATUS_SUSPECT_NOT_IN_QUORUM {
@@ -927,19 +927,7 @@ func (c *ClusterManager) updateClusterStatus() {
 			}
 
 			// Notify node status change if required.
-			peerNodeInCache := api.Node{}
-			if gossipNodeInfo.Value != nil {
-				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
-				if ok {
-					// pre-populate the in cache object with the info
-					// we have from gossip
-					peerNodeInCache = peerNodeInGossip
-				}
-			}
-			peerNodeInCache.Id = string(id)
-
-			// overwrite the cache object with latest data
-			peerNodeInCache.Status = api.Status_STATUS_OK
+			peerNode, _ := c.gossipNodeToAPINode(id, &gossipNodeInfo)
 
 			// Initialize a no-op notify listeners function
 			notifyListenerFn := func() {}
@@ -947,8 +935,6 @@ func (c *ClusterManager) updateClusterStatus() {
 
 			switch {
 			case gossipNodeInfo.Status == types.NODE_STATUS_DOWN:
-				// Replace the status of this node in cache to offline
-				peerNodeInCache.Status = api.Status_STATUS_OFFLINE
 				lastStatus, ok := c.nodeStatuses[string(id)]
 				if !ok {
 					// This node was probably added recently into gossip node
@@ -958,15 +944,15 @@ func (c *ClusterManager) updateClusterStatus() {
 						" to be offline due to inactivity.")
 
 				} else {
-					if lastStatus == peerNodeInCache.Status {
+					if lastStatus == peerNode.Status {
 						break
 					}
 					logrus.Warnln("Detected node ", id,
 						" to be offline due to inactivity.")
 				}
 
-				c.nodeStatuses[string(id)] = peerNodeInCache.Status
-				peerNodeCopy = peerNodeInCache.Copy()
+				c.nodeStatuses[string(id)] = peerNode.Status
+				peerNodeCopy = peerNode.Copy()
 				notifyListenerFn = func() {
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(cluster.ClusterListener).Update(peerNodeCopy)
@@ -978,18 +964,17 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 
 			case gossipNodeInfo.Status == types.NODE_STATUS_UP:
-				peerNodeInCache.Status = api.Status_STATUS_OK
 				lastStatus, ok := c.nodeStatuses[string(id)]
-				if ok && lastStatus == peerNodeInCache.Status {
+				if ok && lastStatus == peerNode.Status {
 					break
 				}
-				c.nodeStatuses[string(id)] = peerNodeInCache.Status
+				c.nodeStatuses[string(id)] = peerNode.Status
 
 				// A node discovered in the cluster.
-				logrus.Infoln("Detected node", peerNodeInCache.Id,
+				logrus.Infoln("Detected node", peerNode.Id,
 					" to be in the cluster.")
 
-				peerNodeCopy = peerNodeInCache.Copy()
+				peerNodeCopy = peerNode.Copy()
 				notifyListenerFn = func() {
 					for e := c.listeners.Front(); e != nil && c.gEnabled; e = e.Next() {
 						err := e.Value.(cluster.ClusterListener).Add(peerNodeCopy)
@@ -1001,35 +986,74 @@ func (c *ClusterManager) updateClusterStatus() {
 				}
 			}
 
-			// Update cache with gossip data
-			if gossipNodeInfo.Value != nil {
-				peerNodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
-				if ok {
-					if peerNodeInCache.Status == api.Status_STATUS_OFFLINE {
-						// Overwrite the status of Node in Gossip data with Down
-						peerNodeInGossip.Status = peerNodeInCache.Status
-					} else {
-						if peerNodeInGossip.Status == api.Status_STATUS_MAINTENANCE {
-							// If the node sent its status as Maintenance
-							// do not overwrite it with online
-						} else {
-							peerNodeInGossip.Status = peerNodeInCache.Status
-						}
-					}
-					c.putNodeCacheEntry(peerNodeInGossip.Id, peerNodeInGossip)
-				} else {
-					logrus.Errorln("Unable to get node info from gossip")
-					c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
-				}
-			} else {
-				c.putNodeCacheEntry(peerNodeInCache.Id, peerNodeInCache)
-			}
-
 			// Notify the listeners
 			notifyListenerFn()
 		}
 		time.Sleep(2 * time.Second)
 	}
+}
+
+func (c *ClusterManager) updateNodesInCache() {
+	gossipStoreKey := types.StoreKey(heartbeatKey + c.config.ClusterId)
+	for {
+		// Process self node
+		node := c.getCurrentState()
+		c.putNodeCacheEntry(node.Id, *node)
+
+		// Process heartbeats from other nodes...
+		gossipValues := c.gossip.GetStoreKeyValue(gossipStoreKey)
+
+		numNodes := 0
+		for id, gossipNodeInfo := range gossipValues {
+			numNodes = numNodes + 1
+
+			size := atomic.LoadInt64(c.size)
+			// Check to make sure we are not exceeding the size of the cluster.
+			if size > 0 && int64(numNodes) > size {
+				logrus.Fatalf("Fatal, number of nodes in the cluster has"+
+					"exceeded the cluster size: %d > %d", numNodes, size)
+			}
+
+			// Ignore self node
+			if id == types.NodeId(node.Id) {
+				continue
+			}
+
+			// Update cache with gossip data
+			peerNode, maintenance := c.gossipNodeToAPINode(id, &gossipNodeInfo)
+			if maintenance {
+				// restore the maintenance status which was overwritten by gossipNodeToAPINode()
+				peerNode.Status = api.Status_STATUS_MAINTENANCE
+			}
+			c.putNodeCacheEntry(peerNode.Id, *peerNode)
+		}
+		time.Sleep(2 * time.Second)
+	}
+}
+
+func (c *ClusterManager) gossipNodeToAPINode(id types.NodeId, gossipNodeInfo *types.NodeValue) (*api.Node, bool) {
+	maintenance := false
+	apiNode := api.Node{}
+
+	// pre-populate apiNode object with the info we have from gossip, if available
+	if gossipNodeInfo.Value != nil {
+		nodeInGossip, ok := gossipNodeInfo.Value.(api.Node)
+		if ok {
+			apiNode = nodeInGossip
+		} else {
+			logrus.Errorln("Unable to get node info from gossip")
+		}
+	}
+	apiNode.Id = string(id)
+	if gossipNodeInfo.Status == types.NODE_STATUS_DOWN {
+		apiNode.Status = api.Status_STATUS_OFFLINE
+	} else {
+		if apiNode.Status == api.Status_STATUS_MAINTENANCE {
+			maintenance = true
+		}
+		apiNode.Status = api.Status_STATUS_OK
+	}
+	return &apiNode, maintenance
 }
 
 // DisableUpdates disables gossip updates
@@ -1062,9 +1086,18 @@ func (c *ClusterManager) GetGossipState() *cluster.ClusterState {
 	return &cluster.ClusterState{NodeStatus: nodes}
 }
 
-func (c *ClusterManager) waitForQuorum(exist bool) error {
+func (c *ClusterManager) getMaxQuorumRetries() int {
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
+	quorumRetries := defaultQuorumRetries
+	if c.config.QuorumTimeoutInSeconds > 0 {
+		quorumRetries = c.config.QuorumTimeoutInSeconds / 2
+	}
+	return quorumRetries
+}
+
+func (c *ClusterManager) waitForQuorum(exist bool) error {
+	maxQuorumRetries := c.getMaxQuorumRetries()
 	quorumRetries := 0
 	for {
 		gossipSelfStatus := c.gossip.GetSelfStatus()
@@ -1084,9 +1117,9 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 			break
 		} else {
 			c.status = api.Status_STATUS_NOT_IN_QUORUM
-			if quorumRetries == 600 {
-				err := fmt.Errorf("Unable to achieve Quorum." +
-					" Timeout 20 minutes exceeded.")
+			if quorumRetries == maxQuorumRetries {
+				err := fmt.Errorf("Unable to achieve Quorum."+
+					" Timeout %v minutes exceeded.", (maxQuorumRetries*2)/60)
 				logrus.Warnln("Failed to join cluster: ", err)
 				c.status = api.Status_STATUS_NOT_IN_QUORUM
 				c.selfNode.Status = api.Status_STATUS_OFFLINE
@@ -1433,14 +1466,17 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.system = systemutils.New()
 
 	// Start the gossip protocol.
-	// XXX Make the port configurable.
 	gob.Register(api.Node{})
+	quorumTimeout := types.DEFAULT_QUORUM_TIMEOUT
+	if c.config.QuorumTimeoutInSeconds > 0 {
+		quorumTimeout = time.Duration(c.config.QuorumTimeoutInSeconds) * time.Second
+	}
 	gossipIntervals := types.GossipIntervals{
 		GossipInterval:   types.DEFAULT_GOSSIP_INTERVAL,
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
-		QuorumTimeout:    types.DEFAULT_QUORUM_TIMEOUT,
+		QuorumTimeout:    quorumTimeout,
 	}
 
 	nodeIp := getPeerAddress(c.selfNode.DataIp, c.gossipPort)
@@ -1483,7 +1519,8 @@ func (c *ClusterManager) StartWithConfiguration(
 		return err
 	}
 
-	go c.updateClusterStatus()
+	go c.updateNodesInCache()
+	go c.notifyListeners()
 	go c.replayNodeDecommission()
 
 	return nil

@@ -298,6 +298,12 @@ func (v *volumeClient) VolumeUsageByNode(
 
 }
 
+func (v *volumeClient) RelaxedReclaimPurge(
+	nodeID string,
+) (*api.RelaxedReclaimPurge, error) {
+	return nil, volume.ErrNotSupported
+}
+
 // Shutdown and cleanup.
 func (v *volumeClient) Shutdown() {}
 
@@ -503,6 +509,20 @@ func (v *volumeClient) CredsCreate(params map[string]string) (string, error) {
 		return "", err
 	}
 	return createResponse.UUID, nil
+}
+
+// CredsUpdate updates a previsiously configured credentials
+func (v *volumeClient) CredsUpdate(name string, params map[string]string) error {
+	request := &api.CredUpdateRequest{
+		Name:        name,
+		InputParams: params,
+	}
+	req := v.c.Put().Resource(api.OsdCredsPath).Instance(name).Body(request)
+	response := req.Do()
+	if response.Error() != nil {
+		return response.FormatError()
+	}
+	return nil
 }
 
 // CredsDelete deletes the credential with given UUID

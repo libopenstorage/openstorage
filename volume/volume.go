@@ -141,6 +141,9 @@ type StatsDriver interface {
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
 	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	// RelaxedReclaimPurge triggers the purge of RelaxedReclaim queue for a
+	// given node
+	RelaxedReclaimPurge(nodeID string) (*api.RelaxedReclaimPurge, error)
 }
 
 type QuiesceDriver interface {
@@ -308,7 +311,9 @@ type BlockDriver interface {
 type CredsDriver interface {
 	// CredsCreate creates credential for a given cloud provider
 	CredsCreate(params map[string]string) (string, error)
-	// CredsList lists the configured credentials in the cluster
+	// CredsUpdate updates credential for an already configured credential
+	CredsUpdate(name string, params map[string]string) error
+	// CredsEnumerate lists the configured credentials in the cluster
 	CredsEnumerate() (map[string]interface{}, error)
 	// CredsDelete deletes the credential associated credUUID
 	CredsDelete(credUUID string) error

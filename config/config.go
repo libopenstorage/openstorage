@@ -43,6 +43,12 @@ type ClusterConfig struct {
 	SystemSharedSecret   string
 	AllowSecurityRemoval bool
 	HWType               api.HardwareType
+	// QuorumTimeoutInSeconds configures time after which an
+	// out of quorum node will restart
+	QuorumTimeoutInSeconds int
+	// SnapLockTryDurationInMinutes is the time for which
+	// the cluster manager will try acquiring a lock for cluster snapshot
+	SnapLockTryDurationInMinutes int
 }
 
 // swagger:model
