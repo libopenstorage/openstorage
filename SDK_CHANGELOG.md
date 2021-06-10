@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.121.0 - (06/09/2021)
+
+* Remove unused fields from volume spec and VolumeState
 ### v0.120.0 - (05/12/2021)
 
 * Add RelaxedReclaimPurge SDK API to OpenstorageNode service.

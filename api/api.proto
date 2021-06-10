@@ -136,8 +136,6 @@ enum VolumeState {
   VOLUME_STATE_TRY_DETACHING = 8;
   // Volume is undergoing restore
   VOLUME_STATE_RESTORE = 9;
-  // Volume is marked as being in the trashcan
-  VOLUME_STATE_IN_TRASHCAN = 10;
 }
 
 // VolumeStatus represents a health status for a volume.
@@ -938,10 +936,8 @@ message Volume {
   // Sharedv4MountOptions are the runtime mount options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 30;
-  // VolumeState is the current runtime state of this volume.
-  VolumeState prev_state = 31;
-  google.protobuf.Timestamp delete_time= 32;
-  google.protobuf.Timestamp expiry_time= 33;
+  // InTrashcan if the volume is in trashcan
+  bool in_trashcan = 31;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -4940,7 +4936,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 120;
+    Minor = 121;
     // SDK version patch value of this specification
     Patch = 0;
   }
