@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.16 - (02/01/2022)
+
+* Remove unused fields from volume spec and VolumeState
+
 ### v0.101.15 - (02/01/2022)
 
 * Add Trashcan volume objects 
