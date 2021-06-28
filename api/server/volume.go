@@ -594,6 +594,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			Sharedv4MountOptSpec: spec.Sharedv4MountOptions,
 		}
 	}
+	if spec.Sharedv4ServiceSpec != nil {
+		newSpec.Sharedv4ServiceSpecOpt = &api.VolumeSpecUpdate_Sharedv4ServiceSpec{
+			Sharedv4ServiceSpec: spec.Sharedv4ServiceSpec,
+		}
+	}
 
 	if spec.FpPreference != vol.Spec.FpPreference {
 		newSpec.FastpathOpt = &api.VolumeSpecUpdate_Fastpath{
