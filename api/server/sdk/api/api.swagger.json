@@ -4233,6 +4233,11 @@
       "apiSharedv4ServiceSpec": {
         "description": "Sharedv4ServiceSpec when set, creates a service endpoint for accessing\na sharedv4 volume.",
         "properties": {
+          "external_access": {
+            "format": "boolean",
+            "title": "Indicates whether the service needs to be accessed outside of the cluster",
+            "type": "boolean"
+          },
           "name": {
             "title": "Name of the service. If not provided the name of the volume will be\nused for setting up a service",
             "type": "string"
@@ -5581,7 +5586,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.121.0"
+    "version": "0.122.0"
   },
   "openapi": "3.0.0",
   "paths": {
