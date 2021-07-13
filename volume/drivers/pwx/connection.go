@@ -1,6 +1,8 @@
 package pwx
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"os"
 	"strconv"
@@ -29,12 +31,15 @@ type ConnectionParamsBuilderConfig struct {
 	DefaultServiceNamespaceName string
 	// DefaultRestPortName is name of Porx legacy REST API port in service
 	DefaultRestPortName string
+	// DefaultRestPortNameSecured is the name of the TLS Secured (if enabled) Porx legacy REST API port in service
+	DefaultRestPortNameSecured string
 	// DefaultSDKPortName is name of Porx SDK/iSDK API port in service
 	DefaultSDKPortName string
 	// DefaultTokenIssuer is the default value for token issuer
 	DefaultTokenIssuer string
 
 	// Environment variables names to get  values config properties
+	// EnableTLSEnv is used to set environment variable name which should be read to enable TLS on the connections
 	EnableTLSEnv string
 	// NamespaceNameEnv is used to set environment variable name which should be read to fetch Porx namespace
 	NamespaceNameEnv string
@@ -65,6 +70,7 @@ func NewConnectionParamsBuilderDefaultConfig() *ConnectionParamsBuilderConfig {
 		DefaultServiceName:          "portworx-service",
 		DefaultServiceNamespaceName: "kube-system",
 		DefaultRestPortName:         "px-api",
+		DefaultRestPortNameSecured:  "px-api-tls",
 		DefaultTokenIssuer:          "apps.portworx.io",
 		DefaultSDKPortName:          "px-sdk",
 		EnableTLSEnv:                "PX_ENABLE_TLS",
@@ -121,6 +127,8 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
 
 	var restPort int
+	var restPortSecured int
+	var finalRestPort int // the port passed to the caller (restPortSecured if available, else restPort)
 	var sdkPort int
 
 	// Get the ports from service
@@ -131,24 +139,74 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 		} else if svcPort.Name == cpb.Config.DefaultRestPortName &&
 			svcPort.Port != 0 {
 			restPort = int(svcPort.Port)
+		} else if svcPort.Name == cpb.Config.DefaultRestPortNameSecured &&
+			svcPort.Port != 0 {
+			restPortSecured = int(svcPort.Port)
 		}
+	}
+	// if secured REST port (9023) is available, use it instead of legacy 9001
+	if restPortSecured != 0 {
+		finalRestPort = restPortSecured
+	} else {
+		finalRestPort = restPort
 	}
 
 	// check if the ports were parsed
-	if sdkPort == 0 || restPort == 0 {
-		err := fmt.Errorf("%s in %s namespace does not contain %s and %s ports set", serviceName, ns, cpb.Config.DefaultSDKPortName, cpb.Config.DefaultRestPortName)
+	if sdkPort == 0 || finalRestPort == 0 {
+		err := fmt.Errorf("%s in %s namespace does not contain %s and either of %s or %s ports set", serviceName, ns, cpb.Config.DefaultSDKPortName, cpb.Config.DefaultRestPortName, cpb.Config.DefaultRestPortNameSecured)
 		logrus.Errorf(err.Error())
 		return "", "", err
 	}
 
-	// PX mgmt API was decided not to be protected with TLS
-	pxMgmtEndpoint = fmt.Sprintf("http://%s:%d", endpoint, restPort)
+	scheme := "http"
+	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
+	if isTLSEnabled && finalRestPort == restPortSecured {
+		scheme = "https" // legacy 9001 port is never TLS secured, irrespective of the value of PX_ENABLE_TLS
+	}
+	pxMgmtEndpoint = fmt.Sprintf("%s://%s:%d", scheme, endpoint, finalRestPort)
 	sdkEndpoint = fmt.Sprintf("%s:%d", endpoint, sdkPort)
 
 	logrus.Infof("Using %s as endpoint for portworx REST API", pxMgmtEndpoint)
 	logrus.Infof("Using %s as endpoint for portworx gRPC API", sdkEndpoint)
 
 	return pxMgmtEndpoint, sdkEndpoint, nil
+}
+
+// BuildTlsConfig returns the TLS configuration (if needed) to connect to the Porx API
+func (cpb *ConnectionParamsBuilder) BuildTlsConfig() (*tls.Config, error) {
+	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
+	if !isTLSEnabled {
+		return nil, nil
+	}
+	rootCA, err := cpb.getCaCertBytes()
+	if err != nil {
+		return nil, err
+	}
+	tlsCfg := &tls.Config{}
+	setRootCA(tlsCfg, rootCA)
+
+	return tlsCfg, nil
+}
+
+func setRootCA(tlsCfg *tls.Config, rootCA []byte) error {
+
+	clientCertPool, err := x509.SystemCertPool()
+	if err != nil || clientCertPool == nil {
+		logrus.Warnf("Warning: Failed to load system certs, root CA param data only: %v\n", err)
+	}
+
+	// JAR: Replace below conds with above 'appendRootCA(rootCAs *x509.CertPool, rootCA []byte)'
+	if clientCertPool == nil && len(rootCA) > 0 {
+		// Only create if system cert is nil && rootCA exists
+		clientCertPool = x509.NewCertPool()
+	}
+
+	if len(rootCA) > 0 { // rootCA exists, append it
+		clientCertPool.AppendCertsFromPEM(rootCA)
+	}
+
+	tlsCfg.RootCAs = clientCertPool
+	return nil
 }
 
 // BuildDialOps build slice of grpc.DialOption to connect to SDK API
@@ -165,6 +223,22 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 		return dialOptions, nil
 	}
 
+	rootCA, err := cpb.getCaCertBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	tlsDialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build TLS gRPC connection options: %v", err)
+	}
+
+	dialOptions = append(dialOptions, tlsDialOptions...)
+
+	return dialOptions, nil
+}
+
+func (cpb *ConnectionParamsBuilder) getCaCertBytes() ([]byte, error) {
 	var rootCA []byte
 	var caCertSecretName = strings.TrimSpace(os.Getenv(cpb.Config.CaCertSecretEnv))
 	var caCertSecretKey = strings.TrimSpace(os.Getenv(cpb.Config.CaCertSecretKeyEnv))
@@ -189,15 +263,7 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 			return nil, fmt.Errorf("CA cert fetchecd from secret: %s using key: %s is empty", caCertSecretName, caCertSecretKey)
 		}
 	}
-
-	tlsDialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
-	if err != nil {
-		return nil, fmt.Errorf("unable to build TLS gRPC connection options: %v", err)
-	}
-
-	dialOptions = append(dialOptions, tlsDialOptions...)
-
-	return dialOptions, nil
+	return rootCA, nil
 }
 
 func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, error) {
@@ -227,7 +293,12 @@ func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, erro
 		return "", "", fmt.Errorf("static REST port value sould be greater than 0")
 	}
 
-	pxMgmtEndpoint, sdkEndpoint := fmt.Sprintf("http://%s:%d", endpoint, restPort), fmt.Sprintf("%s:%d", endpoint, sdkPort)
+	scheme := "http"
+	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
+	if isTLSEnabled {
+		scheme = "https"
+	}
+	pxMgmtEndpoint, sdkEndpoint := fmt.Sprintf("%s://%s:%d", scheme, endpoint, restPort), fmt.Sprintf("%s:%d", endpoint, sdkPort)
 
 	return pxMgmtEndpoint, sdkEndpoint, nil
 }
