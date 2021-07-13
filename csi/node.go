@@ -70,7 +70,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
-	logrus.Debugf("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
+	logrus.Infof("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
 	if len(volumeId) == 0 {
@@ -211,7 +211,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
-	logrus.Debugf("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
+	logrus.Infof("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
 	if len(volumeId) == 0 {
@@ -280,7 +280,7 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	req *csi.NodeGetCapabilitiesRequest,
 ) (*csi.NodeGetCapabilitiesResponse, error) {
 
-	logrus.Debugf("csi.NodeGetCapabilities request received")
+	logrus.Infof("csi.NodeGetCapabilities request received")
 
 	caps := []csi.NodeServiceCapability_RPC_Type{
 		// Getting volume stats for volume health monitoring
@@ -336,7 +336,7 @@ func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
 // and only exposed via the CSI unix domain socket. If a secrets field is added
 // in csi.NodeGetVolumeStatsRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
-	logrus.Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
+	logrus.Infof("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
 
 	// Check arguments
 	id := req.GetVolumeId()
