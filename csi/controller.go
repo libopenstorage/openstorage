@@ -126,7 +126,7 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	ctx context.Context,
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
-	logrus.Debugf("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
+	logrus.Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
 	vol, err := s.driverGetVolume(req.GetVolumeId())
 	if err != nil {
@@ -161,7 +161,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	}
 
 	// Log request
-	logrus.Debugf("csi.ValidateVolumeCapabilities of id %s "+
+	logrus.Infof("csi.ValidateVolumeCapabilities of id %s "+
 		"capabilities %#v "+
 		id,
 		capabilities)
@@ -382,7 +382,7 @@ func (s *OsdCsiServer) CreateVolume(
 ) (*csi.CreateVolumeResponse, error) {
 
 	// Log request
-	logrus.Debugf("csi.CreateVolume request received. Volume: %s", req.GetName())
+	logrus.Infof("csi.CreateVolume request received. Volume: %s", req.GetName())
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
@@ -516,7 +516,7 @@ func (s *OsdCsiServer) DeleteVolume(
 ) (*csi.DeleteVolumeResponse, error) {
 
 	// Log request
-	logrus.Debugf("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
+	logrus.Infof("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
 
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
@@ -848,7 +848,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 ) (*csi.ListSnapshotsResponse, error) {
 	snapshotId := req.GetSnapshotId()
 
-	logrus.Debugf("ListSnapshots for a single snapshot %s received", req.GetSnapshotId())
+	logrus.Infof("ListSnapshots for a single snapshot %s received", req.GetSnapshotId())
 
 	// Get grpc connection
 	conn, err := s.getConn()
@@ -911,7 +911,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	startingToken := req.GetStartingToken()
 	maxEntries := req.GetMaxEntries()
 
-	logrus.Debugf("ListSnapshots for multiple snapshots received. sourceVolumeId: %s, startingToken: %s, maxEntries: %v",
+	logrus.Infof("ListSnapshots for multiple snapshots received. sourceVolumeId: %s, startingToken: %s, maxEntries: %v",
 		sourceVolumeId,
 		startingToken,
 		maxEntries,
