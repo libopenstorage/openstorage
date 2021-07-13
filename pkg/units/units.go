@@ -80,19 +80,19 @@ var unitPattern = regexp.MustCompile(
 var BadUnit = errors.New("Bad unit")
 
 func String(b uint64) string {
-	if b > PiB {
+	if b >= PiB {
 		return fmt.Sprintf("%.2f PiB", float64(b)/float64(PiB))
 	}
-	if b > TiB {
+	if b >= TiB {
 		return fmt.Sprintf("%.2f TiB", float64(b)/float64(TiB))
 	}
-	if b > GiB {
-		return fmt.Sprintf("%.1f TiB", float64(b)/float64(GiB))
+	if b >= GiB {
+		return fmt.Sprintf("%.1f GiB", float64(b)/float64(GiB))
 	}
-	if b > MiB {
+	if b >= MiB {
 		return fmt.Sprintf("%v MiB", b/MiB)
 	}
-	if b > KiB {
+	if b >= KiB {
 		return fmt.Sprintf("%v KiB", b/KiB)
 	}
 	return fmt.Sprintf("%v bytes", b)
@@ -102,13 +102,13 @@ func Parse(bUnit string) (int64, error) {
 	ustring := strings.TrimSpace(bUnit)
 	unitPattern.Longest()
 	if !unitPattern.MatchString(ustring) {
-		return -1, fmt.Errorf("Unit parse error: %s", bUnit)
+		return -1, fmt.Errorf("unit parse error: %s", bUnit)
 	}
 	matches := unitPattern.FindStringSubmatch(ustring)
 
 	if len(matches) == 0 || len(matches) > 4 {
 		return -1, fmt.Errorf(
-			"Unit parse error: invalid count of fields (%v)",
+			"unit parse error: invalid count of fields (%v)",
 			len(matches))
 	}
 	if len(matches) == 1 {
@@ -119,7 +119,7 @@ func Parse(bUnit string) (int64, error) {
 		shift = 1
 	}
 	if len(matches) == 2 {
-		return -1, fmt.Errorf("Unit parse error: invalid fields %v",
+		return -1, fmt.Errorf("unit parse error: invalid fields %v",
 			matches)
 	}
 	if ustring != matches[0] {
