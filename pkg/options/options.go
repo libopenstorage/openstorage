@@ -41,6 +41,10 @@ const (
 	// - Detach
 	// It indicates the Volume Driver to redirect detach to the node where volume is attached
 	OptionsRedirectDetach = "REDIRECT_DETACH"
+	// OptionsDetachDuringDelete is an option provided to the following Openstorage Volume API
+	// - Detach
+	// It indicates the Volume Driver that a Detach is being issued as a part of a Delete request
+	OptionsDetachDuringDelete = "DETACH_DURING_DELETE"
 	// OptionsDeviceFuseMount is an option provided to the following Openstorage Volume APIs
 	// - Mount
 	// - Unmount
