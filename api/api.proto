@@ -419,6 +419,8 @@ message Sharedv4ServiceSpec {
     string name = 1;
     // Indicates what kind of service would be created for this volume.
     ServiceType type = 2;
+    // Indicates whether the service needs to be accessed outside of the cluster
+    bool external_access = 3;
 
     // Type of sharedv4 service. Values are governed by the different types
     // of services supported by container orchestrators such as Kubernetes.
@@ -4936,7 +4938,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 121;
+    Minor = 122;
     // SDK version patch value of this specification
     Patch = 0;
   }

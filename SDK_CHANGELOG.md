@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.122.0 - (07/07/2021)
+
+* Add a flag in Sharedv4ServiceSpec to indicate whether the service needs to be accessed outside of the cluster
+
 ### v0.121.0 - (06/09/2021)
 
 * Remove unused fields from volume spec and VolumeState
