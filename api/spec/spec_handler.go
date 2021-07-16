@@ -137,6 +137,7 @@ var (
 	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
 	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
+	sharedv4ExternalAccessRegex = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
 	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
 	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 	SpecIoThrottleRdIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
@@ -451,6 +452,15 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
 			} else if v == "LoadBalancer" || v == "loadBalancer" {
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_LOADBALANCER
+			}
+		case api.SpecSharedv4ExternalAccess:
+			if spec.Sharedv4ServiceSpec == nil {
+				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
+			}
+			if v == "true" || v == "True" {
+				spec.Sharedv4ServiceSpec.ExternalAccess = true
+			} else {
+				spec.Sharedv4ServiceSpec.ExternalAccess = false
 			}
 		case api.SpecSharedv4ServiceName:
 			if spec.Sharedv4ServiceSpec == nil {
@@ -776,6 +786,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, sharedv4ServiceType := d.getVal(sharedv4ServiceTypeRegex, str); ok {
 		opts[api.SpecSharedv4ServiceType] = sharedv4ServiceType
+	}
+	if ok, sharedv4ExternalAccess := d.getVal(sharedv4ExternalAccessRegex, str); ok {
+		opts[api.SpecSharedv4ExternalAccess] = sharedv4ExternalAccess
 	}
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
