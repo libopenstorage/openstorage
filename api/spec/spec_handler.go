@@ -457,10 +457,10 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			if spec.Sharedv4ServiceSpec == nil {
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
 			}
-			if v == "true" || v == "True" {
-				spec.Sharedv4ServiceSpec.ExternalAccess = true
+			if externalAccess, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
 			} else {
-				spec.Sharedv4ServiceSpec.ExternalAccess = false
+				spec.Sharedv4ServiceSpec.ExternalAccess = externalAccess
 			}
 		case api.SpecSharedv4ServiceName:
 			if spec.Sharedv4ServiceSpec == nil {
