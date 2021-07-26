@@ -462,6 +462,11 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.Sharedv4ServiceSpec.ExternalAccess = externalAccess
 			}
+			if spec.Sharedv4ServiceSpec.ExternalAccess {
+				if spec.Sharedv4ServiceSpec.Type != api.Sharedv4ServiceSpec_NODEPORT && spec.Sharedv4ServiceSpec.Type != api.Sharedv4ServiceSpec_LOADBALANCER {
+					return nil, nil, nil, fmt.Errorf("sharedv4 service type %v doesn't support external access", spec.Sharedv4ServiceSpec.Type)
+				}
+			}
 		case api.SpecSharedv4ServiceName:
 			if spec.Sharedv4ServiceSpec == nil {
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
