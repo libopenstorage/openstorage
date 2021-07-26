@@ -993,7 +993,8 @@
           "IO_PROFILE_DB_REMOTE",
           "IO_PROFILE_CMS",
           "IO_PROFILE_SYNC_SHARED",
-          "IO_PROFILE_AUTO"
+          "IO_PROFILE_AUTO",
+          "IO_PROFILE_NONE"
         ],
         "type": "string"
       },
@@ -4812,6 +4813,9 @@
             "title": "Volume creation time",
             "type": "string"
           },
+          "derived_io_profile": {
+            "$ref": "#/components/schemas/apiIoProfile"
+          },
           "detach_time": {
             "description": "DetachTime time this device was detached.",
             "format": "date-time",
@@ -5586,7 +5590,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.122.0"
+    "version": "0.123.0"
   },
   "openapi": "3.0.0",
   "paths": {
