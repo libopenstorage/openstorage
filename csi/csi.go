@@ -22,6 +22,7 @@ import (
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -38,6 +39,12 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
+
+var clogger *logrus.Logger
+
+func init() {
+	clogger = correlation.NewLogger(correlation.ComponentCSIDriver)
+}
 
 // OsdCsiServerConfig provides the configuration to the
 // the gRPC CSI server created by NewOsdCsiServer()
@@ -88,7 +95,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("OSD Driver name must be provided")
 	}
 	if config.EnableInlineVolumes {
-		logrus.Warnf("CSI ephemeral inline volumes are deprecated and will be disabled by default in the future")
+		clogger.Warnf("CSI ephemeral inline volumes are deprecated and will be disabled by default in the future")
 	}
 	// Save the driver for future calls
 	d, err := volumedrivers.Get(config.DriverName)
@@ -136,18 +143,18 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 // driverGetVolume returns a volume for a given ID. This function skips
 // PX security authentication and should be used only when a CSI request
 // does not support secrets as a field
-func (s *OsdCsiServer) driverGetVolume(id string) (*api.Volume, error) {
+func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Volume, error) {
 	vols, err := s.driver.Inspect([]string{id})
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
-			logrus.Infof("Volume %s cannot be found: %s", id, err.Error())
+			clogger.WithContext(ctx).Infof("Volume %s cannot be found: %s", id, err.Error())
 			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
 		} else if err != nil {
 			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 				id,
 				err.Error())
 		} else {
-			logrus.Infof("Volume %s cannot be found", id)
+			clogger.WithContext(ctx).Infof("Volume %s cannot be found", id)
 			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
 		}
 	}
