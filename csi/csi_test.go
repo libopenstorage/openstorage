@@ -43,7 +43,6 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -81,10 +80,10 @@ type testServer struct {
 func setupFakeDriver() {
 	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
+		clogger.Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
+		clogger.Panicf("Failed to set KVDB instance")
 	}
 	// Need to setup a fake cluster. No need to start it.
 	clustermanager.Init(config.ClusterConfig{
@@ -93,12 +92,12 @@ func setupFakeDriver() {
 	})
 	cm, err = clustermanager.Inst()
 	if err != nil {
-		logrus.Panicf("Unable to initialize cluster manager: %v", err)
+		clogger.Panicf("Unable to initialize cluster manager: %v", err)
 	}
 
 	// Requires a non-nil cluster
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
-		logrus.Panicf("Unable to start volume driver fake: %v", err)
+		clogger.Panicf("Unable to start volume driver fake: %v", err)
 	}
 }
 

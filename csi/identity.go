@@ -20,6 +20,7 @@ import (
 	"fmt"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"golang.org/x/net/context"
 )
 
@@ -36,6 +37,8 @@ func (s *OsdCsiServer) GetPluginCapabilities(
 	ctx context.Context,
 	req *csi.GetPluginCapabilitiesRequest,
 ) (*csi.GetPluginCapabilitiesResponse, error) {
+	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
+
 	return &csi.GetPluginCapabilitiesResponse{
 		Capabilities: []*csi.PluginCapability{
 			&csi.PluginCapability{
@@ -61,6 +64,8 @@ func (s *OsdCsiServer) Probe(
 	ctx context.Context,
 	req *csi.ProbeRequest,
 ) (*csi.ProbeResponse, error) {
+	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
+
 	return &csi.ProbeResponse{}, nil
 }
 
@@ -69,6 +74,7 @@ func (s *OsdCsiServer) Probe(
 func (s *OsdCsiServer) GetPluginInfo(
 	ctx context.Context,
 	req *csi.GetPluginInfoRequest) (*csi.GetPluginInfoResponse, error) {
+	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	var name string
 	if len(s.csiDriverName) != 0 {

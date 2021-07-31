@@ -22,11 +22,11 @@ type RequestContext struct {
 	// Origin is the starting point for this request.
 	// Examples may include any of the following:
 	// pxctl, pxc, kubernetes, CSI, SDK, etc
-	Origin string
+	Origin Component
 }
 
 // NewContext returns a new correlation context object
-func NewContext(ctx context.Context, origin correlation.Component) context.Context {
+func NewContext(ctx context.Context, origin Component) context.Context {
 	requestContext := &RequestContext{
 		ID:     uuid.New(),
 		Origin: origin,
