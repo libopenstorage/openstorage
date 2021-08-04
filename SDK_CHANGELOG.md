@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.123.0 - (07/07/2021)
+
+* Add DerivedIoProfile to Volume and a new NONE IO Profile
+
 ### v0.122.0 - (07/07/2021)
 
 * Add a flag in Sharedv4ServiceSpec to indicate whether the service needs to be accessed outside of the cluster
