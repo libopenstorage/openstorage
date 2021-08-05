@@ -43,7 +43,7 @@ import (
 var clogger *logrus.Logger
 
 func init() {
-	clogger = correlation.NewLogger(correlation.ComponentCSIDriver)
+	clogger = correlation.NewPackageLogger(correlation.ComponentCSIDriver)
 }
 
 // OsdCsiServerConfig provides the configuration to the
