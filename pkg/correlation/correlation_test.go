@@ -7,15 +7,14 @@ import (
 	"testing"
 
 	"github.com/libopenstorage/openstorage/pkg/correlation"
+	"github.com/sirupsen/logrus"
 )
 
-// TestNewLogger mainly is for testing API
-func TestNewLogger(t *testing.T) {
-	clogger := correlation.NewLogger("test")
+func TestNewPackageLogger(t *testing.T) {
+	clogger := correlation.NewPackageLogger("test")
 
 	var buf bytes.Buffer
 	clogger.SetOutput(&buf)
-	clogger.AddHook(&correlation.LogHook{})
 	ctx := correlation.NewContext(context.Background(), "test_origin")
 
 	clogger.WithContext(ctx).Info("test info log")
@@ -29,6 +28,53 @@ func TestNewLogger(t *testing.T) {
 	expectedComponentLog := `component=test`
 	if !strings.Contains(logStr, expectedComponentLog) {
 		t.Fatalf("failed to check for log line %s", expectedComponentLog)
+	}
+
+	expectedCorrelationLog := `correlation-id=`
+	if !strings.Contains(logStr, expectedCorrelationLog) {
+		t.Fatalf("failed to check for log line %s", expectedCorrelationLog)
+	}
+}
+
+func TestFunctionLogger(t *testing.T) {
+	ctx := correlation.NewContext(context.Background(), "test_origin")
+
+	clogger := correlation.NewFunctionLogger(ctx, "test")
+
+	var buf bytes.Buffer
+	clogger.SetOutput(&buf)
+
+	clogger.Info("test info log")
+	logStr := buf.String()
+
+	expectedInfoLog := `level=info msg="test info log"`
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s", expectedInfoLog)
+	}
+
+	expectedComponentLog := `component=test`
+	if !strings.Contains(logStr, expectedComponentLog) {
+		t.Fatalf("failed to check for log line %s", expectedComponentLog)
+	}
+
+	expectedCorrelationLog := `correlation-id=`
+	if !strings.Contains(logStr, expectedCorrelationLog) {
+		t.Fatalf("failed to check for log line %s", expectedCorrelationLog)
+	}
+}
+
+func TestRegisterGlobalLogger(t *testing.T) {
+	var buf bytes.Buffer
+	logrus.SetOutput(&buf)
+	correlation.RegisterGlobalHook()
+	ctx := correlation.NewContext(context.Background(), "test_origin")
+
+	logrus.WithContext(ctx).Info("test info log")
+	logStr := buf.String()
+
+	expectedInfoLog := `level=info msg="test info log"`
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s", expectedInfoLog)
 	}
 
 	expectedCorrelationLog := `correlation-id=`

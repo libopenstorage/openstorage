@@ -6,10 +6,18 @@ import (
 	"github.com/pborman/uuid"
 )
 
+// Component represents a control plane component for
+// correlating requests
+type Component string
+
 const (
 	// ContextKey represents the key for storing and retrieving
 	// the correlation context in a context.Context object.
 	ContextKey = "correlation-context"
+
+	ComponentUnknown   = Component("unknown")
+	ComponentCSIDriver = Component("csi-driver")
+	ComponentSDK       = Component("sdk-server")
 )
 
 // RequestContext represents the context for a given a request.
