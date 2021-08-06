@@ -3,6 +3,10 @@ package correlation
 import (
 	"context"
 	"fmt"
+	"path/filepath"
+	"runtime"
+	"strings"
+	"sync"
 
 	"github.com/sirupsen/logrus"
 )
@@ -13,6 +17,14 @@ type LogHook struct {
 }
 
 var _ logrus.Hook = &LogHook{}
+
+// components a map of package directories to Component name
+// this mapping is used to populate the component log field.
+// Each package can register itself as a component.
+var (
+	components = make(map[string]Component)
+	mu         sync.Mutex
+)
 
 const (
 	// LogFieldID represents a logging field for IDs
@@ -33,7 +45,6 @@ func (lh *LogHook) Levels() []logrus.Level {
 
 // Fire is used to add correlation context info in each log line
 func (lh *LogHook) Fire(entry *logrus.Entry) error {
-
 	// Default to tne entry context. This is populated
 	// by logrus.WithContext.Infof(...)
 	ctx := entry.Context
@@ -54,9 +65,21 @@ func (lh *LogHook) Fire(entry *logrus.Entry) error {
 		entry.Data[LogFieldOrigin] = correlationContext.Origin
 	}
 
-	// Only add component when provided
+	// Add component when provided as a hook
 	if len(lh.Component) > 0 {
 		entry.Data[LogFieldComponent] = lh.Component
+	} else if entry.HasCaller() {
+		// Discover the component based on which package directories have
+		// been registered as hooks
+		dir := filepath.Dir(entry.Caller.File)
+		if comp, ok := components[dir]; ok {
+			entry.Data[LogFieldComponent] = comp
+		} else {
+			// If component is not registered or provided, we
+			// can add more context by looking at the caller dir
+			entry.Data[LogFieldComponent] = getLocalPackage(dir)
+		}
+
 	}
 
 	return nil
@@ -76,10 +99,9 @@ func NewPackageLogger(component Component) *logrus.Logger {
 // For example, this logger can be instantiated inside of a function with a given
 // context object. As logs are printed, they will automatically include the correlation
 // context info.
-func NewFunctionLogger(ctx context.Context, component Component) *logrus.Logger {
+func NewFunctionLogger(ctx context.Context) *logrus.Logger {
 	clogger := logrus.New()
 	clogger.AddHook(&LogHook{
-		Component:       component,
 		FunctionContext: ctx,
 	})
 
@@ -92,4 +114,44 @@ func NewFunctionLogger(ctx context.Context, component Component) *logrus.Logger 
 // or NewPackageLogger for logging.
 func RegisterGlobalHook() {
 	logrus.AddHook(&LogHook{})
+}
+
+// RegisterComponent registers the package where this function was called from
+// as a given component name.
+func RegisterComponent(component Component) {
+	_, file, _, ok := runtime.Caller(1)
+	if !ok {
+		logrus.Errorf("failed to register component")
+	}
+	registerFileAsComponent(file, component)
+}
+
+func registerFileAsComponent(file string, component Component) {
+	mu.Lock()
+	defer mu.Unlock()
+	components[filepath.Dir(file)] = component
+}
+
+// takes a directory in a go path and returns the local package.
+// i.e. /go/src/github.com/libopenstorage/openstorage/pkg/correlation
+// will return openstorage/pkg/correlation
+func getLocalPackage(dir string) string {
+	parts := strings.Split(dir, "/")
+	var githubIndex int
+	for i, d := range parts {
+		// This will work for both imported versions of this
+		// as well as in openstorage itself, since we'll always
+		// keep track of the last index for "github" in the path
+		if d == "github.com" {
+			githubIndex = i
+		}
+	}
+
+	// From /go/src/github.com/libopenstorage/openstorage/pkg/correlation
+	// Need this                             /openstorage/pkg/correlation
+	// From /go/src/github.com/a/b/vendor/github.com/libopenstorage/openstorage/pkg/correlation
+	// Need this                             					   /openstorage/pkg/correlation
+	localIndex := githubIndex + 2
+
+	return strings.Join(parts[localIndex:], "/")
 }

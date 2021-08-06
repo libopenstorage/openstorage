@@ -23,7 +23,6 @@ import (
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/portworx/kvdb"
 	"golang.org/x/net/context"
@@ -45,7 +44,6 @@ func (s *OsdCsiServer) NodeGetInfo(
 	ctx context.Context,
 	req *csi.NodeGetInfoRequest,
 ) (*csi.NodeGetInfoResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	clus, err := s.cluster.Enumerate()
 	if err != nil {
@@ -68,7 +66,6 @@ func (s *OsdCsiServer) NodePublishVolume(
 	ctx context.Context,
 	req *csi.NodePublishVolumeRequest,
 ) (*csi.NodePublishVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
@@ -210,8 +207,6 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	ctx context.Context,
 	req *csi.NodeUnpublishVolumeRequest,
 ) (*csi.NodeUnpublishVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
@@ -283,8 +278,6 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	ctx context.Context,
 	req *csi.NodeGetCapabilitiesRequest,
 ) (*csi.NodeGetCapabilitiesResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	clogger.WithContext(ctx).Debugf("csi.NodeGetCapabilities request received")
 
 	caps := []csi.NodeServiceCapability_RPC_Type{
@@ -341,8 +334,6 @@ func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
 // and only exposed via the CSI unix domain socket. If a secrets field is added
 // in csi.NodeGetVolumeStatsRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	clogger.WithContext(ctx).Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
 
 	// Check arguments
