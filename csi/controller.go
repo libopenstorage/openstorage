@@ -26,7 +26,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -126,7 +125,6 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	ctx context.Context,
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
@@ -152,7 +150,6 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
 	req *csi.ValidateVolumeCapabilitiesRequest,
 ) (*csi.ValidateVolumeCapabilitiesResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	capabilities := req.GetVolumeCapabilities()
 	if capabilities == nil || len(capabilities) == 0 {
@@ -377,8 +374,6 @@ func (s *OsdCsiServer) CreateVolume(
 	ctx context.Context,
 	req *csi.CreateVolumeRequest,
 ) (*csi.CreateVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	// Log request
 	clogger.WithContext(ctx).Infof("csi.CreateVolume request received. Volume: %s", req.GetName())
 
@@ -512,8 +507,6 @@ func (s *OsdCsiServer) DeleteVolume(
 	ctx context.Context,
 	req *csi.DeleteVolumeRequest,
 ) (*csi.DeleteVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	// Log request
 	clogger.WithContext(ctx).Infof("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
 
@@ -557,8 +550,6 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	ctx context.Context,
 	req *csi.ControllerExpandVolumeRequest,
 ) (*csi.ControllerExpandVolumeResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
-
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
 	} else if req.GetCapacityRange() == nil {
@@ -712,7 +703,6 @@ func (s *OsdCsiServer) CreateSnapshot(
 	ctx context.Context,
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	if len(req.GetSourceVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Volume id must be provided")
@@ -796,7 +786,6 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	ctx context.Context,
 	req *csi.DeleteSnapshotRequest,
 ) (*csi.DeleteSnapshotResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	if len(req.GetSnapshotId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
@@ -838,7 +827,6 @@ func (s *OsdCsiServer) ListSnapshots(
 	ctx context.Context,
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
-	ctx = correlation.NewContext(ctx, correlation.ComponentCSIDriver)
 
 	if len(req.GetSnapshotId()) > 0 {
 		return s.listSingleSnapshot(ctx, req)

@@ -32,6 +32,7 @@ import (
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -103,11 +104,22 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
 
+	// Add correlation interceptor
+	correlationInterceptor := correlation.ContextInterceptor{
+		Origin: correlation.ComponentCSIDriver,
+	}
+	opts := make([]grpc.ServerOption, 0)
+	opts = append(opts, grpc.UnaryInterceptor(
+		grpc_middleware.ChainUnaryServer(
+			correlationInterceptor.ContextUnaryInterceptor,
+		)))
+
 	// Create server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
 		Name:    "CSI 1.4",
 		Net:     config.Net,
 		Address: config.Address,
+		Opts:    opts,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create CSI server: %v", err)

@@ -12,7 +12,7 @@ import (
 
 func TestNewPackageLogger(t *testing.T) {
 	clogger := correlation.NewPackageLogger("test")
-
+	clogger.SetReportCaller(true)
 	var buf bytes.Buffer
 	clogger.SetOutput(&buf)
 	ctx := correlation.NewContext(context.Background(), "test_origin")
@@ -38,9 +38,10 @@ func TestNewPackageLogger(t *testing.T) {
 
 func TestFunctionLogger(t *testing.T) {
 	ctx := correlation.NewContext(context.Background(), "test_origin")
+	correlation.RegisterComponent("register_comp_test")
 
-	clogger := correlation.NewFunctionLogger(ctx, "test")
-
+	clogger := correlation.NewFunctionLogger(ctx)
+	clogger.SetReportCaller(true)
 	var buf bytes.Buffer
 	clogger.SetOutput(&buf)
 
@@ -52,7 +53,7 @@ func TestFunctionLogger(t *testing.T) {
 		t.Fatalf("failed to check for log line %s", expectedInfoLog)
 	}
 
-	expectedComponentLog := `component=test`
+	expectedComponentLog := `component=register_comp_test`
 	if !strings.Contains(logStr, expectedComponentLog) {
 		t.Fatalf("failed to check for log line %s", expectedComponentLog)
 	}
@@ -66,6 +67,7 @@ func TestFunctionLogger(t *testing.T) {
 func TestRegisterGlobalLogger(t *testing.T) {
 	var buf bytes.Buffer
 	logrus.SetOutput(&buf)
+	logrus.SetReportCaller(true)
 	correlation.RegisterGlobalHook()
 	ctx := correlation.NewContext(context.Background(), "test_origin")
 

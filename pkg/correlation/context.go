@@ -18,6 +18,7 @@ const (
 	ComponentUnknown   = Component("unknown")
 	ComponentCSIDriver = Component("csi-driver")
 	ComponentSDK       = Component("sdk-server")
+	ComponentAuth      = Component("auth")
 )
 
 // RequestContext represents the context for a given a request.
@@ -35,10 +36,13 @@ type RequestContext struct {
 
 // NewContext returns a new correlation context object
 func NewContext(ctx context.Context, origin Component) context.Context {
-	requestContext := &RequestContext{
-		ID:     uuid.New(),
-		Origin: origin,
+	if v := ctx.Value(ContextKey); v == nil {
+		requestContext := &RequestContext{
+			ID:     uuid.New(),
+			Origin: origin,
+		}
+		ctx = context.WithValue(ctx, ContextKey, requestContext)
 	}
 
-	return context.WithValue(ctx, ContextKey, requestContext)
+	return ctx
 }

@@ -17,10 +17,12 @@ limitations under the License.
 package csi
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -389,4 +392,45 @@ func TestAddEncryptionInfoToLabels(t *testing.T) {
 	assert.Equal(t, labels[options.OptionsSecret], "secret")
 	assert.Equal(t, labels[options.OptionsSecretContext], "context")
 	assert.Equal(t, labels[options.OptionsSecretKey], "key")
+}
+
+func TestCSIServerStartContextInterceptor(t *testing.T) {
+	s := newTestServer(t)
+	assert.True(t, s.Server().IsRunning())
+	defer s.Stop()
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			SnapEnumerate(nil, nil).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(nil, nil).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+	)
+
+	var buf bytes.Buffer
+	clogger.SetOutput(&buf)
+
+	// Make a call
+	c := csi.NewControllerClient(s.Conn())
+	resp, err := c.ListSnapshots(context.Background(), &csi.ListSnapshotsRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	// Should have correlation ID in logs.
+	logStr := buf.String()
+
+	expectedInfoLog := "correlation-id"
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s in %s ", expectedInfoLog, logStr)
+	}
+
+	expectedInfoLog = "csi-driver"
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s in %s", expectedInfoLog, logStr)
+	}
 }
