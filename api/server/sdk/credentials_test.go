@@ -55,6 +55,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 				Region:           "dummy-region",
 				DisableSsl:       true,
 				DisablePathStyle: false,
+				EnableObjectLock: false,
 			},
 		},
 	}
@@ -74,6 +75,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredProxy] = "true"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredObjectLockEnableKey] = "false"
 
 	uuid := "good-uuid"
 	s.MockDriver().
@@ -129,6 +131,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredObjectLockEnableKey] = "false"
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -584,14 +587,17 @@ func TestSdkCredentialEnumerate(t *testing.T) {
 	req := &api.SdkCredentialEnumerateRequest{}
 
 	enumS3test1 := map[string]interface{}{
-		api.OptCredType:         "s3",
-		api.OptCredAccessKey:    "test-access",
-		api.OptCredSecretKey:    "test-secret",
-		api.OptCredEndpoint:     "test-endpoint",
-		api.OptCredRegion:       "test-region",
-		api.OptCredProxy:        "false",
-		api.OptCredIAMPolicy:    "false",
-		api.OptCredStorageClass: "",
+		api.OptCredType:                   "s3",
+		api.OptCredAccessKey:              "test-access",
+		api.OptCredSecretKey:              "test-secret",
+		api.OptCredEndpoint:               "test-endpoint",
+		api.OptCredRegion:                 "test-region",
+		api.OptCredProxy:                  "false",
+		api.OptCredIAMPolicy:              "false",
+		api.OptCredStorageClass:           "",
+		api.OptCredObjectLockEnableKey:    "true",
+		api.OptCredObjectRetentionDaysKey: "2",
+		api.OptCredObjectRetentionModeKey: api.S3RetiontionModeCompliance,
 	}
 
 	enumS3test2 := map[string]interface{}{
@@ -965,6 +971,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredObjectLockEnableKey] = "false"
 
 	// Create a marshalled ownership for the expect params
 	ownership := &api.Ownership{
@@ -1197,6 +1204,7 @@ func TestSdkAWSCredentialUpdateSuccess(t *testing.T) {
 				Region:           "dummy-region",
 				DisableSsl:       true,
 				DisablePathStyle: false,
+				EnableObjectLock: false,
 			},
 		},
 	}
@@ -1216,21 +1224,23 @@ func TestSdkAWSCredentialUpdateSuccess(t *testing.T) {
 	params[api.OptCredProxy] = "true"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredObjectLockEnableKey] = "false"
 	uuid := "good-uuid"
 
 	enumAws := map[string]interface{}{
-		api.OptCredType:             "s3",
-		api.OptCredName:             "test",
-		api.OptCredEncrKey:          "key",
-		api.OptCredAccessKey:        "dummy-access",
-		api.OptCredSecretKey:        "dummy-secret",
-		api.OptCredEndpoint:         "dummy-endpoint",
-		api.OptCredRegion:           "dummy-region",
-		api.OptCredDisableSSL:       "true",
-		api.OptCredBucket:           "mybucket",
-		api.OptCredDisablePathStyle: "false",
-		api.OptCredProxy:            "false",
-		api.OptCredIAMPolicy:        "false",
+		api.OptCredType:                "s3",
+		api.OptCredName:                "test",
+		api.OptCredEncrKey:             "key",
+		api.OptCredAccessKey:           "dummy-access",
+		api.OptCredSecretKey:           "dummy-secret",
+		api.OptCredEndpoint:            "dummy-endpoint",
+		api.OptCredRegion:              "dummy-region",
+		api.OptCredDisableSSL:          "true",
+		api.OptCredBucket:              "mybucket",
+		api.OptCredDisablePathStyle:    "false",
+		api.OptCredProxy:               "false",
+		api.OptCredIAMPolicy:           "false",
+		api.OptCredObjectLockEnableKey: "false",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -1311,6 +1321,7 @@ func TestSdkAWSCredentialUpdateFailed(t *testing.T) {
 	params[api.OptCredProxy] = "true"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredObjectLockEnableKey] = "false"
 	uuid := "good-uuid"
 
 	s.MockDriver().

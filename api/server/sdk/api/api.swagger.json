@@ -1761,6 +1761,20 @@
       },
       "apiSdkAwsCredentialRequest": {
         "properties": {
+          "DefaultRetentionDays": {
+            "format": "int32",
+            "title": "(optional) DefaultRetentionDays to hold on objects",
+            "type": "integer"
+          },
+          "EnableObjectLock": {
+            "format": "boolean",
+            "title": "(optional) EnableObjectLock for immutability",
+            "type": "boolean"
+          },
+          "RetentionMode": {
+            "title": "(optional) RetentionMode, if not specified, uses compliance mode",
+            "type": "string"
+          },
           "access_key": {
             "title": "Access key",
             "type": "string"
@@ -1793,6 +1807,20 @@
       },
       "apiSdkAwsCredentialResponse": {
         "properties": {
+          "DefaultRetentionDays": {
+            "format": "int32",
+            "title": "(optional) DefaultRetentionDays to hold on objects",
+            "type": "integer"
+          },
+          "EnableObjectLock": {
+            "format": "boolean",
+            "title": "(optional) EnableObjectLock for immutability",
+            "type": "boolean"
+          },
+          "RetentionMode": {
+            "title": "(optional) RetentionMode, if not specified, uses compliance mode",
+            "type": "string"
+          },
           "access_key": {
             "title": "Access key",
             "type": "string"
@@ -5590,7 +5618,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.123.0"
+    "version": "0.124.0"
   },
   "openapi": "3.0.0",
   "paths": {

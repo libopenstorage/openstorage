@@ -148,6 +148,12 @@ const (
 	OptCredBucket = "CredBucket"
 	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
+	// OptCredObjectLockEnableKey for aws to enable obj lock
+	OptCredObjectLockEnableKey = "CredObjLockEnable"
+	// OptCredObjRetentionDaysKey for aws to retian objs wit lock
+	OptCredObjectRetentionDaysKey = "CredObjRetentionDays"
+	// OptCredObjectRetentionModeKey for aws, retention mode
+	OptCredObjectRetentionModeKey = "CredObjRetentionMode"
 	// OptCredGoogleJsonKey for google cloud
 	OptCredGoogleJsonKey = "CredJsonKey"
 	// OptCredAzureAccountName is the account name for
@@ -510,6 +516,13 @@ const (
 const (
 	S3StorageClassStandard   = "STANDARD"
 	S3StorageClassStandardIa = "STANDARD_IA"
+)
+
+// obj lock modes for s3
+const (
+	S3RetentionModeInvalid     = "InvalidRetentionMode"
+	S3RetiontionModeCompliance = "ComplianceMode"
+	S3RetentionModeGovernance  = "GovernanceMode"
 )
 
 type CloudBackupStatusType string

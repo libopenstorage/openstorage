@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/golang/protobuf/jsonpb"
 
@@ -97,6 +98,16 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
 	params[api.OptCredStorageClass] = fmt.Sprintf("%v", req.GetS3StorageClass())
+	params[api.OptCredObjectLockEnableKey] = fmt.Sprintf("%v", aws.GetEnableObjectLock())
+	if aws.GetEnableObjectLock() {
+		if aws.GetDefaultRetentionDays() != 0 {
+			params[api.OptCredObjectRetentionDaysKey] = fmt.Sprintf("%v", aws.GetDefaultRetentionDays())
+		}
+		if len(aws.GetRetentionMode()) != 0 {
+			params[api.OptCredObjectRetentionModeKey] = fmt.Sprintf("%v", aws.GetRetentionMode())
+		}
+	}
+
 	uuid, err := s.create(ctx, req, params)
 
 	if err != nil {
@@ -453,14 +464,37 @@ func (s *CredentialServer) Inspect(
 			// older format creds
 			disablePathStyle = "false"
 		}
+		objLock, ok := info[api.OptCredObjectLockEnableKey].(string)
+		if !ok {
+			objLock = "false"
+		}
+		rDays := 0
+		var err error
+		retentionDays, ok := info[api.OptCredObjectRetentionDaysKey].(string)
+		if ok {
+			rDays, err = strconv.Atoi(retentionDays)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "Unable parse Retention days")
+			}
+		}
+
+		retentionMode := ""
+		_, ok = info[api.OptCredObjectRetentionDaysKey]
+		if ok {
+			retentionMode = info[api.OptCredObjectRetentionDaysKey].(string)
+		}
+
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
-				AccessKey:        accessKey,
-				Endpoint:         endpoint,
-				Region:           region,
-				DisableSsl:       disableSsl == "true",
-				DisablePathStyle: disablePathStyle == "true",
-				S3StorageClass:   storageClass,
+				AccessKey:            accessKey,
+				Endpoint:             endpoint,
+				Region:               region,
+				DisableSsl:           disableSsl == "true",
+				DisablePathStyle:     disablePathStyle == "true",
+				S3StorageClass:       storageClass,
+				EnableObjectLock:     objLock == "true",
+				DefaultRetentionDays: int32(rDays),
+				RetentionMode:        retentionMode,
 			},
 		}
 	case "azure":
@@ -648,6 +682,15 @@ func (s *CredentialServer) awsUpdate(
 	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
 	params[api.OptCredStorageClass] = fmt.Sprintf("%v", req.GetS3StorageClass())
+	// Users have to provide correct values, whether they want to change it or not
+	params[api.OptCredObjectLockEnableKey] = fmt.Sprintf("%v", aws.GetEnableObjectLock())
+	if aws.GetDefaultRetentionDays() != 0 {
+		params[api.OptCredObjectRetentionDaysKey] = fmt.Sprintf("%v", aws.GetDefaultRetentionDays())
+	}
+	if len(aws.GetRetentionMode()) != 0 {
+		params[api.OptCredObjectRetentionModeKey] = fmt.Sprintf("%v", aws.GetRetentionMode())
+	}
+
 	err := s.update(ctx, req, params, credId)
 
 	if err != nil {

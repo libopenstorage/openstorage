@@ -2989,6 +2989,12 @@ message SdkAwsCredentialRequest {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) EnableObjectLock for immutability
+  bool EnableObjectLock = 7;
+  // (optional) DefaultRetentionDays to hold on objects
+  int32 DefaultRetentionDays = 8;
+  // (optional) RetentionMode, if not specified, uses compliance mode
+  string RetentionMode = 9;
 }
 
 // Defines credentials for Azure
@@ -3021,6 +3027,12 @@ message SdkAwsCredentialResponse {
   bool disable_path_style = 6;
   // (optional) Storage class for s3 puts
   string s3_storage_class = 7;
+  // (optional) EnableObjectLock for immutability
+  bool EnableObjectLock = 8;
+  // (optional) DefaultRetentionDays to hold on objects
+  int32 DefaultRetentionDays = 9;
+  // (optional) RetentionMode, if not specified, uses compliance mode
+  string RetentionMode = 10;
 }
 
 // Defines the response for Azure credentials
@@ -4941,7 +4953,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 123;
+    Minor = 124;
     // SDK version patch value of this specification
     Patch = 0;
   }

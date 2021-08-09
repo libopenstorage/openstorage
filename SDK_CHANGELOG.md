@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.124.0 - (08/09/2021)
+
+* Add s3 object lock fields to credentials
+
 ### v0.123.0 - (07/07/2021)
 
 * Add DerivedIoProfile to Volume and a new NONE IO Profile
