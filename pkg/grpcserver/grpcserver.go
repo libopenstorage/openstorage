@@ -32,7 +32,6 @@ type GrpcServerConfig struct {
 	Name    string
 	Net     string
 	Address string
-	Opts    []grpc.ServerOption
 }
 
 // GrpcServer is a server manager for gRPC implementations
@@ -43,7 +42,6 @@ type GrpcServer struct {
 	wg       sync.WaitGroup
 	running  bool
 	lock     sync.Mutex
-	opts     []grpc.ServerOption
 }
 
 // New creates a gRPC server on the specified port and transport.
@@ -69,7 +67,6 @@ func New(config *GrpcServerConfig) (*GrpcServer, error) {
 	return &GrpcServer{
 		name:     config.Name,
 		listener: l,
-		opts:     config.Opts,
 	}, nil
 }
 
@@ -83,7 +80,7 @@ func (s *GrpcServer) Start(register func(grpcServer *grpc.Server)) error {
 		return fmt.Errorf("Server already running")
 	}
 
-	s.server = grpc.NewServer(s.opts...)
+	s.server = grpc.NewServer()
 	register(s.server)
 
 	// Start listening for requests

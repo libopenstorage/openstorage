@@ -18,14 +18,7 @@ package auth
 
 import (
 	"context"
-
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 )
-
-func init() {
-	correlation.RegisterComponent("auth")
-	correlation.RegisterGlobalHook()
-}
 
 const (
 	systemGuestRoleName = "system.guest"

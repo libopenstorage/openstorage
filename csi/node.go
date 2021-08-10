@@ -25,6 +25,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -69,7 +70,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
-	clogger.WithContext(ctx).Infof("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
+	logrus.Infof("csi.NodePublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
 	if len(volumeId) == 0 {
@@ -88,7 +89,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	if req.GetVolumeCapability().GetBlock() != nil {
 		isBlockAccessType = true
 	}
-	if err := ensureMountPathCreated(ctx, targetPath, isBlockAccessType); err != nil {
+	if err := ensureMountPathCreated(targetPath, isBlockAccessType); err != nil {
 		return nil, status.Errorf(
 			codes.Aborted,
 			"Failed to use target location %s: %s",
@@ -174,7 +175,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 			DriverOptions: driverOpts,
 		}); err != nil {
 			if spec.Ephemeral {
-				clogger.WithContext(ctx).Errorf("Failed to attach ephemeral volume %s: %v", volumeId, err.Error())
+				logrus.Errorf("Failed to attach ephemeral volume %s: %v", volumeId, err.Error())
 				s.cleanupEphemeral(ctx, conn, volumeId, false)
 			}
 			return nil, err
@@ -189,13 +190,13 @@ func (s *OsdCsiServer) NodePublishVolume(
 		DriverOptions: driverOpts,
 	}); err != nil {
 		if spec.Ephemeral {
-			clogger.WithContext(ctx).Errorf("Failed to mount ephemeral volume %s: %v", volumeId, err.Error())
+			logrus.Errorf("Failed to mount ephemeral volume %s: %v", volumeId, err.Error())
 			s.cleanupEphemeral(ctx, conn, volumeId, true)
 		}
 		return nil, err
 	}
 
-	clogger.WithContext(ctx).Infof("CSI Volume %s mounted on %s",
+	logrus.Infof("CSI Volume %s mounted on %s",
 		volumeId,
 		req.GetTargetPath())
 
@@ -210,7 +211,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
-	clogger.WithContext(ctx).Infof("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
+	logrus.Infof("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
 	if len(volumeId) == 0 {
@@ -224,20 +225,20 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
+			logrus.Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
 		} else if err != nil {
 			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 				req.GetVolumeId(),
 				err.Error())
 		} else {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
+			logrus.Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
 		}
 	}
 
 	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
-		clogger.WithContext(ctx).Infof("unable to unmount volume %s onto %s: %s",
+		logrus.Infof("unable to unmount volume %s onto %s: %s",
 			req.GetVolumeId(),
 			req.GetTargetPath(),
 			err.Error(),
@@ -256,7 +257,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	// Attempt to remove volume path
 	// Kubernetes handles this after NodeUnpublishVolume finishes, but this allows for cross-CO compatibility
 	if err := os.Remove(req.GetTargetPath()); err != nil && !os.IsNotExist(err) {
-		clogger.WithContext(ctx).Warnf("Failed to delete mount path %s: %s", targetPath, err.Error())
+		logrus.Warnf("Failed to delete mount path %s: %s", targetPath, err.Error())
 	}
 
 	// Return error to Kubelet if mount path still exists to force a retry
@@ -267,7 +268,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 			targetPath)
 	}
 
-	clogger.WithContext(ctx).Infof("CSI Volume %s unmounted from path %s", volumeId, targetPath)
+	logrus.Infof("CSI Volume %s unmounted from path %s", volumeId, targetPath)
 
 	return &csi.NodeUnpublishVolumeResponse{}, nil
 }
@@ -278,7 +279,8 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	ctx context.Context,
 	req *csi.NodeGetCapabilitiesRequest,
 ) (*csi.NodeGetCapabilitiesResponse, error) {
-	clogger.WithContext(ctx).Debugf("csi.NodeGetCapabilities request received")
+
+	logrus.Debugf("csi.NodeGetCapabilities request received")
 
 	caps := []csi.NodeServiceCapability_RPC_Type{
 		// Getting volume stats for volume health monitoring
@@ -334,7 +336,8 @@ func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
 // and only exposed via the CSI unix domain socket. If a secrets field is added
 // in csi.NodeGetVolumeStatsRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
-	clogger.WithContext(ctx).Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
+
+	logrus.Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
 
 	// Check arguments
 	id := req.GetVolumeId()
@@ -347,7 +350,7 @@ func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetV
 	}
 
 	// Driver inspect as NodeGetVolumeStatsRequest does not support secrets
-	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+	vol, err := s.driverGetVolume(req.GetVolumeId())
 	if err != nil {
 		return nil, err
 	}
@@ -388,7 +391,7 @@ func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientCo
 		if _, err := mounts.Detach(ctx, &api.SdkVolumeDetachRequest{
 			VolumeId: volumeId,
 		}); err != nil {
-			clogger.WithContext(ctx).Errorf("Failed to detach ephemeral volume %s during cleanup: %v", volumeId, err.Error())
+			logrus.Errorf("Failed to detach ephemeral volume %s during cleanup: %v", volumeId, err.Error())
 			return
 		}
 	}
@@ -396,11 +399,11 @@ func (s *OsdCsiServer) cleanupEphemeral(ctx context.Context, conn *grpc.ClientCo
 	if _, err := volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
 		VolumeId: volumeId,
 	}); err != nil {
-		clogger.WithContext(ctx).Errorf("Failed to delete ephemeral volume %s during cleanup: %v", volumeId, err.Error())
+		logrus.Errorf("Failed to delete ephemeral volume %s during cleanup: %v", volumeId, err.Error())
 	}
 }
 
-func ensureMountPathCreated(ctx context.Context, targetPath string, isBlock bool) error {
+func ensureMountPathCreated(targetPath string, isBlock bool) error {
 	// Check if targetpath exists
 	fileInfo, err := os.Lstat(targetPath)
 	if err != nil && os.IsNotExist(err) {
@@ -408,7 +411,7 @@ func ensureMountPathCreated(ctx context.Context, targetPath string, isBlock bool
 		// 1. Block - create targetPath file
 		// 2. Mount - create targetpath directory
 		if isBlock {
-			if err = makeFile(ctx, targetPath); err != nil {
+			if err = makeFile(targetPath); err != nil {
 				return err
 			}
 		} else {
@@ -454,12 +457,12 @@ func validateEphemeralVolumeAttributes(volumeAttributes map[string]string) error
 	return nil
 }
 
-func makeFile(ctx context.Context, pathname string) error {
+func makeFile(pathname string) error {
 	f, err := os.OpenFile(pathname, os.O_CREATE, os.FileMode(0644))
 	defer func() {
 		err := f.Close()
 		if err != nil {
-			clogger.WithContext(ctx).Warnf("failed to close file: %s", err.Error())
+			logrus.Warnf("failed to close file: %s", err.Error())
 		}
 	}()
 	if err != nil {

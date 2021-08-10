@@ -33,7 +33,6 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
@@ -468,17 +467,11 @@ func (s *sdkGrpcServer) Start() error {
 		s.log.Info("SDK TLS disabled")
 	}
 
-	// Add correlation interceptor
-	correlationInterceptor := correlation.ContextInterceptor{
-		Origin: correlation.ComponentSDK,
-	}
-
 	// Setup authentication and authorization using interceptors if auth is enabled
 	if len(s.config.Security.Authenticators) != 0 {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockUnaryIntercepter,
-				correlationInterceptor.ContextUnaryInterceptor,
 				grpc_auth.UnaryServerInterceptor(s.auth),
 				s.authorizationServerUnaryInterceptor,
 				s.loggerServerUnaryInterceptor,
@@ -496,7 +489,6 @@ func (s *sdkGrpcServer) Start() error {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockUnaryIntercepter,
-				correlationInterceptor.ContextUnaryInterceptor,
 				s.loggerServerUnaryInterceptor,
 				grpc_prometheus.UnaryServerInterceptor,
 			)))
