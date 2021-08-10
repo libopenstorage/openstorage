@@ -31,7 +31,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -126,9 +125,10 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	ctx context.Context,
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
-	logrus.Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
-	vol, err := s.driverGetVolume(req.GetVolumeId())
+	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
+
+	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		return nil, err
 	}
@@ -161,7 +161,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	}
 
 	// Log request
-	logrus.Infof("csi.ValidateVolumeCapabilities of id %s "+
+	clogger.WithContext(ctx).Infof("csi.ValidateVolumeCapabilities of id %s "+
 		"capabilities %#v "+
 		id,
 		capabilities)
@@ -193,7 +193,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 			"Driver volume id [%s] does not equal requested id of: %s",
 			v.Id,
 			id)
-		logrus.Errorln(errs)
+		clogger.WithContext(ctx).Errorln(errs)
 		return nil, status.Error(codes.Internal, errs)
 	}
 	// Setup uninitialized response object
@@ -380,9 +380,8 @@ func (s *OsdCsiServer) CreateVolume(
 	ctx context.Context,
 	req *csi.CreateVolumeRequest,
 ) (*csi.CreateVolumeResponse, error) {
-
 	// Log request
-	logrus.Infof("csi.CreateVolume request received. Volume: %s", req.GetName())
+	clogger.WithContext(ctx).Infof("csi.CreateVolume request received. Volume: %s", req.GetName())
 
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
@@ -395,7 +394,7 @@ func (s *OsdCsiServer) CreateVolume(
 	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
-		logrus.Errorln(e)
+		clogger.WithContext(ctx).Errorln(e)
 		return nil, status.Error(codes.InvalidArgument, e)
 	}
 
@@ -514,9 +513,8 @@ func (s *OsdCsiServer) DeleteVolume(
 	ctx context.Context,
 	req *csi.DeleteVolumeRequest,
 ) (*csi.DeleteVolumeResponse, error) {
-
 	// Log request
-	logrus.Infof("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
+	clogger.WithContext(ctx).Infof("csi.DeleteVolume request received. VolumeID: %s", req.VolumeId)
 
 	// Check arguments
 	if len(req.GetVolumeId()) == 0 {
@@ -546,7 +544,7 @@ func (s *OsdCsiServer) DeleteVolume(
 		e := fmt.Sprintf("Unable to delete volume with id %s: %s",
 			req.GetVolumeId(),
 			err.Error())
-		logrus.Errorln(e)
+		clogger.WithContext(ctx).Errorln(e)
 		return nil, status.Error(codes.Internal, e)
 	}
 
@@ -835,6 +833,7 @@ func (s *OsdCsiServer) ListSnapshots(
 	ctx context.Context,
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
+
 	if len(req.GetSnapshotId()) > 0 {
 		return s.listSingleSnapshot(ctx, req)
 	}
@@ -848,7 +847,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 ) (*csi.ListSnapshotsResponse, error) {
 	snapshotId := req.GetSnapshotId()
 
-	logrus.Infof("ListSnapshots for a single snapshot %s received", req.GetSnapshotId())
+	clogger.WithContext(ctx).Infof("ListSnapshots for a single snapshot %s received", req.GetSnapshotId())
 
 	// Get grpc connection
 	conn, err := s.getConn()
@@ -911,7 +910,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	startingToken := req.GetStartingToken()
 	maxEntries := req.GetMaxEntries()
 
-	logrus.Infof("ListSnapshots for multiple snapshots received. sourceVolumeId: %s, startingToken: %s, maxEntries: %v",
+	clogger.WithContext(ctx).Infof("ListSnapshots for multiple snapshots received. sourceVolumeId: %s, startingToken: %s, maxEntries: %v",
 		sourceVolumeId,
 		startingToken,
 		maxEntries,
