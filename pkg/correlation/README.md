@@ -15,15 +15,16 @@ create the logger once per package. However, each log line can be quite
 verbose as you must provide WithContext(ctx)
 
 File 1:
-```
+
+```go
 package example
 
 var (
     clogger := correlation.NewPackageLogger("test")
 )
 	
-func testFunc() {
-    ctx := correlation.NewContext(context.Background(), "source-component")
+func testFunc(ctx context.Context ) {
+    ctx := correlation.WithCorrelationContext(ctx, "source-component")
 
     clogger.WithContext(ctx).Info("test info log 1")
     testFuncTwo(ctx)
@@ -31,7 +32,8 @@ func testFunc() {
 ```
 
 File 2:
-```
+
+```go
 package example
 
 func testFuncTwo(ctx context.Context) {
@@ -44,11 +46,17 @@ This method is great for reducing the amount of count needed per-line,
 as you do not need to pass in the context at every log line. However,
 you must remember to instantiate the logger at every function.
 
-```
+```go
 package example
 
+func init() {
+    // RegisterComponent registers the package where this function was called from
+    // as a given component name.
+    correlation.RegisterComponent("example-package")
+}
+
 func testFunc() {
-    ctx := correlation.NewContext(context.Background(), "test_origin")
+    ctx := correlation.WithCorrelationContext(context.Background(), "test_origin")
     clogger := correlation.NewFunctionLogger(ctx)
 
     clogger.Info("test info log 1")
@@ -64,17 +72,25 @@ func testFuncTwo(ctx context.Context) {
 
 ### Method 3: Global correlation logging hook
 This is a nice catch-all for covering packages where a
-package-level or function-level logger is not created. However,
-it does not support component metadata. To mark certain packages as 
+package-level or function-level logger is not created. To mark certain packages as 
 a component, call `RegisterComponent` from a given package. Each 
-log line in this package will have the registered component added.
+log line in this package will have the registered component added. If a package 
+is not registered as a component, we'll find the component based on the package.
 
 In main.go, first we should register the global hook:
-```
+
+```go
 package main
 
 init() {
+    // RegisterGlobalHook will register the correlation logging
+    // hook at a global/multi-package level. Note that this is not
+    // component-aware and it is better to use NewFunctionLogger
+    // or NewPackageLogger for logging.
     correlation.RegisterGlobalHook()
+
+    // RegisterComponent registers the package where this function was called from
+    // as a given component name.
     correlation.RegisterComponent("main")
 }
 
@@ -90,10 +106,13 @@ For example, if a support engineer sees many log line failures with "csi-driver"
 they'll know who to contact regarding that failure.
 
 The following example shows how a helper package can be registered as a component:
-```
+
+```go
 package example
 
 func init() {
+    // RegisterComponent registers the package where this function was called from
+    // as a given component name.
     correlation.RegisterComponent("example-package")
 }
 
