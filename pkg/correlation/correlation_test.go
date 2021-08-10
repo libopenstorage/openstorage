@@ -15,7 +15,7 @@ func TestNewPackageLogger(t *testing.T) {
 	clogger.SetReportCaller(true)
 	var buf bytes.Buffer
 	clogger.SetOutput(&buf)
-	ctx := correlation.NewContext(context.Background(), "test_origin")
+	ctx := correlation.WithCorrelationContext(context.Background(), "test_origin")
 
 	clogger.WithContext(ctx).Info("test info log")
 	logStr := buf.String()
@@ -37,7 +37,7 @@ func TestNewPackageLogger(t *testing.T) {
 }
 
 func TestFunctionLogger(t *testing.T) {
-	ctx := correlation.NewContext(context.Background(), "test_origin")
+	ctx := correlation.WithCorrelationContext(context.Background(), "test_origin")
 	correlation.RegisterComponent("register_comp_test")
 
 	clogger := correlation.NewFunctionLogger(ctx)
@@ -69,7 +69,7 @@ func TestRegisterGlobalLogger(t *testing.T) {
 	logrus.SetOutput(&buf)
 	logrus.SetReportCaller(true)
 	correlation.RegisterGlobalHook()
-	ctx := correlation.NewContext(context.Background(), "test_origin")
+	ctx := correlation.WithCorrelationContext(context.Background(), "test_origin")
 
 	logrus.WithContext(ctx).Info("test info log")
 	logStr := buf.String()

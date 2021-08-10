@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -425,12 +424,8 @@ func TestCSIServerStartContextInterceptor(t *testing.T) {
 	logStr := buf.String()
 
 	expectedInfoLog := "correlation-id"
-	if !strings.Contains(logStr, expectedInfoLog) {
-		t.Fatalf("failed to check for log line %s in %s ", expectedInfoLog, logStr)
-	}
+	assert.Contains(t, logStr, expectedInfoLog)
 
 	expectedInfoLog = "csi-driver"
-	if !strings.Contains(logStr, expectedInfoLog) {
-		t.Fatalf("failed to check for log line %s in %s", expectedInfoLog, logStr)
-	}
+	assert.Contains(t, logStr, expectedInfoLog)
 }
