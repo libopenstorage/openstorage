@@ -310,7 +310,7 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Mount(id, mountPath, nil).
+		Mount(context.TODO(), id, mountPath, nil).
 		Return(nil).
 		Times(1)
 
@@ -359,7 +359,7 @@ func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Mount(id, mountPath, map[string]string{"hello": "world"}).
+		Mount(context.TODO(), id, mountPath, map[string]string{"hello": "world"}).
 		Return(nil).
 		Times(1)
 
@@ -404,7 +404,7 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Mount(id, mountPath, nil).
+		Mount(context.TODO(), id, mountPath, nil).
 		Return(fmt.Errorf("Invalid Mount Path"))
 
 	// Setup client
@@ -489,7 +489,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	// Setup client
@@ -531,7 +531,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	_, err = c.Unmount(context.Background(), req)
@@ -570,7 +570,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	_, err = c.Unmount(context.Background(), req)
@@ -607,7 +607,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	_, err = c.Unmount(context.Background(), req)
@@ -643,7 +643,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	_, err = c.Unmount(context.Background(), req)
@@ -676,7 +676,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(nil)
 
 	_, err = c.Unmount(context.Background(), req)
@@ -717,7 +717,7 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Unmount(id, mountPath, options).
+		Unmount(context.TODO(), id, mountPath, options).
 		Return(fmt.Errorf("Invalid Mount Path"))
 
 	// Setup client

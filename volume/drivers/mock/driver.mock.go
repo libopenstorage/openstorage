@@ -5,6 +5,7 @@
 package mock
 
 import (
+	context "context"
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
@@ -651,17 +652,17 @@ func (mr *MockVolumeDriverMockRecorder) Inspect(arg0 interface{}) *gomock.Call {
 }
 
 // Mount mocks base method.
-func (m *MockVolumeDriver) Mount(arg0, arg1 string, arg2 map[string]string) error {
+func (m *MockVolumeDriver) Mount(arg0 context.Context, arg1, arg2 string, arg3 map[string]string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Mount", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Mount", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Mount indicates an expected call of Mount.
-func (mr *MockVolumeDriverMockRecorder) Mount(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Mount(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mount", reflect.TypeOf((*MockVolumeDriver)(nil).Mount), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Mount", reflect.TypeOf((*MockVolumeDriver)(nil).Mount), arg0, arg1, arg2, arg3)
 }
 
 // MountedAt mocks base method.
@@ -865,17 +866,17 @@ func (mr *MockVolumeDriverMockRecorder) Type() *gomock.Call {
 }
 
 // Unmount mocks base method.
-func (m *MockVolumeDriver) Unmount(arg0, arg1 string, arg2 map[string]string) error {
+func (m *MockVolumeDriver) Unmount(arg0 context.Context, arg1, arg2 string, arg3 map[string]string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Unmount", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Unmount", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Unmount indicates an expected call of Unmount.
-func (mr *MockVolumeDriverMockRecorder) Unmount(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Unmount(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unmount", reflect.TypeOf((*MockVolumeDriver)(nil).Unmount), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Unmount", reflect.TypeOf((*MockVolumeDriver)(nil).Unmount), arg0, arg1, arg2, arg3)
 }
 
 // Unquiesce mocks base method.

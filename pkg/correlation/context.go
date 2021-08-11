@@ -49,7 +49,7 @@ type RequestContext struct {
 	Origin Component
 }
 
-// NewContext returns a new correlation context object
+// WithCorrelationContext returns a new correlation context object
 func WithCorrelationContext(ctx context.Context, origin Component) context.Context {
 	if v := ctx.Value(ContextKey); v == nil {
 		requestContext := &RequestContext{
@@ -60,4 +60,11 @@ func WithCorrelationContext(ctx context.Context, origin Component) context.Conte
 	}
 
 	return ctx
+}
+
+// TODO is an alias for context.TODO(), specifically
+// for keeping track of areas where we might want to add
+// the correlation context.
+func TODO() context.Context {
+	return context.TODO()
 }

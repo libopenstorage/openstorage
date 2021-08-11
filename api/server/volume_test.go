@@ -1225,7 +1225,7 @@ func TestVolumeMountSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res := driverclient.Mount(id, "/mnt", map[string]string{})
+	res := driverclient.Mount(context.TODO(), id, "/mnt", map[string]string{})
 	assert.Nil(t, res)
 
 	// Assert volume information is correct
@@ -1276,7 +1276,7 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	//create driverclient
-	err = driverclient.Mount("doesnotexist", "/mnt", map[string]string{})
+	err = driverclient.Mount(context.TODO(), "doesnotexist", "/mnt", map[string]string{})
 	assert.NotNil(t, err)
 
 	// Assert volume information is correct
@@ -1427,11 +1427,11 @@ func TestVolumeUnmountSuccess(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	// Mount
-	res := driverclient.Mount(id, "/mnt", map[string]string{})
+	res := driverclient.Mount(context.TODO(), id, "/mnt", map[string]string{})
 	assert.Nil(t, res)
 
 	// Unmount
-	res2 := driverclient.Unmount(id, "/mnt", map[string]string{})
+	res2 := driverclient.Unmount(context.TODO(), id, "/mnt", map[string]string{})
 	assert.Nil(t, res2)
 
 	// Assert volume information is correct
@@ -1482,11 +1482,11 @@ func TestVolumeUnmountFailed(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	// Mount
-	res := driverclient.Mount(id, "/mnt", map[string]string{})
+	res := driverclient.Mount(context.TODO(), id, "/mnt", map[string]string{})
 	assert.Nil(t, res)
 
 	// Unmount
-	err = driverclient.Unmount("doesnotexist", "/mnt", map[string]string{})
+	err = driverclient.Unmount(context.TODO(), "doesnotexist", "/mnt", map[string]string{})
 	assert.NotNil(t, err)
 
 	// Assert volume information is correct

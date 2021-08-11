@@ -17,6 +17,7 @@ limitations under the License.
 package fake
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"strings"
@@ -210,7 +211,7 @@ func (d *driver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Mount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
@@ -221,7 +222,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err

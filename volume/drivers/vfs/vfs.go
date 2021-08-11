@@ -1,6 +1,7 @@
 package vfs
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -109,7 +110,7 @@ func (d *driver) MountedAt(mountpath string) string {
 
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Mount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
@@ -141,7 +142,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err

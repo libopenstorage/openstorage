@@ -145,7 +145,7 @@ func (s *VolumeServer) Mount(
 		return nil, err
 	}
 
-	err = s.driver(ctx).Mount(req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
+	err = s.driver(ctx).Mount(ctx, req.GetVolumeId(), req.GetMountPath(), req.GetDriverOptions())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -193,7 +193,7 @@ func (s *VolumeServer) Unmount(
 	}
 
 	// Unmount volume
-	if err = s.driver(ctx).Unmount(req.GetVolumeId(), req.GetMountPath(), options); err != nil {
+	if err = s.driver(ctx).Unmount(ctx, req.GetVolumeId(), req.GetMountPath(), options); err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
 			"Failed to unmount volume %s: %v",
