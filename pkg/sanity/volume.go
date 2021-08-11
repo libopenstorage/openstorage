@@ -17,6 +17,7 @@ limitations under the License.
 package sanity
 
 import (
+	"context"
 	"math"
 	"strconv"
 	"time"
@@ -528,11 +529,11 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Attaching mounting the volume to mount Path")
 
-			err = volumedriver.Mount(volumeID, mountPath, nil)
+			err = volumedriver.Mount(context.TODO(), volumeID, mountPath, nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Unmounting the volume successfully")
-			err = volumedriver.Unmount(volumeID, mountPath, nil)
+			err = volumedriver.Unmount(context.TODO(), volumeID, mountPath, nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 	})
@@ -602,7 +603,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
 
-			err = volumedriver.Mount(volumeID, "/mnt", nil)
+			err = volumedriver.Mount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Updating the volume spec with new random size.")
@@ -627,7 +628,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Detaching the volume and unmount successfully")
 
-			err = volumedriver.Unmount(volumeID, "/mnt", nil)
+			err = volumedriver.Unmount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Detach(volumeID, nil)
@@ -909,7 +910,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Unmount(volumeID, "/mnt", nil)
+			err = volumedriver.Unmount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			err = volumedriver.Detach(volumeID, nil)
@@ -962,7 +963,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
 
-			err = volumedriver.Mount(volumeID, "/mnt", nil)
+			err = volumedriver.Mount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Quiescing the volume")

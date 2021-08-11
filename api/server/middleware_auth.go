@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -225,9 +226,9 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 					err = fmt.Errorf("Invalid mount path")
 					break
 				}
-				err = d.Mount(volumeID, req.Action.MountPath, req.Options)
+				err = d.Mount(context.TODO(), volumeID, req.Action.MountPath, req.Options)
 			} else {
-				err = d.Unmount(volumeID, req.Action.MountPath, req.Options)
+				err = d.Unmount(context.TODO(), volumeID, req.Action.MountPath, req.Options)
 			}
 			if err != nil {
 				break

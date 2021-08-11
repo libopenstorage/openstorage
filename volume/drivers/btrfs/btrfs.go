@@ -3,11 +3,12 @@
 package btrfs
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"syscall"
 
-	"go.pedge.io/proto/time"
+	prototime "go.pedge.io/proto/time"
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"
@@ -115,7 +116,7 @@ func (d *driver) Delete(volumeID string) error {
 	return d.btrfs.Remove(volumeID)
 }
 
-func (d *driver) Mount(volumeID string, mountpath string) error {
+func (d *driver) Mount(ctx context.Context, volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -127,7 +128,7 @@ func (d *driver) Mount(volumeID string, mountpath string) error {
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Unmount(volumeID string, mountpath string) error {
+func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err
