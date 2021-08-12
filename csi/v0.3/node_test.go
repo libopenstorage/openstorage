@@ -388,7 +388,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Mount(context.TODO(), name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(fmt.Errorf("MOUNT ERROR")).
 			Times(1),
 		s.MockDriver().
@@ -522,7 +522,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Mount(context.TODO(), name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 	)
@@ -648,7 +648,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(context.TODO(), name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(fmt.Errorf("TEST")).
 			Times(1),
 	)
@@ -696,7 +696,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(context.TODO(), name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 		s.MockDriver().
@@ -754,7 +754,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(context.TODO(), name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 		s.MockDriver().
