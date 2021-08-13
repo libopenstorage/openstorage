@@ -14,6 +14,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/config"
 	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -689,7 +690,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(mountpoint)
 		if len(id) != 0 {
-			err = v.Unmount(context.TODO(), id, mountpoint, nil)
+			err = v.Unmount(correlation.TODO(), id, mountpoint, nil)
 			if err != nil {
 				d.logRequest(method, "").Warnf("Error unmounting scaled volume: %v", err)
 				err = fmt.Errorf("Cannot remount scaled volume(%v)."+
@@ -880,7 +881,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
 
-	err = v.Unmount(context.TODO(), id, mountpoint, opts)
+	err = v.Unmount(correlation.TODO(), id, mountpoint, opts)
 	if err != nil {
 		d.logRequest(method, request.Name).Warnf(
 			"Cannot unmount volume %v, %v",

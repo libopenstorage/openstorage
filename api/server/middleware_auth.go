@@ -2,7 +2,6 @@ package server
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -14,6 +13,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	osecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 	lsecrets "github.com/libopenstorage/secrets"
@@ -226,9 +226,9 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 					err = fmt.Errorf("Invalid mount path")
 					break
 				}
-				err = d.Mount(context.TODO(), volumeID, req.Action.MountPath, req.Options)
+				err = d.Mount(correlation.TODO(), volumeID, req.Action.MountPath, req.Options)
 			} else {
-				err = d.Unmount(context.TODO(), volumeID, req.Action.MountPath, req.Options)
+				err = d.Unmount(correlation.TODO(), volumeID, req.Action.MountPath, req.Options)
 			}
 			if err != nil {
 				break
