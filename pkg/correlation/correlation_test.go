@@ -8,6 +8,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/sirupsen/logrus"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestNewPackageLogger(t *testing.T) {
@@ -83,4 +84,23 @@ func TestRegisterGlobalLogger(t *testing.T) {
 	if !strings.Contains(logStr, expectedCorrelationLog) {
 		t.Fatalf("failed to check for log line %s", expectedCorrelationLog)
 	}
+}
+
+func TestWithCorrelationContext(t *testing.T) {
+	ctx := correlation.WithCorrelationContext(context.Background(), "test")
+	cc, ok := ctx.Value(correlation.ContextKey).(*correlation.RequestContext)
+	if !ok {
+		t.Error("correlation context not found")
+	}
+
+	id := cc.ID
+	assert.NotEmpty(t, id)
+
+	ctx = correlation.WithCorrelationContext(ctx, "test")
+	cc, ok = ctx.Value(correlation.ContextKey).(*correlation.RequestContext)
+	if !ok {
+		t.Error("correlation context not found")
+	}
+	newID := cc.ID
+	assert.Equal(t, id, newID)
 }
