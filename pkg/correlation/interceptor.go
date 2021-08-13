@@ -26,7 +26,7 @@ type ContextInterceptor struct {
 	Origin Component
 }
 
-// UnaryInterceptor creates a gRPC interceptor for adding
+// ContextUnaryInterceptor creates a gRPC interceptor for adding
 // correlation ID to each request
 func (ci *ContextInterceptor) ContextUnaryInterceptor(
 	ctx context.Context,
