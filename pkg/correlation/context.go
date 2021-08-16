@@ -25,10 +25,14 @@ import (
 // correlating requests
 type Component string
 
+// contextKeyType represents a key for interacting with the
+// corrleation context request object
+type contextKeyType string
+
 const (
 	// ContextKey represents the key for storing and retrieving
 	// the correlation context in a context.Context object.
-	ContextKey = "correlation-context"
+	ContextKey = contextKeyType("correlation-context")
 
 	ComponentUnknown   = Component("unknown")
 	ComponentCSIDriver = Component("csi-driver")
