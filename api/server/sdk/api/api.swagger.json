@@ -251,15 +251,6 @@
         "title": "This defines an operator for the policy comparisons",
         "type": "string"
       },
-      "XattrValue": {
-        "default": "UNSPECIFIED",
-        "enum": [
-          "UNSPECIFIED",
-          "COW_ON_DEMAND"
-        ],
-        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume",
-        "type": "string"
-      },
       "apiAlert": {
         "properties": {
           "alert_type": {
@@ -1829,15 +1820,14 @@
         "title": "Defines a response containing the contents of a backup stored by a cloud provider",
         "type": "object"
       },
-      "apiSdkCloudBackupClusterType": {
-        "default": "SdkCloudBackupClusterUnknown",
-        "description": "- SdkCloudBackupClusterUnknown: Unknown\n - SdkCloudBackupClusterCurrent: Beongs to this cluster\n - SdkCloudBackupClusterOther: not this. other cluster",
+      "apiSdkCloudBackupClusterTypeValue": {
+        "default": "UNKNOWN",
         "enum": [
-          "SdkCloudBackupClusterUnknown",
-          "SdkCloudBackupClusterCurrent",
-          "SdkCloudBackupClusterOther"
+          "UNKNOWN",
+          "CURRENT_CLUSTER",
+          "OTHER_CLUSTER"
         ],
-        "title": "CloudBackup operations types",
+        "title": "- UNKNOWN: Unknown\n - CURRENT_CLUSTER: Belongs to this cluster\n - OTHER_CLUSTER: belongs to other cluster",
         "type": "string"
       },
       "apiSdkCloudBackupCreateRequest": {
@@ -2069,7 +2059,7 @@
       "apiSdkCloudBackupInfo": {
         "properties": {
           "cluster_type": {
-            "$ref": "#/components/schemas/apiSdkCloudBackupClusterType"
+            "$ref": "#/components/schemas/apiSdkCloudBackupClusterTypeValue"
           },
           "id": {
             "title": "This is the id as represented by the cloud provider",
@@ -5120,7 +5110,7 @@
             "type": "object"
           },
           "xattr": {
-            "$ref": "#/components/schemas/XattrValue"
+            "$ref": "#/components/schemas/apiXattrValue"
           }
         },
         "type": "object"
@@ -5346,7 +5336,7 @@
             "type": "boolean"
           },
           "xattr": {
-            "$ref": "#/components/schemas/XattrValue"
+            "$ref": "#/components/schemas/apiXattrValue"
           }
         },
         "title": "VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume",
@@ -5426,6 +5416,15 @@
           }
         },
         "type": "object"
+      },
+      "apiXattrValue": {
+        "default": "UNSPECIFIED",
+        "enum": [
+          "UNSPECIFIED",
+          "COW_ON_DEMAND"
+        ],
+        "title": "- UNSPECIFIED: Value is uninitialized or unknown\n - COW_ON_DEMAND: Enable on-demand copy-on-write on the volume",
+        "type": "string"
       },
       "openstorageapiStatus": {
         "default": "STATUS_NONE",

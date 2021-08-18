@@ -4242,21 +4242,23 @@ message SdkCloudBackupInfo {
   map<string, string> metadata = 5;
   // Status indicates the status of the backup
   SdkCloudBackupStatusType status = 6;
-  // cluster indicates if the cloudbackup belongs to current cluster,
+  // indicates if the cloudbackup belongs to current cluster,
   // with older cluster this value may be unknown
-  SdkCloudBackupClusterType cluster_type = 7;
+  SdkCloudBackupClusterType.Value cluster_type = 7;
   // k8s namespace to which this backup belongs to
   string namespace = 8; 
 }
 
-// CloudBackup operations types
-enum SdkCloudBackupClusterType {
-  // Unknown
-  SdkCloudBackupClusterUnknown = 0;
-  // Beongs to this cluster
-  SdkCloudBackupClusterCurrent = 1;
-  // not this. other cluster
-  SdkCloudBackupClusterOther = 2;
+// CloudBackup owner cluster
+message SdkCloudBackupClusterType {
+	enum Value {
+	  // Unknown
+	  UNKNOWN = 0;
+	  // Belongs to this cluster
+	  CURRENT_CLUSTER = 1;
+	  // belongs to other cluster
+	  OTHER_CLUSTER = 2;
+	}
 }
 
 // Defines a response which lists all the backups stored by a cloud provider

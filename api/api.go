@@ -405,8 +405,8 @@ type CloudBackupGenericRequest struct {
 	// MetadataFilter indicates backups whose metadata has these kv pairs
 	MetadataFilter map[string]string
 	// CloudBackupID must be specified if one needs to enumerate known single
-	// backup (format is clusteruuidORBucketName/srcVolId-SnapId(-incr). If t\
-	// this is specified, everything else n the command is ignored
+	// backup (format is clusteruuidORBucketName/srcVolId-SnapId(-incr). If
+	// this is specified, everything else in the command is ignored
 	CloudBackupID string
 	// MissingSrcVol set to true enumerates cloudbackups for which srcVol is not
 	// present in the cluster. Either the source volume is deleted or the
@@ -433,7 +433,7 @@ type CloudBackupInfo struct {
 	Status string
 	// ClusterType indicates if the cloudbackup was uploaded by this
 	// cluster. Could be unknown with older version cloudbackups
-	ClusterType SdkCloudBackupClusterType
+	ClusterType SdkCloudBackupClusterType_Value
 	// Namespace to which this cloudbackup belongs to
 	Namespace string
 }

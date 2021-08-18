@@ -452,7 +452,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 					"hello": "world",
 				},
 				Status:      "Done",
-				ClusterType: api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent,
+				ClusterType: api.SdkCloudBackupClusterType_CURRENT_CLUSTER,
 				Namespace:   namespace,
 			},
 			{
@@ -464,7 +464,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 					"what a": "world",
 				},
 				Status:      "Failed",
-				ClusterType: api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent,
+				ClusterType: api.SdkCloudBackupClusterType_CURRENT_CLUSTER,
 				Namespace:   namespace,
 			},
 		},
@@ -503,7 +503,7 @@ func TestSdkCloudBackupEnumerateWithFilters(t *testing.T) {
 		ts, err := ptypes.TimestampProto(v.Timestamp)
 		assert.NoError(t, err)
 		assert.Equal(t, r.Backups[i].Timestamp, ts)
-		assert.Equal(t, r.Backups[i].ClusterType, api.SdkCloudBackupClusterType_SdkCloudBackupClusterCurrent)
+		assert.Equal(t, r.Backups[i].ClusterType, api.SdkCloudBackupClusterType_CURRENT_CLUSTER)
 		assert.Equal(t, r.Backups[i].Namespace, namespace)
 	}
 }
@@ -552,7 +552,7 @@ func TestSdkCloudBackupEnumerateWithFiltersSingle(t *testing.T) {
 					"hello": "world",
 				},
 				Status:      "Done",
-				ClusterType: api.SdkCloudBackupClusterType_SdkCloudBackupClusterUnknown,
+				ClusterType: api.SdkCloudBackupClusterType_UNKNOWN,
 			},
 		},
 	}
