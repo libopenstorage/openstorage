@@ -23,8 +23,7 @@ import (
 )
 
 func init() {
-	correlation.RegisterComponent("auth")
-	correlation.RegisterGlobalHook()
+	correlation.RegisterComponent(correlation.ComponentAuth)
 }
 
 const (
