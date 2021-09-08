@@ -17,10 +17,12 @@ limitations under the License.
 package csi
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"math/rand"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -28,6 +30,7 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -43,7 +46,6 @@ import (
 	mockdriver "github.com/libopenstorage/openstorage/volume/drivers/mock"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -81,10 +83,10 @@ type testServer struct {
 func setupFakeDriver() {
 	kv, err := kvdb.New(mem.Name, "fake_test", []string{}, nil, kvdb.LogFatalErrorCB)
 	if err != nil {
-		logrus.Panicf("Failed to initialize KVDB")
+		clogger.Panicf("Failed to initialize KVDB")
 	}
 	if err := kvdb.SetInstance(kv); err != nil {
-		logrus.Panicf("Failed to set KVDB instance")
+		clogger.Panicf("Failed to set KVDB instance")
 	}
 	// Need to setup a fake cluster. No need to start it.
 	clustermanager.Init(config.ClusterConfig{
@@ -93,12 +95,12 @@ func setupFakeDriver() {
 	})
 	cm, err = clustermanager.Inst()
 	if err != nil {
-		logrus.Panicf("Unable to initialize cluster manager: %v", err)
+		clogger.Panicf("Unable to initialize cluster manager: %v", err)
 	}
 
 	// Requires a non-nil cluster
 	if err := volumedrivers.Register("fake", map[string]string{}); err != nil {
-		logrus.Panicf("Unable to start volume driver fake: %v", err)
+		clogger.Panicf("Unable to start volume driver fake: %v", err)
 	}
 }
 
@@ -390,4 +392,45 @@ func TestAddEncryptionInfoToLabels(t *testing.T) {
 	assert.Equal(t, labels[options.OptionsSecret], "secret")
 	assert.Equal(t, labels[options.OptionsSecretContext], "context")
 	assert.Equal(t, labels[options.OptionsSecretKey], "key")
+}
+
+func TestCSIServerStartContextInterceptor(t *testing.T) {
+	s := newTestServer(t)
+	assert.True(t, s.Server().IsRunning())
+	defer s.Stop()
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			SnapEnumerate(nil, nil).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(nil, nil).
+			Return([]*api.Volume{}, nil).
+			Times(1),
+	)
+
+	var buf bytes.Buffer
+	clogger.SetOutput(&buf)
+
+	// Make a call
+	c := csi.NewControllerClient(s.Conn())
+	resp, err := c.ListSnapshots(context.Background(), &csi.ListSnapshotsRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+
+	// Should have correlation ID in logs.
+	logStr := buf.String()
+
+	expectedInfoLog := "correlation-id"
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s in %s ", expectedInfoLog, logStr)
+	}
+
+	expectedInfoLog = "csi-driver"
+	if !strings.Contains(logStr, expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s in %s", expectedInfoLog, logStr)
+	}
 }
