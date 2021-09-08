@@ -1,6 +1,7 @@
 package buse
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -271,7 +272,7 @@ func (d *driver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (d *driver) Mount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Mount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return fmt.Errorf("Failed to locate volume %q", volumeID)
@@ -292,7 +293,7 @@ func (d *driver) Mount(volumeID string, mountpath string, options map[string]str
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Unmount(volumeID string, mountpath string, options map[string]string) error {
+func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err

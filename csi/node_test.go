@@ -321,7 +321,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Mount(name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(fmt.Errorf("Unable to mount volume")).
 			Times(1),
 	)
@@ -419,7 +419,7 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Mount(name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 	)
@@ -484,7 +484,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Mount(name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 	)
@@ -547,7 +547,7 @@ func TestNodePublishPureVolumeMountOptions(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Mount(name, targetPath, map[string]string{api.SpecCSIMountOptions: options}).
+			Mount(gomock.Any(), name, targetPath, map[string]string{api.SpecCSIMountOptions: options}).
 			Return(nil).
 			Times(1),
 	)
@@ -626,7 +626,7 @@ func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Mount(name, targetPath, nil).
+			Mount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 	)
@@ -794,7 +794,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(fmt.Errorf("TEST")).
 			Times(1),
 		s.MockDriver().
@@ -851,7 +851,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 		s.MockDriver().
@@ -913,7 +913,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Unmount(name, targetPath, nil).
+			Unmount(gomock.Any(), name, targetPath, nil).
 			Return(nil).
 			Times(1),
 		s.MockDriver().

@@ -25,10 +25,14 @@ import (
 // correlating requests
 type Component string
 
+// contextKeyType represents a key for interacting with the
+// corrleation context request object
+type contextKeyType string
+
 const (
 	// ContextKey represents the key for storing and retrieving
 	// the correlation context in a context.Context object.
-	ContextKey = "correlation-context"
+	ContextKey = contextKeyType("correlation-context")
 
 	ComponentUnknown   = Component("unknown")
 	ComponentCSIDriver = Component("csi-driver")
@@ -49,7 +53,7 @@ type RequestContext struct {
 	Origin Component
 }
 
-// NewContext returns a new correlation context object
+// WithCorrelationContext returns a new correlation context object
 func WithCorrelationContext(ctx context.Context, origin Component) context.Context {
 	if v := ctx.Value(ContextKey); v == nil {
 		requestContext := &RequestContext{
@@ -60,4 +64,11 @@ func WithCorrelationContext(ctx context.Context, origin Component) context.Conte
 	}
 
 	return ctx
+}
+
+// TODO is an alias for context.TODO(), specifically
+// for keeping track of areas where we might want to add
+// the correlation context.
+func TODO() context.Context {
+	return context.TODO()
 }
