@@ -1,6 +1,7 @@
 package layer0
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path"
@@ -19,7 +20,7 @@ import (
 	"github.com/libopenstorage/openstorage/graph"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
 // Layer0 implemenation piggy backs on existing overlay graphdriver implementation
@@ -196,7 +197,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 			return id, nil, nil
 		}
 	}
-	err = l.volDriver.Mount(vols[index].Id, mountPath, nil)
+	err = l.volDriver.Mount(context.TODO(), vols[index].Id, mountPath, nil)
 	if err != nil {
 		logrus.Errorf("Failed to mount volume %v at path %v",
 			vols[index].Id, mountPath)
@@ -256,7 +257,7 @@ func (l *Layer0) Remove(id string) error {
 			opts := make(map[string]string)
 			opts[options.OptionsDeleteAfterUnmount] = "true"
 
-			err = l.volDriver.Unmount(v.volumeID, v.path, opts)
+			err = l.volDriver.Unmount(context.TODO(), v.volumeID, v.path, opts)
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 				_ = l.volDriver.Detach(v.volumeID, nil)
 			}

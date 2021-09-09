@@ -236,7 +236,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 	}
 
-	if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+	if err = s.driver.Unmount(ctx, req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
 		clogger.WithContext(ctx).Infof("unable to unmount volume %s onto %s: %s",
 			req.GetVolumeId(),
 			req.GetTargetPath(),

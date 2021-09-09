@@ -1,6 +1,7 @@
 package fuse
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -115,7 +116,7 @@ func (v *volumeDriver) MountedAt(mountpath string) string {
 	return ""
 }
 
-func (v *volumeDriver) Mount(volumeID string, mountpath string, options map[string]string) error {
+func (v *volumeDriver) Mount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err
@@ -150,7 +151,7 @@ func (v *volumeDriver) Mount(volumeID string, mountpath string, options map[stri
 	return conn.MountError
 }
 
-func (v *volumeDriver) Unmount(volumeID string, mountpath string, options map[string]string) error {
+func (v *volumeDriver) Unmount(ctx context.Context, volumeID string, mountpath string, options map[string]string) error {
 	volume, err := v.GetVol(volumeID)
 	if err != nil {
 		return err

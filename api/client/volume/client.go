@@ -2,6 +2,7 @@ package volume
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -391,7 +392,7 @@ func (v *volumeClient) MountedAt(mountPath string) string {
 
 // Mount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Mount(volumeID string, mountPath string, options map[string]string) error {
+func (v *volumeClient) Mount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -406,7 +407,7 @@ func (v *volumeClient) Mount(volumeID string, mountPath string, options map[stri
 
 // Unmount volume at specified path
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Unmount(volumeID string, mountPath string, options map[string]string) error {
+func (v *volumeClient) Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{

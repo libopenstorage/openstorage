@@ -1,6 +1,7 @@
 package volume
 
 import (
+	"context"
 	"errors"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -252,12 +253,12 @@ type ProtoDriver interface {
 	Delete(volumeID string) error
 	// Mount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Mount(volumeID string, mountPath string, options map[string]string) error
+	Mount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
 	// MountedAt return volume mounted at specified mountpath.
 	MountedAt(mountPath string) string
 	// Unmount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Unmount(volumeID string, mountPath string, options map[string]string) error
+	Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
 	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error

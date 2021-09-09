@@ -95,6 +95,9 @@ func (lh *LogHook) Fire(entry *logrus.Entry) error {
 			entry.Data[LogFieldComponent] = getLocalPackage(dir)
 		}
 
+		// Clear caller metadata. We don't want to log the entire file/function
+		entry.Caller.File = ""
+		entry.Caller.Function = ""
 	}
 
 	return nil
@@ -124,15 +127,19 @@ func NewFunctionLogger(ctx context.Context) *logrus.Logger {
 }
 
 // RegisterGlobalHook will register the correlation logging
-// hook at a global/multi-package level. Note that this is not
-// component-aware and it is better to use NewFunctionLogger
-// or NewPackageLogger for logging.
+// hook at a global/multi-package level per-program.
 func RegisterGlobalHook() {
 	logrus.AddHook(&LogHook{})
+
+	// Setting report caller allows for us to detect the component based on
+	// the package where logrus was called from.
+	logrus.SetReportCaller(true)
 }
 
 // RegisterComponent registers the package where this function was called from
-// as a given component name.
+// as a given component name. This should be done once per package where you want
+// explicitly name the component for this package. Otherwise, we will detect
+// the component based on package directory.
 func RegisterComponent(component Component) {
 	_, file, _, ok := runtime.Caller(1)
 	if !ok {

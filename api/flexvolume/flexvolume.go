@@ -1,6 +1,7 @@
 package flexvolume
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"math"
@@ -11,7 +12,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/libopenstorage/openstorage/volume/drivers"
+	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 
 	"github.com/sirupsen/logrus"
 )
@@ -90,7 +91,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 	if targetMountDir == "" {
 		return ErrMissingMountPath
 	}
-	if err := driver.Mount(mountDevice, targetMountDir, jsonOptions); err != nil {
+	if err := driver.Mount(context.TODO(), mountDevice, targetMountDir, jsonOptions); err != nil {
 		return err
 	}
 	// Update the deviceDriverMap
@@ -126,7 +127,7 @@ func (c *flexVolumeClient) Unmount(mountDir string, options map[string]string) e
 	if err != nil {
 		return err
 	}
-	if err := driver.Unmount(mountDevice, mountDir, options); err != nil {
+	if err := driver.Unmount(context.TODO(), mountDevice, mountDir, options); err != nil {
 		return err
 	}
 	return nil

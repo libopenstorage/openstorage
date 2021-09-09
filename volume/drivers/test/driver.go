@@ -1,6 +1,7 @@
 package test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -229,7 +230,7 @@ func mount(t *testing.T, ctx *Context) {
 
 	err := os.MkdirAll(ctx.testPath, 0755)
 
-	err = ctx.Mount(ctx.volID, ctx.testPath, nil)
+	err = ctx.Mount(context.TODO(), ctx.volID, ctx.testPath, nil)
 	require.NoError(t, err, "Failed in mount %v", ctx.testPath)
 
 	ctx.mountPath = ctx.testPath
@@ -244,7 +245,7 @@ func multiMount(t *testing.T, ctx *Context) {
 	create(t, &ctx2)
 	attach(t, &ctx2)
 
-	err := ctx2.Mount(ctx2.volID, ctx2.testPath, nil)
+	err := ctx2.Mount(context.TODO(), ctx2.volID, ctx2.testPath, nil)
 	require.Error(t, err, "Mount of different devices to same path must fail")
 
 	unmount(t, ctx)
@@ -260,7 +261,7 @@ func unmount(t *testing.T, ctx *Context) {
 
 	require.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
-	err := ctx.Unmount(ctx.volID, ctx.mountPath, nil)
+	err := ctx.Unmount(context.TODO(), ctx.volID, ctx.mountPath, nil)
 	require.NoError(t, err, "Failed in unmount %v", ctx.mountPath)
 
 	ctx.mountPath = ""

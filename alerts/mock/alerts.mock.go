@@ -5,37 +5,39 @@
 package mockalerts
 
 import (
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	alerts "github.com/libopenstorage/openstorage/alerts"
 	api "github.com/libopenstorage/openstorage/api"
-	reflect "reflect"
 )
 
-// MockFilterDeleter is a mock of FilterDeleter interface
+// MockFilterDeleter is a mock of FilterDeleter interface.
 type MockFilterDeleter struct {
 	ctrl     *gomock.Controller
 	recorder *MockFilterDeleterMockRecorder
 }
 
-// MockFilterDeleterMockRecorder is the mock recorder for MockFilterDeleter
+// MockFilterDeleterMockRecorder is the mock recorder for MockFilterDeleter.
 type MockFilterDeleterMockRecorder struct {
 	mock *MockFilterDeleter
 }
 
-// NewMockFilterDeleter creates a new mock instance
+// NewMockFilterDeleter creates a new mock instance.
 func NewMockFilterDeleter(ctrl *gomock.Controller) *MockFilterDeleter {
 	mock := &MockFilterDeleter{ctrl: ctrl}
 	mock.recorder = &MockFilterDeleterMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockFilterDeleter) EXPECT() *MockFilterDeleterMockRecorder {
 	return m.recorder
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockFilterDeleter) Delete(arg0 ...alerts.Filter) error {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -45,13 +47,15 @@ func (m *MockFilterDeleter) Delete(arg0 ...alerts.Filter) error {
 	return ret0
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockFilterDeleterMockRecorder) Delete(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockFilterDeleter)(nil).Delete), arg0...)
 }
 
-// Enumerate mocks base method
+// Enumerate mocks base method.
 func (m *MockFilterDeleter) Enumerate(arg0 ...alerts.Filter) ([]*api.Alert, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{}
 	for _, a := range arg0 {
 		varargs = append(varargs, a)
@@ -62,13 +66,15 @@ func (m *MockFilterDeleter) Enumerate(arg0 ...alerts.Filter) ([]*api.Alert, erro
 	return ret0, ret1
 }
 
-// Enumerate indicates an expected call of Enumerate
+// Enumerate indicates an expected call of Enumerate.
 func (mr *MockFilterDeleterMockRecorder) Enumerate(arg0 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockFilterDeleter)(nil).Enumerate), arg0...)
 }
 
-// Filter mocks base method
+// Filter mocks base method.
 func (m *MockFilterDeleter) Filter(arg0 []*api.Alert, arg1 ...alerts.Filter) ([]*api.Alert, error) {
+	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0}
 	for _, a := range arg1 {
 		varargs = append(varargs, a)
@@ -79,8 +85,9 @@ func (m *MockFilterDeleter) Filter(arg0 []*api.Alert, arg1 ...alerts.Filter) ([]
 	return ret0, ret1
 }
 
-// Filter indicates an expected call of Filter
+// Filter indicates an expected call of Filter.
 func (mr *MockFilterDeleterMockRecorder) Filter(arg0 interface{}, arg1 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0}, arg1...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Filter", reflect.TypeOf((*MockFilterDeleter)(nil).Filter), varargs...)
 }

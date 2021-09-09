@@ -156,7 +156,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		}
 
 		// Mount volume onto the path
-		if err := s.driver.Mount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+		if err := s.driver.Mount(ctx, req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
 			// Detach on error
 			detachErr := s.driver.Detach(v.GetId(), opts)
 			if detachErr != nil {
@@ -233,7 +233,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		}
 
 		// Mount volume onto the path
-		if err = s.driver.Unmount(req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+		if err = s.driver.Unmount(ctx, req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to unmount volume %s onto %s: %s",
