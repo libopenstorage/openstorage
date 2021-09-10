@@ -29,10 +29,10 @@ func Duration(dur *durationpb.Duration) (time.Duration, error) {
 	if int64(d/time.Second) != dur.Seconds {
 		return 0, fmt.Errorf("duration: %v is out of range for time.Duration", dur)
 	}
-	if p.Nanos != 0 {
-		d += time.Duration(p.Nanos) * time.Nanosecond
-		if (d < 0) != (p.Nanos < 0) {
-			return 0, fmt.Errorf("duration: %v is out of range for time.Duration", p)
+	if dur.Nanos != 0 {
+		d += time.Duration(dur.Nanos) * time.Nanosecond
+		if (d < 0) != (dur.Nanos < 0) {
+			return 0, fmt.Errorf("duration: %v is out of range for time.Duration", dur)
 		}
 	}
 	return d, nil

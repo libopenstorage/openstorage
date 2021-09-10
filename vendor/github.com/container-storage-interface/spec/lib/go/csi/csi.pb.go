@@ -2545,50 +2545,6 @@ type ListVolumesResponse_Entry struct {
 	XXX_sizecache        int32                             `json:"-"`
 }
 
-func (m *ListVolumesResponse_VolumeStatus) Reset()         { *m = ListVolumesResponse_VolumeStatus{} }
-func (m *ListVolumesResponse_VolumeStatus) String() string { return proto.CompactTextString(m) }
-func (*ListVolumesResponse_VolumeStatus) ProtoMessage()    {}
-func (*ListVolumesResponse_VolumeStatus) Descriptor() ([]byte, []int) {
-	return fileDescriptor_9cdb00adce470e01, []int{24, 0}
-}
-
-func (m *ListVolumesResponse_VolumeStatus) XXX_Unmarshal(b []byte) error {
-	return xxx_messageInfo_ListVolumesResponse_VolumeStatus.Unmarshal(m, b)
-}
-func (m *ListVolumesResponse_VolumeStatus) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
-	return xxx_messageInfo_ListVolumesResponse_VolumeStatus.Marshal(b, m, deterministic)
-}
-func (m *ListVolumesResponse_VolumeStatus) XXX_Merge(src proto.Message) {
-	xxx_messageInfo_ListVolumesResponse_VolumeStatus.Merge(m, src)
-}
-func (m *ListVolumesResponse_VolumeStatus) XXX_Size() int {
-	return xxx_messageInfo_ListVolumesResponse_VolumeStatus.Size(m)
-}
-func (m *ListVolumesResponse_VolumeStatus) XXX_DiscardUnknown() {
-	xxx_messageInfo_ListVolumesResponse_VolumeStatus.DiscardUnknown(m)
-}
-
-var xxx_messageInfo_ListVolumesResponse_VolumeStatus proto.InternalMessageInfo
-
-func (m *ListVolumesResponse_VolumeStatus) GetPublishedNodeIds() []string {
-	if m != nil {
-		return m.PublishedNodeIds
-	}
-	return nil
-}
-
-type ListVolumesResponse_Entry struct {
-	// This field is REQUIRED
-	Volume *Volume `protobuf:"bytes,1,opt,name=volume,proto3" json:"volume,omitempty"`
-	// This field is OPTIONAL. This field MUST be specified if the
-	// LIST_VOLUMES_PUBLISHED_NODES controller capability is
-	// supported.
-	Status               *ListVolumesResponse_VolumeStatus `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}                          `json:"-"`
-	XXX_unrecognized     []byte                            `json:"-"`
-	XXX_sizecache        int32                             `json:"-"`
-}
-
 func (m *ListVolumesResponse_Entry) Reset()         { *m = ListVolumesResponse_Entry{} }
 func (m *ListVolumesResponse_Entry) String() string { return proto.CompactTextString(m) }
 func (*ListVolumesResponse_Entry) ProtoMessage()    {}
@@ -5917,47 +5873,6 @@ func (*UnimplementedControllerServer) ControllerExpandVolume(ctx context.Context
 }
 func (*UnimplementedControllerServer) ControllerGetVolume(ctx context.Context, req *ControllerGetVolumeRequest) (*ControllerGetVolumeResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ControllerGetVolume not implemented")
-}
-
-// UnimplementedControllerServer can be embedded to have forward compatible implementations.
-type UnimplementedControllerServer struct {
-}
-
-func (*UnimplementedControllerServer) CreateVolume(ctx context.Context, req *CreateVolumeRequest) (*CreateVolumeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateVolume not implemented")
-}
-func (*UnimplementedControllerServer) DeleteVolume(ctx context.Context, req *DeleteVolumeRequest) (*DeleteVolumeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteVolume not implemented")
-}
-func (*UnimplementedControllerServer) ControllerPublishVolume(ctx context.Context, req *ControllerPublishVolumeRequest) (*ControllerPublishVolumeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ControllerPublishVolume not implemented")
-}
-func (*UnimplementedControllerServer) ControllerUnpublishVolume(ctx context.Context, req *ControllerUnpublishVolumeRequest) (*ControllerUnpublishVolumeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ControllerUnpublishVolume not implemented")
-}
-func (*UnimplementedControllerServer) ValidateVolumeCapabilities(ctx context.Context, req *ValidateVolumeCapabilitiesRequest) (*ValidateVolumeCapabilitiesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ValidateVolumeCapabilities not implemented")
-}
-func (*UnimplementedControllerServer) ListVolumes(ctx context.Context, req *ListVolumesRequest) (*ListVolumesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListVolumes not implemented")
-}
-func (*UnimplementedControllerServer) GetCapacity(ctx context.Context, req *GetCapacityRequest) (*GetCapacityResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetCapacity not implemented")
-}
-func (*UnimplementedControllerServer) ControllerGetCapabilities(ctx context.Context, req *ControllerGetCapabilitiesRequest) (*ControllerGetCapabilitiesResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ControllerGetCapabilities not implemented")
-}
-func (*UnimplementedControllerServer) CreateSnapshot(ctx context.Context, req *CreateSnapshotRequest) (*CreateSnapshotResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method CreateSnapshot not implemented")
-}
-func (*UnimplementedControllerServer) DeleteSnapshot(ctx context.Context, req *DeleteSnapshotRequest) (*DeleteSnapshotResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method DeleteSnapshot not implemented")
-}
-func (*UnimplementedControllerServer) ListSnapshots(ctx context.Context, req *ListSnapshotsRequest) (*ListSnapshotsResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ListSnapshots not implemented")
-}
-func (*UnimplementedControllerServer) ControllerExpandVolume(ctx context.Context, req *ControllerExpandVolumeRequest) (*ControllerExpandVolumeResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ControllerExpandVolume not implemented")
 }
 
 func RegisterControllerServer(s *grpc.Server, srv ControllerServer) {

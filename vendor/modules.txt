@@ -42,7 +42,7 @@ github.com/cloudfoundry/gosigar
 # github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
 ## explicit
 github.com/codegangsta/cli
-# github.com/container-storage-interface/spec v1.2.0
+# github.com/container-storage-interface/spec v1.2.0 => github.com/container-storage-interface/spec v1.5.0
 ## explicit
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59
@@ -422,6 +422,12 @@ go.opencensus.io/internal
 go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
+# go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c
+## explicit
+go.pedge.io/pb/go/google/protobuf
+# go.pedge.io/proto v0.0.0-00010101000000-000000000000 => go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
+## explicit
+go.pedge.io/proto/time
 # go.uber.org/atomic v1.7.0
 ## explicit
 # go.uber.org/zap v1.15.0
@@ -773,10 +779,12 @@ k8s.io/utils/integer
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
+# github.com/container-storage-interface/spec => github.com/container-storage-interface/spec v1.5.0
 # github.com/docker/docker => github.com/moby/moby v20.10.3-0.20210324213045-797b974cb90e+incompatible
 # github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
 # github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3
 # github.com/satori/go.uuid => github.com/satori/go.uuid v0.0.0-20160324112244-f9ab0dce87d8
+# go.pedge.io/proto => go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 # google.golang.org/grpc => google.golang.org/grpc v1.29.1
 # k8s.io/api => k8s.io/api v0.20.4
 # k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.20.4

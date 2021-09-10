@@ -65,54 +65,7 @@ func HasExtension(m Message, xt *ExtensionDesc) (has bool) {
 		has = int32(num) == xt.Field
 		b = b[n:]
 	}
-	return e.p.extensionMap, &e.p.mu
-}
-
-// ExtensionDesc represents an extension specification.
-// Used in generated code from the protocol compiler.
-type ExtensionDesc struct {
-	ExtendedType  Message     // nil pointer to the type that is being extended
-	ExtensionType interface{} // nil pointer to the extension type
-	Field         int32       // field number
-	Name          string      // fully-qualified name of extension, for text formatting
-	Tag           string      // protobuf tag style
-	Filename      string      // name of the file in which the extension is defined
-}
-
-func (ed *ExtensionDesc) repeated() bool {
-	t := reflect.TypeOf(ed.ExtensionType)
-	return t.Kind() == reflect.Slice && t.Elem().Kind() != reflect.Uint8
-}
-
-// Extension represents an extension in a message.
-type Extension struct {
-	// When an extension is stored in a message using SetExtension
-	// only desc and value are set. When the message is marshaled
-	// enc will be set to the encoded form of the message.
-	//
-	// When a message is unmarshaled and contains extensions, each
-	// extension will have only enc set. When such an extension is
-	// accessed using GetExtension (or GetExtensions) desc and value
-	// will be set.
-	desc *ExtensionDesc
-
-	// value is a concrete value for the extension field. Let the type of
-	// desc.ExtensionType be the "API type" and the type of Extension.value
-	// be the "storage type". The API type and storage type are the same except:
-	//	* For scalars (except []byte), the API type uses *T,
-	//	while the storage type uses T.
-	//	* For repeated fields, the API type uses []T, while the storage type
-	//	uses *[]T.
-	//
-	// The reason for the divergence is so that the storage type more naturally
-	// matches what is expected of when retrieving the values through the
-	// protobuf reflection APIs.
-	//
-	// The value may only be populated if desc is also populated.
-	value interface{}
-
-	// enc is the raw bytes for the extension field.
-	enc []byte
+	return has
 }
 
 // ClearExtension removes the extension field from m
@@ -202,7 +155,6 @@ func GetExtension(m Message, xt *ExtensionDesc) (interface{}, error) {
 			mr.Set(xtd, m2.Get(xtd))
 			clearUnknown(mr, fieldNum(xt.Field))
 		}
-		return extensionAsLegacyType(e.value), nil
 	}
 
 	// Check whether the message has the extension field set or a default.
@@ -223,14 +175,7 @@ func GetExtension(m Message, xt *ExtensionDesc) (interface{}, error) {
 		rv2.Elem().Set(rv)
 		v = rv2.Interface()
 	}
-
-	// Remember the decoded version and drop the encoded version.
-	// That way it is safe to mutate what we return.
-	e.value = extensionAsStorageType(v)
-	e.desc = extension
-	e.enc = nil
-	emap[extension.Field] = e
-	return extensionAsLegacyType(e.value), nil
+	return v, nil
 }
 
 // extensionResolver is a custom extension resolver that stores a single
@@ -359,33 +304,20 @@ func ExtensionDescs(m Message) ([]*ExtensionDesc, error) {
 		b = b[n:]
 	}
 
-// SetExtension sets the specified extension of pb to the specified value.
-func SetExtension(pb Message, extension *ExtensionDesc, value interface{}) error {
-	epb, err := extendable(pb)
-	if err != nil {
-		return err
-	}
-	if err := checkExtensionTypes(epb, extension); err != nil {
-		return err
-	}
-	typ := reflect.TypeOf(extension.ExtensionType)
-	if typ != reflect.TypeOf(value) {
-		return fmt.Errorf("proto: bad extension value type. got: %T, want: %T", value, extension.ExtensionType)
-	}
-	// nil extension values need to be caught early, because the
-	// encoder can't distinguish an ErrNil due to a nil extension
-	// from an ErrNil due to a missing field. Extensions are
-	// always optional, so the encoder would just swallow the error
-	// and drop all the extensions from the encoded message.
-	if reflect.ValueOf(value).IsNil() {
-		return fmt.Errorf("proto: SetExtension called with nil value of type %T", value)
+	// Transpose the set of descriptors into a list.
+	var xts []*ExtensionDesc
+	for num, xt := range extDescs {
+		if xt == nil {
+			xt = &ExtensionDesc{Field: int32(num)}
+		}
+		xts = append(xts, xt)
 	}
 	return xts, nil
 }
 
-	extmap := epb.extensionsWrite()
-	extmap[extension.Field] = Extension{desc: extension, value: extensionAsStorageType(value)}
-	return nil
+// isValidExtension reports whether xtd is a valid extension descriptor for md.
+func isValidExtension(md protoreflect.MessageDescriptor, xtd protoreflect.ExtensionTypeDescriptor) bool {
+	return xtd.ContainingMessage() == md && md.ExtensionRanges().Has(xtd.Number())
 }
 
 // isScalarKind reports whether k is a protobuf scalar kind (except bytes).
@@ -421,52 +353,4 @@ type fieldNum protoreflect.FieldNumber
 
 func (n1 fieldNum) Has(n2 protoreflect.FieldNumber) bool {
 	return protoreflect.FieldNumber(n1) == n2
-}
-
-// extensionAsLegacyType converts an value in the storage type as the API type.
-// See Extension.value.
-func extensionAsLegacyType(v interface{}) interface{} {
-	switch rv := reflect.ValueOf(v); rv.Kind() {
-	case reflect.Bool, reflect.Int32, reflect.Int64, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
-		// Represent primitive types as a pointer to the value.
-		rv2 := reflect.New(rv.Type())
-		rv2.Elem().Set(rv)
-		v = rv2.Interface()
-	case reflect.Ptr:
-		// Represent slice types as the value itself.
-		switch rv.Type().Elem().Kind() {
-		case reflect.Slice:
-			if rv.IsNil() {
-				v = reflect.Zero(rv.Type().Elem()).Interface()
-			} else {
-				v = rv.Elem().Interface()
-			}
-		}
-	}
-	return v
-}
-
-// extensionAsStorageType converts an value in the API type as the storage type.
-// See Extension.value.
-func extensionAsStorageType(v interface{}) interface{} {
-	switch rv := reflect.ValueOf(v); rv.Kind() {
-	case reflect.Ptr:
-		// Represent slice types as the value itself.
-		switch rv.Type().Elem().Kind() {
-		case reflect.Bool, reflect.Int32, reflect.Int64, reflect.Uint32, reflect.Uint64, reflect.Float32, reflect.Float64, reflect.String:
-			if rv.IsNil() {
-				v = reflect.Zero(rv.Type().Elem()).Interface()
-			} else {
-				v = rv.Elem().Interface()
-			}
-		}
-	case reflect.Slice:
-		// Represent slice types as a pointer to the value.
-		if rv.Type().Elem().Kind() != reflect.Uint8 {
-			rv2 := reflect.New(rv.Type())
-			rv2.Elem().Set(rv)
-			v = rv2.Interface()
-		}
-	}
-	return v
 }

@@ -6,7 +6,6 @@ package proto
 
 import (
 	"fmt"
-	"log"
 	"reflect"
 	"strconv"
 	"strings"
@@ -65,20 +64,35 @@ type Properties struct {
 	Optional bool
 	// Repeated reports whether this is a repeated field.
 	Repeated bool
-	Packed   bool   // relevant for repeated primitives only
-	Enum     string // set for enum types only
-	proto3   bool   // whether this is known to be a proto3 field
-	oneof    bool   // whether this is a oneof field
+	// Packed reports whether this is a packed repeated field of scalars.
+	Packed bool
+	// Proto3 reports whether this field operates under the proto3 syntax.
+	Proto3 bool
+	// Oneof reports whether this field belongs within a oneof.
+	Oneof bool
 
-	Default    string // default value
-	HasDefault bool   // whether an explicit default was provided
+	// Default is the default value in string form.
+	Default string
+	// HasDefault reports whether the field has a default value.
+	HasDefault bool
 
-	stype reflect.Type      // set for struct types only
-	sprop *StructProperties // set for struct types only
+	// MapKeyProp is the properties for the key field for a map field.
+	MapKeyProp *Properties
+	// MapValProp is the properties for the value field for a map field.
+	MapValProp *Properties
+}
 
-	mtype      reflect.Type // set for map types only
-	MapKeyProp *Properties  // set for map types only
-	MapValProp *Properties  // set for map types only
+// OneofProperties represents the type information for a protobuf oneof.
+//
+// Deprecated: Do not use.
+type OneofProperties struct {
+	// Type is a pointer to the generated wrapper type for the field value.
+	// This is nil for messages that are not in the open-struct API.
+	Type reflect.Type
+	// Field is the index into StructProperties.Prop for the containing oneof.
+	Field int
+	// Prop is the properties for the field.
+	Prop *Properties
 }
 
 // String formats the properties in the protobuf struct field tag style.
@@ -120,47 +134,26 @@ func (p *Properties) String() string {
 }
 
 // Parse populates p by parsing a string in the protobuf struct field tag style.
-func (p *Properties) Parse(s string) {
-	// "bytes,49,opt,name=foo,def=hello!"
-	fields := strings.Split(s, ",") // breaks def=, but handled below.
-	if len(fields) < 2 {
-		log.Printf("proto: tag has too few fields: %q", s)
-		return
-	}
-
-	p.Wire = fields[0]
-	switch p.Wire {
-	case "varint":
-		p.WireType = WireVarint
-	case "fixed32":
-		p.WireType = WireFixed32
-	case "fixed64":
-		p.WireType = WireFixed64
-	case "zigzag32":
-		p.WireType = WireVarint
-	case "zigzag64":
-		p.WireType = WireVarint
-	case "bytes", "group":
-		p.WireType = WireBytes
-		// no numeric converter for non-numeric types
-	default:
-		log.Printf("proto: tag has unknown wire type: %q", s)
-		return
-	}
-
-	var err error
-	p.Tag, err = strconv.Atoi(fields[1])
-	if err != nil {
-		return
-	}
-
-outer:
-	for i := 2; i < len(fields); i++ {
-		f := fields[i]
-		switch {
-		case f == "req":
-			p.Required = true
-		case f == "opt":
+func (p *Properties) Parse(tag string) {
+	// For example: "bytes,49,opt,name=foo,def=hello!"
+	for len(tag) > 0 {
+		i := strings.IndexByte(tag, ',')
+		if i < 0 {
+			i = len(tag)
+		}
+		switch s := tag[:i]; {
+		case strings.HasPrefix(s, "name="):
+			p.OrigName = s[len("name="):]
+		case strings.HasPrefix(s, "json="):
+			p.JSONName = s[len("json="):]
+		case strings.HasPrefix(s, "enum="):
+			p.Enum = s[len("enum="):]
+		case strings.HasPrefix(s, "weak="):
+			p.Weak = s[len("weak="):]
+		case strings.Trim(s, "0123456789") == "":
+			n, _ := strconv.ParseUint(s, 10, 32)
+			p.Tag = int(n)
+		case s == "opt":
 			p.Optional = true
 		case s == "req":
 			p.Required = true
@@ -191,50 +184,7 @@ outer:
 			// The default tag is special in that everything afterwards is the
 			// default regardless of the presence of commas.
 			p.HasDefault = true
-			p.Default = f[4:] // rest of string
-			if i+1 < len(fields) {
-				// Commas aren't escaped, and def is always last.
-				p.Default += "," + strings.Join(fields[i+1:], ",")
-				break outer
-			}
-		}
-	}
-}
-
-var protoMessageType = reflect.TypeOf((*Message)(nil)).Elem()
-
-// setFieldProps initializes the field properties for submessages and maps.
-func (p *Properties) setFieldProps(typ reflect.Type, f *reflect.StructField, lockGetProp bool) {
-	switch t1 := typ; t1.Kind() {
-	case reflect.Ptr:
-		if t1.Elem().Kind() == reflect.Struct {
-			p.stype = t1.Elem()
-		}
-
-	case reflect.Slice:
-		if t2 := t1.Elem(); t2.Kind() == reflect.Ptr && t2.Elem().Kind() == reflect.Struct {
-			p.stype = t2.Elem()
-		}
-
-	case reflect.Map:
-		p.mtype = t1
-		p.MapKeyProp = &Properties{}
-		p.MapKeyProp.init(reflect.PtrTo(p.mtype.Key()), "Key", f.Tag.Get("protobuf_key"), nil, lockGetProp)
-		p.MapValProp = &Properties{}
-		vtype := p.mtype.Elem()
-		if vtype.Kind() != reflect.Ptr && vtype.Kind() != reflect.Slice {
-			// The value type is not a message (*T) or bytes ([]byte),
-			// so we need encoders for the pointer to this type.
-			vtype = reflect.PtrTo(vtype)
-		}
-		p.MapValProp.init(vtype, "Value", f.Tag.Get("protobuf_val"), nil, lockGetProp)
-	}
-
-	if p.stype != nil {
-		if lockGetProp {
-			p.sprop = GetProperties(p.stype)
-		} else {
-			p.sprop = getPropertiesLocked(p.stype)
+			p.Default, i = tag[len("def="):], len(tag)
 		}
 		tag = strings.TrimPrefix(tag[i:], ",")
 	}
@@ -267,35 +217,16 @@ var propertiesCache sync.Map // map[reflect.Type]*StructProperties
 //
 // Deprecated: Use protobuf reflection instead.
 func GetProperties(t reflect.Type) *StructProperties {
-	if t.Kind() != reflect.Struct {
-		panic("proto: type must have kind struct")
-	}
-
-	// Most calls to GetProperties in a long-running program will be
-	// retrieving details for types we have seen before.
-	propertiesMu.RLock()
-	sprop, ok := propertiesMap[t]
-	propertiesMu.RUnlock()
-	if ok {
-		return sprop
+	if p, ok := propertiesCache.Load(t); ok {
+		return p.(*StructProperties)
 	}
 	p, _ := propertiesCache.LoadOrStore(t, newProperties(t))
 	return p.(*StructProperties)
 }
 
-type (
-	oneofFuncsIface interface {
-		XXX_OneofFuncs() (func(Message, *Buffer) error, func(Message, int, int, *Buffer) (bool, error), func(Message) int, []interface{})
-	}
-	oneofWrappersIface interface {
-		XXX_OneofWrappers() []interface{}
-	}
-)
-
-// getPropertiesLocked requires that propertiesMu is held.
-func getPropertiesLocked(t reflect.Type) *StructProperties {
-	if prop, ok := propertiesMap[t]; ok {
-		return prop
+func newProperties(t reflect.Type) *StructProperties {
+	if t.Kind() != reflect.Struct {
+		panic(fmt.Sprintf("%v is not a generated message in the open-struct API", t))
 	}
 
 	var hasOneof bool
@@ -323,15 +254,24 @@ func getPropertiesLocked(t reflect.Type) *StructProperties {
 			p.Name = p.OrigName // avoid possible "XXX_" prefix on weak field
 		}
 
-	var oots []interface{}
-	switch m := reflect.Zero(reflect.PtrTo(t)).Interface().(type) {
-	case oneofFuncsIface:
-		_, _, _, oots = m.XXX_OneofFuncs()
-	case oneofWrappersIface:
-		oots = m.XXX_OneofWrappers()
+		prop.Prop = append(prop.Prop, p)
 	}
-	if len(oots) > 0 {
-		// Interpret oneof metadata.
+
+	// Construct a mapping of oneof field names to properties.
+	if hasOneof {
+		var oneofWrappers []interface{}
+		if fn, ok := reflect.PtrTo(t).MethodByName("XXX_OneofFuncs"); ok {
+			oneofWrappers = fn.Func.Call([]reflect.Value{reflect.Zero(fn.Type.In(0))})[3].Interface().([]interface{})
+		}
+		if fn, ok := reflect.PtrTo(t).MethodByName("XXX_OneofWrappers"); ok {
+			oneofWrappers = fn.Func.Call([]reflect.Value{reflect.Zero(fn.Type.In(0))})[0].Interface().([]interface{})
+		}
+		if m, ok := reflect.Zero(reflect.PtrTo(t)).Interface().(protoreflect.ProtoMessage); ok {
+			if m, ok := m.ProtoReflect().(interface{ ProtoMessageInfo() *protoimpl.MessageInfo }); ok {
+				oneofWrappers = m.ProtoMessageInfo().OneofWrappers
+			}
+		}
+
 		prop.OneofTypes = make(map[string]*OneofProperties)
 		for _, wrapper := range oneofWrappers {
 			p := &OneofProperties{

@@ -56,8 +56,8 @@ func TimestampNow() *timestamppb.Timestamp {
 
 // TimestampProto converts the time.Time to a google.protobuf.Timestamp proto.
 // It returns an error if the resulting Timestamp is invalid.
-func TimestampProto(t time.Time) (*tspb.Timestamp, error) {
-	ts := &tspb.Timestamp{
+func TimestampProto(t time.Time) (*timestamppb.Timestamp, error) {
+	ts := &timestamppb.Timestamp{
 		Seconds: t.Unix(),
 		Nanos:   int32(t.Nanosecond()),
 	}

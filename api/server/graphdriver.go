@@ -147,7 +147,7 @@ func (d *graphDriver) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if err := d.gd.Create(request.ID, request.Parent, &graphdriver.CreateOpts{"", nil}); err != nil {
+	if err := d.gd.Create(request.ID, request.Parent, &graphdriver.CreateOpts{MountLabel: "", StorageOpt: nil}); err != nil {
 		d.errResponse(method, w, err)
 		return
 	}

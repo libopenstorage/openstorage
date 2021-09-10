@@ -99,14 +99,67 @@ func UnmarshalAny(any *anypb.Any, m proto.Message) error {
 	return proto.Unmarshal(any.Value, m)
 }
 
-// Is returns true if any value contains a given message type.
-func Is(any *any.Any, pb proto.Message) bool {
-	// The following is equivalent to AnyMessageName(any) == proto.MessageName(pb),
-	// but it avoids scanning TypeUrl for the slash.
-	if any == nil {
+// Is reports whether the Any message contains a message of the specified type.
+func Is(any *anypb.Any, m proto.Message) bool {
+	if any == nil || m == nil {
 		return false
 	}
-	name := proto.MessageName(pb)
-	prefix := len(any.TypeUrl) - len(name)
-	return prefix >= 1 && any.TypeUrl[prefix-1] == '/' && any.TypeUrl[prefix:] == name
+	name := proto.MessageName(m)
+	if !strings.HasSuffix(any.TypeUrl, name) {
+		return false
+	}
+	return len(any.TypeUrl) == len(name) || any.TypeUrl[len(any.TypeUrl)-len(name)-1] == '/'
+}
+
+// DynamicAny is a value that can be passed to UnmarshalAny to automatically
+// allocate a proto.Message for the type specified in an anypb.Any message.
+// The allocated message is stored in the embedded proto.Message.
+//
+// Example:
+//   var x ptypes.DynamicAny
+//   if err := ptypes.UnmarshalAny(a, &x); err != nil { ... }
+//   fmt.Printf("unmarshaled message: %v", x.Message)
+type DynamicAny struct{ proto.Message }
+
+func (m DynamicAny) String() string {
+	if m.Message == nil {
+		return "<nil>"
+	}
+	return m.Message.String()
+}
+func (m DynamicAny) Reset() {
+	if m.Message == nil {
+		return
+	}
+	m.Message.Reset()
+}
+func (m DynamicAny) ProtoMessage() {
+	return
+}
+func (m DynamicAny) ProtoReflect() protoreflect.Message {
+	if m.Message == nil {
+		return nil
+	}
+	return dynamicAny{proto.MessageReflect(m.Message)}
+}
+
+type dynamicAny struct{ protoreflect.Message }
+
+func (m dynamicAny) Type() protoreflect.MessageType {
+	return dynamicAnyType{m.Message.Type()}
+}
+func (m dynamicAny) New() protoreflect.Message {
+	return dynamicAnyType{m.Message.Type()}.New()
+}
+func (m dynamicAny) Interface() protoreflect.ProtoMessage {
+	return DynamicAny{proto.MessageV1(m.Message.Interface())}
+}
+
+type dynamicAnyType struct{ protoreflect.MessageType }
+
+func (t dynamicAnyType) New() protoreflect.Message {
+	return dynamicAny{t.MessageType.New()}
+}
+func (t dynamicAnyType) Zero() protoreflect.Message {
+	return dynamicAny{t.MessageType.Zero()}
 }

@@ -371,45 +371,47 @@ func (u *unmarshalInfo) computeUnmarshalInfo() {
 	}
 
 	// Find any types associated with oneof fields.
-	var oneofImplementers []interface{}
-	switch m := reflect.Zero(reflect.PtrTo(t)).Interface().(type) {
-	case oneofFuncsIface:
-		_, _, _, oneofImplementers = m.XXX_OneofFuncs()
-	case oneofWrappersIface:
-		oneofImplementers = m.XXX_OneofWrappers()
-	}
-	for _, v := range oneofImplementers {
-		tptr := reflect.TypeOf(v) // *Msg_X
-		typ := tptr.Elem()        // Msg_X
-
-		f := typ.Field(0) // oneof implementers have one field
-		baseUnmarshal := fieldUnmarshaler(&f)
-		tags := strings.Split(f.Tag.Get("protobuf"), ",")
-		fieldNum, err := strconv.Atoi(tags[1])
-		if err != nil {
-			panic("protobuf tag field not an integer: " + tags[1])
+	// gogo: len(oneofFields) > 0 is needed for embedded oneof messages, without a marshaler and unmarshaler
+	if len(oneofFields) > 0 {
+		var oneofImplementers []interface{}
+		switch m := reflect.Zero(reflect.PtrTo(t)).Interface().(type) {
+		case oneofFuncsIface:
+			_, _, _, oneofImplementers = m.XXX_OneofFuncs()
+		case oneofWrappersIface:
+			oneofImplementers = m.XXX_OneofWrappers()
 		}
-		var name string
-		for _, tag := range tags {
-			if strings.HasPrefix(tag, "name=") {
-				name = strings.TrimPrefix(tag, "name=")
-				break
+		for _, v := range oneofImplementers {
+			tptr := reflect.TypeOf(v) // *Msg_X
+			typ := tptr.Elem()        // Msg_X
+
+			f := typ.Field(0) // oneof implementers have one field
+			baseUnmarshal := fieldUnmarshaler(&f)
+			tags := strings.Split(f.Tag.Get("protobuf"), ",")
+			fieldNum, err := strconv.Atoi(tags[1])
+			if err != nil {
+				panic("protobuf tag field not an integer: " + tags[1])
+			}
+			var name string
+			for _, tag := range tags {
+				if strings.HasPrefix(tag, "name=") {
+					name = strings.TrimPrefix(tag, "name=")
+					break
+				}
+			}
+
+			// Find the oneof field that this struct implements.
+			// Might take O(n^2) to process all of the oneofs, but who cares.
+			for _, of := range oneofFields {
+				if tptr.Implements(of.ityp) {
+					// We have found the corresponding interface for this struct.
+					// That lets us know where this struct should be stored
+					// when we encounter it during unmarshaling.
+					unmarshal := makeUnmarshalOneof(typ, of.ityp, baseUnmarshal)
+					u.setTag(fieldNum, of.field, unmarshal, 0, name)
+				}
 			}
 
 		}
-
-		// Find the oneof field that this struct implements.
-		// Might take O(n^2) to process all of the oneofs, but who cares.
-		for _, of := range oneofFields {
-			if tptr.Implements(of.ityp) {
-				// We have found the corresponding interface for this struct.
-				// That lets us know where this struct should be stored
-				// when we encounter it during unmarshaling.
-				unmarshal := makeUnmarshalOneof(typ, of.ityp, baseUnmarshal)
-				u.setTag(fieldNum, of.field, unmarshal, 0, name)
-			}
-		}
-
 	}
 
 	// Get extension ranges, if any.
@@ -469,6 +471,10 @@ func typeUnmarshaler(t reflect.Type, tags string) unmarshaler {
 	tagArray := strings.Split(tags, ",")
 	encoding := tagArray[0]
 	name := "unknown"
+	ctype := false
+	isTime := false
+	isDuration := false
+	isWktPointer := false
 	proto3 := false
 	validateUTF8 := true
 	for _, tag := range tagArray[3:] {
@@ -477,6 +483,18 @@ func typeUnmarshaler(t reflect.Type, tags string) unmarshaler {
 		}
 		if tag == "proto3" {
 			proto3 = true
+		}
+		if strings.HasPrefix(tag, "customtype=") {
+			ctype = true
+		}
+		if tag == "stdtime" {
+			isTime = true
+		}
+		if tag == "stdduration" {
+			isDuration = true
+		}
+		if tag == "wktptr" {
+			isWktPointer = true
 		}
 	}
 	validateUTF8 = validateUTF8 && proto3
