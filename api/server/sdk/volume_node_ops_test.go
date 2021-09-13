@@ -67,7 +67,7 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Attach(id, options).
+			Attach(gomock.Any(), id, options).
 			Return(devpath, nil),
 	)
 
@@ -116,7 +116,7 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Attach(id, options).
+			Attach(gomock.Any(), id, options).
 			Return("", fmt.Errorf("Failed to Attach device")),
 	)
 
@@ -191,7 +191,7 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Detach(id, options).
+			Detach(gomock.Any(), id, options).
 			Return(nil),
 	)
 
@@ -238,7 +238,7 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Detach(id, options).
+			Detach(gomock.Any(), id, options).
 			Return(fmt.Errorf("Failed to Detach")),
 	)
 

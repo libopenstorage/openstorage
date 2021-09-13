@@ -245,7 +245,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if err = s.driver.Detach(volumeId, nil); err != nil {
+		if err = s.driver.Detach(ctx, volumeId, nil); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to detach volume: %s",

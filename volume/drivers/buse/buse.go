@@ -268,7 +268,7 @@ func (d *driver) Delete(volumeID string) error {
 	return nil
 }
 
-func (d *driver) MountedAt(mountpath string) string {
+func (d *driver) MountedAt(ctx context.Context, mountpath string) string {
 	return ""
 }
 
@@ -360,12 +360,12 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
+func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error) {
 	// Nothing to do on attach.
 	return path.Join(BuseMountPath, volumeID), nil
 }
 
-func (d *driver) Detach(volumeID string, options map[string]string) error {
+func (d *driver) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 	// Nothing to do on detach.
 	return nil
 }

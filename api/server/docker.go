@@ -688,7 +688,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 	// detached. If not return an error.
 	mountpoint := d.mountpath(name)
 	if vol.Spec.Scale > 1 {
-		id := v.MountedAt(mountpoint)
+		id := v.MountedAt(ctx, mountpoint)
 		if len(id) != 0 {
 			err = v.Unmount(correlation.TODO(), id, mountpoint, nil)
 			if err != nil {
@@ -700,7 +700,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				err = v.Detach(id, nil)
+				err = v.Detach(ctx, id, nil)
 				if err != nil {
 					d.logRequest(method, "").Warnf("Error detaching scaled volume: %v", err)
 
@@ -840,6 +840,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 
 func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	method := "unmount"
+	ctx := r.Context()
 
 	v, err := volumedrivers.Get(d.name)
 	if err != nil {
@@ -866,7 +867,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	mountpoint := d.mountpath(name)
 	id := vol.Id
 	if vol.Spec.Scale > 1 {
-		id = v.MountedAt(mountpoint)
+		id = v.MountedAt(ctx, mountpoint)
 		if len(id) == 0 {
 			err := fmt.Errorf("Failed to find volume mapping for %v",
 				mountpoint)
@@ -891,7 +892,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if v.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_ = v.Detach(id, nil)
+		_ = v.Detach(context.TODO(), id, nil)
 	}
 	d.emptyResponse(w)
 }

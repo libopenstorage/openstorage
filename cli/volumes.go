@@ -174,7 +174,7 @@ func (v *volDriver) volumeAttach(cliContext *cli.Context) {
 	v.volumeOptions(cliContext)
 	volumeID := cliContext.Args()[0]
 
-	devicePath, err := v.volDriver.Attach(string(volumeID), nil)
+	devicePath, err := v.volDriver.Attach(context.TODO(), (volumeID), nil)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return
@@ -191,7 +191,7 @@ func (v *volDriver) volumeDetach(cliContext *cli.Context) {
 	}
 	volumeID := cliContext.Args()[0]
 	v.volumeOptions(cliContext)
-	err := v.volDriver.Detach(string(volumeID), nil)
+	err := v.volDriver.Detach(context.TODO(), string(volumeID), nil)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return
