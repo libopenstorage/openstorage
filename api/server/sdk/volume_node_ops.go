@@ -65,7 +65,7 @@ func (s *VolumeServer) Attach(
 		}
 	}
 
-	devPath, err := s.driver(ctx).Attach(req.GetVolumeId(), options)
+	devPath, err := s.driver(ctx).Attach(ctx, req.GetVolumeId(), options)
 	if err == volume.ErrVolAttachedOnRemoteNode {
 		return nil, status.Error(codes.AlreadyExists, err.Error())
 	} else if err != nil {
@@ -109,7 +109,7 @@ func (s *VolumeServer) Detach(
 		options[mountattachoptions.OptionsRedirectDetach] = fmt.Sprint(req.GetOptions().GetRedirect())
 	}
 
-	err = s.driver(ctx).Detach(req.GetVolumeId(), options)
+	err = s.driver(ctx).Detach(context.TODO(), req.GetVolumeId(), options)
 	if err != nil && !IsErrorNotFound(err) {
 		return nil, status.Errorf(
 			codes.Internal,

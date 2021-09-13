@@ -71,9 +71,15 @@ func (lh *LogHook) Fire(entry *logrus.Entry) error {
 
 	// If a context has been found, we will populate the correlation info
 	if ctx != nil {
-		correlationContext, ok := ctx.Value(ContextKey).(*RequestContext)
+		ctxKeyValue := ctx.Value(ContextKey)
+		if ctxKeyValue == nil {
+			// Return without error as we not always add the correlation context
+			return nil
+		}
+
+		correlationContext, ok := ctxKeyValue.(*RequestContext)
 		if !ok {
-			return fmt.Errorf("failed to get context for correlation logging hook")
+			return fmt.Errorf("failed to get request context for correlation logging hook")
 		}
 
 		entry.Data[LogFieldID] = correlationContext.ID
@@ -158,6 +164,8 @@ func registerFileAsComponent(file string, component Component) {
 // i.e. /go/src/github.com/libopenstorage/openstorage/pkg/correlation
 // will return openstorage/pkg/correlation
 func getLocalPackage(dir string) string {
+	fmt.Println("GETTING LCOAL PKG", dir)
+
 	parts := strings.Split(dir, "/")
 	var githubIndex int
 	for i, d := range parts {

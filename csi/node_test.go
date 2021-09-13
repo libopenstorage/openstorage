@@ -258,7 +258,7 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return("", fmt.Errorf("Unable to attach volume")).
 			Times(1),
 	)
@@ -397,7 +397,7 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return("", nil).
 			Times(1),
 		s.MockDriver().
@@ -804,7 +804,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(nil).
 			Times(1),
 	)
@@ -861,7 +861,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(fmt.Errorf("DETACH ERROR")).
 			Times(1),
 	)
@@ -923,7 +923,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(nil).
 			Times(1),
 	)

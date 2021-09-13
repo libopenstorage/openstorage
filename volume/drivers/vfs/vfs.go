@@ -104,7 +104,7 @@ func (d *driver) Delete(volumeID string) error {
 
 }
 
-func (d *driver) MountedAt(mountpath string) string {
+func (d *driver) MountedAt(ctx context.Context, mountpath string) string {
 	return ""
 }
 

@@ -260,7 +260,7 @@ type ProtoDriver interface {
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Mount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
 	// MountedAt return volume mounted at specified mountpath.
-	MountedAt(mountPath string) string
+	MountedAt(ctx context.Context, mountPath string) string
 	// Unmount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
@@ -302,10 +302,10 @@ type BlockDriver interface {
 	// Attach map device to the host.
 	// On success the devicePath specifies location where the device is exported
 	// Errors ErrEnoEnt, ErrVolAttached may be returned.
-	Attach(volumeID string, attachOptions map[string]string) (string, error)
+	Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error)
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
-	Detach(volumeID string, options map[string]string) error
+	Detach(ctx context.Context, volumeID string, options map[string]string) error
 }
 
 // CredsDriver provides methods to handle credentials
