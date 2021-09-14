@@ -174,7 +174,8 @@ $(OSDSANITY)-clean:
 docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
-docker-proto: $(GOPATH)/bin/protoc-gen-go
+# the docker-build-proto should be there temporarily for the go mod upgrade
+docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
@@ -410,6 +411,7 @@ sdk-check-version:
 mockgen:
 	GO111MODULE=off go get github.com/golang/mock/gomock
 	GO111MODULE=off go get github.com/golang/mock/mockgen
+	cp -r /go/src/github.com/golang/mock ./vendor/github.com/golang/
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_cluster.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageClusterServer,OpenStorageClusterClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
