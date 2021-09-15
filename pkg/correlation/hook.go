@@ -101,8 +101,11 @@ func (lh *LogHook) Fire(entry *logrus.Entry) error {
 			entry.Data[LogFieldComponent] = getLocalPackage(dir)
 		}
 
-		// Clear caller metadata. We don't want to log the entire file/function
-		entry.Caller.File = ""
+	}
+
+	if entry.HasCaller() {
+		// always clear caller metadata. We don't want to log the entire file/function
+		entry.Caller.File = filepath.Base(entry.Caller.File)
 		entry.Caller.Function = ""
 	}
 
@@ -164,8 +167,6 @@ func registerFileAsComponent(file string, component Component) {
 // i.e. /go/src/github.com/libopenstorage/openstorage/pkg/correlation
 // will return openstorage/pkg/correlation
 func getLocalPackage(dir string) string {
-	fmt.Println("GETTING LCOAL PKG", dir)
-
 	parts := strings.Split(dir, "/")
 	var githubIndex int
 	for i, d := range parts {
