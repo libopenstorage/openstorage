@@ -105,7 +105,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 

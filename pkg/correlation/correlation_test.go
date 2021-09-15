@@ -3,6 +3,7 @@ package correlation_test
 import (
 	"bytes"
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 
@@ -95,6 +96,7 @@ func TestWithCorrelationContext(t *testing.T) {
 
 	id := cc.ID
 	assert.NotEmpty(t, id)
+	fmt.Println(id)
 
 	ctx = correlation.WithCorrelationContext(ctx, "test")
 	cc, ok = ctx.Value(correlation.ContextKey).(*correlation.RequestContext)
@@ -102,5 +104,6 @@ func TestWithCorrelationContext(t *testing.T) {
 		t.Error("correlation context not found")
 	}
 	newID := cc.ID
+	fmt.Println(newID)
 	assert.Equal(t, id, newID)
 }
