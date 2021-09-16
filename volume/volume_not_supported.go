@@ -1,6 +1,8 @@
 package volume
 
 import (
+	"context"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -38,11 +40,11 @@ var (
 
 type blockNotSupported struct{}
 
-func (b *blockNotSupported) Attach(volumeID string, attachOptions map[string]string) (string, error) {
+func (b *blockNotSupported) Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error) {
 	return "", ErrNotSupported
 }
 
-func (b *blockNotSupported) Detach(volumeID string, options map[string]string) error {
+func (b *blockNotSupported) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 	return ErrNotSupported
 }
 

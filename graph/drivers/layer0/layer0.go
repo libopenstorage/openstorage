@@ -190,7 +190,7 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 
 	// If this is a block driver, first attach the volume.
 	if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		_, err := l.volDriver.Attach(vols[index].Id, nil)
+		_, err := l.volDriver.Attach(context.TODO(), vols[index].Id, nil)
 		if err != nil {
 			logrus.Errorf("Failed to attach volume %v", vols[index].Id)
 			delete(l.volumes, id)
@@ -259,7 +259,7 @@ func (l *Layer0) Remove(id string) error {
 
 			err = l.volDriver.Unmount(context.TODO(), v.volumeID, v.path, opts)
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-				_ = l.volDriver.Detach(v.volumeID, nil)
+				_ = l.volDriver.Detach(context.TODO(), v.volumeID, nil)
 			}
 			err = os.RemoveAll(v.path)
 			delete(l.volumes, v.id)

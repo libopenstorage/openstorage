@@ -487,7 +487,7 @@ func (d *driver) Delete(volumeID string) (e error) {
 	return nil
 }
 
-func (d *driver) MountedAt(mountpath string) string {
+func (d *driver) MountedAt(ctx context.Context, mountpath string) string {
 	return ""
 }
 
@@ -693,7 +693,7 @@ func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeI
 	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Attach(volumeID string, attachOptions map[string]string) (string, error) {
+func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error) {
 
 	nfsPath, err := d.getNFSPathById(volumeID)
 	if err != nil {
@@ -732,7 +732,7 @@ func (d *driver) Attach(volumeID string, attachOptions map[string]string) (strin
 	return dev.Path(), nil
 }
 
-func (d *driver) Detach(volumeID string, options map[string]string) error {
+func (d *driver) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 
 	// Get volume info
 	v, err := util.VolumeFromName(d, volumeID)

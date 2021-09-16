@@ -260,7 +260,7 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		Times(2 * len(testargs))
 	s.MockDriver().
 		EXPECT().
-		Attach(name, map[string]string{}).
+		Attach(gomock.Any(), name, map[string]string{}).
 		Return(devicePath, nil).
 		Times(len(testargs))
 	s.MockDriver().
@@ -327,7 +327,7 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 			Times(2),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return("", fmt.Errorf("TEST")).
 			Times(1),
 	)
@@ -383,7 +383,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(2),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return("", nil).
 			Times(1),
 		s.MockDriver().
@@ -393,7 +393,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(nil).
 			Times(1),
 	)
@@ -450,7 +450,7 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 			Times(2),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return(devicePath, nil).
 			Times(1),
 	)
@@ -517,7 +517,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 			Times(2),
 		s.MockDriver().
 			EXPECT().
-			Attach(name, gomock.Any()).
+			Attach(gomock.Any(), name, gomock.Any()).
 			Return("", nil).
 			Times(1),
 		s.MockDriver().
@@ -706,7 +706,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(fmt.Errorf("DETACH ERROR")).
 			Times(1),
 	)
@@ -764,7 +764,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Detach(name, gomock.Any()).
+			Detach(gomock.Any(), name, gomock.Any()).
 			Return(nil).
 			Times(1),
 	)

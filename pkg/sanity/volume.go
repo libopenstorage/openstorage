@@ -439,7 +439,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Attaching the volume to a node")
 
-			str, err := volumedriver.Attach(volumeID, nil)
+			str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
@@ -453,7 +453,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(volumes[0].GetAttachedState()).To(BeEquivalentTo(api.AttachState_ATTACH_STATE_EXTERNAL))
 
 			By("Detaching the volume successfully")
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 		})
@@ -479,7 +479,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -523,7 +523,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Attaching a volume before mounting")
 
-			str, err := volumedriver.Attach(volumeID, nil)
+			str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeEmpty())
 
@@ -599,7 +599,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("First attaching and mounting the volume to a node")
 
-			str, err := volumedriver.Attach(volumeID, nil)
+			str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
 
@@ -631,7 +631,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Unmount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -913,7 +913,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Unmount(context.TODO(), volumeID, "/mnt", nil)
 			Expect(err).NotTo(HaveOccurred())
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -959,7 +959,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			Expect(err).To(HaveOccurred())
 
 			By("Now Attaching and mounting the volume")
-			str, err := volumedriver.Attach(volumeID, nil)
+			str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(str).NotTo(BeNil())
 

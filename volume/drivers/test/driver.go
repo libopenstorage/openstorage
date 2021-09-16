@@ -204,13 +204,13 @@ func attach(t *testing.T, ctx *Context) {
 	fmt.Println("attach")
 	err := waitReady(t, ctx)
 	require.NoError(t, err, "Volume status is not up")
-	p, err := ctx.Attach(ctx.volID, ctx.AttachOptions)
+	p, err := ctx.Attach(context.TODO(), ctx.volID, ctx.AttachOptions)
 	if err != nil {
 		require.Equal(t, err, volume.ErrNotSupported, "Error on attach %v", err)
 	}
 	ctx.devicePath = p
 
-	p, err = ctx.Attach(ctx.volID, ctx.AttachOptions)
+	p, err = ctx.Attach(context.TODO(), ctx.volID, ctx.AttachOptions)
 	if err == nil {
 		require.Equal(t, p, ctx.devicePath, "Multiple calls to attach if not errored should return the same path")
 	}
@@ -218,7 +218,7 @@ func attach(t *testing.T, ctx *Context) {
 
 func detach(t *testing.T, ctx *Context) {
 	fmt.Println("detach")
-	err := ctx.Detach(ctx.volID, nil)
+	err := ctx.Detach(context.TODO(), ctx.volID, nil)
 	if err != nil {
 		require.Equal(t, ctx.devicePath, "", "Error on detach %s: %v", ctx.devicePath, err)
 	}
@@ -291,7 +291,7 @@ func io(t *testing.T, ctx *Context) {
 }
 
 func detachBad(t *testing.T, ctx *Context) {
-	err := ctx.Detach(ctx.volID, nil)
+	err := ctx.Detach(context.TODO(), ctx.volID, nil)
 	require.True(t, (err == nil || err == volume.ErrNotSupported),
 		"Detach on mounted device should fail")
 }

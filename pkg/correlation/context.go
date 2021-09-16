@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"github.com/pborman/uuid"
+	"google.golang.org/grpc/metadata"
 )
 
 // Component represents a control plane component for
@@ -33,6 +34,12 @@ const (
 	// ContextKey represents the key for storing and retrieving
 	// the correlation context in a context.Context object.
 	ContextKey = contextKeyType("correlation-context")
+
+	// ContextIDKey represents the key for the correlation ID
+	ContextIDKey = "correlation-context-id"
+
+	// ContextOriginKey represents the key for the correlation origin
+	ContextOriginKey = "correlation-context-origin"
 
 	ComponentUnknown   = Component("unknown")
 	ComponentCSIDriver = Component("csi-driver")
@@ -71,4 +78,41 @@ func WithCorrelationContext(ctx context.Context, origin Component) context.Conte
 // the correlation context.
 func TODO() context.Context {
 	return context.TODO()
+}
+
+// RequestContextFromContextValue returns the request context from a context value
+func RequestContextFromContextValue(ctx context.Context) *RequestContext {
+	contextKeyValue := ctx.Value(ContextKey)
+	rc, ok := contextKeyValue.(*RequestContext)
+	if !ok {
+		return &RequestContext{}
+	}
+
+	return rc
+}
+
+// RequestContextFromContextMetadata returns a new request context from a metadata object
+func RequestContextFromContextMetadata(md metadata.MD) *RequestContext {
+	rc := &RequestContext{}
+	if len(md[ContextIDKey]) > 0 {
+		rc.ID = md[ContextIDKey][0]
+	}
+	if len(md[ContextOriginKey]) > 0 {
+		rc.Origin = Component(md[ContextOriginKey][0])
+	}
+
+	return rc
+}
+
+// AsMap returns the request context as a map
+func (rc *RequestContext) AsMap() map[string]string {
+	m := make(map[string]string)
+	if rc.ID != "" {
+		m[ContextIDKey] = rc.ID
+	}
+	if rc.Origin != "" {
+		m[ContextOriginKey] = string(rc.Origin)
+	}
+
+	return m
 }
