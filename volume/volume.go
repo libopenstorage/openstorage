@@ -24,6 +24,8 @@ var (
 	ErrEinval = errors.New("Invalid argument")
 	// ErrVolDetached returned when volume is in detached state
 	ErrVolDetached = errors.New("Volume is detached")
+	// ErrAttachedHostSpecNotFound returned when the attached host's spec is not found
+	ErrAttachedHostSpecNotFound = errors.New("Spec of the attached host is not found")
 	// ErrVolAttached returned when volume is in attached state
 	ErrVolAttached = errors.New("Volume is attached")
 	// ErrVolAttachedOnRemoteNode returned when volume is in attached on different node
