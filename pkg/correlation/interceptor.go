@@ -27,9 +27,9 @@ type ContextInterceptor struct {
 	Origin Component
 }
 
-// ContextUnaryInterceptor creates a gRPC interceptor for adding
+// ContextUnaryServerInterceptor creates a gRPC interceptor for adding
 // correlation ID to each request
-func (ci *ContextInterceptor) ContextUnaryInterceptor(
+func (ci *ContextInterceptor) ContextUnaryServerInterceptor(
 	ctx context.Context,
 	req interface{},
 	info *grpc.UnaryServerInfo,
@@ -48,4 +48,28 @@ func (ci *ContextInterceptor) ContextUnaryInterceptor(
 	ctx = WithCorrelationContext(ctx, ci.Origin)
 
 	return handler(ctx, req)
+}
+
+// ContextUnaryClientInterceptor creates a gRPC interceptor for adding
+// correlation ID to each request
+func ContextUnaryClientInterceptor(
+	ctx context.Context,
+	method string,
+	req, reply interface{},
+	cc *grpc.ClientConn,
+	invoker grpc.UnaryInvoker,
+	opts ...grpc.CallOption,
+) error {
+	// Create new metadata from request context in context
+	newContextMap := RequestContextFromContextValue(ctx).AsMap()
+	newContextMD := metadata.New(newContextMap)
+
+	// Get existing metadata if exists and join with new one
+	existingMD, ok := metadata.FromOutgoingContext(ctx)
+	if ok {
+		newContextMD = metadata.Join(newContextMD, existingMD)
+	}
+	ctx = metadata.NewOutgoingContext(ctx, newContextMD)
+
+	return invoker(ctx, method, req, reply, cc, opts...)
 }

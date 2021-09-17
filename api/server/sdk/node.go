@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/portworx/kvdb"
 	"google.golang.org/grpc"
@@ -233,7 +234,10 @@ func (s *NodeServer) getProxyClient(
 ) (api.OpenStorageNodeClient, error) {
 	endpoint := host + ":" + s.server.port()
 	// TODO TLS
-	dialOpts := []grpc.DialOption{grpc.WithInsecure()}
+	dialOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+	}
 	conn, err := grpcserver.Connect(endpoint, dialOpts)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Node usage from remote node failed with :%v", err.Error())

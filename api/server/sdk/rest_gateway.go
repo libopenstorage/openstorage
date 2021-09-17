@@ -30,6 +30,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 )
 
@@ -127,7 +128,10 @@ func (s *sdkRestGateway) restServerSetupHandlers() (http.Handler, error) {
 	// Connect to gRPC unix domain socket
 	conn, err := grpcserver.Connect(
 		s.grpcServer.Address(),
-		[]grpc.DialOption{grpc.WithInsecure()})
+		[]grpc.DialOption{
+			grpc.WithInsecure(),
+			grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+		})
 	if err != nil {
 		return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
 	}

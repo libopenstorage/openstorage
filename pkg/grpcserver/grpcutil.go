@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -52,8 +53,10 @@ func GetTlsDialOptions(caCertData []byte) ([]grpc.DialOption, error) {
 		}
 	}
 
-	dialOptions := []grpc.DialOption{grpc.WithTransportCredentials(
-		credentials.NewClientTLSFromCert(capool, ""))}
+	dialOptions := []grpc.DialOption{
+		grpc.WithTransportCredentials(credentials.NewClientTLSFromCert(capool, "")),
+		grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+	}
 	return dialOptions, nil
 }
 
