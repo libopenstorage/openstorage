@@ -478,7 +478,7 @@ func (s *sdkGrpcServer) Start() error {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockUnaryIntercepter,
-				correlationInterceptor.ContextUnaryInterceptor,
+				correlationInterceptor.ContextUnaryServerInterceptor,
 				grpc_auth.UnaryServerInterceptor(s.auth),
 				s.authorizationServerUnaryInterceptor,
 				s.loggerServerUnaryInterceptor,
@@ -496,7 +496,7 @@ func (s *sdkGrpcServer) Start() error {
 		opts = append(opts, grpc.UnaryInterceptor(
 			grpc_middleware.ChainUnaryServer(
 				s.rwlockUnaryIntercepter,
-				correlationInterceptor.ContextUnaryInterceptor,
+				correlationInterceptor.ContextUnaryServerInterceptor,
 				s.loggerServerUnaryInterceptor,
 				grpc_prometheus.UnaryServerInterceptor,
 			)))

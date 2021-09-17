@@ -111,7 +111,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 	opts := make([]grpc.ServerOption, 0)
 	opts = append(opts, grpc.UnaryInterceptor(
 		grpc_middleware.ChainUnaryServer(
-			correlationInterceptor.ContextUnaryInterceptor,
+			correlationInterceptor.ContextUnaryServerInterceptor,
 		)))
 
 	// Create server
@@ -144,7 +144,10 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 		fmt.Println("Connecting to", s.sdkUds)
 		s.conn, err = grpcserver.Connect(
 			s.sdkUds,
-			[]grpc.DialOption{grpc.WithInsecure()})
+			[]grpc.DialOption{
+				grpc.WithInsecure(),
+				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+			})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
 		}
@@ -179,7 +182,7 @@ func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Vol
 // the contents of a K8S Secret map into the Secrets section of the CSI call.
 // Also adds correlation ID to the outgoing context
 func (s *OsdCsiServer) setupContext(ctx context.Context, csiSecrets map[string]string) context.Context {
-	metadataMap := correlation.RequestContextFromContextValue(ctx).AsMap()
+	metadataMap := make(map[string]string)
 	if token, ok := csiSecrets[authsecrets.SecretTokenKey]; ok {
 		metadataMap["authorization"] = "bearer " + token
 	}

@@ -22,6 +22,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/options"
@@ -76,6 +77,7 @@ func (vd *volAPI) getConn() (*grpc.ClientConn, error) {
 			[]grpc.DialOption{
 				grpc.WithInsecure(),
 				grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(maxMsgSize)),
+				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
 			})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect to gRPC handler: %v", err)
