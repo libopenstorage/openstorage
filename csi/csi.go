@@ -177,12 +177,16 @@ func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Vol
 
 // Gets token from the secrets. In Kubernetes, the side car containers copy
 // the contents of a K8S Secret map into the Secrets section of the CSI call.
-func (s *OsdCsiServer) setupContextWithToken(ctx context.Context, csiSecrets map[string]string) context.Context {
+// Also adds correlation ID to the outgoing context
+func (s *OsdCsiServer) setupContext(ctx context.Context, csiSecrets map[string]string) context.Context {
+	metadataMap := correlation.RequestContextFromContextValue(ctx).AsMap()
 	if token, ok := csiSecrets[authsecrets.SecretTokenKey]; ok {
-		md := metadata.New(map[string]string{
-			"authorization": "bearer " + token,
-		})
+		metadataMap["authorization"] = "bearer " + token
+	}
 
+	// Create and return metadata from map
+	if len(metadataMap) > 0 {
+		md := metadata.New(metadataMap)
 		return metadata.NewOutgoingContext(ctx, md)
 	}
 

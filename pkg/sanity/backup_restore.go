@@ -17,6 +17,7 @@ limitations under the License.
 package sanity
 
 import (
+	"context"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -101,7 +102,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -153,7 +154,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				}
 
 				// Attaching the volume first
-				str, err := volumedriver.Attach(volumeID, nil)
+				str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
@@ -209,7 +210,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -259,7 +260,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				}
 
 				// Attaching the volume first
-				str, err := volumedriver.Attach(volumeID, nil)
+				str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
@@ -332,7 +333,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -387,7 +388,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				}
 
 				// Attaching the volume first
-				str, err := volumedriver.Attach(volumeID, nil)
+				str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 
@@ -474,7 +475,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -552,7 +553,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -644,7 +645,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -733,7 +734,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Detach(volumeID, nil)
+			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
 			err = volumedriver.Delete(volumeID)
@@ -785,7 +786,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				}
 
 				// Attaching the volume first
-				str, err := volumedriver.Attach(volumeID, nil)
+				str, err := volumedriver.Attach(context.TODO(), volumeID, nil)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(str).NotTo(BeNil())
 

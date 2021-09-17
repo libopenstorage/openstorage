@@ -105,7 +105,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -245,7 +245,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if err = s.driver.Detach(volumeId, nil); err != nil {
+		if err = s.driver.Detach(ctx, volumeId, nil); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to detach volume: %s",

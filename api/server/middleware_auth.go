@@ -170,6 +170,8 @@ func (a *authMiddleware) createWithAuth(w http.ResponseWriter, r *http.Request, 
 
 func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
 	fn := "set"
+
+	ctx := correlation.WithCorrelationContext(r.Context(), "auth-middleware")
 	d, authRequired := a.isTokenProcessingRequired(r)
 	if !authRequired {
 		next(w, r)
@@ -210,9 +212,9 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 		if req.Action.Attach != api.VolumeActionParam_VOLUME_ACTION_PARAM_NONE {
 			isOpDone = true
 			if req.Action.Attach == api.VolumeActionParam_VOLUME_ACTION_PARAM_ON {
-				_, err = d.Attach(volumeID, req.Options)
+				_, err = d.Attach(ctx, volumeID, req.Options)
 			} else {
-				err = d.Detach(volumeID, req.Options)
+				err = d.Detach(ctx, volumeID, req.Options)
 			}
 			if err != nil {
 				break
@@ -226,9 +228,9 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 					err = fmt.Errorf("Invalid mount path")
 					break
 				}
-				err = d.Mount(correlation.TODO(), volumeID, req.Action.MountPath, req.Options)
+				err = d.Mount(ctx, volumeID, req.Action.MountPath, req.Options)
 			} else {
-				err = d.Unmount(correlation.TODO(), volumeID, req.Action.MountPath, req.Options)
+				err = d.Unmount(ctx, volumeID, req.Action.MountPath, req.Options)
 			}
 			if err != nil {
 				break

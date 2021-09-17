@@ -36,18 +36,18 @@ func (m *MockVolumeDriver) EXPECT() *MockVolumeDriverMockRecorder {
 }
 
 // Attach mocks base method.
-func (m *MockVolumeDriver) Attach(arg0 string, arg1 map[string]string) (string, error) {
+func (m *MockVolumeDriver) Attach(arg0 context.Context, arg1 string, arg2 map[string]string) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Attach", arg0, arg1)
+	ret := m.ctrl.Call(m, "Attach", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Attach indicates an expected call of Attach.
-func (mr *MockVolumeDriverMockRecorder) Attach(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Attach(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Attach", reflect.TypeOf((*MockVolumeDriver)(nil).Attach), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Attach", reflect.TypeOf((*MockVolumeDriver)(nil).Attach), arg0, arg1, arg2)
 }
 
 // CapacityUsage mocks base method.
@@ -475,17 +475,17 @@ func (mr *MockVolumeDriverMockRecorder) Delete(arg0 interface{}) *gomock.Call {
 }
 
 // Detach mocks base method.
-func (m *MockVolumeDriver) Detach(arg0 string, arg1 map[string]string) error {
+func (m *MockVolumeDriver) Detach(arg0 context.Context, arg1 string, arg2 map[string]string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Detach", arg0, arg1)
+	ret := m.ctrl.Call(m, "Detach", arg0, arg1, arg2)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Detach indicates an expected call of Detach.
-func (mr *MockVolumeDriverMockRecorder) Detach(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Detach(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Detach", reflect.TypeOf((*MockVolumeDriver)(nil).Detach), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Detach", reflect.TypeOf((*MockVolumeDriver)(nil).Detach), arg0, arg1, arg2)
 }
 
 // Enumerate mocks base method.
@@ -652,17 +652,17 @@ func (mr *MockVolumeDriverMockRecorder) Mount(arg0, arg1, arg2, arg3 interface{}
 }
 
 // MountedAt mocks base method.
-func (m *MockVolumeDriver) MountedAt(arg0 string) string {
+func (m *MockVolumeDriver) MountedAt(arg0 context.Context, arg1 string) string {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "MountedAt", arg0)
+	ret := m.ctrl.Call(m, "MountedAt", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // MountedAt indicates an expected call of MountedAt.
-func (mr *MockVolumeDriverMockRecorder) MountedAt(arg0 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) MountedAt(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MountedAt", reflect.TypeOf((*MockVolumeDriver)(nil).MountedAt), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MountedAt", reflect.TypeOf((*MockVolumeDriver)(nil).MountedAt), arg0, arg1)
 }
 
 // Name mocks base method.

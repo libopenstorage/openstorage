@@ -120,7 +120,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	// If this is for a block driver, first attach the volume
 	var devicePath string
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if devicePath, err = s.driver.Attach(req.GetVolumeId(), opts); err != nil {
+		if devicePath, err = s.driver.Attach(ctx, req.GetVolumeId(), opts); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to attach volume: %s",
@@ -132,7 +132,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		// As block create a sym link to the attached location
 		err = os.Symlink(devicePath, req.GetTargetPath())
 		if err != nil {
-			detachErr := s.driver.Detach(v.GetId(), opts)
+			detachErr := s.driver.Detach(ctx, v.GetId(), opts)
 			if detachErr != nil {
 				logrus.Errorf("Unable to detach volume %s: %s",
 					v.GetId(),
@@ -158,7 +158,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		// Mount volume onto the path
 		if err := s.driver.Mount(ctx, req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
 			// Detach on error
-			detachErr := s.driver.Detach(v.GetId(), opts)
+			detachErr := s.driver.Detach(ctx, v.GetId(), opts)
 			if detachErr != nil {
 				logrus.Errorf("Unable to detach volume %s: %s",
 					v.GetId(),
@@ -244,7 +244,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if err = s.driver.Detach(req.GetVolumeId(), nil); err != nil {
+		if err = s.driver.Detach(ctx, req.GetVolumeId(), nil); err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to detach volume: %s",

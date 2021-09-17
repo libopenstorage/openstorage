@@ -349,7 +349,7 @@ func (v *volumeClient) SnapEnumerate(ids []string,
 // Attach map device to the host.
 // On success the devicePath specifies location where the device is exported
 // Errors ErrEnoEnt, ErrVolAttached may be returned.
-func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) (string, error) {
+func (v *volumeClient) Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error) {
 	response, err := v.doVolumeSetGetResponse(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -374,7 +374,7 @@ func (v *volumeClient) Attach(volumeID string, attachOptions map[string]string) 
 
 // Detach device from the host.
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
-func (v *volumeClient) Detach(volumeID string, options map[string]string) error {
+func (v *volumeClient) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 	return v.doVolumeSet(
 		volumeID,
 		&api.VolumeSetRequest{
@@ -386,7 +386,7 @@ func (v *volumeClient) Detach(volumeID string, options map[string]string) error 
 	)
 }
 
-func (v *volumeClient) MountedAt(mountPath string) string {
+func (v *volumeClient) MountedAt(ctx context.Context, mountPath string) string {
 	return ""
 }
 

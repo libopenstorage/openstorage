@@ -1014,7 +1014,7 @@ func TestVolumeAttachSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	_, err = driverclient.Attach(id, map[string]string{})
+	_, err = driverclient.Attach(context.TODO(), id, map[string]string{})
 	assert.Nil(t, err)
 
 	// Assert volume information is correct
@@ -1064,7 +1064,7 @@ func TestVolumeAttachFailed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	_, err = driverclient.Attach("doesnotexist", map[string]string{})
+	_, err = driverclient.Attach(context.TODO(), "doesnotexist", map[string]string{})
 	assert.NotNil(t, err)
 
 	// Assert volume information is correct
@@ -1115,11 +1115,11 @@ func TestVolumeDetachSuccess(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	// Attach
-	_, err = driverclient.Attach(id, map[string]string{})
+	_, err = driverclient.Attach(context.TODO(), id, map[string]string{})
 	assert.Nil(t, err)
 
 	// Detach
-	res := driverclient.Detach(id, map[string]string{})
+	res := driverclient.Detach(context.TODO(), id, map[string]string{})
 	assert.Nil(t, res)
 
 	volumes := api.NewOpenStorageVolumeClient(testVolDriver.Conn())
@@ -1168,11 +1168,11 @@ func TestVolumeDetachFailed(t *testing.T) {
 	assert.NotEmpty(t, id)
 
 	// Attach
-	_, err = driverclient.Attach(id, map[string]string{})
+	_, err = driverclient.Attach(context.TODO(), id, map[string]string{})
 	assert.Nil(t, err)
 
 	// Detach
-	res := driverclient.Detach("doesnotexist", map[string]string{})
+	res := driverclient.Detach(context.TODO(), "doesnotexist", map[string]string{})
 	// Detach must not fail on non-existing volume
 	assert.Nil(t, res)
 

@@ -112,7 +112,7 @@ func (v *volumeDriver) Delete(volumeID string) error {
 	return v.DeleteVol(volumeID)
 }
 
-func (v *volumeDriver) MountedAt(mountpath string) string {
+func (v *volumeDriver) MountedAt(ctx context.Context, mountpath string) string {
 	return ""
 }
 

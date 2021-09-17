@@ -175,7 +175,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -451,7 +451,7 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -524,7 +524,7 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -577,7 +577,7 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -719,7 +719,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -800,7 +800,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -852,7 +852,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 	volumes := api.NewOpenStorageVolumeClient(conn)
@@ -919,7 +919,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	}
 
 	// Get secret if any was passed
-	ctx = s.setupContextWithToken(ctx, req.GetSecrets())
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 	volumes := api.NewOpenStorageVolumeClient(conn)

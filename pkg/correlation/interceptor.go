@@ -19,6 +19,7 @@ import (
 	"context"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/metadata"
 )
 
 // ContextInterceptor represents a correlation interceptor
@@ -34,6 +35,16 @@ func (ci *ContextInterceptor) ContextUnaryInterceptor(
 	info *grpc.UnaryServerInfo,
 	handler grpc.UnaryHandler,
 ) (interface{}, error) {
+	md, ok := metadata.FromIncomingContext(ctx)
+	if ok {
+		// Get request context from gRPC metadata
+		rc := RequestContextFromContextMetadata(md)
+
+		// Only add to context if an ID exists
+		if len(rc.ID) > 0 {
+			ctx = context.WithValue(ctx, ContextKey, rc)
+		}
+	}
 	ctx = WithCorrelationContext(ctx, ci.Origin)
 
 	return handler(ctx, req)
