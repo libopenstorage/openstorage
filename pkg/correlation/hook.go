@@ -17,7 +17,6 @@ package correlation
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 	"runtime"
 	"strings"
@@ -79,7 +78,7 @@ func (lh *LogHook) Fire(entry *logrus.Entry) error {
 
 		correlationContext, ok := ctxKeyValue.(*RequestContext)
 		if !ok {
-			return fmt.Errorf("failed to get request context for correlation logging hook")
+			return nil
 		}
 
 		entry.Data[LogFieldID] = correlationContext.ID
