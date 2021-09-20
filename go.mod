@@ -53,6 +53,7 @@ require (
 	github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194
 	github.com/portworx/sched-ops v1.20.4-rc1
 	github.com/prometheus/client_golang v1.9.0
+	github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452 // indirect
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
@@ -64,11 +65,13 @@ require (
 	go.pedge.io/proto v0.0.0-00010101000000-000000000000
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
-	golang.org/x/net v0.0.0-20210913180222-943fd674d43e
+	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
+	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210910150752-751e447fb3d0
+	golang.org/x/sys v0.0.0-20210917161153-d61c044b1678
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/genproto v0.0.0-20210909211513-a8c4777a87af
+	golang.org/x/tools v0.1.5 // indirect
+	google.golang.org/genproto v0.0.0-20210920155426-26f343e4c215
 	google.golang.org/grpc v1.40.0
 	google.golang.org/protobuf v1.27.1
 	gopkg.in/freddierice/go-losetup.v1 v1.0.0-20170407175016-fc9adea44124
