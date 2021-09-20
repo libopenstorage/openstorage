@@ -159,6 +159,7 @@ github.com/golang/groupcache/lru
 # github.com/golang/mock v1.6.0
 ## explicit
 github.com/golang/mock/gomock
+github.com/golang/mock/mockgen/model
 # github.com/golang/protobuf v1.5.2
 ## explicit
 github.com/golang/protobuf/descriptor
@@ -388,8 +389,6 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
-# github.com/robertkrimen/otto v0.0.0-20210614181706-373ff5438452
-## explicit
 # github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 ## explicit
 github.com/rs/cors

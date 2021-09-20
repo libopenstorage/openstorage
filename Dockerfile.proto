@@ -45,15 +45,6 @@ RUN git checkout v1.4.1 && \
     go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0 && \
 	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
-# This is a hack for file not found error when downloading mock
-# go mod vendor somehow doesn't serve mockgen folder, which is a critical component
-# the hack is to simply clone the entire repo and move the folder inside vendor before
-# running mockgen.
-# Note: additional command is required in the makefile mockgen section for copying the files over
-RUN mkdir -p /go/src/github.com/golang
-WORKDIR /go/src/github.com/golang
-RUN git clone https://github.com/golang/mock.git
-
 # Install swagger 2.0 to OpenApi 3.0 converter
 RUN npm install -g swagger2openapi
 # Finally, set working directory to the openstorage project
