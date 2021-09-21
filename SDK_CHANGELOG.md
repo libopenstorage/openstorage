@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.12 - (09/21/2021)
+
+* Add pool maintenance status code
+
 ### v0.101.11 - (08/18/2021)
 
 * Additions to CloudBackupEnumerate API to allow enumerating cloudbackups 
