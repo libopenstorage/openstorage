@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.13 - (09/20/2021)
+
+* Add DerivedIoProfile to Volume and a new NONE IO Profile
+
 ### v0.101.12 - (09/21/2021)
 
 * Add pool maintenance status code

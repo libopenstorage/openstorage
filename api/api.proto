@@ -113,6 +113,7 @@ enum IoProfile {
   IO_PROFILE_CMS = 4;
   IO_PROFILE_SYNC_SHARED = 5;
   IO_PROFILE_AUTO = 6;
+  IO_PROFILE_NONE = 7;
 }
 
 // VolumeState represents the state of a volume.
@@ -909,6 +910,8 @@ message Volume {
   // Sharedv4MountOptions are the runtime mount options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 30;
+  // DerivedIoProfile the IO profile determined from the pattern
+  IoProfile derived_io_profile = 31;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -4858,7 +4861,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 12;
+    Patch = 13;
   }
 
   // The following cannot be set to use the enum Version because the REST
