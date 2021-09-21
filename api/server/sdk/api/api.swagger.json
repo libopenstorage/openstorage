@@ -5443,6 +5443,7 @@
           "STATUS_STORAGE_REBALANCE",
           "STATUS_STORAGE_DRIVE_REPLACE",
           "STATUS_NOT_IN_QUORUM_NO_STORAGE",
+          "STATUS_POOLMAINTENANCE",
           "STATUS_MAX"
         ],
         "title": "- STATUS_MAX: Add statuses before MAX and update the number for MAX",
@@ -5459,7 +5460,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.11"
+    "version": "0.101.12"
   },
   "openapi": "3.0.0",
   "paths": {

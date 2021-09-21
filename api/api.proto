@@ -34,8 +34,9 @@ enum Status {
   STATUS_STORAGE_REBALANCE = 11;
   STATUS_STORAGE_DRIVE_REPLACE = 12;
   STATUS_NOT_IN_QUORUM_NO_STORAGE = 13;
+  STATUS_POOLMAINTENANCE = 14;
   // Add statuses before MAX and update the number for MAX
-  STATUS_MAX = 14;
+  STATUS_MAX = 15;
 }
 
 enum DriverType {
@@ -4857,7 +4858,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 11;
+    Patch = 12;
   }
 
   // The following cannot be set to use the enum Version because the REST
