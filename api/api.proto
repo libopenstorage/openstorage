@@ -34,8 +34,9 @@ enum Status {
   STATUS_STORAGE_REBALANCE = 11;
   STATUS_STORAGE_DRIVE_REPLACE = 12;
   STATUS_NOT_IN_QUORUM_NO_STORAGE = 13;
+  STATUS_POOLMAINTENANCE = 14;
   // Add statuses before MAX and update the number for MAX
-  STATUS_MAX = 14;
+  STATUS_MAX = 15;
 }
 
 enum DriverType {
@@ -4941,7 +4942,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 123;
+    Minor = 124;
     // SDK version patch value of this specification
     Patch = 0;
   }
