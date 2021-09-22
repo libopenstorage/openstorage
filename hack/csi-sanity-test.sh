@@ -3,8 +3,6 @@ set -x
 
 cleanup() {
 	sudo pkill -15 -f $GOPATH/bin/osd
-	go mod tidy
-	go mod vendor
 }
 
 assert_success() {

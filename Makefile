@@ -58,6 +58,7 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	update-test-deps \
 	vendor-update \
 	vendor-without-update \
+	vendor-gomod \
 	vendor \
 	build \
 	install \
@@ -139,10 +140,21 @@ update-test-deps:
 	GO111MODULE=off go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
+	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
+
+vendor-without-update: $(GOPATH)/bin/govendor
+	rm -rf vendor
+	govendor init
+	GOOS=linux GOARCH=amd64 govendor add +external
+	GOOS=linux GOARCH=amd64 govendor update +vendor
+	GOOS=linux GOARCH=amd64 govendor add +external
+	GOOS=linux GOARCH=amd64 govendor update +vendor
+
+vendor-gomod:
 	GOOS=linux GOARCH=amd64 go mod tidy
 	GOOS=linux GOARCH=amd64 go mod vendor
 
-vendor: vendor-update
+vendor: vendor-gomod
 
 build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
