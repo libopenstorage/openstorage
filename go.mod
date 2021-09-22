@@ -84,6 +84,8 @@ replace (
 	github.com/container-storage-interface/spec => github.com/container-storage-interface/spec v1.5.0
 	github.com/docker/docker => github.com/moby/moby v20.10.3-0.20210324213045-797b974cb90e+incompatible
 	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
+
+	github.com/kubernetes-csi/csi-test/v4 => github.com/kubernetes-csi/csi-test/v4 v4.2.0
 	github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3
 	github.com/satori/go.uuid => github.com/satori/go.uuid v0.0.0-20160324112244-f9ab0dce87d8
 
