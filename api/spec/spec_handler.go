@@ -138,6 +138,7 @@ var (
 	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 	sharedv4ExternalAccessRegex = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
+	sharedv4FailoverDelayRegex  = regexp.MustCompile(api.SpecSharedv4FailoverDelay + "=([A-Za-z]+),?")
 	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
 	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 	SpecIoThrottleRdIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
@@ -472,7 +473,15 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
 			}
 			spec.Sharedv4ServiceSpec.Name = v
-
+		case api.SpecSharedv4FailoverDelay:
+			if spec.Sharedv4Spec == nil {
+				spec.Sharedv4Spec = &api.Sharedv4Spec{}
+			}
+			if v == "short" {
+				spec.Sharedv4Spec.FailoverDelay = api.Sharedv4FailoverDelay_SHORT
+			} else if v == "normal" {
+				spec.Sharedv4Spec.FailoverDelay = api.Sharedv4FailoverDelay_NORMAL
+			}
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
 				spec.MountOptions = &api.MountOptions{
@@ -794,6 +803,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, sharedv4ExternalAccess := d.getVal(sharedv4ExternalAccessRegex, str); ok {
 		opts[api.SpecSharedv4ExternalAccess] = sharedv4ExternalAccess
+	}
+	if ok, failoverDelay := d.getVal(sharedv4FailoverDelayRegex, str); ok {
+		opts[api.SpecSharedv4FailoverDelay] = failoverDelay
 	}
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath

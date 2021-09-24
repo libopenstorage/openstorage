@@ -444,6 +444,29 @@ message Sharedv4ServiceSpec {
     }
 }
 
+  // Sharedv4FailoverDelay specifies how long to wait before failing over to a new server.
+  message Sharedv4FailoverDelay {
+    enum Value {
+      // Unspecified
+      UNSPECIFIED = 0;
+      // Fail over to the new NFS server quickly. This is appropriate for
+      // the apps with sharedv4 service volumes. It can also be used
+      // for the apps with sharedv4 volumes when such apps are able
+      // to restart quickly.
+      SHORT = 1;
+      // Give the old NFS server more time to come back up before
+      // triggering the failover. This is appropriate for the apps
+      // with sharedv4 volumes (non-service).
+      NORMAL = 2;
+    }
+}
+
+// Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+message Sharedv4Spec {
+  // Indicates how long to wait before failing over to a new server.
+  Sharedv4FailoverDelay.Value failover_delay = 1;
+}
+
 // MountOptions defines the mount options with which a volume is mounted.
 message MountOptions {
   // Options are opaque key value pairs that are passed as mount options when
@@ -644,6 +667,8 @@ message VolumeSpec {
   uint32 number_of_chunks = 44;
   // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
   IoThrottle io_throttle = 45;
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  Sharedv4Spec sharedv4_spec = 46;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -711,6 +736,8 @@ message VolumeSpecUpdate {
   oneof auto_fstrim_opt { bool auto_fstrim = 38; }
   // io_throttle_opt defines the io throttle limits for the volume
   oneof io_throttle_opt { IoThrottle io_throttle = 39;}
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 40; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -798,6 +825,8 @@ message VolumeSpecPolicy {
   oneof auto_fstrim_opt { bool auto_fstrim = 64; }
   // io_throttle_opt defines the io throttle limits for the volume
   oneof io_throttle_opt { IoThrottle io_throttle = 65;}
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 66; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -944,6 +973,7 @@ message Volume {
   bool in_trashcan = 31;
   // DerivedIoProfile the IO profile determined from the pattern
   IoProfile derived_io_profile = 32;
+  // TODO should we add sharedv4_spec here?
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1986,7 +2016,6 @@ service OpenStorageNode {
         get: "/v1/nodes/usage/{node_id}"
       };
     }
-  
   // Triggers RelaxedReclaim purge for a give node
   rpc RelaxedReclaimPurge(SdkNodeRelaxedReclaimPurgeRequest)
     returns (SdkNodeRelaxedReclaimPurgeResponse) {
@@ -2386,7 +2415,6 @@ service OpenStorageCredentials {
         body: "*"
       };
     }
- 
   // input is very same as credential create
   rpc Update(SdkCredentialUpdateRequest)
     returns (SdkCredentialUpdateResponse) {
@@ -4942,7 +4970,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 124;
+    Minor = 125;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5527,6 +5555,8 @@ message RestoreVolumeSpec {
   RestoreParamBoolType auto_fstrim = 28;
   // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
   IoThrottle io_throttle = 29;
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  Sharedv4Spec sharedv4_spec = 30;
 }
 
 // Request message to get the volume catalog

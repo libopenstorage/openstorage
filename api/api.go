@@ -90,6 +90,7 @@ const (
 	SpecProxyWrite             = "proxy_write"
 	SpecSharedv4ServiceType    = "sharedv4_svc_type"
 	SpecSharedv4ServiceName    = "sharedv4_svc_name"
+	SpecSharedv4FailoverDelay  = "sharedv4_failover_delay"
 	SpecSharedv4ExternalAccess = "sharedv4_external_access"
 	SpecFastpath               = "fastpath"
 	SpecAutoFstrim             = "auto_fstrim"
