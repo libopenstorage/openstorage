@@ -453,6 +453,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
 			} else if v == "LoadBalancer" || v == "loadBalancer" {
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_LOADBALANCER
+			} else {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 service type: %v", v)
 			}
 		case api.SpecSharedv4ExternalAccess:
 			if spec.Sharedv4ServiceSpec == nil {
@@ -477,10 +479,14 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			if spec.Sharedv4Spec == nil {
 				spec.Sharedv4Spec = &api.Sharedv4Spec{}
 			}
-			if v == "short" {
+			if v == api.SpecSharedv4FailoverDelayShort {
 				spec.Sharedv4Spec.FailoverDelay = api.Sharedv4FailoverDelay_SHORT
-			} else if v == "normal" {
+			} else if v == api.SpecSharedv4FailoverDelayNormal {
 				spec.Sharedv4Spec.FailoverDelay = api.Sharedv4FailoverDelay_NORMAL
+			} else if v == api.SpecSharedv4FailoverDelayUnspecified {
+				spec.Sharedv4Spec.FailoverDelay = api.Sharedv4FailoverDelay_UNSPECIFIED
+			} else {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 failover delay: %v", v)
 			}
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
