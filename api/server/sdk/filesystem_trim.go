@@ -77,6 +77,21 @@ func (s *FilesystemTrimServer) Status(
 	return r, err
 }
 
+// Status of auto fs trim operation
+func (s *FilesystemTrimServer) AutoFSTrimStatus(
+	ctx context.Context,
+	req *api.SdkAutoFSTrimStatusRequest,
+) (*api.SdkAutoFSTrimStatusResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	r, err := s.driver(ctx).AutoFilesystemTrimStatus(req)
+
+	return r, err
+}
+
 // Stop the background filesystem trim operation on a volume, if any
 func (s *FilesystemTrimServer) Stop(
 	ctx context.Context,

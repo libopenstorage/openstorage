@@ -1753,6 +1753,23 @@
         },
         "type": "object"
       },
+      "apiSdkAutoFSTrimStatusResponse": {
+        "description": "SdkAutoFSTrimStatusResponse defines the response for a\nSdkAutoFSTrimStatusRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "trim_status": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
+            },
+            "title": "map of volume id and the state of the filesystem trim operation",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkAwsCredentialRequest": {
         "properties": {
           "access_key": {
@@ -5622,7 +5639,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.125.0"
+    "version": "0.126.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6806,6 +6823,26 @@
         "summary": "Stop a filesystem check background operation on an unmounted volume, if any",
         "tags": [
           "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-status": {
+      "get": {
+        "operationId": "AutoFSTrimStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageFilesystemTrim"
         ]
       }
     },
