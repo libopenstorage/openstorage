@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.16 - (02/01/2022)
+
+* Added api for auto fs trim status
+
 ### v0.101.15 - (02/01/2022)
 
 * auto fstrim flag in volume spec

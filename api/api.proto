@@ -1611,6 +1611,13 @@ service OpenStorageFilesystemTrim {
       };
     }
 
+  rpc AutoFSTrimStatus(SdkAutoFSTrimStatusRequest)
+    returns (SdkAutoFSTrimStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-trim/auto-fstrim-status"
+      };
+    }
+
   // Stop a filesystem Trim background operation on a mounted volume, if any
   rpc Stop(SdkFilesystemTrimStopRequest)
     returns (SdkFilesystemTrimStopResponse){
@@ -4723,6 +4730,19 @@ message SdkFilesystemTrimStatusResponse{
   string message = 2;
 }
 
+// SdkAutoFSTrimStatusRequest defines a request to get status of autofs trim operation
+message SdkAutoFSTrimStatusRequest {
+}
+
+// SdkAutoFSTrimStatusResponse defines the response for a
+// SdkAutoFSTrimStatusRequest.
+message SdkAutoFSTrimStatusResponse {
+  // map of volume id and the state of the filesystem trim operation
+  map<string, FilesystemTrim.FilesystemTrimStatus> trim_status = 1;
+  // Text blob containing ASCII text providing details of the operation
+  string message = 2;
+}
+
 // SdkFilesystemTrimStopRequest defines a request to stop a background
 // filesystem trim operation
 message SdkFilesystemTrimStopRequest {
@@ -4896,7 +4916,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 15;
+    Patch = 16;
   }
 
   // The following cannot be set to use the enum Version because the REST
