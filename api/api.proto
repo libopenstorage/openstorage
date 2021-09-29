@@ -973,7 +973,6 @@ message Volume {
   bool in_trashcan = 31;
   // DerivedIoProfile the IO profile determined from the pattern
   IoProfile derived_io_profile = 32;
-  // TODO should we add sharedv4_spec here?
 }
 
 // Stats is a structure that represents last collected stats for a volume
