@@ -92,58 +92,59 @@ type SpecHandler interface {
 }
 
 var (
-	nameRegex                   = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
-	tokenRegex                  = regexp.MustCompile(api.Token + "=([A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]+),?")
-	tokenSecretRegex            = regexp.MustCompile(api.TokenSecret + `=/*([0-9A-Za-z_/]+),?`)
-	tokenSecretNamespaceRegex   = regexp.MustCompile(api.TokenSecretNamespace + `=/*([0-9A-Za-z_/]+),?`)
-	nodesRegex                  = regexp.MustCompile(api.SpecNodes + "=([A-Za-z0-9-_;]+),?")
-	parentRegex                 = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
-	sizeRegex                   = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
-	scaleRegex                  = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
-	fsRegex                     = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
-	bsRegex                     = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
-	queueDepthRegex             = regexp.MustCompile(api.SpecQueueDepth + "=([0-9]+),?")
-	haRegex                     = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
-	cosRegex                    = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
-	sharedRegex                 = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
-	journalRegex                = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
-	sharedv4Regex               = regexp.MustCompile(api.SpecSharedv4 + "=([A-Za-z]+),?")
-	cascadedRegex               = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
-	passphraseRegex             = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
-	stickyRegex                 = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
-	secureRegex                 = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
-	zonesRegex                  = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
-	racksRegex                  = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
-	rackRegex                   = regexp.MustCompile(api.SpecRack + "=([A-Za-z]+),?")
-	aggrRegex                   = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" + api.SpecAutoAggregationValue + "),?")
-	compressedRegex             = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
-	snapScheduleRegex           = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
-	ioProfileRegex              = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
-	asyncIoRegex                = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
-	earlyAckRegex               = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
-	forceUnsupportedFsTypeRegex = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
-	nodiscardRegex              = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
-	storagePolicyRegex          = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
-	exportProtocolRegex         = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
-	exportOptionsRegex          = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
-	proxyEndpointRegex          = regexp.MustCompile(api.SpecProxyEndpoint + "=([0-9A-Za-z_@:./#&+-]+),?")
-	proxyNFSSubPathRegex        = regexp.MustCompile(api.SpecProxyNFSSubPath + "=([A-Za-z]+),?")
-	proxyNFSExportPathRegex     = regexp.MustCompile(api.SpecProxyNFSExportPath + "=([A-Za-z]+),?")
-	proxyS3BucketRegex          = regexp.MustCompile(api.SpecProxyS3Bucket + "=([A-Za-z]+),?")
-	mountOptionsRegex           = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
-	sharedv4MountOptionsRegex   = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
-	cowOnDemandRegex            = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
-	directIoRegex               = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
-	ProxyWriteRegex             = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
-	sharedv4ServiceTypeRegex    = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
-	sharedv4ServiceNameRegex    = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
-	sharedv4ExternalAccessRegex = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
-	fastpathRegex               = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
-	AutoFstrimRegex             = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
-	SpecIoThrottleRdIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
-	SpecIoThrottleWrIOPSRegex   = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
-	SpecIoThrottleRdBWRegex     = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
-	SpecIoThrottleWrBWRegex     = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
+	nameRegex                     = regexp.MustCompile(api.Name + "=([0-9A-Za-z_-]+),?")
+	tokenRegex                    = regexp.MustCompile(api.Token + "=([A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]+),?")
+	tokenSecretRegex              = regexp.MustCompile(api.TokenSecret + `=/*([0-9A-Za-z_/]+),?`)
+	tokenSecretNamespaceRegex     = regexp.MustCompile(api.TokenSecretNamespace + `=/*([0-9A-Za-z_/]+),?`)
+	nodesRegex                    = regexp.MustCompile(api.SpecNodes + "=([A-Za-z0-9-_;]+),?")
+	parentRegex                   = regexp.MustCompile(api.SpecParent + "=([A-Za-z]+),?")
+	sizeRegex                     = regexp.MustCompile(api.SpecSize + "=([0-9A-Za-z]+),?")
+	scaleRegex                    = regexp.MustCompile(api.SpecScale + "=([0-9]+),?")
+	fsRegex                       = regexp.MustCompile(api.SpecFilesystem + "=([0-9A-Za-z]+),?")
+	bsRegex                       = regexp.MustCompile(api.SpecBlockSize + "=([0-9]+),?")
+	queueDepthRegex               = regexp.MustCompile(api.SpecQueueDepth + "=([0-9]+),?")
+	haRegex                       = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
+	cosRegex                      = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
+	sharedRegex                   = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	journalRegex                  = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
+	sharedv4Regex                 = regexp.MustCompile(api.SpecSharedv4 + "=([A-Za-z]+),?")
+	cascadedRegex                 = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
+	passphraseRegex               = regexp.MustCompile(api.SpecPassphrase + "=([0-9A-Za-z_@./#&+-]+),?")
+	stickyRegex                   = regexp.MustCompile(api.SpecSticky + "=([A-Za-z]+),?")
+	secureRegex                   = regexp.MustCompile(api.SpecSecure + "=([A-Za-z]+),?")
+	zonesRegex                    = regexp.MustCompile(api.SpecZones + "=([A-Za-z]+),?")
+	racksRegex                    = regexp.MustCompile(api.SpecRacks + "=([A-Za-z]+),?")
+	rackRegex                     = regexp.MustCompile(api.SpecRack + "=([A-Za-z]+),?")
+	aggrRegex                     = regexp.MustCompile(api.SpecAggregationLevel + "=([0-9]+|" + api.SpecAutoAggregationValue + "),?")
+	compressedRegex               = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
+	snapScheduleRegex             = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
+	ioProfileRegex                = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	asyncIoRegex                  = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
+	earlyAckRegex                 = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
+	forceUnsupportedFsTypeRegex   = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
+	nodiscardRegex                = regexp.MustCompile(api.SpecNodiscard + "=([A-Za-z]+),?")
+	storagePolicyRegex            = regexp.MustCompile(api.StoragePolicy + "=([0-9A-Za-z_-]+),?")
+	exportProtocolRegex           = regexp.MustCompile(api.SpecExportProtocol + "=([A-Za-z]+),?")
+	exportOptionsRegex            = regexp.MustCompile(api.SpecExportOptions + "=([A-Za-z]+),?")
+	proxyEndpointRegex            = regexp.MustCompile(api.SpecProxyEndpoint + "=([0-9A-Za-z_@:./#&+-]+),?")
+	proxyNFSSubPathRegex          = regexp.MustCompile(api.SpecProxyNFSSubPath + "=([A-Za-z]+),?")
+	proxyNFSExportPathRegex       = regexp.MustCompile(api.SpecProxyNFSExportPath + "=([A-Za-z]+),?")
+	proxyS3BucketRegex            = regexp.MustCompile(api.SpecProxyS3Bucket + "=([A-Za-z]+),?")
+	mountOptionsRegex             = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	sharedv4MountOptionsRegex     = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
+	cowOnDemandRegex              = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
+	directIoRegex                 = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
+	ProxyWriteRegex               = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
+	sharedv4ServiceTypeRegex      = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
+	sharedv4ServiceNameRegex      = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
+	sharedv4ExternalAccessRegex   = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
+	Sharedv4FailoverStrategyRegex = regexp.MustCompile(api.SpecSharedv4FailoverStrategy + "=([A-Za-z]+),?")
+	fastpathRegex                 = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
+	AutoFstrimRegex               = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
+	SpecIoThrottleRdIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
+	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
+	SpecIoThrottleRdBWRegex       = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
+	SpecIoThrottleWrBWRegex       = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
 )
 
 type specHandler struct {
@@ -452,6 +453,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
 			} else if v == "LoadBalancer" || v == "loadBalancer" {
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_LOADBALANCER
+			} else {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 service type: %v", v)
 			}
 		case api.SpecSharedv4ExternalAccess:
 			if spec.Sharedv4ServiceSpec == nil {
@@ -472,7 +475,19 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
 			}
 			spec.Sharedv4ServiceSpec.Name = v
-
+		case api.SpecSharedv4FailoverStrategy:
+			if spec.Sharedv4Spec == nil {
+				spec.Sharedv4Spec = &api.Sharedv4Spec{}
+			}
+			if v == api.SpecSharedv4FailoverStrategyAggressive {
+				spec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_AGGRESSIVE
+			} else if v == api.SpecSharedv4FailoverStrategyNormal {
+				spec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_NORMAL
+			} else if v == api.SpecSharedv4FailoverStrategyUnspecified {
+				spec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_UNSPECIFIED
+			} else {
+				return nil, nil, nil, fmt.Errorf("invalid sharedv4 failover strategy: %v", v)
+			}
 		case api.SpecMountOptions:
 			if spec.MountOptions == nil {
 				spec.MountOptions = &api.MountOptions{
@@ -794,6 +809,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, sharedv4ExternalAccess := d.getVal(sharedv4ExternalAccessRegex, str); ok {
 		opts[api.SpecSharedv4ExternalAccess] = sharedv4ExternalAccess
+	}
+	if ok, failoverStrategy := d.getVal(Sharedv4FailoverStrategyRegex, str); ok {
+		opts[api.SpecSharedv4FailoverStrategy] = failoverStrategy
 	}
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
