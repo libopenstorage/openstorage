@@ -4,7 +4,7 @@
 
 ### v0.125.0 - (09/28/2021)
 
-* Add sharedv4 failover delay option
+* Add sharedv4 failover strategy option
 
 ### v0.124.0 - (09/20/2021)
 

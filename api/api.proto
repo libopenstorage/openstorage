@@ -444,8 +444,8 @@ message Sharedv4ServiceSpec {
     }
 }
 
-  // Sharedv4FailoverDelay specifies how long to wait before failing over to a new server.
-  message Sharedv4FailoverDelay {
+  // Sharedv4FailoverStrategy specifies how long to wait before failing over to a new server.
+  message Sharedv4FailoverStrategy {
     enum Value {
       // Unspecified
       UNSPECIFIED = 0;
@@ -453,7 +453,7 @@ message Sharedv4ServiceSpec {
       // the apps with sharedv4 service volumes. It can also be used
       // for the apps with sharedv4 volumes when such apps are able
       // to restart quickly.
-      SHORT = 1;
+      AGGRESSIVE = 1;
       // Give the old NFS server more time to come back up before
       // triggering the failover. This is appropriate for the apps
       // with sharedv4 volumes (non-service).
@@ -463,8 +463,8 @@ message Sharedv4ServiceSpec {
 
 // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
 message Sharedv4Spec {
-  // Indicates how long to wait before failing over to a new server.
-  Sharedv4FailoverDelay.Value failover_delay = 1;
+  // Indicates how aggressively to fail over to a new server.
+  Sharedv4FailoverStrategy.Value failover_strategy = 1;
 }
 
 // MountOptions defines the mount options with which a volume is mounted.

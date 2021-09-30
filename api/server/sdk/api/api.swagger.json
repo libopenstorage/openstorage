@@ -4225,12 +4225,12 @@
         ],
         "type": "string"
       },
-      "apiSharedv4FailoverDelayValue": {
+      "apiSharedv4FailoverStrategyValue": {
         "default": "UNSPECIFIED",
-        "description": " - UNSPECIFIED: Unspecified\n - SHORT: Fail over to the new NFS server quickly. This is appropriate for\nthe apps with sharedv4 service volumes. It can also be used\nfor the apps with sharedv4 volumes when such apps are able\nto restart quickly.\n - NORMAL: Give the old NFS server more time to come back up before\ntriggering the failover. This is appropriate for the apps\nwith sharedv4 volumes (non-service).",
+        "description": " - UNSPECIFIED: Unspecified\n - AGGRESSIVE: Fail over to the new NFS server quickly. This is appropriate for\nthe apps with sharedv4 service volumes. It can also be used\nfor the apps with sharedv4 volumes when such apps are able\nto restart quickly.\n - NORMAL: Give the old NFS server more time to come back up before\ntriggering the failover. This is appropriate for the apps\nwith sharedv4 volumes (non-service).",
         "enum": [
           "UNSPECIFIED",
-          "SHORT",
+          "AGGRESSIVE",
           "NORMAL"
         ],
         "type": "string"
@@ -4255,8 +4255,8 @@
       },
       "apiSharedv4Spec": {
         "properties": {
-          "failover_delay": {
-            "$ref": "#/components/schemas/apiSharedv4FailoverDelayValue"
+          "failover_strategy": {
+            "$ref": "#/components/schemas/apiSharedv4FailoverStrategyValue"
           }
         },
         "title": "Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes",
