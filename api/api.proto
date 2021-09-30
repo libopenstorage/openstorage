@@ -442,6 +442,29 @@ message Sharedv4ServiceSpec {
     }
 }
 
+  // Sharedv4FailoverStrategy specifies how long to wait before failing over to a new server.
+  message Sharedv4FailoverStrategy {
+    enum Value {
+      // Unspecified
+      UNSPECIFIED = 0;
+      // Fail over to the new NFS server quickly. This is appropriate for
+      // the apps with sharedv4 service volumes. It can also be used
+      // for the apps with sharedv4 volumes when such apps are able
+      // to restart quickly.
+      AGGRESSIVE = 1;
+      // Give the old NFS server more time to come back up before
+      // triggering the failover. This is appropriate for the apps
+      // with sharedv4 volumes (non-service).
+      NORMAL = 2;
+    }
+}
+
+// Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+message Sharedv4Spec {
+  // Indicates how aggressively to fail over to a new server.
+  Sharedv4FailoverStrategy.Value failover_strategy = 1;
+}
+
 // MountOptions defines the mount options with which a volume is mounted.
 message MountOptions {
   // Options are opaque key value pairs that are passed as mount options when
@@ -624,6 +647,8 @@ message VolumeSpec {
   ProxySpec proxy_spec = 41;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  Sharedv4Spec sharedv4_spec = 43;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -687,6 +712,8 @@ message VolumeSpecUpdate {
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
   // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 38; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -770,6 +797,8 @@ message VolumeSpecPolicy {
   oneof fastpath_opt { bool fastpath = 62; }
   // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 63; }
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 64; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -4250,7 +4279,7 @@ message SdkCloudBackupInfo {
   // with older cluster this value may be unknown
   SdkCloudBackupClusterType.Value cluster_type = 7;
   // k8s namespace to which this backup belongs to
-  string namespace = 8; 
+  string namespace = 8;
 }
 
 // CloudBackup owner cluster
@@ -4861,7 +4890,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 13;
+    Patch = 14;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -5440,6 +5469,8 @@ message RestoreVolumeSpec {
   ProxySpec proxy_spec = 26;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 27;
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  Sharedv4Spec sharedv4_spec = 28;
 }
 
 // Request message to get the volume catalog
