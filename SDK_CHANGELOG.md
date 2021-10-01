@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.14 - (09/28/2021)
+
+* Add sharedv4 failover strategy option
+
 ### v0.101.13 - (09/20/2021)
 
 * Add DerivedIoProfile to Volume and a new NONE IO Profile
@@ -12,7 +16,7 @@
 
 ### v0.101.11 - (08/18/2021)
 
-* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups 
+* Additions to CloudBackupEnumerate API to allow enumerating cloudbackups
 * with whose source volumes are missing in the cluster. Also indicate if
 * cloudbackup belongs to current cluster with enumerate data.
 

@@ -837,6 +837,12 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	} else {
 		spec.Sharedv4ServiceSpec = vol.GetSharedv4ServiceSpec()
 	}
+	// Sharedv4Spec
+	if req.GetSharedv4Spec() != nil {
+		spec.Sharedv4Spec = req.GetSharedv4Spec()
+	} else {
+		spec.Sharedv4Spec = vol.GetSharedv4Spec()
+	}
 
 	return spec
 }
@@ -1153,6 +1159,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.Sharedv4ServiceSpec = req.GetSharedv4ServiceSpec()
+	}
+
+	// Sharedv4Spec
+	if req.GetSharedv4SpecOpt() != nil {
+		if isValidate && vol.GetSharedv4Spec() != req.GetSharedv4Spec() {
+			return vol, errMsg
+		}
+		spec.Sharedv4Spec = req.GetSharedv4Spec()
 	}
 
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
