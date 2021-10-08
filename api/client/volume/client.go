@@ -14,6 +14,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
 	ost_errors "github.com/libopenstorage/openstorage/api/errors"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
@@ -351,6 +352,7 @@ func (v *volumeClient) SnapEnumerate(ids []string,
 // Errors ErrEnoEnt, ErrVolAttached may be returned.
 func (v *volumeClient) Attach(ctx context.Context, volumeID string, attachOptions map[string]string) (string, error) {
 	response, err := v.doVolumeSetGetResponse(
+		ctx,
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
@@ -376,6 +378,7 @@ func (v *volumeClient) Attach(ctx context.Context, volumeID string, attachOption
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 	return v.doVolumeSet(
+		ctx,
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
@@ -394,6 +397,7 @@ func (v *volumeClient) MountedAt(ctx context.Context, mountPath string) string {
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Mount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
+		ctx,
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
@@ -409,6 +413,7 @@ func (v *volumeClient) Mount(ctx context.Context, volumeID string, mountPath str
 // Errors ErrEnoEnt, ErrVolDetached may be returned.
 func (v *volumeClient) Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error {
 	return v.doVolumeSet(
+		ctx,
 		volumeID,
 		&api.VolumeSetRequest{
 			Action: &api.VolumeStateAction{
@@ -423,7 +428,7 @@ func (v *volumeClient) Unmount(ctx context.Context, volumeID string, mountPath s
 // Update volume
 func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator,
 	spec *api.VolumeSpec) error {
-	return v.doVolumeSet(
+	return v.doVolumeSet(correlation.TODO(),
 		volumeID,
 		&api.VolumeSetRequest{
 			Locator: locator,
@@ -432,16 +437,23 @@ func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator,
 	)
 }
 
-func (v *volumeClient) doVolumeSet(volumeID string,
+func (v *volumeClient) doVolumeSet(ctx context.Context, volumeID string,
 	request *api.VolumeSetRequest) error {
-	_, err := v.doVolumeSetGetResponse(volumeID, request)
+	_, err := v.doVolumeSetGetResponse(ctx, volumeID, request)
 	return err
 }
 
-func (v *volumeClient) doVolumeSetGetResponse(volumeID string,
+func (v *volumeClient) doVolumeSetGetResponse(ctx context.Context, volumeID string,
 	request *api.VolumeSetRequest) (*api.VolumeSetResponse, error) {
 	response := &api.VolumeSetResponse{}
-	if err := v.c.Put().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
+	rc := correlation.RequestContextFromContextValue(ctx)
+	if err := v.c.Put().Resource(volumePath).
+		Instance(volumeID).
+		Body(request).
+		SetHeader(correlation.ContextIDKey, rc.ID).
+		SetHeader(correlation.ContextOriginKey, string(rc.Origin)).
+		Do().
+		Unmarshal(response); err != nil {
 		return nil, err
 	}
 	if response.VolumeResponse != nil && response.VolumeResponse.Error != "" {
