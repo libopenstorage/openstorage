@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.126.0 - (09/28/2021)
+
+* Added api for auto fs trim status
+
 ### v0.125.0 - (09/28/2021)
 
 * Add sharedv4 failover strategy option
