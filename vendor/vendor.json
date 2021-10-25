@@ -51,10 +51,10 @@
 			"revisionTime": "2016-03-26T22:39:47Z"
 		},
 		{
-			"checksumSHA1": "1H74jYhqrLJ3Gt28BCkG5W+O6AM=",
+			"checksumSHA1": "Jk3Dtu3X8S/HWbhRQtVAO25u190=",
 			"path": "github.com/container-storage-interface/spec/lib/go/csi",
-			"revision": "2816e424b0abb2c00e4e93c24645a5b8d20a62a2",
-			"revisionTime": "2021-03-04T21:52:00Z"
+			"revision": "f1ae02418ccc363f089ee952d438f30ffdb4b4dc",
+			"revisionTime": "2021-06-07T19:24:05Z"
 		},
 		{
 			"checksumSHA1": "vcncrPAdKKpLjl5O5lAdrFU6NOc=",
