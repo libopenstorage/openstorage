@@ -80,6 +80,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// Get single volume
 		csi.ControllerServiceCapability_RPC_GET_VOLUME,
+
+		// Volume condition
+		csi.ControllerServiceCapability_RPC_VOLUME_CONDITION,
 	}
 
 	var serviceCapabilities []*csi.ControllerServiceCapability
@@ -130,6 +133,19 @@ func (s *OsdCsiServer) ControllerGetVolume(
 
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+			return &csi.ControllerGetVolumeResponse{
+				Volume: &csi.Volume{
+					VolumeId: req.GetVolumeId(),
+				},
+				Status: &csi.ControllerGetVolumeResponse_VolumeStatus{
+					VolumeCondition: &csi.VolumeCondition{
+						Abnormal: true,
+						Message:  fmt.Sprintf("Volume ID %s not found", req.GetVolumeId()),
+					},
+				},
+			}, nil
+		}
 		return nil, err
 	}
 

@@ -70,13 +70,14 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	assert.Len(t, resp.GetCapabilities(), 6)
+	assert.Len(t, resp.GetCapabilities(), 7)
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_GET_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CLONE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_EXPAND_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_VOLUME_CONDITION, resp))
 
 	assert.False(t, containsCap(csi.ControllerServiceCapability_RPC_UNKNOWN, resp))
 }
