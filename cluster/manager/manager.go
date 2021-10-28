@@ -255,16 +255,18 @@ func ExternalIp(config *config.ClusterConfig) (string, string, error) {
 // Parameter 'clustDBRef' may be a pointer to "empty" struct, in which case it'll be populated, but it must not be NULL.
 // Also, it's caller's responsibility to lock the access to the NodeCache.
 func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.ClusterInfo) (api.Node, error) {
-	var n api.Node
-	var ok bool
-
 	nodeID, _ = c.nodeIdFromIp(nodeID)
 
 	if nodeID == c.selfNode.Id {
-		n = *c.getCurrentState()
-	} else if n, ok = c.nodeCache[nodeID]; !ok {
+		return *c.getCurrentState(), nil
+	}
+
+	n, ok := c.nodeCache[nodeID]
+	if !ok {
 		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
-	} else if n.Status == api.Status_STATUS_OFFLINE &&
+	}
+
+	if n.Status == api.Status_STATUS_OFFLINE &&
 		(n.DataIp == "" || n.MgmtIp == "") {
 		// cached info unstable, read from DB
 		if clustDBRef.Id == "" {
@@ -288,7 +290,11 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			// Node entry won't be refreshed form DB, will use the "offline" original
 		}
 	}
-	return n, nil
+	// We don't want to expose our internal pointers to the caller.
+	// Make a deep copy of the api.Node struct before returning it.
+	// For the self node, this is done already by c.getCurrentState().
+	nodeCopy := (&n).Copy()
+	return *nodeCopy, nil
 }
 
 // Inspect inspects given node and returns the state
