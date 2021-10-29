@@ -513,9 +513,11 @@ func (mr *MockClusterMockRecorder) InspectDomain(arg0 interface{}) *gomock.Call 
 }
 
 // NodeRemoveDone mocks base method.
-func (m *MockCluster) NodeRemoveDone(arg0 string, arg1 error) {
+func (m *MockCluster) NodeRemoveDone(arg0 string, arg1 error) error {
 	m.ctrl.T.Helper()
-	m.ctrl.Call(m, "NodeRemoveDone", arg0, arg1)
+	ret := m.ctrl.Call(m, "NodeRemoveDone", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
 }
 
 // NodeRemoveDone indicates an expected call of NodeRemoveDone.

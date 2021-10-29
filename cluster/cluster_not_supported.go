@@ -179,8 +179,8 @@ func (m *NullClusterRemove) Remove(arg0 []api.Node, arg1 bool) error {
 }
 
 // NodeRemoveDone
-func (m *NullClusterRemove) NodeRemoveDone(arg0 string, arg1 error) {
-	return
+func (m *NullClusterRemove) NodeRemoveDone(arg0 string, arg1 error) error {
+	return ErrNotImplemented
 }
 
 // NullClusterStatus implementations
