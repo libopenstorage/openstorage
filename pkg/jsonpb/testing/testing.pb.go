@@ -6,7 +6,7 @@ package testing
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import timestamp "github.com/golang/protobuf/ptypes/timestamp"
+import timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
@@ -48,22 +48,22 @@ func (x Status) String() string {
 	return proto.EnumName(Status_name, int32(x))
 }
 func (Status) EnumDescriptor() ([]byte, []int) {
-	return fileDescriptor_testing_d5eec0697b035013, []int{0}
+	return fileDescriptor_testing_d2575d5ff7a6a985, []int{0}
 }
 
 type Foo struct {
-	Timestamp            *timestamp.Timestamp `protobuf:"bytes,1,opt,name=timestamp" json:"timestamp,omitempty"`
-	Status               Status               `protobuf:"varint,2,opt,name=status,enum=testing.Status" json:"status,omitempty"`
-	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
-	XXX_unrecognized     []byte               `json:"-"`
-	XXX_sizecache        int32                `json:"-"`
+	Timestamp            *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp" json:"timestamp,omitempty"`
+	Status               Status                 `protobuf:"varint,2,opt,name=status,enum=testing.Status" json:"status,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}               `json:"-"`
+	XXX_unrecognized     []byte                 `json:"-"`
+	XXX_sizecache        int32                  `json:"-"`
 }
 
 func (m *Foo) Reset()         { *m = Foo{} }
 func (m *Foo) String() string { return proto.CompactTextString(m) }
 func (*Foo) ProtoMessage()    {}
 func (*Foo) Descriptor() ([]byte, []int) {
-	return fileDescriptor_testing_d5eec0697b035013, []int{0}
+	return fileDescriptor_testing_d2575d5ff7a6a985, []int{0}
 }
 func (m *Foo) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_Foo.Unmarshal(m, b)
@@ -83,7 +83,7 @@ func (m *Foo) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_Foo proto.InternalMessageInfo
 
-func (m *Foo) GetTimestamp() *timestamp.Timestamp {
+func (m *Foo) GetTimestamp() *timestamppb.Timestamp {
 	if m != nil {
 		return m.Timestamp
 	}
@@ -103,10 +103,10 @@ func init() {
 }
 
 func init() {
-	proto.RegisterFile("pkg/jsonpb/testing/testing.proto", fileDescriptor_testing_d5eec0697b035013)
+	proto.RegisterFile("pkg/jsonpb/testing/testing.proto", fileDescriptor_testing_d2575d5ff7a6a985)
 }
 
-var fileDescriptor_testing_d5eec0697b035013 = []byte{
+var fileDescriptor_testing_d2575d5ff7a6a985 = []byte{
 	// 215 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xe2, 0x52, 0x28, 0xc8, 0x4e, 0xd7,
 	0xcf, 0x2a, 0xce, 0xcf, 0x2b, 0x48, 0xd2, 0x2f, 0x49, 0x2d, 0x2e, 0xc9, 0xcc, 0x4b, 0x87, 0xd1,

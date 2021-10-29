@@ -6,8 +6,8 @@ package flexvolume
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import empty "github.com/golang/protobuf/ptypes/empty"
 import _ "google.golang.org/genproto/googleapis/api/annotations"
+import emptypb "google.golang.org/protobuf/types/known/emptypb"
 
 import (
 	context "golang.org/x/net/context"
@@ -36,7 +36,7 @@ func (m *AttachRequest) Reset()         { *m = AttachRequest{} }
 func (m *AttachRequest) String() string { return proto.CompactTextString(m) }
 func (*AttachRequest) ProtoMessage()    {}
 func (*AttachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{0}
+	return fileDescriptor_flexvolume_f3351e70cdde2d38, []int{0}
 }
 func (m *AttachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_AttachRequest.Unmarshal(m, b)
@@ -74,7 +74,7 @@ func (m *DetachRequest) Reset()         { *m = DetachRequest{} }
 func (m *DetachRequest) String() string { return proto.CompactTextString(m) }
 func (*DetachRequest) ProtoMessage()    {}
 func (*DetachRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{1}
+	return fileDescriptor_flexvolume_f3351e70cdde2d38, []int{1}
 }
 func (m *DetachRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_DetachRequest.Unmarshal(m, b)
@@ -114,7 +114,7 @@ func (m *MountRequest) Reset()         { *m = MountRequest{} }
 func (m *MountRequest) String() string { return proto.CompactTextString(m) }
 func (*MountRequest) ProtoMessage()    {}
 func (*MountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{2}
+	return fileDescriptor_flexvolume_f3351e70cdde2d38, []int{2}
 }
 func (m *MountRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_MountRequest.Unmarshal(m, b)
@@ -166,7 +166,7 @@ func (m *UnmountRequest) Reset()         { *m = UnmountRequest{} }
 func (m *UnmountRequest) String() string { return proto.CompactTextString(m) }
 func (*UnmountRequest) ProtoMessage()    {}
 func (*UnmountRequest) Descriptor() ([]byte, []int) {
-	return fileDescriptor_flexvolume_503b7911b4b4c52f, []int{3}
+	return fileDescriptor_flexvolume_f3351e70cdde2d38, []int{3}
 }
 func (m *UnmountRequest) XXX_Unmarshal(b []byte) error {
 	return xxx_messageInfo_UnmountRequest.Unmarshal(m, b)
@@ -213,11 +213,11 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for API service
 
 type APIClient interface {
-	Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error)
-	Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*empty.Empty, error)
-	Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*empty.Empty, error)
+	Init(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
+	Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 }
 
 type aPIClient struct {
@@ -228,8 +228,8 @@ func NewAPIClient(cc *grpc.ClientConn) APIClient {
 	return &aPIClient{cc}
 }
 
-func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) Init(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := grpc.Invoke(ctx, "/flexvolume.API/Init", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -237,8 +237,8 @@ func (c *aPIClient) Init(ctx context.Context, in *empty.Empty, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := grpc.Invoke(ctx, "/flexvolume.API/Attach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -246,8 +246,8 @@ func (c *aPIClient) Attach(ctx context.Context, in *AttachRequest, opts ...grpc.
 	return out, nil
 }
 
-func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := grpc.Invoke(ctx, "/flexvolume.API/Detach", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -255,8 +255,8 @@ func (c *aPIClient) Detach(ctx context.Context, in *DetachRequest, opts ...grpc.
 	return out, nil
 }
 
-func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := grpc.Invoke(ctx, "/flexvolume.API/Mount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -264,8 +264,8 @@ func (c *aPIClient) Mount(ctx context.Context, in *MountRequest, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *aPIClient) Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*empty.Empty, error) {
-	out := new(empty.Empty)
+func (c *aPIClient) Unmount(ctx context.Context, in *UnmountRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	out := new(emptypb.Empty)
 	err := grpc.Invoke(ctx, "/flexvolume.API/Unmount", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
@@ -276,11 +276,11 @@ func (c *aPIClient) Unmount(ctx context.Context, in *UnmountRequest, opts ...grp
 // Server API for API service
 
 type APIServer interface {
-	Init(context.Context, *empty.Empty) (*empty.Empty, error)
-	Attach(context.Context, *AttachRequest) (*empty.Empty, error)
-	Detach(context.Context, *DetachRequest) (*empty.Empty, error)
-	Mount(context.Context, *MountRequest) (*empty.Empty, error)
-	Unmount(context.Context, *UnmountRequest) (*empty.Empty, error)
+	Init(context.Context, *emptypb.Empty) (*emptypb.Empty, error)
+	Attach(context.Context, *AttachRequest) (*emptypb.Empty, error)
+	Detach(context.Context, *DetachRequest) (*emptypb.Empty, error)
+	Mount(context.Context, *MountRequest) (*emptypb.Empty, error)
+	Unmount(context.Context, *UnmountRequest) (*emptypb.Empty, error)
 }
 
 func RegisterAPIServer(s *grpc.Server, srv APIServer) {
@@ -288,7 +288,7 @@ func RegisterAPIServer(s *grpc.Server, srv APIServer) {
 }
 
 func _API_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(empty.Empty)
+	in := new(emptypb.Empty)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -300,7 +300,7 @@ func _API_Init_Handler(srv interface{}, ctx context.Context, dec func(interface{
 		FullMethod: "/flexvolume.API/Init",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(APIServer).Init(ctx, req.(*empty.Empty))
+		return srv.(APIServer).Init(ctx, req.(*emptypb.Empty))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -407,10 +407,10 @@ var _API_serviceDesc = grpc.ServiceDesc{
 }
 
 func init() {
-	proto.RegisterFile("pkg/flexvolume/flexvolume.proto", fileDescriptor_flexvolume_503b7911b4b4c52f)
+	proto.RegisterFile("pkg/flexvolume/flexvolume.proto", fileDescriptor_flexvolume_f3351e70cdde2d38)
 }
 
-var fileDescriptor_flexvolume_503b7911b4b4c52f = []byte{
+var fileDescriptor_flexvolume_f3351e70cdde2d38 = []byte{
 	// 436 bytes of a gzipped FileDescriptorProto
 	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xb4, 0x92, 0x41, 0x6b, 0xdb, 0x30,
 	0x14, 0xc7, 0xb1, 0xbd, 0xa4, 0xed, 0xb3, 0x53, 0x3c, 0x6d, 0x0c, 0xcf, 0x1d, 0xac, 0xd3, 0x29,
