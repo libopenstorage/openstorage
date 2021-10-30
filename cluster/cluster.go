@@ -298,7 +298,7 @@ type ClusterRemove interface {
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node, forceRemove bool) error
 	// NodeRemoveDone notify cluster manager NodeRemove is done.
-	NodeRemoveDone(nodeID string, result error)
+	NodeRemoveDone(nodeID string, result error) error
 }
 
 type ClusterAlerts interface {
