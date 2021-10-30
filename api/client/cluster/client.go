@@ -279,7 +279,8 @@ func (c *clusterClient) Remove(nodes []api.Node, forceRemove bool) error {
 	return nil
 }
 
-func (c *clusterClient) NodeRemoveDone(nodeID string, result error) {
+func (c *clusterClient) NodeRemoveDone(nodeID string, result error) error {
+	return nil
 }
 
 func (c *clusterClient) Shutdown() error {
