@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
@@ -31,7 +32,7 @@ func (c *Client) GetSecret(name string, namespace string) (*corev1.Secret, error
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().Secrets(namespace).Get(name, metav1.GetOptions{})
+	return c.kubernetes.CoreV1().Secrets(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
 // CreateSecret creates the given secret
@@ -40,7 +41,7 @@ func (c *Client) CreateSecret(secret *corev1.Secret) (*corev1.Secret, error) {
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().Secrets(secret.Namespace).Create(secret)
+	return c.kubernetes.CoreV1().Secrets(secret.Namespace).Create(context.TODO(), secret, metav1.CreateOptions{})
 }
 
 // UpdateSecret updates the given secret
@@ -49,7 +50,7 @@ func (c *Client) UpdateSecret(secret *corev1.Secret) (*corev1.Secret, error) {
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().Secrets(secret.Namespace).Update(secret)
+	return c.kubernetes.CoreV1().Secrets(secret.Namespace).Update(context.TODO(), secret, metav1.UpdateOptions{})
 }
 
 // UpdateSecretData updates or creates a new secret with the given data
@@ -86,7 +87,7 @@ func (c *Client) DeleteSecret(name, namespace string) error {
 		return err
 	}
 
-	return c.kubernetes.CoreV1().Secrets(namespace).Delete(name, &metav1.DeleteOptions{
+	return c.kubernetes.CoreV1().Secrets(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{
 		PropagationPolicy: &deleteForegroundPolicy,
 	})
 }
@@ -101,7 +102,7 @@ func (c *Client) WatchSecret(secret *v1.Secret, fn WatchFunc) error {
 		Watch:         true,
 	}
 
-	watchInterface, err := c.kubernetes.CoreV1().Secrets(secret.Namespace).Watch(listOptions)
+	watchInterface, err := c.kubernetes.CoreV1().Secrets(secret.Namespace).Watch(context.TODO(), listOptions)
 	if err != nil {
 		return err
 	}

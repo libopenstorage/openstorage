@@ -713,6 +713,32 @@ func (kv *memKV) EnumerateWithSelect(
 	return kvi, nil
 }
 
+func (kv *memKV) EnumerateKVPWithSelect(
+	prefix string,
+	enumerateSelect kvdb.EnumerateKVPSelect,
+	copySelect kvdb.CopyKVPSelect,
+) (kvdb.KVPairs, error) {
+	if enumerateSelect == nil || copySelect == nil {
+		return nil, ErrIllegalSelect
+	}
+	kv.mutex.Lock()
+	defer kv.mutex.Unlock()
+	var kvi kvdb.KVPairs
+	prefix = kv.domain + prefix
+	for k, v := range kv.m {
+		if strings.HasPrefix(k, prefix) && !strings.Contains(k, "/_") {
+			if enumerateSelect(&v.KVPair, v.ivalue) {
+				cpy := copySelect(&v.KVPair, v.ivalue)
+				if cpy == nil {
+					return nil, ErrIllegalSelect
+				}
+				kvi = append(kvi, cpy)
+			}
+		}
+	}
+	return kvi, nil
+}
+
 func (kv *memKV) GetWithCopy(
 	key string,
 	copySelect kvdb.CopySelect,

@@ -18,6 +18,40 @@ $ make generate
 This will regenerate the swagger json file and any Golang mock files.
 
 ## Updating vendor
+Go provides built-in tools to update the vendor and add packages. All the packages name and versions
+are defined in go.mod. Checksums are in go.sum.
+
+To vendor the packages:
+```
+# clean up the go.mod require sections with only the required packages
+go mod tidy
+# download the packages (relevant go files) into the vendor folder
+go mod vendor
+
+# --- or ----
+make vendor
+```
+
+There are multiple ways to adding a new package. First is to run the command below. This automatically updates go.mod and go.sum.
+```
+go get -u some/package@version
+```
+After adding, make sure to vendor the package as well.
+
+Second way is to manually update the go.mod file and run vendor command. 
+
+Note: In some cases, you might need a pesudo version instead of a tagged one. 
+Example:
+```
+# via go get
+go get golang.org/x/sys@v0.0.0-20190726090000-fde4db37ae7a
+# via manual modifying go.mod
+require golang.org/x/sys v0.0.0-20190813064441-fde4db37ae7a // indirect
+```
+For reference: https://jfrog.com/blog/go-big-with-pseudo-versions-and-gocenter/
+
+
+## Updating vendor with govendor (Old)
 
 If you are lucky enough to need to update a vendor package you will need to
 use [govendor](https://github.com/kardianos/govendor) to update it.

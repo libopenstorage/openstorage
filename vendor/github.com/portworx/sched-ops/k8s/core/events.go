@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,7 +25,7 @@ func (c *Client) CreateEvent(event *corev1.Event) (*corev1.Event, error) {
 	if err := c.initClient(); err != nil {
 		return nil, err
 	}
-	return c.kubernetes.CoreV1().Events(event.Namespace).Create(event)
+	return c.kubernetes.CoreV1().Events(event.Namespace).Create(context.TODO(), event, metav1.CreateOptions{})
 }
 
 // ListEvents retrieves all events registered with kubernetes
@@ -31,7 +33,7 @@ func (c *Client) ListEvents(namespace string, opts metav1.ListOptions) (*corev1.
 	if err := c.initClient(); err != nil {
 		return nil, err
 	}
-	return c.kubernetes.CoreV1().Events(namespace).List(opts)
+	return c.kubernetes.CoreV1().Events(namespace).List(context.TODO(), opts)
 }
 
 // RecorderOps is an interface to record k8s events
