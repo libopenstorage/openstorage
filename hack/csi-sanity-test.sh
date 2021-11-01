@@ -22,7 +22,7 @@ sudo -E $GOPATH/bin/osd \
 jobs -l
 
 # Run CSI Test
-go get -u github.com/kubernetes-csi/csi-test/...
+GO111MODULE=off go get -u github.com/kubernetes-csi/csi-test/...
 sudo $GOPATH/bin/csi-sanity --csi.endpoint=/var/lib/osd/driver/fake-csi.sock
 assert_success
 

@@ -216,7 +216,7 @@ endif
 	@echo ">>> Generating protobuf definitions from pkg/jsonpb/testing/testing.proto"
 	$(PROTOC) -I $(PROTOSRC_PATH) $(PROTOSRC_PATH)/pkg/jsonpb/testing/testing.proto --go_out=plugins=grpc:.
 	@echo ">>> Updating SDK versions"
-	go run tools/sdkver/sdkver.go --swagger api/server/sdk/api/api.swagger.json
+	GO111MODULE=off go run tools/sdkver/sdkver.go --swagger api/server/sdk/api/api.swagger.json
 
 lint: $(GOPATH)/bin/golint
 	golint $(PKGS)

@@ -6,36 +6,37 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
-// MockOpenStorageNodeServer is a mock of OpenStorageNodeServer interface
+// MockOpenStorageNodeServer is a mock of OpenStorageNodeServer interface.
 type MockOpenStorageNodeServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageNodeServerMockRecorder
 }
 
-// MockOpenStorageNodeServerMockRecorder is the mock recorder for MockOpenStorageNodeServer
+// MockOpenStorageNodeServerMockRecorder is the mock recorder for MockOpenStorageNodeServer.
 type MockOpenStorageNodeServerMockRecorder struct {
 	mock *MockOpenStorageNodeServer
 }
 
-// NewMockOpenStorageNodeServer creates a new mock instance
+// NewMockOpenStorageNodeServer creates a new mock instance.
 func NewMockOpenStorageNodeServer(ctrl *gomock.Controller) *MockOpenStorageNodeServer {
 	mock := &MockOpenStorageNodeServer{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageNodeServerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageNodeServer) EXPECT() *MockOpenStorageNodeServerMockRecorder {
 	return m.recorder
 }
 
-// CordonAttachments mocks base method
+// CordonAttachments mocks base method.
 func (m *MockOpenStorageNodeServer) CordonAttachments(arg0 context.Context, arg1 *api.SdkNodeCordonAttachmentsRequest) (*api.SdkNodeCordonAttachmentsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CordonAttachments", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockOpenStorageNodeServer) CordonAttachments(arg0 context.Context, arg1
 	return ret0, ret1
 }
 
-// CordonAttachments indicates an expected call of CordonAttachments
+// CordonAttachments indicates an expected call of CordonAttachments.
 func (mr *MockOpenStorageNodeServerMockRecorder) CordonAttachments(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CordonAttachments", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).CordonAttachments), arg0, arg1)
 }
 
-// DrainAttachments mocks base method
+// DrainAttachments mocks base method.
 func (m *MockOpenStorageNodeServer) DrainAttachments(arg0 context.Context, arg1 *api.SdkNodeDrainAttachmentsRequest) (*api.SdkJobResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DrainAttachments", arg0, arg1)
@@ -59,13 +60,13 @@ func (m *MockOpenStorageNodeServer) DrainAttachments(arg0 context.Context, arg1 
 	return ret0, ret1
 }
 
-// DrainAttachments indicates an expected call of DrainAttachments
+// DrainAttachments indicates an expected call of DrainAttachments.
 func (mr *MockOpenStorageNodeServerMockRecorder) DrainAttachments(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DrainAttachments", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).DrainAttachments), arg0, arg1)
 }
 
-// Enumerate mocks base method
+// Enumerate mocks base method.
 func (m *MockOpenStorageNodeServer) Enumerate(arg0 context.Context, arg1 *api.SdkNodeEnumerateRequest) (*api.SdkNodeEnumerateResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Enumerate", arg0, arg1)
@@ -74,13 +75,13 @@ func (m *MockOpenStorageNodeServer) Enumerate(arg0 context.Context, arg1 *api.Sd
 	return ret0, ret1
 }
 
-// Enumerate indicates an expected call of Enumerate
+// Enumerate indicates an expected call of Enumerate.
 func (mr *MockOpenStorageNodeServerMockRecorder) Enumerate(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).Enumerate), arg0, arg1)
 }
 
-// EnumerateWithFilters mocks base method
+// EnumerateWithFilters mocks base method.
 func (m *MockOpenStorageNodeServer) EnumerateWithFilters(arg0 context.Context, arg1 *api.SdkNodeEnumerateWithFiltersRequest) (*api.SdkNodeEnumerateWithFiltersResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnumerateWithFilters", arg0, arg1)
@@ -89,13 +90,13 @@ func (m *MockOpenStorageNodeServer) EnumerateWithFilters(arg0 context.Context, a
 	return ret0, ret1
 }
 
-// EnumerateWithFilters indicates an expected call of EnumerateWithFilters
+// EnumerateWithFilters indicates an expected call of EnumerateWithFilters.
 func (mr *MockOpenStorageNodeServerMockRecorder) EnumerateWithFilters(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateWithFilters", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).EnumerateWithFilters), arg0, arg1)
 }
 
-// Inspect mocks base method
+// Inspect mocks base method.
 func (m *MockOpenStorageNodeServer) Inspect(arg0 context.Context, arg1 *api.SdkNodeInspectRequest) (*api.SdkNodeInspectResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Inspect", arg0, arg1)
@@ -104,13 +105,13 @@ func (m *MockOpenStorageNodeServer) Inspect(arg0 context.Context, arg1 *api.SdkN
 	return ret0, ret1
 }
 
-// Inspect indicates an expected call of Inspect
+// Inspect indicates an expected call of Inspect.
 func (mr *MockOpenStorageNodeServerMockRecorder) Inspect(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).Inspect), arg0, arg1)
 }
 
-// InspectCurrent mocks base method
+// InspectCurrent mocks base method.
 func (m *MockOpenStorageNodeServer) InspectCurrent(arg0 context.Context, arg1 *api.SdkNodeInspectCurrentRequest) (*api.SdkNodeInspectCurrentResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "InspectCurrent", arg0, arg1)
@@ -119,13 +120,13 @@ func (m *MockOpenStorageNodeServer) InspectCurrent(arg0 context.Context, arg1 *a
 	return ret0, ret1
 }
 
-// InspectCurrent indicates an expected call of InspectCurrent
+// InspectCurrent indicates an expected call of InspectCurrent.
 func (mr *MockOpenStorageNodeServerMockRecorder) InspectCurrent(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectCurrent", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).InspectCurrent), arg0, arg1)
 }
 
-// UncordonAttachments mocks base method
+// UncordonAttachments mocks base method.
 func (m *MockOpenStorageNodeServer) UncordonAttachments(arg0 context.Context, arg1 *api.SdkNodeUncordonAttachmentsRequest) (*api.SdkNodeUncordonAttachmentsResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UncordonAttachments", arg0, arg1)
@@ -134,13 +135,13 @@ func (m *MockOpenStorageNodeServer) UncordonAttachments(arg0 context.Context, ar
 	return ret0, ret1
 }
 
-// UncordonAttachments indicates an expected call of UncordonAttachments
+// UncordonAttachments indicates an expected call of UncordonAttachments.
 func (mr *MockOpenStorageNodeServerMockRecorder) UncordonAttachments(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncordonAttachments", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).UncordonAttachments), arg0, arg1)
 }
 
-// VolumeBytesUsedByNode mocks base method
+// VolumeBytesUsedByNode mocks base method.
 func (m *MockOpenStorageNodeServer) VolumeBytesUsedByNode(arg0 context.Context, arg1 *api.SdkVolumeBytesUsedRequest) (*api.SdkVolumeBytesUsedResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VolumeBytesUsedByNode", arg0, arg1)
@@ -149,13 +150,13 @@ func (m *MockOpenStorageNodeServer) VolumeBytesUsedByNode(arg0 context.Context, 
 	return ret0, ret1
 }
 
-// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode.
 func (mr *MockOpenStorageNodeServerMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).VolumeBytesUsedByNode), arg0, arg1)
 }
 
-// VolumeUsageByNode mocks base method
+// VolumeUsageByNode mocks base method.
 func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VolumeUsageByNode", arg0, arg1)
@@ -164,36 +165,36 @@ func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1
 	return ret0, ret1
 }
 
-// VolumeUsageByNode indicates an expected call of VolumeUsageByNode
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode.
 func (mr *MockOpenStorageNodeServerMockRecorder) VolumeUsageByNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeUsageByNode", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).VolumeUsageByNode), arg0, arg1)
 }
 
-// MockOpenStorageNodeClient is a mock of OpenStorageNodeClient interface
+// MockOpenStorageNodeClient is a mock of OpenStorageNodeClient interface.
 type MockOpenStorageNodeClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageNodeClientMockRecorder
 }
 
-// MockOpenStorageNodeClientMockRecorder is the mock recorder for MockOpenStorageNodeClient
+// MockOpenStorageNodeClientMockRecorder is the mock recorder for MockOpenStorageNodeClient.
 type MockOpenStorageNodeClientMockRecorder struct {
 	mock *MockOpenStorageNodeClient
 }
 
-// NewMockOpenStorageNodeClient creates a new mock instance
+// NewMockOpenStorageNodeClient creates a new mock instance.
 func NewMockOpenStorageNodeClient(ctrl *gomock.Controller) *MockOpenStorageNodeClient {
 	mock := &MockOpenStorageNodeClient{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageNodeClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageNodeClient) EXPECT() *MockOpenStorageNodeClientMockRecorder {
 	return m.recorder
 }
 
-// CordonAttachments mocks base method
+// CordonAttachments mocks base method.
 func (m *MockOpenStorageNodeClient) CordonAttachments(arg0 context.Context, arg1 *api.SdkNodeCordonAttachmentsRequest, arg2 ...grpc.CallOption) (*api.SdkNodeCordonAttachmentsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -206,14 +207,14 @@ func (m *MockOpenStorageNodeClient) CordonAttachments(arg0 context.Context, arg1
 	return ret0, ret1
 }
 
-// CordonAttachments indicates an expected call of CordonAttachments
+// CordonAttachments indicates an expected call of CordonAttachments.
 func (mr *MockOpenStorageNodeClientMockRecorder) CordonAttachments(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CordonAttachments", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).CordonAttachments), varargs...)
 }
 
-// DrainAttachments mocks base method
+// DrainAttachments mocks base method.
 func (m *MockOpenStorageNodeClient) DrainAttachments(arg0 context.Context, arg1 *api.SdkNodeDrainAttachmentsRequest, arg2 ...grpc.CallOption) (*api.SdkJobResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -226,14 +227,14 @@ func (m *MockOpenStorageNodeClient) DrainAttachments(arg0 context.Context, arg1 
 	return ret0, ret1
 }
 
-// DrainAttachments indicates an expected call of DrainAttachments
+// DrainAttachments indicates an expected call of DrainAttachments.
 func (mr *MockOpenStorageNodeClientMockRecorder) DrainAttachments(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DrainAttachments", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).DrainAttachments), varargs...)
 }
 
-// Enumerate mocks base method
+// Enumerate mocks base method.
 func (m *MockOpenStorageNodeClient) Enumerate(arg0 context.Context, arg1 *api.SdkNodeEnumerateRequest, arg2 ...grpc.CallOption) (*api.SdkNodeEnumerateResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -246,14 +247,14 @@ func (m *MockOpenStorageNodeClient) Enumerate(arg0 context.Context, arg1 *api.Sd
 	return ret0, ret1
 }
 
-// Enumerate indicates an expected call of Enumerate
+// Enumerate indicates an expected call of Enumerate.
 func (mr *MockOpenStorageNodeClientMockRecorder) Enumerate(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).Enumerate), varargs...)
 }
 
-// EnumerateWithFilters mocks base method
+// EnumerateWithFilters mocks base method.
 func (m *MockOpenStorageNodeClient) EnumerateWithFilters(arg0 context.Context, arg1 *api.SdkNodeEnumerateWithFiltersRequest, arg2 ...grpc.CallOption) (*api.SdkNodeEnumerateWithFiltersResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -266,14 +267,14 @@ func (m *MockOpenStorageNodeClient) EnumerateWithFilters(arg0 context.Context, a
 	return ret0, ret1
 }
 
-// EnumerateWithFilters indicates an expected call of EnumerateWithFilters
+// EnumerateWithFilters indicates an expected call of EnumerateWithFilters.
 func (mr *MockOpenStorageNodeClientMockRecorder) EnumerateWithFilters(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateWithFilters", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).EnumerateWithFilters), varargs...)
 }
 
-// Inspect mocks base method
+// Inspect mocks base method.
 func (m *MockOpenStorageNodeClient) Inspect(arg0 context.Context, arg1 *api.SdkNodeInspectRequest, arg2 ...grpc.CallOption) (*api.SdkNodeInspectResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -286,14 +287,14 @@ func (m *MockOpenStorageNodeClient) Inspect(arg0 context.Context, arg1 *api.SdkN
 	return ret0, ret1
 }
 
-// Inspect indicates an expected call of Inspect
+// Inspect indicates an expected call of Inspect.
 func (mr *MockOpenStorageNodeClientMockRecorder) Inspect(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).Inspect), varargs...)
 }
 
-// InspectCurrent mocks base method
+// InspectCurrent mocks base method.
 func (m *MockOpenStorageNodeClient) InspectCurrent(arg0 context.Context, arg1 *api.SdkNodeInspectCurrentRequest, arg2 ...grpc.CallOption) (*api.SdkNodeInspectCurrentResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -306,14 +307,14 @@ func (m *MockOpenStorageNodeClient) InspectCurrent(arg0 context.Context, arg1 *a
 	return ret0, ret1
 }
 
-// InspectCurrent indicates an expected call of InspectCurrent
+// InspectCurrent indicates an expected call of InspectCurrent.
 func (mr *MockOpenStorageNodeClientMockRecorder) InspectCurrent(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectCurrent", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).InspectCurrent), varargs...)
 }
 
-// UncordonAttachments mocks base method
+// UncordonAttachments mocks base method.
 func (m *MockOpenStorageNodeClient) UncordonAttachments(arg0 context.Context, arg1 *api.SdkNodeUncordonAttachmentsRequest, arg2 ...grpc.CallOption) (*api.SdkNodeUncordonAttachmentsResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -326,14 +327,14 @@ func (m *MockOpenStorageNodeClient) UncordonAttachments(arg0 context.Context, ar
 	return ret0, ret1
 }
 
-// UncordonAttachments indicates an expected call of UncordonAttachments
+// UncordonAttachments indicates an expected call of UncordonAttachments.
 func (mr *MockOpenStorageNodeClientMockRecorder) UncordonAttachments(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncordonAttachments", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).UncordonAttachments), varargs...)
 }
 
-// VolumeBytesUsedByNode mocks base method
+// VolumeBytesUsedByNode mocks base method.
 func (m *MockOpenStorageNodeClient) VolumeBytesUsedByNode(arg0 context.Context, arg1 *api.SdkVolumeBytesUsedRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeBytesUsedResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -346,14 +347,14 @@ func (m *MockOpenStorageNodeClient) VolumeBytesUsedByNode(arg0 context.Context, 
 	return ret0, ret1
 }
 
-// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode.
 func (mr *MockOpenStorageNodeClientMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).VolumeBytesUsedByNode), varargs...)
 }
 
-// VolumeUsageByNode mocks base method
+// VolumeUsageByNode mocks base method.
 func (m *MockOpenStorageNodeClient) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest, arg2 ...grpc.CallOption) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -366,7 +367,7 @@ func (m *MockOpenStorageNodeClient) VolumeUsageByNode(arg0 context.Context, arg1
 	return ret0, ret1
 }
 
-// VolumeUsageByNode indicates an expected call of VolumeUsageByNode
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode.
 func (mr *MockOpenStorageNodeClientMockRecorder) VolumeUsageByNode(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)

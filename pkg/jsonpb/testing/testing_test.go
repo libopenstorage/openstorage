@@ -8,7 +8,7 @@ import (
 	protobuf_timestamp "github.com/golang/protobuf/ptypes/timestamp"
 
 	"github.com/libopenstorage/openstorage/pkg/jsonpb"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 )
 
 func TestTimestamp(t *testing.T) {
@@ -22,7 +22,7 @@ func TestTimestamp(t *testing.T) {
 		t.Fatal(err)
 	}
 	if timestamp.Seconds != timestamp2.Seconds {
-		t.Fatalf("%v %v", *timestamp, *timestamp2)
+		t.Fatalf("%v %v", timestamp, timestamp2)
 	}
 }
 

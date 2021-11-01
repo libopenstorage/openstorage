@@ -6,36 +6,37 @@ package mock
 
 import (
 	context "context"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	grpc "google.golang.org/grpc"
-	reflect "reflect"
 )
 
-// MockOpenStorageBucketServer is a mock of OpenStorageBucketServer interface
+// MockOpenStorageBucketServer is a mock of OpenStorageBucketServer interface.
 type MockOpenStorageBucketServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageBucketServerMockRecorder
 }
 
-// MockOpenStorageBucketServerMockRecorder is the mock recorder for MockOpenStorageBucketServer
+// MockOpenStorageBucketServerMockRecorder is the mock recorder for MockOpenStorageBucketServer.
 type MockOpenStorageBucketServerMockRecorder struct {
 	mock *MockOpenStorageBucketServer
 }
 
-// NewMockOpenStorageBucketServer creates a new mock instance
+// NewMockOpenStorageBucketServer creates a new mock instance.
 func NewMockOpenStorageBucketServer(ctrl *gomock.Controller) *MockOpenStorageBucketServer {
 	mock := &MockOpenStorageBucketServer{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageBucketServerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageBucketServer) EXPECT() *MockOpenStorageBucketServerMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
+// Create mocks base method.
 func (m *MockOpenStorageBucketServer) Create(arg0 context.Context, arg1 *api.BucketCreateRequest) (*api.BucketCreateResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", arg0, arg1)
@@ -44,13 +45,13 @@ func (m *MockOpenStorageBucketServer) Create(arg0 context.Context, arg1 *api.Buc
 	return ret0, ret1
 }
 
-// Create indicates an expected call of Create
+// Create indicates an expected call of Create.
 func (mr *MockOpenStorageBucketServerMockRecorder) Create(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).Create), arg0, arg1)
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockOpenStorageBucketServer) Delete(arg0 context.Context, arg1 *api.BucketDeleteRequest) (*api.BucketDeleteResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
@@ -59,13 +60,13 @@ func (m *MockOpenStorageBucketServer) Delete(arg0 context.Context, arg1 *api.Buc
 	return ret0, ret1
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockOpenStorageBucketServerMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).Delete), arg0, arg1)
 }
 
-// GrantAccess mocks base method
+// GrantAccess mocks base method.
 func (m *MockOpenStorageBucketServer) GrantAccess(arg0 context.Context, arg1 *api.BucketGrantAccessRequest) (*api.BucketGrantAccessResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GrantAccess", arg0, arg1)
@@ -74,13 +75,13 @@ func (m *MockOpenStorageBucketServer) GrantAccess(arg0 context.Context, arg1 *ap
 	return ret0, ret1
 }
 
-// GrantAccess indicates an expected call of GrantAccess
+// GrantAccess indicates an expected call of GrantAccess.
 func (mr *MockOpenStorageBucketServerMockRecorder) GrantAccess(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantAccess", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).GrantAccess), arg0, arg1)
 }
 
-// RevokeAccess mocks base method
+// RevokeAccess mocks base method.
 func (m *MockOpenStorageBucketServer) RevokeAccess(arg0 context.Context, arg1 *api.BucketRevokeAccessRequest) (*api.BucketRevokeAccessResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RevokeAccess", arg0, arg1)
@@ -89,36 +90,36 @@ func (m *MockOpenStorageBucketServer) RevokeAccess(arg0 context.Context, arg1 *a
 	return ret0, ret1
 }
 
-// RevokeAccess indicates an expected call of RevokeAccess
+// RevokeAccess indicates an expected call of RevokeAccess.
 func (mr *MockOpenStorageBucketServerMockRecorder) RevokeAccess(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeAccess", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).RevokeAccess), arg0, arg1)
 }
 
-// MockOpenStorageBucketClient is a mock of OpenStorageBucketClient interface
+// MockOpenStorageBucketClient is a mock of OpenStorageBucketClient interface.
 type MockOpenStorageBucketClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageBucketClientMockRecorder
 }
 
-// MockOpenStorageBucketClientMockRecorder is the mock recorder for MockOpenStorageBucketClient
+// MockOpenStorageBucketClientMockRecorder is the mock recorder for MockOpenStorageBucketClient.
 type MockOpenStorageBucketClientMockRecorder struct {
 	mock *MockOpenStorageBucketClient
 }
 
-// NewMockOpenStorageBucketClient creates a new mock instance
+// NewMockOpenStorageBucketClient creates a new mock instance.
 func NewMockOpenStorageBucketClient(ctrl *gomock.Controller) *MockOpenStorageBucketClient {
 	mock := &MockOpenStorageBucketClient{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageBucketClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageBucketClient) EXPECT() *MockOpenStorageBucketClientMockRecorder {
 	return m.recorder
 }
 
-// Create mocks base method
+// Create mocks base method.
 func (m *MockOpenStorageBucketClient) Create(arg0 context.Context, arg1 *api.BucketCreateRequest, arg2 ...grpc.CallOption) (*api.BucketCreateResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -131,14 +132,14 @@ func (m *MockOpenStorageBucketClient) Create(arg0 context.Context, arg1 *api.Buc
 	return ret0, ret1
 }
 
-// Create indicates an expected call of Create
+// Create indicates an expected call of Create.
 func (mr *MockOpenStorageBucketClientMockRecorder) Create(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).Create), varargs...)
 }
 
-// Delete mocks base method
+// Delete mocks base method.
 func (m *MockOpenStorageBucketClient) Delete(arg0 context.Context, arg1 *api.BucketDeleteRequest, arg2 ...grpc.CallOption) (*api.BucketDeleteResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -151,14 +152,14 @@ func (m *MockOpenStorageBucketClient) Delete(arg0 context.Context, arg1 *api.Buc
 	return ret0, ret1
 }
 
-// Delete indicates an expected call of Delete
+// Delete indicates an expected call of Delete.
 func (mr *MockOpenStorageBucketClientMockRecorder) Delete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).Delete), varargs...)
 }
 
-// GrantAccess mocks base method
+// GrantAccess mocks base method.
 func (m *MockOpenStorageBucketClient) GrantAccess(arg0 context.Context, arg1 *api.BucketGrantAccessRequest, arg2 ...grpc.CallOption) (*api.BucketGrantAccessResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -171,14 +172,14 @@ func (m *MockOpenStorageBucketClient) GrantAccess(arg0 context.Context, arg1 *ap
 	return ret0, ret1
 }
 
-// GrantAccess indicates an expected call of GrantAccess
+// GrantAccess indicates an expected call of GrantAccess.
 func (mr *MockOpenStorageBucketClientMockRecorder) GrantAccess(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantAccess", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).GrantAccess), varargs...)
 }
 
-// RevokeAccess mocks base method
+// RevokeAccess mocks base method.
 func (m *MockOpenStorageBucketClient) RevokeAccess(arg0 context.Context, arg1 *api.BucketRevokeAccessRequest, arg2 ...grpc.CallOption) (*api.BucketRevokeAccessResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -191,7 +192,7 @@ func (m *MockOpenStorageBucketClient) RevokeAccess(arg0 context.Context, arg1 *a
 	return ret0, ret1
 }
 
-// RevokeAccess indicates an expected call of RevokeAccess
+// RevokeAccess indicates an expected call of RevokeAccess.
 func (mr *MockOpenStorageBucketClientMockRecorder) RevokeAccess(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
