@@ -1,6 +1,12 @@
-# Color [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)](http://godoc.org/github.com/fatih/color) [![Build Status](http://img.shields.io/travis/fatih/color.svg?style=flat-square)](https://travis-ci.org/fatih/color)
+# Archived project. No maintenance. 
+
+This project is not maintained anymore and is archived. Feel free to fork and
+make your own changes if needed. For more detail read my blog post: [Taking an indefinite sabbatical from my projects](https://arslan.io/2018/10/09/taking-an-indefinite-sabbatical-from-my-projects/)
+
+Thanks to everyone for their valuable feedback and contributions.
 
 
+# Color [![GoDoc](https://godoc.org/github.com/fatih/color?status.svg)](https://godoc.org/github.com/fatih/color) 
 
 Color lets you use colorized outputs in terms of [ANSI Escape
 Codes](http://en.wikipedia.org/wiki/ANSI_escape_code#Colors) in Go (Golang). It
@@ -8,8 +14,7 @@ has support for Windows too! The API can be used in several ways, pick one that
 suits you.
 
 
-
-![Color](http://i.imgur.com/c1JI0lA.png)
+![Color](https://i.imgur.com/c1JI0lA.png)
 
 
 ## Install
@@ -56,6 +61,16 @@ whiteBackground := red.Add(color.BgWhite)
 whiteBackground.Println("Red text with white background.")
 ```
 
+### Use your own output (io.Writer)
+
+```go
+// Use your own io.Writer output
+color.New(color.FgBlue).Fprintln(myWriter, "blue color!")
+
+blue := color.New(color.FgBlue)
+blue.Fprint(writer, "This will print text in blue.")
+```
+
 ### Custom print functions (PrintFunc)
 
 ```go
@@ -67,6 +82,17 @@ red("Error: %s", err)
 // Mix up multiple attributes
 notice := color.New(color.Bold, color.FgGreen).PrintlnFunc()
 notice("Don't forget this...")
+```
+
+### Custom fprint functions (FprintFunc)
+
+```go
+blue := color.New(FgBlue).FprintfFunc()
+blue(myWriter, "important notice: %s", stars)
+
+// Mix up with multiple attributes
+success := color.New(color.Bold, color.FgGreen).FprintlnFunc()
+success(myWriter, "Don't forget this...")
 ```
 
 ### Insert into noncolor strings (SprintFunc)
@@ -81,8 +107,8 @@ info := color.New(color.FgWhite, color.BgGreen).SprintFunc()
 fmt.Printf("This %s rocks!\n", info("package"))
 
 // Use helper functions
-fmt.Printf("This", color.RedString("warning"), "should be not neglected.")
-fmt.Printf(color.GreenString("Info:"), "an important message." )
+fmt.Println("This", color.RedString("warning"), "should be not neglected.")
+fmt.Printf("%v %v\n", color.GreenString("Info:"), "an important message.")
 
 // Windows supported too! Just don't forget to change the output to color.Output
 fmt.Fprintf(color.Output, "Windows support: %s", color.GreenString("PASS"))
@@ -106,13 +132,15 @@ defer color.Unset() // Use it in your function
 fmt.Println("All text will now be bold magenta.")
 ```
 
-### Disable color
+### Disable/Enable color
+ 
+There might be a case where you want to explicitly disable/enable color output. the 
+`go-isatty` package will automatically disable color output for non-tty output streams 
+(for example if the output were piped directly to `less`)
 
-There might be a case where you want to disable color output (for example to
-pipe the standard output of your app to somewhere else). `Color` has support to
-disable colors both globally and for single color definition. For example
-suppose you have a CLI app and a `--no-color` bool flag. You can easily disable
-the color output with:
+`Color` has support to disable/enable colors both globally and for single color 
+definitions. For example suppose you have a CLI app and a `--no-color` bool flag. You 
+can easily disable the color output with:
 
 ```go
 

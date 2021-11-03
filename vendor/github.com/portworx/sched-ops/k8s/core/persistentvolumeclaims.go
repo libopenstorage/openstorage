@@ -1,6 +1,7 @@
 package core
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -61,7 +62,7 @@ func (c *Client) CreatePersistentVolumeClaim(pvc *corev1.PersistentVolumeClaim) 
 		ns = corev1.NamespaceDefault
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumeClaims(ns).Create(pvc)
+	return c.kubernetes.CoreV1().PersistentVolumeClaims(ns).Create(context.TODO(), pvc, metav1.CreateOptions{})
 }
 
 // UpdatePersistentVolumeClaim updates an existing persistent volume claim
@@ -75,7 +76,7 @@ func (c *Client) UpdatePersistentVolumeClaim(pvc *corev1.PersistentVolumeClaim) 
 		ns = corev1.NamespaceDefault
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumeClaims(ns).Update(pvc)
+	return c.kubernetes.CoreV1().PersistentVolumeClaims(ns).Update(context.TODO(), pvc, metav1.UpdateOptions{})
 }
 
 // DeletePersistentVolumeClaim deletes the given persistent volume claim
@@ -84,7 +85,7 @@ func (c *Client) DeletePersistentVolumeClaim(name, namespace string) error {
 		return err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumeClaims(namespace).Delete(name, &metav1.DeleteOptions{})
+	return c.kubernetes.CoreV1().PersistentVolumeClaims(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 }
 
 // ValidatePersistentVolumeClaim validates the given pvc
@@ -96,7 +97,7 @@ func (c *Client) ValidatePersistentVolumeClaim(pvc *corev1.PersistentVolumeClaim
 
 		result, err := c.kubernetes.CoreV1().
 			PersistentVolumeClaims(pvc.Namespace).
-			Get(pvc.Name, metav1.GetOptions{})
+			Get(context.TODO(), pvc.Name, metav1.GetOptions{})
 		if err != nil {
 			return "", true, err
 		}
@@ -126,7 +127,7 @@ func (c *Client) ValidatePersistentVolumeClaimSize(pvc *corev1.PersistentVolumeC
 
 		result, err := c.kubernetes.CoreV1().
 			PersistentVolumeClaims(pvc.Namespace).
-			Get(pvc.Name, metav1.GetOptions{})
+			Get(context.TODO(), pvc.Name, metav1.GetOptions{})
 		if err != nil {
 			return "", true, err
 		}
@@ -158,7 +159,7 @@ func (c *Client) CreatePersistentVolume(pv *corev1.PersistentVolume) (*corev1.Pe
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumes().Create(pv)
+	return c.kubernetes.CoreV1().PersistentVolumes().Create(context.TODO(), pv, metav1.CreateOptions{})
 }
 
 // GetPersistentVolumeClaim returns the PVC for given name and namespace
@@ -168,7 +169,7 @@ func (c *Client) GetPersistentVolumeClaim(pvcName string, namespace string) (*co
 	}
 
 	return c.kubernetes.CoreV1().PersistentVolumeClaims(namespace).
-		Get(pvcName, metav1.GetOptions{})
+		Get(context.TODO(), pvcName, metav1.GetOptions{})
 }
 
 // GetPersistentVolumeClaims returns all PVCs in given namespace and that match the optional labelSelector
@@ -183,7 +184,7 @@ func (c *Client) getPVCsWithListOptions(namespace string, listOpts metav1.ListOp
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumeClaims(namespace).List(listOpts)
+	return c.kubernetes.CoreV1().PersistentVolumeClaims(namespace).List(context.TODO(), listOpts)
 }
 
 // GetPersistentVolume returns the PV for given name
@@ -192,7 +193,7 @@ func (c *Client) GetPersistentVolume(pvName string) (*corev1.PersistentVolume, e
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumes().Get(pvName, metav1.GetOptions{})
+	return c.kubernetes.CoreV1().PersistentVolumes().Get(context.TODO(), pvName, metav1.GetOptions{})
 }
 
 // DeletePersistentVolume deletes the PV for given name
@@ -201,7 +202,7 @@ func (c *Client) DeletePersistentVolume(pvName string) error {
 		return err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumes().Delete(pvName, &metav1.DeleteOptions{
+	return c.kubernetes.CoreV1().PersistentVolumes().Delete(context.TODO(), pvName, metav1.DeleteOptions{
 		PropagationPolicy: &deleteForegroundPolicy,
 	})
 }
@@ -212,7 +213,7 @@ func (c *Client) GetPersistentVolumes() (*corev1.PersistentVolumeList, error) {
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().PersistentVolumes().List(metav1.ListOptions{})
+	return c.kubernetes.CoreV1().PersistentVolumes().List(context.TODO(), metav1.ListOptions{})
 }
 
 // GetVolumeForPersistentVolumeClaim returns the volumeID for the given PVC
@@ -231,7 +232,7 @@ func (c *Client) GetPersistentVolumeClaimStatus(pvc *corev1.PersistentVolumeClai
 		return nil, err
 	}
 
-	result, err := c.kubernetes.CoreV1().PersistentVolumeClaims(pvc.Namespace).Get(pvc.Name, metav1.GetOptions{})
+	result, err := c.kubernetes.CoreV1().PersistentVolumeClaims(pvc.Namespace).Get(context.TODO(), pvc.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +248,7 @@ func (c *Client) GetPersistentVolumeClaimParams(pvc *corev1.PersistentVolumeClai
 
 	params := make(map[string]string)
 
-	result, err := c.kubernetes.CoreV1().PersistentVolumeClaims(pvc.Namespace).Get(pvc.Name, metav1.GetOptions{})
+	result, err := c.kubernetes.CoreV1().PersistentVolumeClaims(pvc.Namespace).Get(context.TODO(), pvc.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
@@ -280,7 +281,7 @@ func (c *Client) GetPVCsUsingStorageClass(scName string) ([]corev1.PersistentVol
 	}
 
 	var retList []corev1.PersistentVolumeClaim
-	pvcs, err := c.kubernetes.CoreV1().PersistentVolumeClaims("").List(metav1.ListOptions{})
+	pvcs, err := c.kubernetes.CoreV1().PersistentVolumeClaims("").List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

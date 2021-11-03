@@ -17,9 +17,9 @@ RUN dnf -y install \
 	protobuf-devel && dnf -y clean all && rm -rf /var/cache/yum
 RUN pip install virtualenv
 RUN gem install grpc && gem install grpc-tools
-RUN go get -u github.com/golang/protobuf/protoc-gen-go && \
+RUN GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go && \
 	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 # Lock protoc-gen-go version to v1.1.0.
 #
@@ -33,7 +33,7 @@ RUN go get -u github.com/golang/protobuf/protoc-gen-go && \
 # Which may apply to project depending on OpenStorage.
 #
 WORKDIR /go/src/github.com/golang/protobuf
-RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go
+RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go@v1.1.0
 
 
 # Lock protoc-gen-swagger to v1.4.1
@@ -42,8 +42,8 @@ RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go
 #
 WORKDIR /go/src/github.com/grpc-ecosystem/grpc-gateway
 RUN git checkout v1.4.1 && \
-    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0 && \
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
 # Install swagger 2.0 to OpenApi 3.0 converter
 RUN npm install -g swagger2openapi
