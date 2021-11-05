@@ -5,6 +5,8 @@ import "google/protobuf/empty.proto";
 
 package flexvolume;
 
+option go_package = "github.com/libopenstorage/openstorage/pkg/flexvolume;flexvolume";
+
 message AttachRequest {
   map<string, string> json_options = 1;
 }

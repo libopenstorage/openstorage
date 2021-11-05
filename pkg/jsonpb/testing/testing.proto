@@ -4,6 +4,8 @@ import "google/protobuf/timestamp.proto";
 
 package testing;
 
+option go_package = "github.com/libopenstorage/openstorage/pkg/jsonpb/testing;testing";
+
 enum Status {
   STATUS_NONE = 0;
   STATUS_INIT = 1;
