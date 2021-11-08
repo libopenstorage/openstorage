@@ -14,6 +14,7 @@ install:
   - chmod +x ./kind
   - mv ./kind ${GOPATH}/bin
 script:
+  - ping mirrors.fedoraproject.org
   - git-validation -run DCO,short-subject
   - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
   - make docker-proto
