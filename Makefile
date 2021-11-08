@@ -217,8 +217,8 @@ lint: $(GOPATH)/bin/golint
 vet:
 	@if [ $(shell go vet $(PKGS) | grep -v ".*contains sync.Mutex.*" | wc -l) != 0 ]; then\
 		echo "go vet failed (ignore the errors associate with sync.Mutex";\
-        exit 1;\
-    fi
+		exit 1;\
+	fi
 	
 
 errcheck: $(GOPATH)/bin/errcheck
