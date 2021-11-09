@@ -1,5 +1,5 @@
 sudo: required
-dist: focal
+
 services:
   - docker
 language: go
