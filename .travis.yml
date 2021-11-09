@@ -15,8 +15,6 @@ install:
   - chmod +x ./kind
   - mv ./kind ${GOPATH}/bin
 script:
-  - wget -O connecttest 'https://mirrors.fedoraproject.org/metalink?repo=fedora-35&arch=x86_64'
-  - cat connecttest
   - git-validation -run DCO,short-subject
   - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
   - make docker-proto
