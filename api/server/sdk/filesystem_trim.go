@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
@@ -50,7 +51,10 @@ func (s *FilesystemTrimServer) Start(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
 	}
 
-	r, err := s.driver(ctx).FilesystemTrimStart(req)
+	r, err := s.driver(ctx).FilesystemTrimStart(&api.SdkFilesystemTrimStartRequest{
+		VolumeId:  req.VolumeId,
+		MountPath: req.MountPath,
+	})
 
 	return r, err
 }
@@ -72,7 +76,10 @@ func (s *FilesystemTrimServer) Status(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
 	}
 
-	r, err := s.driver(ctx).FilesystemTrimStatus(req)
+	r, err := s.driver(ctx).FilesystemTrimStatus(&api.SdkFilesystemTrimStatusRequest{
+		VolumeId:  req.VolumeId,
+		MountPath: req.MountPath,
+	})
 
 	return r, err
 }
@@ -87,7 +94,7 @@ func (s *FilesystemTrimServer) AutoFSTrimStatus(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	r, err := s.driver(ctx).AutoFilesystemTrimStatus(req)
+	r, err := s.driver(ctx).AutoFilesystemTrimStatus(&api.SdkAutoFSTrimStatusRequest{})
 
 	return r, err
 }
@@ -109,7 +116,10 @@ func (s *FilesystemTrimServer) Stop(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
 	}
 
-	r, err := s.driver(ctx).FilesystemTrimStop(req)
+	r, err := s.driver(ctx).FilesystemTrimStop(&api.SdkFilesystemTrimStopRequest{
+		VolumeId:  req.VolumeId,
+		MountPath: req.MountPath,
+	})
 
 	return r, err
 }
