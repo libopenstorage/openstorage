@@ -802,7 +802,10 @@ func (s *CloudBackupServer) Size(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
-	r, err := s.driver(ctx).CloudBackupSize(req)
+	r, err := s.driver(ctx).CloudBackupSize(&api.SdkCloudBackupSizeRequest{
+		BackupId:     req.BackupId,
+		CredentialId: req.CredentialId,
+	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to fetch backup size: %v", err)
 	}
