@@ -51,10 +51,7 @@ func (s *FilesystemCheckServer) Start(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a mode parameter")
 	}
 
-	r, err := s.driver(ctx).FilesystemCheckStart(&api.SdkFilesystemCheckStartRequest{
-		VolumeId: req.VolumeId,
-		Mode:     req.Mode,
-	})
+	r, err := s.driver(ctx).FilesystemCheckStart(req)
 
 	return r, err
 }
@@ -73,9 +70,7 @@ func (s *FilesystemCheckServer) Status(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	}
 
-	r, err := s.driver(ctx).FilesystemCheckStatus(&api.SdkFilesystemCheckStatusRequest{
-		VolumeId: req.VolumeId,
-	})
+	r, err := s.driver(ctx).FilesystemCheckStatus(req)
 
 	return r, err
 }
@@ -94,9 +89,7 @@ func (s *FilesystemCheckServer) Stop(
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	}
 
-	r, err := s.driver(ctx).FilesystemCheckStop(&api.SdkFilesystemCheckStopRequest{
-		VolumeId: req.VolumeId,
-	})
+	r, err := s.driver(ctx).FilesystemCheckStop(req)
 
 	return r, err
 }
