@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.127.0 - (11/11/2021)
+
+* Upgrade to proto3
+
 ### v0.126.0 - (09/28/2021)
 
 * Added api for auto fs trim status
