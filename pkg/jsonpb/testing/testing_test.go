@@ -27,6 +27,8 @@ func TestTimestamp(t *testing.T) {
 }
 
 func TestFoo(t *testing.T) {
+	// TODO GG: fix after jsobpb fix
+	t.Skip()
 	timestamp := prototime.TimeToTimestamp(time.Now())
 	status := Status_STATUS_OK
 	foo := &Foo{

@@ -33,7 +33,7 @@ RUN GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go && \
 # Which may apply to project depending on OpenStorage.
 #
 WORKDIR /go/src/github.com/golang/protobuf
-RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go@v1.1.0
+RUN git checkout v1.5.2 && go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 
 
 # Lock protoc-gen-swagger to v1.4.1
