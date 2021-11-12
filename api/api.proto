@@ -15,7 +15,7 @@ import "google/api/annotations.proto";
 
 package openstorage.api;
 
-option go_package = "api";
+option go_package = "./api;api";
 option java_multiple_files = true;
 option java_package = "com.openstorage.api";
 
@@ -4989,7 +4989,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 126;
+    Minor = 127;
     // SDK version patch value of this specification
     Patch = 0;
   }
