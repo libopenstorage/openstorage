@@ -40,14 +40,14 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 
 	minTimeout := 1 * time.Second
 	maxTimeout := 60 * time.Minute
-	defaultTimeout := 5 * time.Minute
+	defaultTimeout := 10 * time.Minute
 
 	logrus.Infof("Waiting for volume %s to become available", id)
 
 	e := util.WaitForWithContext(
 		ctx,
 		minTimeout, maxTimeout, defaultTimeout, // timeouts
-		5 * time.Second, // period
+		250*time.Millisecond, // period
 		func() (bool, error) {
 			var err error
 			// Get the latest status from the volume
