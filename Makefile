@@ -174,7 +174,7 @@ docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
-		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
+		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin:/usr/local/go/bin" \
 		quay.io/openstorage/osd-proto \
 			make proto mockgen
 
