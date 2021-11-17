@@ -60,7 +60,7 @@ require (
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
 	go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c // indirect
-	go.pedge.io/proto v0.0.0-00010101000000-000000000000
+	go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
@@ -81,15 +81,12 @@ require (
 )
 
 replace (
-	github.com/container-storage-interface/spec => github.com/container-storage-interface/spec v1.5.0
 	github.com/docker/docker => github.com/moby/moby v20.10.3-0.20210324213045-797b974cb90e+incompatible
 	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
 
-	github.com/kubernetes-csi/csi-test/v4 => github.com/kubernetes-csi/csi-test/v4 v4.2.0
 	github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3
 	github.com/satori/go.uuid => github.com/satori/go.uuid v0.0.0-20160324112244-f9ab0dce87d8
 
-	go.pedge.io/proto => go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 
 	k8s.io/api => k8s.io/api v0.20.4
