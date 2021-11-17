@@ -296,6 +296,9 @@ func (cl *filesystemTrimNotSupported) FilesystemTrimStatus(request *api.SdkFiles
 func (cl *filesystemTrimNotSupported) AutoFilesystemTrimStatus(request *api.SdkAutoFSTrimStatusRequest) (*api.SdkAutoFSTrimStatusResponse, error) {
 	return nil, ErrNotSupported
 }
+func (cl *filesystemTrimNotSupported) AutoFilesystemTrimUsage(request *api.SdkAutoFSTrimUsageRequest) (*api.SdkAutoFSTrimUsageResponse, error) {
+	return nil, ErrNotSupported
+}
 func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
 	return nil, ErrNotSupported
 }

@@ -1753,6 +1753,47 @@
         },
         "type": "object"
       },
+      "apiSdkAutoFSTrimUsageResponse": {
+        "description": "SdkAutoFSTrimUsageResponse defines the response for a\nSdkAutoFSTrimUsageRequest.",
+        "properties": {
+          "du_usage": {
+            "additionalProperties": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "map of volume id and the du usage",
+            "type": "object"
+          },
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "px_usage": {
+            "additionalProperties": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "map of volume id and the px usage",
+            "type": "object"
+          },
+          "vol_name": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "map of volume id and volume name",
+            "type": "object"
+          },
+          "vol_size": {
+            "additionalProperties": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "map of volume id and the volume size",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkAwsCredentialRequest": {
         "properties": {
           "access_key": {
@@ -5607,7 +5648,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.127.0"
+    "version": "0.128.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7229,6 +7270,37 @@
             "description": "An unexpected error response."
           }
         },
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-usage": {
+      "get": {
+        "operationId": "OpenStorageFilesystemTrim_AutoFSTrimUsage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimUsageResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Usage of a filesystem Trim background operation on all locally mounted\nvolume",
         "tags": [
           "OpenStorageFilesystemTrim"
         ]

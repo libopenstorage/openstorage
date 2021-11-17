@@ -1658,6 +1658,15 @@ service OpenStorageFilesystemTrim {
       };
     }
 
+  // Usage of a filesystem Trim background operation on all locally mounted
+  // volume
+  rpc AutoFSTrimUsage(SdkAutoFSTrimUsageRequest)
+  returns (SdkAutoFSTrimUsageResponse){
+    option(google.api.http) = {
+      get: "/v1/filesystem-trim/auto-fstrim-usage"
+    };
+  }
+
   // Stop a filesystem Trim background operation on a mounted volume, if any
   rpc Stop(SdkFilesystemTrimStopRequest)
     returns (SdkFilesystemTrimStopResponse){
@@ -4819,6 +4828,25 @@ message SdkAutoFSTrimStatusResponse {
   string message = 2;
 }
 
+// SdkAutoFSTrimUsageRequest defines a request to get status of autofs trim operation
+message SdkAutoFSTrimUsageRequest {
+}
+
+// SdkAutoFSTrimUsageResponse defines the response for a
+// SdkAutoFSTrimUsageRequest.
+message SdkAutoFSTrimUsageResponse {
+  // map of volume id and volume name
+  map<string, string> vol_name = 1;
+  // map of volume id and the volume size
+  map<string, uint64> vol_size = 2;
+  // map of volume id and the du usage
+  map<string, uint64> du_usage = 3;
+  // map of volume id and the px usage
+  map<string, uint64> px_usage = 4;
+  // Text blob containing ASCII text providing details of the operation
+  string message = 5;
+}
+
 // SdkFilesystemTrimStopRequest defines a request to stop a background
 // filesystem trim operation
 message SdkFilesystemTrimStopRequest {
@@ -4989,7 +5017,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 127;
+    Minor = 128;
     // SDK version patch value of this specification
     Patch = 0;
   }
