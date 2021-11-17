@@ -87,6 +87,8 @@ replace (
 
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 
+	// Replacing k8s.io dependencies is required if a dependency or any dependency of a dependency
+	// depends on k8s.io/kubernetes. See https://github.com/kubernetes/kubernetes/issues/79384#issuecomment-505725449
 	k8s.io/api => k8s.io/api v0.20.4
 	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.20.4
 	k8s.io/apimachinery => k8s.io/apimachinery v0.20.4
