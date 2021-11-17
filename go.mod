@@ -26,12 +26,11 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
-	github.com/hashicorp/consul/api v1.8.1 // indirect
-	github.com/hashicorp/go-hclog v0.12.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
+	github.com/hashicorp/memberlist v0.1.4 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/kubernetes-csi/csi-test v2.2.0+incompatible
 	github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24
@@ -82,7 +81,6 @@ require (
 
 replace (
 	github.com/docker/docker => github.com/moby/moby v20.10.3-0.20210324213045-797b974cb90e+incompatible
-	github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
 
 	github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3
 	github.com/satori/go.uuid => github.com/satori/go.uuid v0.0.0-20160324112244-f9ab0dce87d8
