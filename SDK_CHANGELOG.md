@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.17 - (02/01/2022)
+
+* Add api for auto fstrim disk usage report 
+
 ### v0.101.16 - (02/01/2022)
 
 * Added api for auto fs trim status
