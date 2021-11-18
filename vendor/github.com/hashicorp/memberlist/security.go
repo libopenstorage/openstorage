@@ -106,10 +106,7 @@ func encryptPayload(vsn encryptionVersion, key []byte, msg []byte, data []byte, 
 	dst.WriteByte(byte(vsn))
 
 	// Add a random nonce
-	_, err = io.CopyN(dst, rand.Reader, nonceSize)
-	if err != nil {
-		return err
-	}
+	io.CopyN(dst, rand.Reader, nonceSize)
 	afterNonce := dst.Len()
 
 	// Ensure we are correctly padded (only version 0)

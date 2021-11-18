@@ -42,7 +42,7 @@ github.com/cloudfoundry/gosigar
 # github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
 ## explicit
 github.com/codegangsta/cli
-# github.com/container-storage-interface/spec v1.5.0 => github.com/container-storage-interface/spec v1.5.0
+# github.com/container-storage-interface/spec v1.5.0
 ## explicit
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59
@@ -201,25 +201,21 @@ github.com/grpc-ecosystem/go-grpc-prometheus
 github.com/grpc-ecosystem/grpc-gateway/internal
 github.com/grpc-ecosystem/grpc-gateway/runtime
 github.com/grpc-ecosystem/grpc-gateway/utilities
-# github.com/hashicorp/consul/api v1.8.1
-## explicit
+# github.com/hashicorp/consul/api v1.3.0
 github.com/hashicorp/consul/api
 # github.com/hashicorp/errwrap v1.0.0
 github.com/hashicorp/errwrap
 # github.com/hashicorp/go-cleanhttp v0.5.1
 github.com/hashicorp/go-cleanhttp
-# github.com/hashicorp/go-hclog v0.12.2
-## explicit
-github.com/hashicorp/go-hclog
 # github.com/hashicorp/go-immutable-radix v1.2.0
 ## explicit
 github.com/hashicorp/go-immutable-radix
 # github.com/hashicorp/go-msgpack v0.5.5
 ## explicit
 github.com/hashicorp/go-msgpack/codec
-# github.com/hashicorp/go-multierror v1.1.0
+# github.com/hashicorp/go-multierror v1.0.0
 github.com/hashicorp/go-multierror
-# github.com/hashicorp/go-rootcerts v1.0.2
+# github.com/hashicorp/go-rootcerts v1.0.0
 github.com/hashicorp/go-rootcerts
 # github.com/hashicorp/go-sockaddr v1.0.2
 ## explicit
@@ -229,9 +225,10 @@ github.com/hashicorp/go-sockaddr
 github.com/hashicorp/golang-lru/simplelru
 # github.com/hashicorp/logutils v1.0.0
 github.com/hashicorp/logutils
-# github.com/hashicorp/memberlist v0.2.2
+# github.com/hashicorp/memberlist v0.1.4
+## explicit
 github.com/hashicorp/memberlist
-# github.com/hashicorp/serf v0.9.5
+# github.com/hashicorp/serf v0.8.2
 github.com/hashicorp/serf/coordinate
 # github.com/imdario/mergo v0.3.10
 ## explicit
@@ -426,7 +423,7 @@ go.opencensus.io/trace/tracestate
 # go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c
 ## explicit
 go.pedge.io/pb/go/google/protobuf
-# go.pedge.io/proto v0.0.0-00010101000000-000000000000 => go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
+# go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 ## explicit
 go.pedge.io/proto/time
 # go.uber.org/atomic v1.7.0
@@ -786,13 +783,9 @@ k8s.io/utils/integer
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
-# github.com/container-storage-interface/spec => github.com/container-storage-interface/spec v1.5.0
 # github.com/docker/docker => github.com/moby/moby v20.10.3-0.20210324213045-797b974cb90e+incompatible
-# github.com/hashicorp/consul => github.com/hashicorp/consul v1.5.1
-# github.com/kubernetes-csi/csi-test/v4 => github.com/kubernetes-csi/csi-test/v4 v4.2.0
 # github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3
 # github.com/satori/go.uuid => github.com/satori/go.uuid v0.0.0-20160324112244-f9ab0dce87d8
-# go.pedge.io/proto => go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 # google.golang.org/grpc => google.golang.org/grpc v1.29.1
 # k8s.io/api => k8s.io/api v0.20.4
 # k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.20.4
