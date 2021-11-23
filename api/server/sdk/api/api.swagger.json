@@ -955,6 +955,31 @@
         "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem is a healthy\n - FS_HEALTH_STATUS_SAFE_TO_FIX: filesystem has errors, but can be fixed safely\n - FS_HEALTH_STATUS_NEEDS_INSPECTION: filesystem has errors, these cannot be fixed automatically,\nuser needs to review the reported errors and take appropriate action",
         "type": "string"
       },
+      "apiFstrimVolumeUsageInfo": {
+        "properties": {
+          "du_usage": {
+            "format": "uint64",
+            "title": "Disk usage in bytes",
+            "type": "string"
+          },
+          "px_usage": {
+            "format": "uint64",
+            "title": "Disk usage seen in Portworx in bytes",
+            "type": "string"
+          },
+          "volume_name": {
+            "title": "Volume name",
+            "type": "string"
+          },
+          "volume_size": {
+            "format": "uint64",
+            "title": "Volume size",
+            "type": "string"
+          }
+        },
+        "title": "FstrimVolUsageInfo",
+        "type": "object"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -1732,39 +1757,15 @@
       "apiSdkAutoFSTrimUsageResponse": {
         "description": "SdkAutoFSTrimUsageResponse defines the response for a\nSdkAutoFSTrimUsageRequest.",
         "properties": {
-          "du_usage": {
-            "additionalProperties": {
-              "format": "uint64",
-              "type": "string"
-            },
-            "title": "map of volume id and the du usage",
-            "type": "object"
-          },
           "message": {
             "title": "Text blob containing ASCII text providing details of the operation",
             "type": "string"
           },
-          "px_usage": {
+          "usage": {
             "additionalProperties": {
-              "format": "uint64",
-              "type": "string"
+              "$ref": "#/components/schemas/apiFstrimVolumeUsageInfo"
             },
-            "title": "map of volume id and the px usage",
-            "type": "object"
-          },
-          "vol_name": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "map of volume id and volume name",
-            "type": "object"
-          },
-          "vol_size": {
-            "additionalProperties": {
-              "format": "uint64",
-              "type": "string"
-            },
-            "title": "map of volume id and the volume size",
+            "title": "map of fstrim disk usage and volume name",
             "type": "object"
           }
         },
