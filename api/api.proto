@@ -1046,6 +1046,18 @@ message VolumeUsageByNode {
   repeated VolumeUsage volume_usage= 1;
 }
 
+// FstrimVolUsageInfo
+message FstrimVolumeUsageInfo {
+  // Volume name
+  string volume_name = 1;
+  // Volume size
+  uint64 volume_size = 2;
+  // Disk usage in bytes 
+  uint64 du_usage = 3;
+  // Disk usage seen in Portworx in bytes
+  uint64 px_usage = 4;
+}
+
 // Purges the RelaxedReclaim queue
 message RelaxedReclaimPurge {
   // num_purged returns number of volumes purged
@@ -4835,16 +4847,10 @@ message SdkAutoFSTrimUsageRequest {
 // SdkAutoFSTrimUsageResponse defines the response for a
 // SdkAutoFSTrimUsageRequest.
 message SdkAutoFSTrimUsageResponse {
-  // map of volume id and volume name
-  map<string, string> vol_name = 1;
-  // map of volume id and the volume size
-  map<string, uint64> vol_size = 2;
-  // map of volume id and the du usage
-  map<string, uint64> du_usage = 3;
-  // map of volume id and the px usage
-  map<string, uint64> px_usage = 4;
+  // map of fstrim disk usage and volume name
+  map<string, FstrimVolumeUsageInfo> usage = 1;
   // Text blob containing ASCII text providing details of the operation
-  string message = 5;
+  string message = 2;
 }
 
 // SdkFilesystemTrimStopRequest defines a request to stop a background
