@@ -112,7 +112,7 @@ $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-$(GOPATH)/bin/packr:
+$(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
 
@@ -243,9 +243,9 @@ test: packr
 docs:
 	go generate ./cmd/osd/main.go
 
-packr: $(GOPATH)/bin/packr
-	packr clean
-	packr
+packr: $(GOPATH)/bin/packr2
+	packr2 clean
+	packr2
 
 generate-mockfiles:
 	go generate $(PKGS)
