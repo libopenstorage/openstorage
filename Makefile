@@ -115,7 +115,7 @@ $(GOPATH)/bin/govendor:
 	@echo "Installing missing $@ ..."
 	go get -u github.com/kardianos/govendor
 
-$(GOPATH)/bin/packr:
+$(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
 	go get -u github.com/gobuffalo/packr/...
 
@@ -246,9 +246,9 @@ test: packr
 docs:
 	go generate ./cmd/osd/main.go
 
-packr: $(GOPATH)/bin/packr
-	packr clean
-	packr
+packr: $(GOPATH)/bin/packr2
+	packr2 clean
+	packr2
 
 generate-mockfiles:
 	go generate $(PKGS)
