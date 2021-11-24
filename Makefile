@@ -112,7 +112,7 @@ $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-$(GOPATH)/bin/packr:
+$(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
 
@@ -243,9 +243,9 @@ test: packr
 docs:
 	go generate ./cmd/osd/main.go
 
-packr: $(GOPATH)/bin/packr
-	packr clean
-	packr
+packr: $(GOPATH)/bin/packr2
+	packr2 clean
+	packr2
 
 generate-mockfiles:
 	go generate $(PKGS)
@@ -417,6 +417,7 @@ mockgen:
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
 	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
+	mockgen -destination=volume/drivers/mock/driver.mock.go -package=mock github.com/libopenstorage/openstorage/volume VolumeDriver
 
 e2e: docker-build-osd
 	cd test && ./run.bash
