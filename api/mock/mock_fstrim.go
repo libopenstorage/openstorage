@@ -51,6 +51,21 @@ func (mr *MockOpenStorageFilesystemTrimServerMockRecorder) AutoFSTrimStatus(arg0
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimStatus", reflect.TypeOf((*MockOpenStorageFilesystemTrimServer)(nil).AutoFSTrimStatus), arg0, arg1)
 }
 
+// AutoFSTrimUsage mocks base method.
+func (m *MockOpenStorageFilesystemTrimServer) AutoFSTrimUsage(arg0 context.Context, arg1 *api.SdkAutoFSTrimUsageRequest) (*api.SdkAutoFSTrimUsageResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoFSTrimUsage", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimUsageResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimUsage indicates an expected call of AutoFSTrimUsage.
+func (mr *MockOpenStorageFilesystemTrimServerMockRecorder) AutoFSTrimUsage(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimUsage", reflect.TypeOf((*MockOpenStorageFilesystemTrimServer)(nil).AutoFSTrimUsage), arg0, arg1)
+}
+
 // Start mocks base method.
 func (m *MockOpenStorageFilesystemTrimServer) Start(arg0 context.Context, arg1 *api.SdkFilesystemTrimStartRequest) (*api.SdkFilesystemTrimStartResponse, error) {
 	m.ctrl.T.Helper()
@@ -137,6 +152,26 @@ func (mr *MockOpenStorageFilesystemTrimClientMockRecorder) AutoFSTrimStatus(arg0
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimStatus", reflect.TypeOf((*MockOpenStorageFilesystemTrimClient)(nil).AutoFSTrimStatus), varargs...)
+}
+
+// AutoFSTrimUsage mocks base method.
+func (m *MockOpenStorageFilesystemTrimClient) AutoFSTrimUsage(arg0 context.Context, arg1 *api.SdkAutoFSTrimUsageRequest, arg2 ...grpc.CallOption) (*api.SdkAutoFSTrimUsageResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AutoFSTrimUsage", varargs...)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimUsageResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimUsage indicates an expected call of AutoFSTrimUsage.
+func (mr *MockOpenStorageFilesystemTrimClientMockRecorder) AutoFSTrimUsage(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimUsage", reflect.TypeOf((*MockOpenStorageFilesystemTrimClient)(nil).AutoFSTrimUsage), varargs...)
 }
 
 // Start mocks base method.

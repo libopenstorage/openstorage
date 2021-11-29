@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.128.0 - (11/17/2021)
+
+* Add api for auto fstrim disk usage report 
+
 ### v0.127.0 - (11/11/2021)
 
 * Upgrade to proto3

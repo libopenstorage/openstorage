@@ -945,6 +945,31 @@
         "title": "- FS_HEALTH_STATUS_UNKNOWN: filesystem health status is unknown\n - FS_HEALTH_STATUS_HEALTHY: filesystem is a healthy\n - FS_HEALTH_STATUS_SAFE_TO_FIX: filesystem has errors, but can be fixed safely\n - FS_HEALTH_STATUS_NEEDS_INSPECTION: filesystem has errors, these cannot be fixed automatically,\nuser needs to review the reported errors and take appropriate action",
         "type": "string"
       },
+      "apiFstrimVolumeUsageInfo": {
+        "properties": {
+          "du_usage": {
+            "format": "uint64",
+            "title": "Disk usage in bytes",
+            "type": "string"
+          },
+          "px_usage": {
+            "format": "uint64",
+            "title": "Disk usage seen in Portworx in bytes",
+            "type": "string"
+          },
+          "volume_name": {
+            "title": "Volume name",
+            "type": "string"
+          },
+          "volume_size": {
+            "format": "uint64",
+            "title": "Volume size",
+            "type": "string"
+          }
+        },
+        "title": "FstrimVolUsageInfo",
+        "type": "object"
+      },
       "apiGroup": {
         "description": "Group represents VolumeGroup / namespace\nAll volumes in the same group share this object.",
         "properties": {
@@ -1748,6 +1773,23 @@
               "$ref": "#/components/schemas/FilesystemTrimFilesystemTrimStatus"
             },
             "title": "map of volume id and the state of the filesystem trim operation",
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimUsageResponse": {
+        "description": "SdkAutoFSTrimUsageResponse defines the response for a\nSdkAutoFSTrimUsageRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "usage": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/apiFstrimVolumeUsageInfo"
+            },
+            "title": "map of fstrim disk usage and volume name",
             "type": "object"
           }
         },
@@ -5607,7 +5649,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.127.0"
+    "version": "0.128.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7229,6 +7271,37 @@
             "description": "An unexpected error response."
           }
         },
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-usage": {
+      "get": {
+        "operationId": "OpenStorageFilesystemTrim_AutoFSTrimUsage",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimUsageResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Usage of a filesystem Trim background operation on all locally mounted\nvolume",
         "tags": [
           "OpenStorageFilesystemTrim"
         ]
