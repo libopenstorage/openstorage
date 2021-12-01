@@ -1056,6 +1056,8 @@ message FstrimVolumeUsageInfo {
   uint64 du_usage = 3;
   // Disk usage seen in Portworx in bytes
   uint64 px_usage = 4;
+  // If auto fstrim is performed to the volume, if not, why   
+  string perform_auto_fstrim = 5; 
 }
 
 // Purges the RelaxedReclaim queue
@@ -5023,7 +5025,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 128;
+    Minor = 129;
     // SDK version patch value of this specification
     Patch = 0;
   }

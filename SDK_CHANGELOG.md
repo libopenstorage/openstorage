@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.129.0 - (11/30/2021)
+
+* Add message to show auto fstrim enable/disable info
+
 ### v0.128.0 - (11/17/2021)
 
 * Add api for auto fstrim disk usage report 
