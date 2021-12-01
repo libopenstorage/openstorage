@@ -962,6 +962,10 @@
             "title": "Disk usage in bytes",
             "type": "string"
           },
+          "perform_auto_fstrim": {
+            "title": "If auto fstrim is performed to the volume, if not, why",
+            "type": "string"
+          },
           "px_usage": {
             "format": "uint64",
             "title": "Disk usage seen in Portworx in bytes",
