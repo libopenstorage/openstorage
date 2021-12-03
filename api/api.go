@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/mohae/deepcopy"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 // Strings for VolumeSpec
@@ -1347,4 +1348,9 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+// GetAllEnumInfo returns an EnumInfo for every proto enum
+func GetAllEnumInfo() []protoimpl.EnumInfo {
+	return file_api_api_proto_enumTypes
 }
