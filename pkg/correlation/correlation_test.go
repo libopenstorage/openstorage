@@ -3,6 +3,7 @@ package correlation_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"testing"
@@ -17,24 +18,42 @@ func TestNewPackageLogger(t *testing.T) {
 	clogger.SetReportCaller(true)
 	var buf bytes.Buffer
 	clogger.SetOutput(&buf)
+	clogger.SetLevel(logrus.DebugLevel)
 	ctx := correlation.WithCorrelationContext(context.Background(), "test_origin")
 
 	clogger.WithContext(ctx).Info("test info log")
+	clogger.WithContext(ctx).Errorf("test error log: %v", errors.New("test err"))
 	logStr := buf.String()
 
+	// Log lines are separated by "\n". Break them up into separate strings.
+	lines := strings.Split(logStr, "\n")
+
+	// Log line-specific checks
 	expectedInfoLog := `level=info msg="test info log"`
-	if !strings.Contains(logStr, expectedInfoLog) {
-		t.Fatalf("failed to check for log line %s", expectedInfoLog)
+	if !strings.Contains(lines[0], expectedInfoLog) {
+		t.Fatalf("failed to check for log line %s in %s", expectedInfoLog, lines[0])
 	}
 
-	expectedComponentLog := `component=test`
-	if !strings.Contains(logStr, expectedComponentLog) {
-		t.Fatalf("failed to check for log line %s", expectedComponentLog)
+	expectedErrorLog := `msg="test error log: test err"`
+	if !strings.Contains(lines[1], expectedErrorLog) {
+		t.Fatalf("failed to check for log line %s in %s", expectedErrorLog, lines[1])
 	}
 
-	expectedCorrelationLog := `correlation-id=`
-	if !strings.Contains(logStr, expectedCorrelationLog) {
-		t.Fatalf("failed to check for log line %s", expectedCorrelationLog)
+	// All log lines should have these fields
+	for _, logLine := range lines {
+		// last line is empty
+		if logLine == "" {
+			continue
+		}
+		expectedComponentLog := `component=test`
+		if !strings.Contains(logLine, expectedComponentLog) {
+			t.Fatalf("failed to check for log line %s in %s", expectedComponentLog, logLine)
+		}
+
+		expectedCorrelationLog := `correlation-id=`
+		if !strings.Contains(logLine, expectedCorrelationLog) {
+			t.Fatalf("failed to check for log line %s in %s", expectedCorrelationLog, logLine)
+		}
 	}
 }
 

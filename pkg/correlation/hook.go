@@ -54,7 +54,7 @@ const (
 // Levels describes which levels this logrus hook
 // should run with.
 func (lh *LogHook) Levels() []logrus.Level {
-	return []logrus.Level{logrus.InfoLevel}
+	return logrus.AllLevels
 }
 
 // Fire is used to add correlation context info in each log line
