@@ -167,6 +167,8 @@ const (
 	OptCredProxy = "CredProxy"
 	// OptCredIAMPolicy if "true", indicates IAM creds to be used
 	OptCredIAMPolicy = "CredIAMPolicy"
+	// OptRemoteCredUUID is the UUID of the remote cluster credential
+	OptRemoteCredUUID = "RemoteCredUUID"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
