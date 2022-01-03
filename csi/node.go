@@ -24,7 +24,6 @@ import (
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
-	"github.com/portworx/kvdb"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -110,8 +109,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	defer cancel()
 
 	// Check if block device
-	driverType := s.driver.Type()
-	if driverType != api.DriverType_DRIVER_TYPE_BLOCK &&
+	if s.volumeDriverType != api.DriverType_DRIVER_TYPE_BLOCK &&
 		req.GetVolumeCapability().GetBlock() != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach as block a non block device")
 	}
@@ -165,7 +163,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 		SecretName: spec.GetPassphrase(),
 	}
 	mounts := api.NewOpenStorageMountAttachClient(conn)
-	if driverType == api.DriverType_DRIVER_TYPE_BLOCK {
+	if s.volumeDriverType == api.DriverType_DRIVER_TYPE_BLOCK {
 		// attach is assumed to be idempotent
 		// attach is assumed to return the same DevicePath on each call
 		if _, err = mounts.Attach(ctx, &api.SdkVolumeAttachRequest{
@@ -220,23 +218,32 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
 	}
 
-	// Get volume information
-	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
-	if err != nil || len(vols) < 1 {
-		if err == kvdb.ErrNotFound {
+	// Check if volume exists
+	_, err := s.sdkGetVolume(ctx, req.GetVolumeId())
+	if err != nil {
+		s, ok := status.FromError(err)
+		if ok && s.Code() == codes.NotFound {
 			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
-		} else if err != nil {
-			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
-				req.GetVolumeId(),
-				err.Error())
-		} else {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
-			return &csi.NodeUnpublishVolumeResponse{}, nil
 		}
+
+		clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
+		return &csi.NodeUnpublishVolumeResponse{}, nil
 	}
 
-	if err = s.driver.Unmount(ctx, req.GetVolumeId(), req.GetTargetPath(), nil); err != nil {
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	mounts := api.NewOpenStorageMountAttachClient(conn)
+	_, err = mounts.Unmount(ctx, &api.SdkVolumeUnmountRequest{
+		VolumeId:  req.GetVolumeId(),
+		MountPath: req.GetTargetPath(),
+	})
+	if err != nil {
 		clogger.WithContext(ctx).Infof("unable to unmount volume %s onto %s: %s",
 			req.GetVolumeId(),
 			req.GetTargetPath(),
@@ -244,8 +251,11 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 		)
 	}
 
-	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
-		if err = s.driver.Detach(ctx, volumeId, nil); err != nil {
+	if s.volumeDriverType == api.DriverType_DRIVER_TYPE_BLOCK {
+		_, err = mounts.Detach(ctx, &api.SdkVolumeDetachRequest{
+			VolumeId: req.GetVolumeId(),
+		})
+		if err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
 				"Unable to detach volume: %s",
@@ -347,7 +357,7 @@ func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetV
 	}
 
 	// Driver inspect as NodeGetVolumeStatsRequest does not support secrets
-	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+	vol, err := s.sdkGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		return nil, err
 	}

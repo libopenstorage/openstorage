@@ -104,6 +104,15 @@ func TestControllerGetVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				Name: id,
+			}, nil).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
+		s.MockDriver().
+			EXPECT().
 			Inspect([]string{id}).
 			Return([]*api.Volume{
 				vol,

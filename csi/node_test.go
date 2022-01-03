@@ -93,12 +93,6 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 
 	name := "myvol"
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
-
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
@@ -140,11 +134,6 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 	c := csi.NewNodeClient(s.Conn())
 
 	name := "myvol"
-	s.MockDriver().
-		EXPECT().
-		Type().
-		Return(api.DriverType_DRIVER_TYPE_BLOCK).
-		Times(1)
 
 	os.Mkdir("mypath", 0750)
 	defer os.Remove("mypath")
@@ -223,7 +212,10 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 
 func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	// Create server and client connection
-	s := newTestServer(t)
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:       mockDriverName,
+		VolumeDriverType: api.DriverType_DRIVER_TYPE_BLOCK,
+	})
 	defer s.Stop()
 
 	// Make a call
@@ -232,12 +224,6 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	name := "myvol"
 	size := uint64(10)
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
-
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
@@ -297,11 +283,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 	size := uint64(10)
 	targetPath := "/mnt"
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
+
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
@@ -318,12 +300,12 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 					},
 				},
 			}, nil).
-			Times(1),
+			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
 			Mount(gomock.Any(), name, targetPath, nil).
 			Return(fmt.Errorf("Unable to mount volume")).
-			Times(1),
+			AnyTimes(),
 	)
 
 	req := &csi.NodePublishVolumeRequest{
@@ -459,11 +441,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 	size := uint64(10)
 	targetPath := "/mnt"
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
+
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
@@ -522,11 +500,7 @@ func TestNodePublishPureVolumeMountOptions(t *testing.T) {
 	mountFlags := []string{"nfsvers=4.1", "tcp"}
 	options := strings.Join(mountFlags, ",")
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
+
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
@@ -587,11 +561,7 @@ func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
 	size := uint64(10)
 	targetPath := "/mnt"
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
+
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{name}).
@@ -663,13 +633,7 @@ func TestNodePublishVolumeEphemeralDisabled(t *testing.T) {
 
 	name := "csi-12345"
 	targetPath := "/mnt"
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
-	)
+	gomock.InOrder()
 
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId:   name,
@@ -703,13 +667,7 @@ func TestNodePublishVolumeEphemeralDenyList(t *testing.T) {
 
 	name := "csi-12345"
 	targetPath := "/mnt"
-	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_NONE).
-			Times(1),
-	)
+	gomock.InOrder()
 
 	req := &csi.NodePublishVolumeRequest{
 		VolumeId:   name,

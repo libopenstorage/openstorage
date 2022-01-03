@@ -37,7 +37,6 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
@@ -63,6 +62,9 @@ type OsdCsiServerConfig struct {
 	// EnableInlineVolumes decides whether or not we will allow
 	// creation of inline volumes.
 	EnableInlineVolumes bool
+
+	// VolumeDriver settings
+	VolumeDriverType api.DriverType
 }
 
 // OsdCsiServer is a OSD CSI compliant server which
@@ -74,12 +76,13 @@ type OsdCsiServer struct {
 
 	*grpcserver.GrpcServer
 	specHandler        spec.SpecHandler
-	driver             volume.VolumeDriver
 	cluster            cluster.Cluster
 	sdkUds             string
 	conn               *grpc.ClientConn
 	mu                 sync.Mutex
 	csiDriverName      string
+	volumeDriverName   string
+	volumeDriverType   api.DriverType
 	allowInlineVolumes bool
 }
 
@@ -125,10 +128,16 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
 	}
 
+	volumeDriverType := d.Type()
+	if config.VolumeDriverType != api.DriverType_DRIVER_TYPE_NONE {
+		volumeDriverType = config.VolumeDriverType
+	}
+
 	return &OsdCsiServer{
 		specHandler:        spec.NewSpecHandler(),
 		GrpcServer:         gServer,
-		driver:             d,
+		volumeDriverName:   d.Name(),
+		volumeDriverType:   volumeDriverType,
 		cluster:            config.Cluster,
 		sdkUds:             config.SdkUds,
 		csiDriverName:      config.CsiDriverName,
@@ -158,9 +167,22 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 // driverGetVolume returns a volume for a given ID. This function skips
 // PX security authentication and should be used only when a CSI request
 // does not support secrets as a field
-func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Volume, error) {
-	vols, err := s.driver.Inspect([]string{id})
-	if err != nil || len(vols) < 1 {
+func (s *OsdCsiServer) sdkGetVolume(ctx context.Context, id string) (*api.Volume, error) {
+	// Get grpc connection
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Unable to connect to SDK server: %v", err)
+	}
+
+	volumes := api.NewOpenStorageVolumeClient(conn)
+
+	// Get volume information
+	inspectResp, err := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
+		Name: id,
+	})
+	if err != nil || len(inspectResp.Volumes) < 1 {
 		if err == kvdb.ErrNotFound {
 			clogger.WithContext(ctx).Infof("Volume %s cannot be found: %s", id, err.Error())
 			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
@@ -173,9 +195,8 @@ func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Vol
 			return nil, status.Errorf(codes.NotFound, "Failed to find volume with id %s", id)
 		}
 	}
-	vol := vols[0]
 
-	return vol, nil
+	return inspectResp.Volumes[0].Volume, nil
 }
 
 // Gets token from the secrets. In Kubernetes, the side car containers copy
