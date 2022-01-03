@@ -135,6 +135,13 @@ func (s *OsdCsiServer) NodePublishVolume(
 		if mountFlags != "" {
 			driverOpts[api.SpecCSIMountOptions] = mountFlags
 		}
+		if req.GetVolumeCapability().GetMount().GetFsType() != "" {
+			driverOpts[api.SpecCSIFsType] = req.GetVolumeCapability().GetMount().GetFsType()
+		}
+		driverOpts[api.SpecCSIRawBlock] = "false"
+		if isBlockAccessType {
+			driverOpts[api.SpecCSIRawBlock] = "true"
+		}
 	}
 
 	// can use either spec.Ephemeral or VolumeContext label

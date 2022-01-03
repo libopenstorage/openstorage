@@ -63,6 +63,8 @@ const (
 	SpecExportOptionsEmpty   = "empty_export_options"
 	SpecMountOptions         = "mount_options"
 	SpecCSIMountOptions      = "csi_mount_options"
+	SpecCSIRawBlock			 = "fadirectRawBlock"
+	SpecCSIFsType			 = "fsType"
 	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	SpecProxyProtocolS3      = "s3"
 	SpecProxyProtocolPXD     = "pxd"
@@ -1224,6 +1226,14 @@ func (v *VolumeSpec) IsPureVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBackend()
 }
 
+func (v *VolumeSpec) IsPureFile() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureFile()
+}
+
+func (v *VolumeSpec) IsPureBlock() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlock()
+}
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
@@ -1350,6 +1360,14 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+func (s *ProxySpec) IsPureFile() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+func (s *ProxySpec) IsPureBlock() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK
 }
 
 // GetAllEnumInfo returns an EnumInfo for every proto enum

@@ -155,6 +155,16 @@ func (s *VolumeServer) create(
 				err.Error())
 		}
 
+		if spec.IsPureVolume() {
+			id, err = s.driver(ctx).Create(locator, source, spec)
+			if err != nil {
+				return "", status.Errorf(
+					codes.Internal,
+					"Failed to create snapshot for Pure FA volume: %v",
+					err.Error())
+			}
+			return id, nil
+		}
 		// Check ownership
 		// Snapshots just need read access
 		if !parent.IsPermitted(ctx, api.Ownership_Read) {
