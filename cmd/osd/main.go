@@ -68,6 +68,8 @@ func main() {
 	if reexec.Init() {
 		return
 	}
+	logrus.SetLevel(logrus.DebugLevel)
+
 	app := cli.NewApp()
 	app.Name = "osd"
 	app.Usage = "Open Storage CLI"
@@ -393,6 +395,12 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Failed to create system token manager: %v\n", err)
 		}
 		auth.InitSystemTokenManager(stm)
+
+		stgauthenticator, err := auth.SystemTokenManagerInst().GetAuthenticator()
+		if err != nil {
+			return fmt.Errorf("failed to get system token authenticator: %v", err)
+		}
+		authenticators[auth.SystemTokenManagerInst().Issuer()] = stgauthenticator
 	}
 
 	// Start the cluster state machine, if enabled.

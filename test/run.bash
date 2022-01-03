@@ -16,6 +16,7 @@ done
 BART=./node_modules/bats/bin/bats
 
 # Set env DEBUG=1 to show output of osd::echo and osd::by
+export DEBUG=1
 export TMPDIR=/tmp/bats-test-$$
 mkdir -p ${TMPDIR} && \
     ${BART} setup testcases && \

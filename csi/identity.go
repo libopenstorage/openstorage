@@ -74,7 +74,7 @@ func (s *OsdCsiServer) GetPluginInfo(
 	if len(s.csiDriverName) != 0 {
 		name = s.csiDriverName
 	} else {
-		name = fmt.Sprintf(csiDriverNameFormat, s.driver.Name())
+		name = fmt.Sprintf(csiDriverNameFormat, s.volumeDriverName)
 	}
 
 	return &csi.GetPluginInfoResponse{
@@ -83,7 +83,7 @@ func (s *OsdCsiServer) GetPluginInfo(
 
 		// As OSD CSI Driver matures, add here more information
 		Manifest: map[string]string{
-			"driver": s.driver.Name(),
+			"driver": s.volumeDriverName,
 		},
 	}, nil
 }

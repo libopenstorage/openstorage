@@ -203,6 +203,16 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	})
 
 	// Setup CSI simple driver
+	tester.MockDriver().
+		EXPECT().
+		Type().
+		Return(api.DriverType_DRIVER_TYPE_NONE).
+		Times(1)
+	tester.MockDriver().
+		EXPECT().
+		Name().
+		Return("mock").
+		Times(1)
 	config.Net = "tcp"
 	config.Address = "127.0.0.1:0"
 	config.SdkUds = tester.uds
@@ -287,7 +297,7 @@ func TestCSIServerStart(t *testing.T) {
 	assert.NotNil(t, err)
 
 	// Make a call
-	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
+	s.MockDriver().EXPECT().Name().Return("mock").AnyTimes()
 	c := csi.NewIdentityClient(s.Conn())
 	r, err := c.GetPluginInfo(context.Background(), &csi.GetPluginInfoRequest{})
 	assert.Nil(t, err)

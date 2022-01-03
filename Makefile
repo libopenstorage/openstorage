@@ -238,7 +238,7 @@ test-sdk: install-sdk-test launch-sdk
 	sdk-test -ginkgo.noColor -ginkgo.noisySkippings=false -sdk.endpoint=localhost:9100 -sdk.cpg=$(GOPATH)/src/github.com/libopenstorage/sdk-test/cmd/sdk-test/cb.yaml
 
 test: packr
-	go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
+	go test -v -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
 
 docs:
 	go generate ./cmd/osd/main.go

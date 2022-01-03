@@ -31,7 +31,7 @@ func TestNewCSIServerGetPluginInfo(t *testing.T) {
 	defer s.Stop()
 
 	// Setup mock
-	s.MockDriver().EXPECT().Name().Return("mock").Times(2)
+	s.MockDriver().EXPECT().Name().Return("mock").AnyTimes()
 
 	// Setup client
 	c := csi.NewIdentityClient(s.Conn())
@@ -62,9 +62,6 @@ func TestNewCSIServerGetPluginInfoWithOverrideName(t *testing.T) {
 		CsiDriverName: "override",
 	})
 	defer s.Stop()
-
-	// Setup mock
-	s.MockDriver().EXPECT().Name().Return("mock").Times(1)
 
 	// Setup client
 	c := csi.NewIdentityClient(s.Conn())

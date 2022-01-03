@@ -131,7 +131,12 @@ func (s *OsdCsiServer) ControllerGetVolume(
 
 	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
-	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+	// CSI ControllerGetVolume does not support secrets, so we must generate a system token
+	// to communicate with the SDK server.
+	systemTokenMap := generateSystemToken(ctx)
+	ctx = s.setupContext(ctx, systemTokenMap)
+
+	vol, err := s.sdkGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
 			return &csi.ControllerGetVolumeResponse{
