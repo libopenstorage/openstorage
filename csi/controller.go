@@ -129,6 +129,8 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
 
+	// TODO: Use system token manager to get secret.
+	ctx = s.setupContext(ctx, req.GetSecrets())
 	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
 	vol, err := s.sdkGetVolume(ctx, req.GetVolumeId())

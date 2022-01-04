@@ -208,6 +208,9 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	volumeId := req.GetVolumeId()
 	targetPath := req.GetTargetPath()
 
+	// TODO: Use system token manager to get secret.
+	ctx = s.setupContext(ctx, req.GetSecrets())
+
 	clogger.WithContext(ctx).Infof("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
 	// Check arguments
@@ -216,19 +219,6 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 	if len(targetPath) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Target path must be provided")
-	}
-
-	// Check if volume exists
-	_, err := s.sdkGetVolume(ctx, req.GetVolumeId())
-	if err != nil {
-		s, ok := status.FromError(err)
-		if ok && s.Code() == codes.NotFound {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
-			return &csi.NodeUnpublishVolumeResponse{}, nil
-		}
-
-		clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
-		return &csi.NodeUnpublishVolumeResponse{}, nil
 	}
 
 	conn, err := s.getConn()
@@ -344,6 +334,9 @@ func getVolumeCondition(vol *api.Volume) *csi.VolumeCondition {
 // and only exposed via the CSI unix domain socket. If a secrets field is added
 // in csi.NodeGetVolumeStatsRequest, we can update this to hit the SDK and use auth.
 func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetVolumeStatsRequest) (*csi.NodeGetVolumeStatsResponse, error) {
+	// TODO: Use system token manager to get secret.
+	ctx = s.setupContext(ctx, req.GetSecrets())
+
 	clogger.WithContext(ctx).Debugf("NodeGetVolumeStats request received. VolumeID: %s, VolumePath: %s", req.GetVolumeId(), req.GetVolumePath())
 
 	// Check arguments

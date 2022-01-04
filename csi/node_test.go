@@ -241,7 +241,6 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 				},
 			}, nil).
 			Times(1),
-
 		s.MockDriver().
 			EXPECT().
 			Attach(gomock.Any(), name, gomock.Any()).
@@ -332,7 +331,10 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 
 func TestNodePublishVolumeBlock(t *testing.T) {
 	// Create server and client connection
-	s := newTestServer(t)
+	s := newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName:       mockDriverName,
+		VolumeDriverType: api.DriverType_DRIVER_TYPE_BLOCK,
+	})
 	defer s.Stop()
 
 	// Make a call
@@ -355,11 +357,6 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 	defer os.Remove(targetPath)
 
 	gomock.InOrder(
-		s.MockDriver().
-			EXPECT().
-			Type().
-			Return(api.DriverType_DRIVER_TYPE_BLOCK).
-			Times(1),
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
@@ -701,7 +698,9 @@ func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Enumerate(&api.VolumeLocator{
+				Name: name,
+			}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 	)
