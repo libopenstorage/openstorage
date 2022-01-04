@@ -165,7 +165,7 @@ $(OSDSANITY)-clean:
 	@$(MAKE) -C cmd/osd-sanity clean
 
 docker-build-proto:
-	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
+	docker build -t quay.io/openstorage/osd-proto --network=host -f Dockerfile.proto .
 
 # the docker-build-proto should be there temporarily for the go mod upgrade
 docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
@@ -176,7 +176,7 @@ docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
 		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin:/usr/local/go/bin" \
 		quay.io/openstorage/osd-proto \
-			make proto mockgen
+	        make proto mockgen
 
 proto: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/protoc-gen-grpc-gateway $(GOPATH)/bin/protoc-gen-swagger
 ifndef DOCKER_PROTO
