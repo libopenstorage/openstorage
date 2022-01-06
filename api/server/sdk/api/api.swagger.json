@@ -1539,6 +1539,9 @@
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
           },
+          "readahead": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -2782,6 +2785,10 @@
       },
       "apiSdkDiagsCollectRequest": {
         "properties": {
+          "filename": {
+            "description": "Filename is an optional flag only to be used for testing purposes.",
+            "type": "string"
+          },
           "issuer": {
             "title": "Issuer is an optional  user friendly name for the caller invoking the API",
             "type": "string"
@@ -5187,6 +5194,10 @@
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
           },
+          "readahead": {
+            "title": "Enable readahead for the volume",
+            "type": "boolean"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -5315,6 +5326,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "readahead": {
+            "type": "boolean"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -5431,6 +5445,9 @@
           "queue_depth": {
             "format": "int64",
             "type": "integer"
+          },
+          "readahead": {
+            "type": "boolean"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
@@ -5653,7 +5670,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.129.0"
+    "version": "0.131.0"
   },
   "openapi": "3.0.0",
   "paths": {

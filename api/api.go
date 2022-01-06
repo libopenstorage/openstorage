@@ -63,8 +63,6 @@ const (
 	SpecExportOptionsEmpty   = "empty_export_options"
 	SpecMountOptions         = "mount_options"
 	SpecCSIMountOptions      = "csi_mount_options"
-	SpecCSIRawBlock			 = "fadirectRawBlock"
-	SpecCSIFsType			 = "fsType"
 	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	SpecProxyProtocolS3      = "s3"
 	SpecProxyProtocolPXD     = "pxd"
@@ -108,6 +106,7 @@ const (
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
+	SpecReadahead                           = "readahead"
 )
 
 // OptionKey specifies a set of recognized query params.

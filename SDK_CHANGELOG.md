@@ -2,6 +2,14 @@
 
 ## Releases
 
+### v0.131.0 - (1/15/2022)
+
+* Add a readahead flag in volume spec
+
+### v0.130.0 - (1/4/2022)
+
+* Add a filename field to DiagsCollectionRequest for test purposes
+
 ### v0.129.0 - (11/30/2021)
 
 * Add message to show auto fstrim enable/disable info

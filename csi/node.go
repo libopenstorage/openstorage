@@ -136,11 +136,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 			driverOpts[api.SpecCSIMountOptions] = mountFlags
 		}
 		if req.GetVolumeCapability().GetMount().GetFsType() != "" {
-			driverOpts[api.SpecCSIFsType] = req.GetVolumeCapability().GetMount().GetFsType()
-		}
-		driverOpts[api.SpecCSIRawBlock] = "false"
-		if isBlockAccessType {
-			driverOpts[api.SpecCSIRawBlock] = "true"
+			driverOpts[api.SpecFilesystem] = req.GetVolumeCapability().GetMount().GetFsType()
 		}
 	}
 

@@ -669,6 +669,8 @@ message VolumeSpec {
   IoThrottle io_throttle = 45;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 46;
+  // Enable readahead for the volume
+  bool readahead = 47;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -738,6 +740,8 @@ message VolumeSpecUpdate {
   oneof io_throttle_opt { IoThrottle io_throttle = 39;}
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 40; }
+  // Enable readahead for the volume
+  oneof readahead_opt { bool readahead  = 41; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -827,6 +831,8 @@ message VolumeSpecPolicy {
   oneof io_throttle_opt { IoThrottle io_throttle = 65;}
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 66; }
+  // Enable readahead for the volume
+  oneof readahead_opt { bool readahead  = 67; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -3755,6 +3761,8 @@ message SdkDiagsCollectRequest {
   int64 timeout_mins = 5;
   // Live is an optional flag if true will collect live cores from running processes of the driver
   bool live = 6;
+  // Filename is an optional flag only to be used for testing purposes.
+  string filename = 7;
 }
 
 // SdkDiagsCollectResponse defines a response for an SDK request to collect diags
@@ -5025,7 +5033,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 129;
+    Minor = 131;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5612,6 +5620,8 @@ message RestoreVolumeSpec {
   IoThrottle io_throttle = 29;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
   Sharedv4Spec sharedv4_spec = 30;
+  // Enable readahead for the volume
+  RestoreParamBoolType readahead = 31;
 }
 
 // Request message to get the volume catalog
