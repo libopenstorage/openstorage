@@ -37,6 +37,7 @@ enum Status {
   STATUS_POOLMAINTENANCE = 14;
   // Add statuses before MAX and update the number for MAX
   STATUS_MAX = 15;
+  MAKEJOBFAIL = 16;
 }
 
 enum DriverType {
