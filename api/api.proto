@@ -3755,6 +3755,8 @@ message SdkDiagsCollectRequest {
   int64 timeout_mins = 5;
   // Live is an optional flag if true will collect live cores from running processes of the driver
   bool live = 6;
+  // Filename is an optional flag only to be used for testing purposes.
+  string filename = 7;
 }
 
 // SdkDiagsCollectResponse defines a response for an SDK request to collect diags
@@ -5025,7 +5027,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 129;
+    Minor = 130;
     // SDK version patch value of this specification
     Patch = 0;
   }
