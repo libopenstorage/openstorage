@@ -13,17 +13,17 @@ install:
   - chmod +x ./kind
   - mv ./kind ${GOPATH}/bin
 script:
-  - git-validation -run DCO,short-subject
-  - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
-  - make docker-proto
-  - git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
-  - hack/check-api-version.sh
-  - git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-  - bash hack/docker-integration-test.sh
-  - bash hack/csi-sanity-test.sh
-  - make install verify
+  - git-validation -run DCO,short-subject || travis_terminate 1;
+  - go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0" || travis_terminate 1;
+  - make docker-proto || travis_terminate 1;
+  - git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0" || travis_terminate 1;
+  - hack/check-api-version.sh || travis_terminate 1;
+  - git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0" || travis_terminate 1;
+  - bash hack/docker-integration-test.sh || travis_terminate 1;
+  - bash hack/csi-sanity-test.sh || travis_terminate 1;
+  - make install verify || travis_terminate 1;
   - if [ "${TRAVIS_PULL_REQUEST}" == "false" ]; then
-      echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin;
+      echo "${DOCKER_PASS}" | docker login -u "${DOCKER_USER}" --password-stdin; 
       make push-mock-sdk-server;
     fi
 notifications:
