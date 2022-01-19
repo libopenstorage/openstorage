@@ -47,7 +47,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "xattr": "UNSPECIFIED",
  "proxy_write": false,
  "auto_fstrim": false,
- "number_of_chunks": 0
+ "number_of_chunks": 0,
+ "readahead": false
 }`,
 		data,
 	)
