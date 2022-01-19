@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.131.0 - (1/15/2022)
+
+* Add a readahead flag in volume spec
+
 ### v0.130.0 - (1/4/2022)
 
 * Add a filename field to DiagsCollectionRequest for test purposes

@@ -774,6 +774,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 			ProxyWrite:    false,
 			AutoFstrim:    false,
 			IoThrottle:    &api.IoThrottle{},
+			Readahead:     false,
 		},
 	}
 

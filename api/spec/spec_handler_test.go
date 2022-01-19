@@ -505,6 +505,16 @@ func TestOptAutoFstrim(t *testing.T) {
 	require.False(t, spec.AutoFstrim, "Failed to parse auto_fstrim option into spec")
 }
 
+func TestOptReadahead(t *testing.T) {
+	testSpecOptString(t, api.SpecReadahead, "true")
+
+	spec := testSpecFromString(t, api.SpecReadahead, "true")
+	require.True(t, spec.Readahead, "Failed to parse readahead option into spec")
+
+	spec = testSpecFromString(t, api.SpecReadahead, "false")
+	require.False(t, spec.Readahead, "Failed to parse readahead option into spec")
+}
+
 func TestIoThrottleSpec(t *testing.T) {
 	testSpecOptString(t, api.SpecIoThrottleRdIOPS, "128")
 	testSpecOptString(t, api.SpecIoThrottleWrIOPS, "128")

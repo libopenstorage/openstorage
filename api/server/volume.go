@@ -657,6 +657,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 		}
 	}
 
+	if spec.Readahead != vol.Spec.Readahead {
+		newSpec.ReadaheadOpt = &api.VolumeSpecUpdate_Readahead{
+			Readahead: spec.Readahead,
+		}
+	}
+
 	return newSpec
 }
 

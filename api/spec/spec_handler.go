@@ -145,6 +145,7 @@ var (
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
 	SpecIoThrottleRdBWRegex       = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
 	SpecIoThrottleWrBWRegex       = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
+	ReadaheadRegex                = regexp.MustCompile(api.SpecReadahead + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -565,6 +566,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.AutoFstrim = autoFstrim
 			}
+		case api.SpecReadahead:
+			if readahead, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Readahead = readahead
+			}
 		case api.SpecBackendType:
 			// Treat Pure FlashArray and FlashBlade volumes as proxy volumes and store the backend type as ProxyProtocol
 			// in the spec, but the key to pass this value in is specified as 'backend' to reduce confusions
@@ -818,6 +825,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
+	}
+	if ok, readahead := d.getVal(ReadaheadRegex, str); ok {
+		opts[api.SpecReadahead] = readahead
 	}
 	if ok, ioThrottleIOPS := d.getVal(SpecIoThrottleRdIOPSRegex, str); ok {
 		opts[api.SpecIoThrottleRdIOPS] = ioThrottleIOPS

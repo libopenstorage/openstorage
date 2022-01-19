@@ -1539,6 +1539,9 @@
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
           },
+          "readahead": {
+            "$ref": "#/components/schemas/apiRestoreParamBoolType"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -5191,6 +5194,10 @@
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
           },
+          "readahead": {
+            "title": "Enable readahead for the volume",
+            "type": "boolean"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -5319,6 +5326,9 @@
             "format": "int64",
             "type": "integer"
           },
+          "readahead": {
+            "type": "boolean"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -5435,6 +5445,9 @@
           "queue_depth": {
             "format": "int64",
             "type": "integer"
+          },
+          "readahead": {
+            "type": "boolean"
           },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
