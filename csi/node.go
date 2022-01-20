@@ -210,8 +210,8 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 
 	// CSI NodeUnpublishVolume does not support secrets, so we must generate a system token
 	// to communicate with the SDK server.
-	systemTokenMap := generateSystemToken(ctx)
-	ctx = s.setupContext(ctx, systemTokenMap)
+	appsTokenMap := s.generateAppsToken(ctx)
+	ctx = s.setupContext(ctx, appsTokenMap)
 
 	clogger.WithContext(ctx).Infof("csi.NodeUnpublishVolume request received. VolumeID: %s, TargetPath: %s", volumeId, targetPath)
 
@@ -341,8 +341,8 @@ func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetV
 
 	// CSI NodeGetVolumeStats does not support secrets, so we must generate a system token
 	// to communicate with the SDK server. This is okay because NodeGetVolumeStats is not exposed to the end user.
-	systemTokenMap := generateSystemToken(ctx)
-	ctx = s.setupContext(ctx, systemTokenMap)
+	appsTokenMap := s.generateAppsToken(ctx)
+	ctx = s.setupContext(ctx, appsTokenMap)
 
 	// Check arguments
 	id := req.GetVolumeId()

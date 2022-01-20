@@ -86,6 +86,7 @@ type OsdCsiServer struct {
 	volumeDriverName   string
 	volumeDriverType   api.DriverType
 	allowInlineVolumes bool
+	tokenGenerator     auth.TokenGenerator
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -249,17 +250,17 @@ func (s *OsdCsiServer) Start() error {
 	})
 }
 
-func generateSystemToken(ctx context.Context) map[string]string {
+func (s *OsdCsiServer) generateAppsToken(ctx context.Context) map[string]string {
 	secrets := map[string]string{}
 
-	if auth.SystemTokenManagerInst().Issuer() != "" {
-		token, err := auth.SystemTokenManagerInst().GetToken(
+	if s.tokenGenerator != nil {
+		token, err := s.tokenGenerator.GetToken(
 			&auth.Options{
 				Expiration: time.Now().Add(1 * time.Hour).Unix(),
 			},
 		)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("failed to generate system token: %v", err)
+			logrus.WithContext(ctx).Errorf("failed to generate CSI apps token: %v", err)
 			return secrets
 		}
 

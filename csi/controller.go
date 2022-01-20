@@ -133,8 +133,8 @@ func (s *OsdCsiServer) ControllerGetVolume(
 
 	// CSI ControllerGetVolume does not support secrets, so we must generate a system token
 	// to communicate with the SDK server.
-	systemTokenMap := generateSystemToken(ctx)
-	ctx = s.setupContext(ctx, systemTokenMap)
+	appsTokenMap := s.generateAppsToken(ctx)
+	ctx = s.setupContext(ctx, appsTokenMap)
 
 	vol, err := s.sdkGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
