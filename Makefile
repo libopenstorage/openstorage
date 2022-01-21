@@ -65,10 +65,12 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	proto \
 	lint \
 	vet \
+	fmt \
 	packr \
 	errcheck \
 	pretest \
 	test \
+	hack-tests \
 	docs \
 	docker-build-osd-dev \
 	docker-build \
@@ -85,6 +87,10 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	generate-mockfiles \
 	e2e \
 	verify \
+	osd-tests \
+	pr-lint \
+	pr-verify \
+	pr-unit-tests \
 	sdk-check-version
 
 
@@ -176,7 +182,7 @@ docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
 		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin:/usr/local/go/bin" \
 		quay.io/openstorage/osd-proto \
-	        make proto mockgen
+			make proto mockgen
 
 proto: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/protoc-gen-grpc-gateway $(GOPATH)/bin/protoc-gen-swagger
 ifndef DOCKER_PROTO
@@ -220,6 +226,8 @@ vet:
 		exit 1;\
 	fi
 	
+fmt:
+	go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
 
 errcheck: $(GOPATH)/bin/errcheck
 	errcheck -tags "$(TAGS)" $(PKGS)
@@ -419,7 +427,20 @@ mockgen:
 	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
 	mockgen -destination=volume/drivers/mock/driver.mock.go -package=mock github.com/libopenstorage/openstorage/volume VolumeDriver
 
+osd-tests: install
+	./hack/csi-sanity-test.sh
+	./hack/docker-integration-test.sh
+
 e2e: docker-build-osd
 	cd test && ./run.bash
 
 verify: vet sdk-check-version docker-test e2e
+
+pr-verify: vet fmt sdk-check-version
+	git-validation -run DCO,short-subject
+	make docker-proto
+	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
+	hack/check-api-version.sh
+	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
+
+pr-test: osd-tests docker-test e2e
