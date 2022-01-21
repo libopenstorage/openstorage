@@ -49,9 +49,6 @@ assert_attached(){
 	fi
 }
 
-# Generate shared secret
-make install || exit 1
-
 token=$($GOPATH/bin/osd-token-generator \
   --auth-config=hack/sdk-auth-sample.yml \
   --shared-secret=testsecret)

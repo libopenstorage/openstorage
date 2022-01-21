@@ -13,10 +13,6 @@ assert_success() {
 	fi
 }
 
-# Install osd binary
-make install
-assert_success
-
 # Start OSD
 sudo -E $GOPATH/bin/osd \
 	-d \
