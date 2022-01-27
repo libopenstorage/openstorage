@@ -210,7 +210,6 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			VolumeLabels: make(map[string]string),
 		}
 	}
-
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
@@ -385,6 +384,10 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.Nodiscard = nodiscard
+				// autofstrim to follow nodiscard when not explicitly specified
+				if _, exists := opts[api.SpecAutoFstrim]; !exists {
+					spec.AutoFstrim = nodiscard
+				}
 			}
 		case api.Token:
 			// skip, if not it would be added to the labels
@@ -767,6 +770,11 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, nodiscard := d.getVal(nodiscardRegex, str); ok {
 		opts[api.SpecNodiscard] = nodiscard
+		// if nodiscard was specified and autofstrim was not specified
+		// autfstrim will follow nodoscard
+		if ok, _ := d.getVal(AutoFstrimRegex, str); !ok {
+			opts[api.SpecAutoFstrim] = nodiscard
+		}
 	}
 	if ok, storagepolicy := d.getVal(storagePolicyRegex, str); ok {
 		opts[api.StoragePolicy] = storagepolicy
