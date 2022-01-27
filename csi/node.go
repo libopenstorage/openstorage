@@ -51,7 +51,8 @@ func (s *OsdCsiServer) NodeGetInfo(
 	}
 
 	result := &csi.NodeGetInfoResponse{
-		NodeId: clus.NodeId,
+		NodeId:             clus.NodeId,
+		AccessibleTopology: &csi.Topology{},
 	}
 
 	return result, nil
