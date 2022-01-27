@@ -229,6 +229,10 @@ func (m *NullClusterPair) RefreshPair(arg0 string) error {
 	return ErrNotImplemented
 }
 
+func (m *NullClusterPair) GetPairMode() api.ClusterPairMode_Mode {
+	return api.ClusterPairMode_Default
+}
+
 // EnumeratePairs
 func (m *NullClusterPair) EnumeratePairs() (*api.ClusterPairsEnumerateResponse, error) {
 	return nil, ErrNotImplemented
