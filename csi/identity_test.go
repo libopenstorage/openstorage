@@ -24,6 +24,28 @@ import (
 	"golang.org/x/net/context"
 )
 
+func TestNewCSIServerGetPluginCapabilities(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup client
+	c := csi.NewIdentityClient(s.Conn())
+
+	// Get capabilities
+	r, err := c.GetPluginCapabilities(context.Background(), &csi.GetPluginCapabilitiesRequest{})
+	assert.NoError(t, err)
+
+	// Verify
+	assert.Len(t, r.Capabilities, 3)
+	assert.Equal(t, csi.PluginCapability_Service_CONTROLLER_SERVICE,
+		r.Capabilities[0].Type.(*csi.PluginCapability_Service_).Service.Type)
+	assert.Equal(t, csi.PluginCapability_Service_VOLUME_ACCESSIBILITY_CONSTRAINTS,
+		r.Capabilities[1].Type.(*csi.PluginCapability_Service_).Service.Type)
+	assert.Equal(t, csi.PluginCapability_VolumeExpansion_ONLINE,
+		r.Capabilities[2].Type.(*csi.PluginCapability_VolumeExpansion_).VolumeExpansion.Type)
+}
+
 func TestNewCSIServerGetPluginInfo(t *testing.T) {
 
 	// Create server and client connection
