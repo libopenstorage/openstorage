@@ -503,4 +503,10 @@ func TestOptAutoFstrim(t *testing.T) {
 
 	spec = testSpecFromString(t, api.SpecAutoFstrim, "false")
 	require.False(t, spec.AutoFstrim, "Failed to parse auto_fstrim option into spec")
+	// with Nodiscard, when autoFstrim is not specified
+	spec = testSpecFromString(t, api.SpecNodiscard, "true")
+	require.Equal(t, spec.AutoFstrim, true, "AutoFstrim value does not match nodiscard")
+
+	spec = testSpecFromString(t, api.SpecNodiscard, "false")
+	require.Equal(t, spec.AutoFstrim, false, "AutoFstrim value does not match Nodiscard")
 }
