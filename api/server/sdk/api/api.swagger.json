@@ -16,9 +16,10 @@
         "default": "Default",
         "enum": [
           "Default",
-          "DisasterRecovery"
+          "DisasterRecovery",
+          "OneTimeMigration"
         ],
-        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery",
+        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery\n - OneTimeMigration: Paired for one-time migration",
         "type": "string"
       },
       "FilesystemCheckFilesystemCheckStatus": {
@@ -5505,7 +5506,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.16"
+    "version": "0.101.17"
   },
   "openapi": "3.0.0",
   "paths": {
