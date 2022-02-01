@@ -177,6 +177,7 @@ docker-build-proto:
 docker-proto: $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged --rm \
+		--pull always \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
