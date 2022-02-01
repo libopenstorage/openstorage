@@ -175,9 +175,9 @@ docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
 docker-proto: $(GOPATH)/bin/protoc-gen-go
+	docker pull quay.io/openstorage/osd-proto
 	docker run \
 		--privileged --rm \
-		--pull always \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
