@@ -3,8 +3,7 @@ services:
   - docker
 language: go
 go:
-  - 1.14.x
-  - 1.15.x
+  - 1.16.x
 install:
   - go get -u github.com/vbatts/git-validation
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
