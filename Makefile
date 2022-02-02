@@ -175,7 +175,6 @@ docker-build-proto:
 
 # the docker-build-proto should be there temporarily for the go mod upgrade
 docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
-	docker pull quay.io/openstorage/osd-proto
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
