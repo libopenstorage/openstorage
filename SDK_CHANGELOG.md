@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.132.0 - (1/31/2022)
+
+* Added a new cluster pairing mode for OneTimeMigration.
+
+
 ### v0.131.0 - (1/15/2022)
 
 * Add a readahead flag in volume spec
@@ -16,7 +21,7 @@
 
 ### v0.128.0 - (11/17/2021)
 
-* Add api for auto fstrim disk usage report 
+* Add api for auto fstrim disk usage report
 
 ### v0.127.0 - (11/11/2021)
 
