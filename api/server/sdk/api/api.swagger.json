@@ -4238,6 +4238,11 @@
             "title": "Reads completed successfully",
             "type": "string"
           },
+          "unique_blocks": {
+            "format": "uint64",
+            "title": "Unique Blocks",
+            "type": "string"
+          },
           "write_bytes": {
             "format": "uint64",
             "title": "Number of bytes written",
@@ -4764,6 +4769,11 @@
           "id": {
             "description": "Self referential volume ID.",
             "type": "string"
+          },
+          "in_trashcan": {
+            "format": "boolean",
+            "title": "InTrashcan if the volume is in trashcan",
+            "type": "boolean"
           },
           "last_scan": {
             "description": "LastScan is the time when an integrity check was run.",
@@ -5495,7 +5505,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.14"
+    "version": "0.101.16"
   },
   "openapi": "3.0.0",
   "paths": {

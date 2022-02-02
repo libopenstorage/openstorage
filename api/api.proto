@@ -941,6 +941,8 @@ message Volume {
   MountOptions sharedv4_mount_options = 30;
   // DerivedIoProfile the IO profile determined from the pattern
   IoProfile derived_io_profile = 31;
+  // InTrashcan if the volume is in trashcan
+  bool in_trashcan = 32;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -965,6 +967,8 @@ message Stats {
   uint64 bytes_used = 9;
   // Interval in ms during which stats were collected
   uint64 interval_ms = 10;
+  // Unique Blocks
+  uint64 unique_blocks = 14;
 }
 
 // Provides details on exclusive and shared storage used by
@@ -4890,7 +4894,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 14;
+    Patch = 16;
   }
 
   // The following cannot be set to use the enum Version because the REST
