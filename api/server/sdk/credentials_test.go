@@ -1176,3 +1176,165 @@ func TestSdkCredentialDeleteReferencesFailed(t *testing.T) {
 	_, ok := status.FromError(err)
 	assert.True(t, ok)
 }
+
+func TestSdkAWSCredentialUpdateSuccess(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		UseProxy:      true,
+		IamPolicy:     false,
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey:        "dummy-access",
+				SecretKey:        "dummy-secret",
+				Endpoint:         "dummy-endpoint",
+				Region:           "dummy-region",
+				DisableSsl:       true,
+				DisablePathStyle: false,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "s3"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
+	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredDisableSSL] = "true"
+	params[api.OptCredDisablePathStyle] = "false"
+	params[api.OptCredProxy] = "true"
+	params[api.OptCredIAMPolicy] = "false"
+	params[api.OptCredStorageClass] = ""
+	uuid := "good-uuid"
+
+	enumAws := map[string]interface{}{
+		api.OptCredType:             "s3",
+		api.OptCredName:             "test",
+		api.OptCredEncrKey:          "key",
+		api.OptCredAccessKey:        "dummy-access",
+		api.OptCredSecretKey:        "dummy-secret",
+		api.OptCredEndpoint:         "dummy-endpoint",
+		api.OptCredRegion:           "dummy-region",
+		api.OptCredDisableSSL:       "true",
+		api.OptCredBucket:           "mybucket",
+		api.OptCredDisablePathStyle: "false",
+		api.OptCredProxy:            "false",
+		api.OptCredIAMPolicy:        "false",
+	}
+	enumerateData := map[string]interface{}{
+		uuid: enumAws,
+	}
+
+	s.MockDriver().
+		EXPECT().
+		CredsCreate(params).
+		Return(uuid, nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsUpdate(uuid, params).
+		Return(nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsEnumerate().
+		Return(enumerateData, nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Create AWS Credentials
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+	// Update Credentials
+	updateReq := &api.SdkCredentialUpdateRequest{
+		CredentialId: uuid,
+		UpdateReq:    req,
+	}
+
+	_, err = c.Update(context.Background(), updateReq)
+	assert.NoError(t, err)
+}
+
+func TestSdkAWSCredentialUpdateFailed(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		UseProxy:      true,
+		IamPolicy:     false,
+		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
+			AwsCredential: &api.SdkAwsCredentialRequest{
+				AccessKey:        "dummy-access",
+				SecretKey:        "dummy-secret",
+				Endpoint:         "dummy-endpoint",
+				Region:           "dummy-region",
+				DisableSsl:       true,
+				DisablePathStyle: false,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "s3"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredRegion] = req.GetAwsCredential().GetRegion()
+	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
+	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
+	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredDisableSSL] = "true"
+	params[api.OptCredDisablePathStyle] = "false"
+	params[api.OptCredProxy] = "true"
+	params[api.OptCredIAMPolicy] = "false"
+	params[api.OptCredStorageClass] = ""
+	uuid := "good-uuid"
+
+	s.MockDriver().
+		EXPECT().
+		CredsCreate(params).
+		Return(uuid, nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Create Credentials
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+
+	// Update Credentials
+	updateReq := &api.SdkCredentialUpdateRequest{
+		UpdateReq: req,
+	}
+	// Update Credentials
+	_, err = c.Update(context.Background(), updateReq)
+	assert.Error(t, err)
+}

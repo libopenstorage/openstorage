@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.22 - (02/03/2022)
+
+* Add new api to upadte existing credentials
+
 ### v0.101.21 - (02/01/2022)
 
 * Add support for per-volume throttling of IOPS and/or bandwidth

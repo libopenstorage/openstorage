@@ -589,3 +589,186 @@ func validateAndDeleteIfInvalid(ctx context.Context, s *CredentialServer, uuid s
 
 	return nil
 }
+
+// Update method modifies previously created credentials
+func (s *CredentialServer) Update(
+	ctx context.Context,
+	req *api.SdkCredentialUpdateRequest,
+) (*api.SdkCredentialUpdateResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetCredentialId()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply credentialId")
+	} else if aws := req.UpdateReq.GetAwsCredential(); aws != nil {
+		return s.awsUpdate(ctx, req.UpdateReq, aws, req.GetCredentialId())
+	} else if azure := req.UpdateReq.GetAzureCredential(); azure != nil {
+		return s.azureUpdate(ctx, req.UpdateReq, azure, req.GetCredentialId())
+	} else if google := req.UpdateReq.GetGoogleCredential(); google != nil {
+		return s.googleUpdate(ctx, req.UpdateReq, google, req.GetCredentialId())
+	}
+	return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
+}
+
+func (s *CredentialServer) awsUpdate(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	aws *api.SdkAwsCredentialRequest,
+	credId string,
+) (*api.SdkCredentialUpdateResponse, error) {
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "s3"
+	params[api.OptCredName] = req.GetName()
+	// Users dont have to provide there if they dont want to change this
+	if len(req.GetEncryptionKey()) != 0 {
+		params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	}
+	if len(req.GetBucket()) != 0 {
+		params[api.OptCredBucket] = req.GetBucket()
+	}
+	if len(aws.GetRegion()) != 0 {
+		params[api.OptCredRegion] = aws.GetRegion()
+	}
+	if len(aws.GetEndpoint()) != 0 {
+		params[api.OptCredEndpoint] = aws.GetEndpoint()
+	}
+	if len(aws.GetAccessKey()) != 0 {
+		params[api.OptCredAccessKey] = aws.GetAccessKey()
+	}
+	if len(aws.GetSecretKey()) != 0 {
+		params[api.OptCredSecretKey] = aws.GetSecretKey()
+	}
+	// Users have to provide correct values, whether they want to change it or not
+	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
+
+	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
+	params[api.OptCredStorageClass] = fmt.Sprintf("%v", req.GetS3StorageClass())
+	err := s.update(ctx, req, params, credId)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to create aws credentials: %v",
+			err.Error())
+	}
+
+	return &api.SdkCredentialUpdateResponse{}, nil
+}
+
+func (s *CredentialServer) azureUpdate(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	azure *api.SdkAzureCredentialRequest,
+	credId string,
+) (*api.SdkCredentialUpdateResponse, error) {
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "azure"
+	params[api.OptCredName] = req.GetName()
+	if len(req.GetEncryptionKey()) != 0 {
+		params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	}
+	if len(req.GetBucket()) != 0 {
+		params[api.OptCredBucket] = req.GetBucket()
+	}
+	if len(azure.GetAccountKey()) != 0 {
+		params[api.OptCredAzureAccountKey] = azure.GetAccountKey()
+	}
+	if len(azure.GetAccountName()) != 0 {
+		params[api.OptCredAzureAccountName] = azure.GetAccountName()
+	}
+
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
+
+	err := s.update(ctx, req, params, credId)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to update Azure credentials: %v",
+			err.Error())
+	}
+
+	return &api.SdkCredentialUpdateResponse{}, nil
+}
+
+func (s *CredentialServer) googleUpdate(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	google *api.SdkGoogleCredentialRequest,
+	credId string,
+) (*api.SdkCredentialUpdateResponse, error) {
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "google"
+	params[api.OptCredName] = req.GetName()
+	if len(req.GetEncryptionKey()) != 0 {
+		params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	}
+	if len(req.GetBucket()) != 0 {
+		params[api.OptCredBucket] = req.GetBucket()
+	}
+	if len(google.GetProjectId()) != 0 {
+		params[api.OptCredGoogleProjectID] = google.GetProjectId()
+	}
+	if len(google.GetJsonKey()) != 0 {
+		params[api.OptCredGoogleJsonKey] = google.GetJsonKey()
+	}
+	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
+	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())
+
+	err := s.update(ctx, req, params, credId)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to update Google credentials: %v",
+			err.Error())
+	}
+
+	return &api.SdkCredentialUpdateResponse{}, nil
+}
+
+func (s *CredentialServer) update(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	params map[string]string,
+	credId string,
+) error {
+	if params == nil || req == nil {
+		return fmt.Errorf("params and/or request is nil and cannot update credentials")
+	}
+	if s.driver(ctx) == nil {
+		return status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if credId == "" {
+		return status.Error(codes.InvalidArgument, "Must provide credentials uuid")
+	}
+
+	// Check ownership
+	resp, err := s.Inspect(ctx, &api.SdkCredentialInspectRequest{
+		CredentialId: credId,
+	})
+	// This checks at least for READ access type to credential
+	if err != nil {
+		return err
+	}
+	// This checks for admin access type to credential to be able to update it
+	if !resp.GetOwnership().IsPermittedByContext(ctx, api.Ownership_Admin) {
+		return status.Errorf(
+			codes.PermissionDenied,
+			"Only admin access type to credential is allowed to update %v",
+			credId)
+	}
+
+	return s.driver(ctx).CredsUpdate(credId, params)
+}

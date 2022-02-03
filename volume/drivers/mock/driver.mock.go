@@ -476,6 +476,20 @@ func (mr *MockVolumeDriverMockRecorder) CredsEnumerate() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsEnumerate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsEnumerate))
 }
 
+// CredsUpdate mocks base method.
+func (m *MockVolumeDriver) CredsUpdate(arg0 string, arg1 map[string]string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CredsUpdate", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// CredsUpdate indicates an expected call of CredsUpdate.
+func (mr *MockVolumeDriverMockRecorder) CredsUpdate(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CredsUpdate", reflect.TypeOf((*MockVolumeDriver)(nil).CredsUpdate), arg0, arg1)
+}
+
 // CredsValidate mocks base method.
 func (m *MockVolumeDriver) CredsValidate(arg0 string) error {
 	m.ctrl.T.Helper()
