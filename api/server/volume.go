@@ -638,9 +638,22 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 			ScanPolicy: spec.ScanPolicy,
 		}
 	}
+
 	if spec.ProxyWrite != vol.Spec.ProxyWrite {
 		newSpec.ProxyWriteOpt = &api.VolumeSpecUpdate_ProxyWrite{
 			ProxyWrite: spec.ProxyWrite,
+		}
+	}
+
+	if spec.IoThrottle != nil {
+		newSpec.IoThrottleOpt = &api.VolumeSpecUpdate_IoThrottle{
+			IoThrottle: spec.IoThrottle,
+		}
+	}
+
+	if spec.AutoFstrim != vol.Spec.AutoFstrim {
+		newSpec.AutoFstrimOpt = &api.VolumeSpecUpdate_AutoFstrim{
+			AutoFstrim: spec.AutoFstrim,
 		}
 	}
 

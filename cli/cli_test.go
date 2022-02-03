@@ -43,7 +43,8 @@ func TestCmdMarshalProto(t *testing.T) {
  "storage_policy": "",
  "fp_preference": false,
  "xattr": "UNSPECIFIED",
- "proxy_write": false
+ "proxy_write": false,
+ "auto_fstrim": false
 }`,
 		data,
 	)
