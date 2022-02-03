@@ -2,13 +2,17 @@
 
 ## Releases
 
+### v0.101.17 - (02/02/2022)
+
+* Added a new cluster pairing mode for OneTimeMigration.
+
 ### v0.101.16 - (02/01/2022)
 
 * Remove unused fields from volume spec and VolumeState
 
 ### v0.101.15 - (02/01/2022)
 
-* Add Trashcan volume objects 
+* Add Trashcan volume objects
 
 ### v0.101.14 - (09/28/2021)
 

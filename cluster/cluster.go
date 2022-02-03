@@ -158,6 +158,9 @@ type ClusterListenerPairOps interface {
 
 	// ValidatePair is called when we get a validate pair request
 	ValidatePair(pair *api.ClusterPairInfo) error
+
+	// GetPairMode returns the pairing mode
+	GetPairMode() api.ClusterPairMode_Mode
 }
 
 // ClusterListenerAlertOps is a wrapper over ClusterAlerts interface
@@ -543,6 +546,10 @@ func (nc *NullClusterListener) ValidatePair(
 	pair *api.ClusterPairInfo,
 ) error {
 	return nil
+}
+
+func (nc *NullClusterListener) GetPairMode() api.ClusterPairMode_Mode {
+	return api.ClusterPairMode_Default
 }
 
 // StoragePoolProvider is the backing provider for openstorage SDK operations on storage pools
