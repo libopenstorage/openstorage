@@ -153,6 +153,7 @@ func (c *ClusterManager) RefreshPair(
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: pair.Token,
+		CredentialId:       pair.Options[api.OptRemoteCredUUID],
 	}
 
 	endpoints := pair.CurrentEndpoints
