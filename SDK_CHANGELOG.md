@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.133.0 - (2/3/2022)
+
+* Renumbered the fields to match release branches.
+
 ### v0.132.0 - (1/31/2022)
 
 * Added a new cluster pairing mode for OneTimeMigration.
