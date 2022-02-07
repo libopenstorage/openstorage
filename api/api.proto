@@ -254,6 +254,13 @@ message StoragePool {
   StoragePoolOperation last_operation = 11;
 }
 
+// SchedulerTopology defines the topology information of the storage node
+// in scheduler context
+message SchedulerTopology {
+    // Key-value pairs defining the topology of the node
+    map<string, string> labels = 1;
+}
+
 // StoragePoolOperation defines an operation being performed on a storage pool
 message StoragePoolOperation {
   // Type is the type of the operation
@@ -1553,6 +1560,8 @@ message StorageNode {
   HardwareType HWType = 18;
   // Determine if the node is secured
   SecurityStatus security_status = 19;
+  // Topology information of the node in scheduler context
+  SchedulerTopology scheduler_topology = 20;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -5034,7 +5043,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 133;
+    Minor = 134;
     // SDK version patch value of this specification
     Patch = 0;
   }

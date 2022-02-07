@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.134.0 - (2/7/2022)
+
+* Add scheduler topology field to the StorageNode object.
+
 ### v0.133.0 - (2/3/2022)
 
 * Renumbered the fields to match release branches.
@@ -9,7 +13,6 @@
 ### v0.132.0 - (1/31/2022)
 
 * Added a new cluster pairing mode for OneTimeMigration.
-
 
 ### v0.131.0 - (1/15/2022)
 
