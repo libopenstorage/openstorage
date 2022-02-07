@@ -34,6 +34,102 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+func TestGetNodeInfo(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewNodeClient(s.Conn())
+
+	// TestCase; Error in cluster enumerate
+	cluster := api.Cluster{NodeId: "node-1"}
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(cluster, fmt.Errorf("enumerate error")).
+		Times(1)
+
+	_, err := c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "enumerate error")
+
+	// TestCase: Error in cluster inspect
+	node := api.Node{}
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(cluster, nil).
+		AnyTimes()
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(node, fmt.Errorf("inspect error")).
+		Times(1)
+
+	_, err = c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "inspect error")
+
+	// TestCase: Successful node info
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(node, nil).
+		Times(1)
+
+	res, err := c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "node-1", res.NodeId)
+	assert.Empty(t, res.AccessibleTopology)
+
+	// TestCase: Node info with empty topology
+	node.SchedulerTopology = &api.SchedulerTopology{}
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(node, nil).
+		Times(1)
+
+	res, err = c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "node-1", res.NodeId)
+	assert.Empty(t, res.AccessibleTopology)
+
+	// TestCase: Node info with empty topology labels
+	node.SchedulerTopology.Labels = map[string]string{}
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(node, nil).
+		Times(1)
+
+	res, err = c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "node-1", res.NodeId)
+	assert.Empty(t, res.AccessibleTopology)
+
+	// TestCase: Node info with empty topology labels
+	node.SchedulerTopology.Labels["zone"] = "zone-1"
+	node.SchedulerTopology.Labels["region"] = "region-1"
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(node, nil).
+		AnyTimes()
+
+	res, err = c.NodeGetInfo(context.Background(), &csi.NodeGetInfoRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, "node-1", res.NodeId)
+	assert.NotEmpty(t, res.AccessibleTopology)
+	assert.Len(t, res.AccessibleTopology.Segments, 2)
+	assert.Equal(t, res.AccessibleTopology.Segments["zone"], "zone-1")
+	assert.Equal(t, res.AccessibleTopology.Segments["region"], "region-1")
+}
+
 func TestNodePublishVolumeBadArguments(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
