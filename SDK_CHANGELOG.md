@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.23 - (02/07/2022)
+
+* Add scheduler topology field to the StorageNode object
+
 ### v0.101.22 - (02/03/2022)
 
 * Add new api to upadte existing credentials
@@ -12,7 +16,7 @@
 
 ### v0.101.20 - (02/01/2022)
 
-* Add api for auto fstrim disk usage report 
+* Add api for auto fstrim disk usage report
 
 ### v0.101.19 - (02/01/2022)
 

@@ -1609,6 +1609,19 @@
         },
         "type": "object"
       },
+      "apiSchedulerTopology": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Key-value pairs defining the topology of the node",
+            "type": "object"
+          }
+        },
+        "title": "SchedulerTopology defines the topology information of the storage node\nin scheduler context",
+        "type": "object"
+      },
       "apiSdkAlertsAlertTypeQuery": {
         "description": "SdkAlertsAlertTypeQuery queries for alerts using alert type\nand it requires that resource type be provided as well.",
         "properties": {
@@ -4468,6 +4481,9 @@
             "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler.",
             "type": "string"
           },
+          "scheduler_topology": {
+            "$ref": "#/components/schemas/apiSchedulerTopology"
+          },
           "security_status": {
             "$ref": "#/components/schemas/StorageNodeSecurityStatus"
           },
@@ -5635,7 +5651,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.22"
+    "version": "0.101.23"
   },
   "openapi": "3.0.0",
   "paths": {

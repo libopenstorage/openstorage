@@ -254,6 +254,13 @@ message StoragePool {
   StoragePoolOperation last_operation = 11;
 }
 
+// SchedulerTopology defines the topology information of the storage node
+// in scheduler context
+message SchedulerTopology {
+    // Key-value pairs defining the topology of the node
+    map<string, string> labels = 1;
+}
+
 // StoragePoolOperation defines an operation being performed on a storage pool
 message StoragePoolOperation {
   // Type is the type of the operation
@@ -1040,12 +1047,12 @@ message FstrimVolumeUsageInfo {
   string volume_name = 1;
   // Volume size
   uint64 volume_size = 2;
-  // Disk usage in bytes 
+  // Disk usage in bytes
   uint64 du_usage = 3;
   // Disk usage seen in Portworx in bytes
   uint64 px_usage = 4;
-  // If auto fstrim is performed to the volume, if not, why   
-  string perform_auto_fstrim = 5; 
+  // If auto fstrim is performed to the volume, if not, why
+  string perform_auto_fstrim = 5;
 }
 
 // Purges the RelaxedReclaim queue
@@ -1535,6 +1542,8 @@ message StorageNode {
   HardwareType HWType = 18;
   // Determine if the node is secured
   SecurityStatus security_status = 19;
+  // Topology information of the node in scheduler context
+  SchedulerTopology scheduler_topology = 20;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -2425,7 +2434,7 @@ service OpenStorageCredentials {
         body: "*"
       };
     }
- 
+
   // input is very same as credential create
   rpc Update(SdkCredentialUpdateRequest)
     returns (SdkCredentialUpdateResponse) {
@@ -4999,7 +5008,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 22;
+    Patch = 23;
   }
 
   // The following cannot be set to use the enum Version because the REST

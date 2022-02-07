@@ -258,6 +258,8 @@ type Node struct {
 	HWType HardwareType
 	// Determine if the node is secure with authentication and authorization
 	SecurityStatus StorageNode_SecurityStatus
+	// SchedulerTopology topology information of the node in scheduler context
+	SchedulerTopology *SchedulerTopology
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -978,6 +980,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		Hostname:          s.Hostname,
 		HWType:            s.HWType,
 		SecurityStatus:    s.SecurityStatus,
+		SchedulerTopology: s.SchedulerTopology,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
