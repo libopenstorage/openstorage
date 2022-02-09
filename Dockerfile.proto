@@ -1,25 +1,29 @@
 #
 # Do not use directly, use `make docker-proto` instead
 #
-FROM fedora
+FROM golang
 MAINTAINER luis@portworx.com
 
 ENV GOPATH=/go
-RUN dnf -y install \
-	golang-bin \
+RUN apt update
+RUN rm -rf /usr/local/go
+RUN apt-get install -y unzip
+RUN wget -nv https://dl.google.com/go/go1.16.4.linux-amd64.tar.gz && tar -xf go1.16.4.linux-amd64.tar.gz && mv go /usr/local  
+RUN curl -sL https://deb.nodesource.com/setup_14.x | bash 
+RUN curl -LO https://github.com/protocolbuffers/protobuf/releases/download/v3.14.0/protoc-3.14.0-linux-x86_64.zip
+RUN unzip protoc-3.14.0-linux-x86_64.zip -d /usr/local
+RUN apt-get -y -qq install \
 	python \
-	python-pip \
-	gem \
-	npm \
+	python3-pip \
+	rubygems \
+	nodejs \
 	make \
-	git \
-	protobuf-compiler \
-	protobuf-devel && dnf -y clean all && rm -rf /var/cache/yum
-RUN pip install virtualenv
+	git 
+RUN pip3 install virtualenv
 RUN gem install grpc && gem install grpc-tools
-RUN go get -u github.com/golang/protobuf/protoc-gen-go && \
+RUN GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go && \
 	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 # Lock protoc-gen-go version to v1.1.0.
 #
@@ -33,7 +37,7 @@ RUN go get -u github.com/golang/protobuf/protoc-gen-go && \
 # Which may apply to project depending on OpenStorage.
 #
 WORKDIR /go/src/github.com/golang/protobuf
-RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go
+RUN git checkout v1.5.2 && go install github.com/golang/protobuf/protoc-gen-go@v1.5.2
 
 
 # Lock protoc-gen-swagger to v1.4.1
@@ -42,8 +46,8 @@ RUN git checkout v1.1.0 && go install github.com/golang/protobuf/protoc-gen-go
 #
 WORKDIR /go/src/github.com/grpc-ecosystem/grpc-gateway
 RUN git checkout v1.4.1 && \
-    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger && \
-	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+    go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0 && \
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway@v1.16.0
 
 # Install swagger 2.0 to OpenApi 3.0 converter
 RUN npm install -g swagger2openapi

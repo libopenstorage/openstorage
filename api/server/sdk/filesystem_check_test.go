@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,10 +31,7 @@ func TestSdkFilesystemCheckCheckHealth(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStart(&api.SdkFilesystemCheckStartRequest{
-			VolumeId: testVolumeId,
-			Mode:     testMode,
-		}).
+		FilesystemCheckStart(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -69,9 +67,7 @@ func TestSdkFilesystemCheckCheckHealthStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStatus(&api.SdkFilesystemCheckStatusRequest{
-			VolumeId: testVolumeId,
-		}).
+		FilesystemCheckStatus(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -108,10 +104,7 @@ func TestSdkFilesystemCheckFixAll(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStart(&api.SdkFilesystemCheckStartRequest{
-			VolumeId: testVolumeId,
-			Mode:     testMode,
-		}).
+		FilesystemCheckStart(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -147,9 +140,7 @@ func TestSdkFilesystemCheckFixAllStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStatus(&api.SdkFilesystemCheckStatusRequest{
-			VolumeId: testVolumeId,
-		}).
+		FilesystemCheckStatus(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -186,10 +177,7 @@ func TestSdkFilesystemCheckFixSafe(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStart(&api.SdkFilesystemCheckStartRequest{
-			VolumeId: testVolumeId,
-			Mode:     testMode,
-		}).
+		FilesystemCheckStart(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -225,9 +213,7 @@ func TestSdkFilesystemCheckFixSafeStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStatus(&api.SdkFilesystemCheckStatusRequest{
-			VolumeId: testVolumeId,
-		}).
+		FilesystemCheckStatus(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -258,9 +244,7 @@ func TestSdkFilesystemCheckStop(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemCheckStop(&api.SdkFilesystemCheckStopRequest{
-			VolumeId: testVolumeId,
-		}).
+		FilesystemCheckStop(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 	// Setup client

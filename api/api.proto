@@ -15,7 +15,7 @@ import "google/api/annotations.proto";
 
 package openstorage.api;
 
-option go_package = "api";
+option go_package = "./api;api";
 option java_multiple_files = true;
 option java_package = "com.openstorage.api";
 
@@ -252,6 +252,13 @@ message StoragePool {
   string uuid = 10;
   // LastOperation is the most recent operation being performed on a storage pool
   StoragePoolOperation last_operation = 11;
+}
+
+// SchedulerTopology defines the topology information of the storage node
+// in scheduler context
+message SchedulerTopology {
+    // Key-value pairs defining the topology of the node
+    map<string, string> labels = 1;
 }
 
 // StoragePoolOperation defines an operation being performed on a storage pool
@@ -661,14 +668,16 @@ message VolumeSpec {
   ProxySpec proxy_spec = 41;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 42;
+  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
+  Sharedv4Spec sharedv4_spec = 43;
   // Autofstrim indicates that fstrim would be run on this volume automatically, without user intervention
-  bool auto_fstrim = 43;
-  // NumberOfChunks indicates how many chunks must be created, 0 and 1 both mean 1
-  uint32 number_of_chunks = 44;
+  bool auto_fstrim = 44;
   // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
   IoThrottle io_throttle = 45;
-  // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
-  Sharedv4Spec sharedv4_spec = 46;
+  // NumberOfChunks indicates how many chunks must be created, 0 and 1 both mean 1
+  uint32 number_of_chunks = 46;
+  // Enable readahead for the volume
+  bool readahead = 47;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -732,12 +741,14 @@ message VolumeSpecUpdate {
   oneof proxy_spec_opt { ProxySpec proxy_spec = 36;}
   // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
   oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 37;}
-  // Autofstrim is set to true, to enable automatic fstrim on this volume
-  oneof auto_fstrim_opt { bool auto_fstrim = 38; }
-  // io_throttle_opt defines the io throttle limits for the volume
-  oneof io_throttle_opt { IoThrottle io_throttle = 39;}
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
-  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 40; }
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 38; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 39; }
+  // io_throttle_opt defines the io throttle limits for the volume
+  oneof io_throttle_opt { IoThrottle io_throttle = 40;}
+  // Enable readahead for the volume
+  oneof readahead_opt { bool readahead  = 41; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -817,16 +828,18 @@ message VolumeSpecPolicy {
   oneof proxy_write_opt { bool proxy_write = 60; }
   // proxy_spec_opt provides the spec for a proxy volume.
   oneof proxy_spec_opt { ProxySpec proxy_spec = 61; }
-  // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
-  oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 62; }
   // fastpath preference
-  oneof fastpath_opt { bool fastpath = 63; }
-  // Autofstrim is set to true, to enable automatic fstrim on this volume
-  oneof auto_fstrim_opt { bool auto_fstrim = 64; }
-  // io_throttle_opt defines the io throttle limits for the volume
-  oneof io_throttle_opt { IoThrottle io_throttle = 65;}
+  oneof fastpath_opt { bool fastpath = 62; }
+  // sharedv4_service_spec_opt provides the spec for sharedv4 volume service
+  oneof sharedv4_service_spec_opt { Sharedv4ServiceSpec sharedv4_service_spec = 63; }
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
-  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 66; }
+  oneof sharedv4_spec_opt { Sharedv4Spec sharedv4_spec = 64; }
+  // Autofstrim is set to true, to enable automatic fstrim on this volume
+  oneof auto_fstrim_opt { bool auto_fstrim = 65; }
+  // io_throttle_opt defines the io throttle limits for the volume
+  oneof io_throttle_opt { IoThrottle io_throttle = 66;}
+  // Enable readahead for the volume
+  oneof readahead_opt { bool readahead  = 67; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -969,10 +982,10 @@ message Volume {
   // Sharedv4MountOptions are the runtime mount options that will be used while mounting a sharedv4 volume
   // from a node where the volume replica does not exist
   MountOptions sharedv4_mount_options = 30;
-  // InTrashcan if the volume is in trashcan
-  bool in_trashcan = 31;
   // DerivedIoProfile the IO profile determined from the pattern
-  IoProfile derived_io_profile = 32;
+  IoProfile derived_io_profile = 31;
+  // InTrashcan if the volume is in trashcan
+  bool in_trashcan = 32;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -1044,6 +1057,20 @@ message VolumeUsage {
 message VolumeUsageByNode {
   // VolumeUsage returns list of VolumeUsage for given node
   repeated VolumeUsage volume_usage= 1;
+}
+
+// FstrimVolUsageInfo
+message FstrimVolumeUsageInfo {
+  // Volume name
+  string volume_name = 1;
+  // Volume size
+  uint64 volume_size = 2;
+  // Disk usage in bytes
+  uint64 du_usage = 3;
+  // Disk usage seen in Portworx in bytes
+  uint64 px_usage = 4;
+  // If auto fstrim is performed to the volume, if not, why
+  string perform_auto_fstrim = 5;
 }
 
 // Purges the RelaxedReclaim queue
@@ -1533,6 +1560,8 @@ message StorageNode {
   HardwareType HWType = 18;
   // Determine if the node is secured
   SecurityStatus security_status = 19;
+  // Topology information of the node in scheduler context
+  SchedulerTopology scheduler_topology = 20;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -1657,6 +1686,15 @@ service OpenStorageFilesystemTrim {
         get: "/v1/filesystem-trim/auto-fstrim-status"
       };
     }
+
+  // Usage of a filesystem Trim background operation on all locally mounted
+  // volume
+  rpc AutoFSTrimUsage(SdkAutoFSTrimUsageRequest)
+  returns (SdkAutoFSTrimUsageResponse){
+    option(google.api.http) = {
+      get: "/v1/filesystem-trim/auto-fstrim-usage"
+    };
+  }
 
   // Stop a filesystem Trim background operation on a mounted volume, if any
   rpc Stop(SdkFilesystemTrimStopRequest)
@@ -2421,6 +2459,7 @@ service OpenStorageCredentials {
         body: "*"
       };
     }
+
   // input is very same as credential create
   rpc Update(SdkCredentialUpdateRequest)
     returns (SdkCredentialUpdateResponse) {
@@ -3732,6 +3771,8 @@ message SdkDiagsCollectRequest {
   int64 timeout_mins = 5;
   // Live is an optional flag if true will collect live cores from running processes of the driver
   bool live = 6;
+  // Filename is an optional flag only to be used for testing purposes.
+  string filename = 7;
 }
 
 // SdkDiagsCollectResponse defines a response for an SDK request to collect diags
@@ -4819,6 +4860,19 @@ message SdkAutoFSTrimStatusResponse {
   string message = 2;
 }
 
+// SdkAutoFSTrimUsageRequest defines a request to get status of autofs trim operation
+message SdkAutoFSTrimUsageRequest {
+}
+
+// SdkAutoFSTrimUsageResponse defines the response for a
+// SdkAutoFSTrimUsageRequest.
+message SdkAutoFSTrimUsageResponse {
+  // map of fstrim disk usage and volume name
+  map<string, FstrimVolumeUsageInfo> usage = 1;
+  // Text blob containing ASCII text providing details of the operation
+  string message = 2;
+}
+
 // SdkFilesystemTrimStopRequest defines a request to stop a background
 // filesystem trim operation
 message SdkFilesystemTrimStopRequest {
@@ -4989,7 +5043,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 126;
+    Minor = 134;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5194,6 +5248,8 @@ message ClusterPairMode {
         Default = 0;
         // Paired for DisasterRecovery
         DisasterRecovery = 1;
+        // Paired for one-time migration
+        OneTimeMigration = 2;
     }
 }
 
@@ -5570,12 +5626,14 @@ message RestoreVolumeSpec {
   ProxySpec proxy_spec = 26;
   // Sharedv4ServiceSpec specifies a spec for configuring a service for a sharedv4 volume
   Sharedv4ServiceSpec sharedv4_service_spec = 27;
-  // Autofstrim is true if automatic fstrim is enabled for the volume
-  RestoreParamBoolType auto_fstrim = 28;
-  // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
-  IoThrottle io_throttle = 29;
   // Sharedv4Spec specifies common properties of sharedv4 and sharedv4 service volumes
-  Sharedv4Spec sharedv4_spec = 30;
+  Sharedv4Spec sharedv4_spec = 28;
+  // Autofstrim is true if automatic fstrim is enabled for the volume
+  RestoreParamBoolType auto_fstrim = 29;
+  // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
+  IoThrottle io_throttle = 30;
+  // Enable readahead for the volume
+  RestoreParamBoolType readahead = 31;
 }
 
 // Request message to get the volume catalog

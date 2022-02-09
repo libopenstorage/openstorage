@@ -58,16 +58,19 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	update-test-deps \
 	vendor-update \
 	vendor-without-update \
+	vendor-gomod \
 	vendor \
 	build \
 	install \
 	proto \
 	lint \
 	vet \
+	fmt \
 	packr \
 	errcheck \
 	pretest \
 	test \
+	hack-tests \
 	docs \
 	docker-build-osd-dev \
 	docker-build \
@@ -84,6 +87,10 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	generate-mockfiles \
 	e2e \
 	verify \
+	osd-tests \
+	pr-lint \
+	pr-verify \
+	pr-unit-tests \
 	sdk-check-version
 
 
@@ -93,67 +100,59 @@ all: build $(OSDSANITY)
 #
 $(GOPATH)/bin/golint:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/lint/golint
+	GO111MODULE=off go get -u github.com/golang/lint/golint
 
 $(GOPATH)/bin/errcheck:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/kisielk/errcheck
+	GO111MODULE=off go get -u github.com/kisielk/errcheck
 
 $(GOPATH)/bin/protoc-gen-go:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/protobuf/protoc-gen-go
+	GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go
 
 $(GOPATH)/bin/protoc-gen-grpc-gateway:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-$(GOPATH)/bin/govendor:
+$(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/kardianos/govendor
-
-$(GOPATH)/bin/packr:
-	@echo "Installing missing $@ ..."
-	go get -u github.com/gobuffalo/packr/...
+	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
 
 $(GOPATH)/bin/cover:
 	@echo "Installing missing $@ ..."
-	go get -u golang.org/x/tools/cmd/cover
+	GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
 $(GOPATH)/bin/gotestcover:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/pierrre/gotestcover
+	GO111MODULE=off go get -u github.com/pierrre/gotestcover
 
 # DEPS build rules
 #
 
 deps:
-	go get -d -v $(PKGS)
+	GO111MODULE=off go get -d -v $(PKGS)
 
 update-deps:
-	go get -d -v -u -f $(PKGS)
+	GO111MODULE=off go get -d -v -u -f $(PKGS)
 
 test-deps:
-	go get -d -v -t $(PKGS)
+	GO111MODULE=off go get -d -v -t $(PKGS)
 
 update-test-deps:
-	go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
+	GO111MODULE=off go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
 	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
-vendor-without-update: $(GOPATH)/bin/govendor
-	rm -rf vendor
-	govendor init
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
+vendor-gomod:
+	GOOS=linux GOARCH=amd64 go mod tidy
+	GOOS=linux GOARCH=amd64 go mod vendor
 
-vendor: vendor-update vendor-without-update
+vendor: vendor-gomod
 
 build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
@@ -172,15 +171,16 @@ $(OSDSANITY)-clean:
 	@$(MAKE) -C cmd/osd-sanity clean
 
 docker-build-proto:
-	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
+	docker build -t quay.io/openstorage/osd-proto --network=host -f Dockerfile.proto .
 
-docker-proto: $(GOPATH)/bin/protoc-gen-go
+# the docker-build-proto should be there temporarily for the go mod upgrade
+docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
-		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin" \
+		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin:/usr/local/go/bin" \
 		quay.io/openstorage/osd-proto \
 			make proto mockgen
 
@@ -221,7 +221,13 @@ lint: $(GOPATH)/bin/golint
 	golint $(PKGS)
 
 vet:
-	go vet $(PKGS)
+	@if [ $(shell go vet $(PKGS) | grep -v ".*contains sync.Mutex.*" | wc -l) != 0 ]; then\
+		echo "go vet failed (ignore the errors associate with sync.Mutex";\
+		exit 1;\
+	fi
+	
+fmt:
+	go fmt $(go list ./... | grep -v vendor) | grep -v "api.pb.go" | wc -l | grep "^0";
 
 errcheck: $(GOPATH)/bin/errcheck
 	errcheck -tags "$(TAGS)" $(PKGS)
@@ -231,7 +237,7 @@ pretest: lint vet errcheck
 install-sdk-test:
 ifndef HAS_SDKTEST
 	@echo "Installing sdk-test"
-	@-go get -d -u github.com/libopenstorage/sdk-test 1>/dev/null 2>&1
+	@-GO111MODULE=off go get -d -u github.com/libopenstorage/sdk-test 1>/dev/null 2>&1
 	@(cd $(GOPATH)/src/github.com/libopenstorage/sdk-test/cmd/sdk-test && make install )
 endif
 
@@ -245,9 +251,9 @@ test: packr
 docs:
 	go generate ./cmd/osd/main.go
 
-packr: $(GOPATH)/bin/packr
-	packr clean
-	packr
+packr: $(GOPATH)/bin/packr2
+	packr2 clean
+	packr2
 
 generate-mockfiles:
 	go generate $(PKGS)
@@ -408,8 +414,8 @@ sdk-check-version:
 	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
 
 mockgen:
-	go get github.com/golang/mock/gomock
-	go get github.com/golang/mock/mockgen
+	GO111MODULE=off go get github.com/golang/mock/gomock
+	GO111MODULE=off go get github.com/golang/mock/mockgen
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_cluster.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageClusterServer,OpenStorageClusterClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
@@ -419,8 +425,22 @@ mockgen:
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
 	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
+	mockgen -destination=volume/drivers/mock/driver.mock.go -package=mock github.com/libopenstorage/openstorage/volume VolumeDriver
+
+osd-tests: install
+	./hack/csi-sanity-test.sh
+	./hack/docker-integration-test.sh
 
 e2e: docker-build-osd
 	cd test && ./run.bash
 
 verify: vet sdk-check-version docker-test e2e
+
+pr-verify: vet fmt sdk-check-version
+	git-validation -run DCO,short-subject
+	make docker-proto
+	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
+	hack/check-api-version.sh
+	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
+
+pr-test: osd-tests docker-test e2e

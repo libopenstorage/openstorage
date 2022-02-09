@@ -40,14 +40,14 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 
 	minTimeout := 1 * time.Second
 	maxTimeout := 60 * time.Minute
-	defaultTimeout := 10 * time.Minute
+	defaultTimeout := 5 * time.Minute
 
 	logrus.Infof("Waiting for volume %s to become available", id)
 
 	e := util.WaitForWithContext(
 		ctx,
 		minTimeout, maxTimeout, defaultTimeout, // timeouts
-		250*time.Millisecond, // period
+		5*time.Second, // period
 		func() (bool, error) {
 			var err error
 			// Get the latest status from the volume
@@ -847,6 +847,9 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 	// AutoFstrim
 	spec.AutoFstrim = setSpecBool(vol.GetAutoFstrim(), req.GetAutoFstrim(), req.GetAutoFstrimOpt())
 
+	// Readahead
+	spec.Readahead = setSpecBool(vol.GetReadahead(), req.GetReadahead(), req.GetReadaheadOpt())
+
 	// ProxySpec
 	if req.GetIoThrottle() != nil {
 		spec.IoThrottle = req.GetIoThrottle()
@@ -1184,6 +1187,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.AutoFstrim = req.GetAutoFstrim()
+	}
+
+	// Readahead
+	if req.GetReadaheadOpt() != nil {
+		if isValidate && vol.GetReadahead() != req.GetReadahead() {
+			return vol, errMsg
+		}
+		spec.Readahead = req.GetReadahead()
 	}
 
 	// Sharedv4Spec

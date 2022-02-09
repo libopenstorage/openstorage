@@ -132,7 +132,6 @@ func (s *sdkGrpcServer) loggerInterceptor(handler func() error, fullMethod strin
 	})
 
 	logger.Info("Start")
-	s.log = logger
 	ts := time.Now()
 	err := handler()
 	duration := time.Now().Sub(ts)

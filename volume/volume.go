@@ -219,6 +219,9 @@ type FilesystemTrimDriver interface {
 	// AutoFilesystemTrimStatus returns the status of auto fs trim
 	// operations on volumes
 	AutoFilesystemTrimStatus(request *api.SdkAutoFSTrimStatusRequest) (*api.SdkAutoFSTrimStatusResponse, error)
+	// AutoFilesystemTrimUsage returns the volume usage and trimmable
+	// space of locally mounted pxd volumes
+	AutoFilesystemTrimUsage(request *api.SdkAutoFSTrimUsageRequest) (*api.SdkAutoFSTrimUsageResponse, error)
 	// FilesystemTrimStop stops a filesystem trim background operation on
 	// a specified volume, if any
 	FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error)

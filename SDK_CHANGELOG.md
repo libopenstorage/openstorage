@@ -2,6 +2,38 @@
 
 ## Releases
 
+### v0.134.0 - (2/7/2022)
+
+* Add scheduler topology field to the StorageNode object.
+
+### v0.133.0 - (2/3/2022)
+
+* Renumbered the fields to match release branches.
+
+### v0.132.0 - (1/31/2022)
+
+* Added a new cluster pairing mode for OneTimeMigration.
+
+### v0.131.0 - (1/15/2022)
+
+* Add a readahead flag in volume spec
+
+### v0.130.0 - (1/4/2022)
+
+* Add a filename field to DiagsCollectionRequest for test purposes
+
+### v0.129.0 - (11/30/2021)
+
+* Add message to show auto fstrim enable/disable info
+
+### v0.128.0 - (11/17/2021)
+
+* Add api for auto fstrim disk usage report
+
+### v0.127.0 - (11/11/2021)
+
+* Upgrade to proto3
+
 ### v0.126.0 - (09/28/2021)
 
 * Added api for auto fs trim status

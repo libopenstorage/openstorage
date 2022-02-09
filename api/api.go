@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/mohae/deepcopy"
+	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
 )
 
 // Strings for VolumeSpec
@@ -105,6 +106,7 @@ const (
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
+	SpecReadahead                           = "readahead"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -166,6 +168,8 @@ const (
 	OptCredProxy = "CredProxy"
 	// OptCredIAMPolicy if "true", indicates IAM creds to be used
 	OptCredIAMPolicy = "CredIAMPolicy"
+	// OptRemoteCredUUID is the UUID of the remote cluster credential
+	OptRemoteCredUUID = "RemoteCredUUID"
 	// OptCloudBackupID is the backID in the cloud
 	OptCloudBackupID = "CloudBackID"
 	// OptCloudBackupIgnoreCreds ignores credentials for incr backups
@@ -257,6 +261,8 @@ type Node struct {
 	HWType HardwareType
 	// Determine if the node is secure with authentication and authorization
 	SecurityStatus StorageNode_SecurityStatus
+	// SchedulerTopology topology information of the node in scheduler context
+	SchedulerTopology *SchedulerTopology
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -977,6 +983,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		Hostname:          s.Hostname,
 		HWType:            s.HWType,
 		SecurityStatus:    s.SecurityStatus,
+		SchedulerTopology: s.SchedulerTopology,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
@@ -1347,4 +1354,9 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+// GetAllEnumInfo returns an EnumInfo for every proto enum
+func GetAllEnumInfo() []protoimpl.EnumInfo {
+	return file_api_api_proto_enumTypes
 }

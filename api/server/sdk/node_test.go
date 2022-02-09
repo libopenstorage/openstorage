@@ -148,6 +148,11 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 				MemUsed:           41,
 				MemFree:           93,
 				HWType:            api.HardwareType_UnknownMachine,
+				SchedulerTopology: &api.SchedulerTopology{
+					Labels: map[string]string{
+						"foo": "bar",
+					},
+				},
 			},
 		},
 	}
@@ -160,6 +165,11 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 		MemUsed:           41,
 		MemFree:           93,
 		HWType:            api.HardwareType_UnknownMachine,
+		SchedulerTopology: &api.SchedulerTopology{
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+		},
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
@@ -339,6 +349,11 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 			"hello": "world",
 		},
 		HWType: api.HardwareType_BareMetalMachine,
+		SchedulerTopology: &api.SchedulerTopology{
+			Labels: map[string]string{
+				"foo": "bar",
+			},
+		},
 	}
 
 	cluster := api.Cluster{
@@ -378,6 +393,10 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	// Check Labels
 	assert.Len(t, rn.GetNodeLabels(), 1)
 	assert.Equal(t, rn.GetNodeLabels(), node.NodeLabels)
+
+	// Check scheduler topology
+	assert.NotNil(t, rn.GetSchedulerTopology())
+	assert.Equal(t, node.SchedulerTopology.Labels, rn.GetSchedulerTopology().GetLabels())
 }
 
 func TestSdkVolumeUsageByNode(t *testing.T) {

@@ -157,6 +157,7 @@ var (
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
 	SpecIoThrottleRdBWRegex       = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
 	SpecIoThrottleWrBWRegex       = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
+	ReadaheadRegex                = regexp.MustCompile(api.SpecReadahead + "=([A-Za-z]+),?")
 )
 
 type specHandler struct {
@@ -221,7 +222,6 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			VolumeLabels: make(map[string]string),
 		}
 	}
-
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
@@ -399,6 +399,10 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.Nodiscard = nodiscard
+				// autofstrim to follow nodiscard when not explicitly specified
+				if _, exists := opts[api.SpecAutoFstrim]; !exists {
+					spec.AutoFstrim = nodiscard
+				}
 			}
 		case api.Token:
 			// skip, if not it would be added to the labels
@@ -579,6 +583,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.AutoFstrim = autoFstrim
+			}
+		case api.SpecReadahead:
+			if readahead, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Readahead = readahead
 			}
 		case api.SpecBackendType:
 			// Treat Pure FlashArray and FlashBlade volumes as proxy volumes and store the backend type as ProxyProtocol
@@ -775,6 +785,11 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, nodiscard := d.getVal(nodiscardRegex, str); ok {
 		opts[api.SpecNodiscard] = nodiscard
+		// if nodiscard was specified and autofstrim was not specified
+		// autfstrim will follow nodoscard
+		if ok, _ := d.getVal(AutoFstrimRegex, str); !ok {
+			opts[api.SpecAutoFstrim] = nodiscard
+		}
 	}
 	if ok, storagepolicy := d.getVal(storagePolicyRegex, str); ok {
 		opts[api.StoragePolicy] = storagepolicy
@@ -833,6 +848,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
+	}
+	if ok, readahead := d.getVal(ReadaheadRegex, str); ok {
+		opts[api.SpecReadahead] = readahead
 	}
 	if ok, ioThrottleIOPS := d.getVal(SpecIoThrottleRdIOPSRegex, str); ok {
 		opts[api.SpecIoThrottleRdIOPS] = ioThrottleIOPS

@@ -29,6 +29,16 @@ func (c *ClusterManager) CreatePair(
 ) (*api.ClusterPairCreateResponse, error) {
 	remoteIp := request.RemoteClusterIp
 
+	for e := c.listeners.Front(); e != nil; e = e.Next() {
+		pairMode := e.Value.(cluster.ClusterListener).GetPairMode()
+		if pairMode == api.ClusterPairMode_DisasterRecovery &&
+			request.Mode == api.ClusterPairMode_Default {
+			// If DisasterRecovery mode is set on the listener
+			// then override the default mode
+			request.Mode = pairMode
+		}
+	}
+
 	// Pair with remote server
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
 	processRequest := &api.ClusterPairProcessRequest{
@@ -143,6 +153,7 @@ func (c *ClusterManager) RefreshPair(
 	processRequest := &api.ClusterPairProcessRequest{
 		SourceClusterId:    c.Uuid(),
 		RemoteClusterToken: pair.Token,
+		CredentialId:       pair.Options[api.OptRemoteCredUUID],
 	}
 
 	endpoints := pair.CurrentEndpoints

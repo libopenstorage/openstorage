@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
@@ -88,6 +89,21 @@ func (s *FilesystemTrimServer) AutoFSTrimStatus(
 	}
 
 	r, err := s.driver(ctx).AutoFilesystemTrimStatus(req)
+
+	return r, err
+}
+
+// Usage of auto fs trim
+func (s *FilesystemTrimServer) AutoFSTrimUsage(
+	ctx context.Context,
+	req *api.SdkAutoFSTrimUsageRequest,
+) (*api.SdkAutoFSTrimUsageResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	r, err := s.driver(ctx).AutoFilesystemTrimUsage(req)
 
 	return r, err
 }

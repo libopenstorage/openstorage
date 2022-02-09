@@ -179,8 +179,8 @@ func (m *NullClusterRemove) Remove(arg0 []api.Node, arg1 bool) error {
 }
 
 // NodeRemoveDone
-func (m *NullClusterRemove) NodeRemoveDone(arg0 string, arg1 error) {
-	return
+func (m *NullClusterRemove) NodeRemoveDone(arg0 string, arg1 error) error {
+	return ErrNotImplemented
 }
 
 // NullClusterStatus implementations
@@ -227,6 +227,10 @@ func (m *NullClusterPair) GetPair(arg0 string) (*api.ClusterPairGetResponse, err
 // RefreshPair
 func (m *NullClusterPair) RefreshPair(arg0 string) error {
 	return ErrNotImplemented
+}
+
+func (m *NullClusterPair) GetPairMode() api.ClusterPairMode_Mode {
+	return api.ClusterPairMode_Default
 }
 
 // EnumeratePairs

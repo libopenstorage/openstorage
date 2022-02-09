@@ -50,11 +50,23 @@ func (s *OsdCsiServer) NodeGetInfo(
 		return nil, status.Errorf(codes.Internal, "Unable to Enumerate cluster: %s", err)
 	}
 
-	result := &csi.NodeGetInfoResponse{
-		NodeId: clus.NodeId,
+	node, err := s.cluster.Inspect(clus.NodeId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to Inspect node %s: %s", clus.NodeId, err)
 	}
 
-	return result, nil
+	topology := &csi.Topology{}
+	if node.SchedulerTopology != nil && len(node.SchedulerTopology.Labels) > 0 {
+		topology.Segments = make(map[string]string)
+		for k, v := range node.SchedulerTopology.Labels {
+			topology.Segments[k] = v
+		}
+	}
+
+	return &csi.NodeGetInfoResponse{
+		NodeId:             clus.NodeId,
+		AccessibleTopology: topology,
+	}, nil
 }
 
 // NodePublishVolume is a CSI API call which mounts the volume on the specified

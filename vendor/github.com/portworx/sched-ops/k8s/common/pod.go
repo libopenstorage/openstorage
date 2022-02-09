@@ -2,6 +2,7 @@ package common
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 
 	schederrors "github.com/portworx/sched-ops/k8s/errors"
@@ -13,7 +14,7 @@ import (
 
 // GetPodsByOwner returns pods for the given owner and namespace
 func GetPodsByOwner(client v1.CoreV1Interface, ownerUID types.UID, namespace string) ([]corev1.Pod, error) {
-	podList, err := client.Pods(namespace).List(metav1.ListOptions{})
+	podList, err := client.Pods(namespace).List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
 		return nil, err
 	}

@@ -158,6 +158,9 @@ type ClusterListenerPairOps interface {
 
 	// ValidatePair is called when we get a validate pair request
 	ValidatePair(pair *api.ClusterPairInfo) error
+
+	// GetPairMode returns the pairing mode
+	GetPairMode() api.ClusterPairMode_Mode
 }
 
 // ClusterListenerAlertOps is a wrapper over ClusterAlerts interface
@@ -298,7 +301,7 @@ type ClusterRemove interface {
 	// Remove node(s) from the cluster permanently.
 	Remove(nodes []api.Node, forceRemove bool) error
 	// NodeRemoveDone notify cluster manager NodeRemove is done.
-	NodeRemoveDone(nodeID string, result error)
+	NodeRemoveDone(nodeID string, result error) error
 }
 
 type ClusterAlerts interface {
@@ -543,6 +546,10 @@ func (nc *NullClusterListener) ValidatePair(
 	pair *api.ClusterPairInfo,
 ) error {
 	return nil
+}
+
+func (nc *NullClusterListener) GetPairMode() api.ClusterPairMode_Mode {
+	return api.ClusterPairMode_Default
 }
 
 // StoragePoolProvider is the backing provider for openstorage SDK operations on storage pools
