@@ -542,3 +542,42 @@ func TestIoThrottleSpec(t *testing.T) {
 	require.NotNil(t, ioThrottleSpec)
 	require.Equal(t, uint32(128), ioThrottleSpec.ReadIops)
 }
+
+func TestRestoreSpecFromOpts(t *testing.T) {
+	s := NewSpecHandler()
+	// Performing the check for a subset of options
+	spec, locator, err := s.RestoreSpecFromOpts(map[string]string{
+		api.SpecHaLevel:   "2",
+		api.SpecNodes:     "node1,node2",
+		api.SpecIoProfile: "db_remote",
+		api.SpecSharedv4:  "true",
+		api.SpecSticky:    "false",
+		api.SpecLabels:    "foo=bar",
+	})
+	require.NoError(t, err, "unexpected error")
+	require.NotNil(t, spec, "unexpected spec")
+	require.NotNil(t, locator, "unexpected locator")
+	require.Equal(t, spec.HaLevel, int64(2), "unexpected ha level")
+	require.Equal(t, spec.IoProfile, api.IoProfile_IO_PROFILE_DB_REMOTE, "unexpected io profile")
+	require.Equal(t, spec.Sharedv4, api.RestoreParamBoolType_PARAM_TRUE, "unexpected sharedv4 ")
+	require.Equal(t, spec.Sticky, api.RestoreParamBoolType_PARAM_FALSE, "unexpected sticky bit")
+	require.Equal(t, len(locator.VolumeLabels), 1, "unexpected labels")
+
+	val, ok := locator.VolumeLabels["foo"]
+	require.True(t, ok, "unexpected label")
+	require.Equal(t, val, "bar", "unexpected label value")
+
+	// Do not error out on invalid options since RestoreVolumeSpec
+	// does not support all the spec options
+	spec, locator, err = s.RestoreSpecFromOpts(map[string]string{
+		api.SpecHaLevel: "2",
+		"foo":           "bar",
+	})
+	require.NoError(t, err, "unexpected error")
+	require.NotNil(t, spec, "unexpected spec")
+	require.NotNil(t, locator, "unexpected locator")
+	require.Equal(t, spec.HaLevel, int64(2), "unexpected ha level")
+
+	require.Equal(t, len(locator.VolumeLabels), 0, "unexpected labels")
+
+}
