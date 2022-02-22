@@ -413,7 +413,15 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 
-				updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume())
+				// The OSD Client in Kubernetes Portworx in-tree driver is out of date
+				// and uses non-pointer booleans in the VolumeSpec. This code is locked and cannot be updated.
+				// volumeSet is only used with K8s in-tree resizing and will have a
+				// false boolean flag for all unset spec values. As a result, real values
+				// such as autofstrim/proxy_write are being reset during K8s resize operations.
+				// We must only update the size in this case to preserve other spec values.
+				isSchedulerRequest := isRequestFromScheduler(r)
+
+				updateReq.Spec = getVolumeUpdateSpec(req.Spec, vol.GetVolume(), isSchedulerRequest)
 			}
 
 			if _, err := volumes.Update(ctx, updateReq); err != nil {
@@ -486,9 +494,23 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecUpdate {
+func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume, isSchedulerRequest bool) *api.VolumeSpecUpdate {
 	newSpec := &api.VolumeSpecUpdate{}
 	if spec == nil {
+		return newSpec
+	}
+
+	// Check if size is changed. If it is, we save this for later.
+	sizeUpdate := spec.Size != 0 && spec.Size != vol.Spec.Size
+	if sizeUpdate {
+		newSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
+			Size: spec.Size,
+		}
+	}
+	// return early for scheduler resize requests, as k8s in-tree driver is the only code
+	// path for volumeSet REST requests. We only support resizing for this path.
+	// This prevents potentially reseting boolean values from k8s resize requests.
+	if isSchedulerRequest && sizeUpdate {
 		return newSpec
 	}
 
@@ -540,12 +562,6 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume) *api.VolumeSpecU
 	if spec.Scale != vol.Spec.Scale {
 		newSpec.ScaleOpt = &api.VolumeSpecUpdate_Scale{
 			Scale: spec.Scale,
-		}
-	}
-
-	if spec.Size != vol.Spec.Size {
-		newSpec.SizeOpt = &api.VolumeSpecUpdate_Size{
-			Size: spec.Size,
 		}
 	}
 
@@ -2062,4 +2078,20 @@ func GetVolumeAPIRoutesWithAuth(
 	}
 	return router, nil
 
+}
+
+func isRequestFromScheduler(r *http.Request) bool {
+	userAgent := r.Header.Get("User-Agent")
+	var isSchedulerRequest bool
+	if len(userAgent) > 0 {
+		// Check if the request is coming from a container orchestrator
+		clientName := strings.Split(userAgent, "/")
+		if len(clientName) > 0 {
+			if strings.HasSuffix(clientName[0], schedDriverPostFix) {
+				isSchedulerRequest = true
+			}
+		}
+	}
+
+	return isSchedulerRequest
 }
