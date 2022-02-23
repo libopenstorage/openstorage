@@ -2311,21 +2311,27 @@ func TestControllerExpandVolume(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 
 	myid := "myid"
+	vol := &api.Volume{
+		Id: myid,
+		Spec: &api.VolumeSpec{
+			Size: uint64(units.GiB),
+		},
+	}
 	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{myid}).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{myid},
 			}, nil).
-			Return([]*api.Volume{
-				&api.Volume{
-					Id: myid,
-					Spec: &api.VolumeSpec{
-						Size: uint64(units.GiB),
-					},
-				},
-			}, nil).
-			Times(1),
+			Return([]*api.Volume{vol}, nil).
+			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
 			Set(gomock.Any(), gomock.Any(), &api.VolumeSpec{
@@ -2345,6 +2351,38 @@ func TestControllerExpandVolume(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func TestControllerExpandVolumeIdempotent(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	myid := "myid"
+	vol := &api.Volume{
+		Id: myid,
+		Spec: &api.VolumeSpec{
+			Size: uint64(5 * units.GiB),
+		},
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{myid},
+			}, nil).
+			Return([]*api.Volume{vol}, nil).
+			Times(1),
+	)
+
+	_, err := c.ControllerExpandVolume(context.Background(), &csi.ControllerExpandVolumeRequest{
+		VolumeId: myid,
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: int64(5 * units.GiB),
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	})
+	assert.NoError(t, err)
+}
 func TestControllerCreateSnapshotBadParameters(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
