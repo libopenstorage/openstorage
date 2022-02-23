@@ -607,6 +607,24 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	// should be issued. Otherwise, no operation should occur.
 	volumes := api.NewOpenStorageVolumeClient(conn)
 
+	// Check for idempotency. There are cases where we return an error in the proto
+	// driver if the volume update request has no changes, so we return early here instead.
+	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetVolumeId())
+		}
+		return nil, status.Errorf(codes.Internal, "Failed to get volume %s: %v", req.GetVolumeId(), err)
+	}
+	if inspectResp.Volume.Spec.Size == spec.GetSize() {
+		return &csi.ControllerExpandVolumeResponse{
+			CapacityBytes:         int64(newSize),
+			NodeExpansionRequired: false,
+		}, nil
+	}
+
 	// Update volume with new size
 	_, err = volumes.Update(ctx, &api.SdkVolumeUpdateRequest{
 		VolumeId: req.GetVolumeId(),
