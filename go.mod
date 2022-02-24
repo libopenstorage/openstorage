@@ -5,6 +5,7 @@ go 1.15
 require (
 	bazil.org/fuse v0.0.0-20160317181031-37bfa8be9291
 	github.com/armon/go-metrics v0.3.3 // indirect
+	github.com/aws/aws-sdk-go v1.35.24
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/cloudfoundry/gosigar v0.0.0-20150402170747-3ed7c74352da // indirect
 	github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
@@ -26,12 +27,14 @@ require (
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/hashicorp/consul/api v1.3.0 // indirect
 	github.com/hashicorp/go-immutable-radix v1.2.0 // indirect
 	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-sockaddr v1.0.2 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/memberlist v0.1.4 // indirect
 	github.com/imdario/mergo v0.3.10 // indirect
+	github.com/johannesboyne/gofakes3 v0.0.0-20210819161434-5c8dfcfe5310
 	github.com/kubernetes-csi/csi-test v2.2.0+incompatible
 	github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
@@ -50,7 +53,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194
 	github.com/portworx/sched-ops v1.20.4-rc1
-	github.com/prometheus/client_golang v1.9.0
+	github.com/prometheus/client_golang v1.7.1
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
@@ -63,7 +66,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
-	golang.org/x/net v0.0.0-20210917221730-978cfadd31cf
+	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys v0.0.0-20210921065528-437939a70204
 	golang.org/x/text v0.3.7 // indirect
@@ -77,6 +80,7 @@ require (
 	k8s.io/apimachinery v0.20.4
 	k8s.io/client-go v12.0.0+incompatible
 	k8s.io/klog/v2 v2.20.0 // indirect
+	sigs.k8s.io/container-object-storage-interface-spec v0.0.0-20220211001052-50e143052de8
 )
 
 replace (

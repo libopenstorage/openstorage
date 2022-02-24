@@ -210,7 +210,7 @@ spec:
       hostPID: false
       containers:
         - name: osd
-          image: quay.io/openstorage/osd:latest
+          image: quay.io/openstorage/osd-dev-base:1.14
           imagePullPolicy: Never # Manually loaded into KinD (see setup script)
           args:
               ["-d","--driver=name=fake", "--csidrivername","osd.openstorage.org"]
