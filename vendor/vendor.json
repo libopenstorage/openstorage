@@ -27,6 +27,12 @@
 			"revisionTime": "2016-05-21T00:23:38Z"
 		},
 		{
+			"checksumSHA1": "YBINuc/xEY9C8INLIrooghqq2Gs=",
+			"path": "github.com/aws/aws-sdk-go",
+			"revision": "82e096143fdfb8f52fbeb4ef78d400eea6381ccd",
+			"revisionTime": "2020-11-09T17:14:18Z"
+		},
+		{
 			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
 			"path": "github.com/beorn7/perks/quantile",
 			"revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
@@ -459,10 +465,16 @@
 			"revisionTime": "2017-07-24T00:48:29Z"
 		},
 		{
-			"checksumSHA1": "rix4F+CSyo3wrlhURNU8sTxYjzg=",
+			"checksumSHA1": "lkk1TAjTVaNj/CZl/KmOrUL5//E=",
+			"path": "github.com/hashicorp/consul",
+			"revision": "e8757838a49feeb682c7e6ad6b78694a78b2096b",
+			"revisionTime": "2018-10-11T16:54:11Z"
+		},
+		{
+			"checksumSHA1": "PJDKLws64a9Lb00kp9qgyhAD81s=",
 			"path": "github.com/hashicorp/consul/api",
-			"revision": "a440433ac832516bb026872f698669122a4789b6",
-			"revisionTime": "2016-04-01T01:07:39Z"
+			"revision": "e8757838a49feeb682c7e6ad6b78694a78b2096b",
+			"revisionTime": "2018-10-11T16:54:11Z"
 		},
 		{
 			"checksumSHA1": "cdOCt0Yb+hdErz8NAQqayxPmRsY=",
@@ -511,6 +523,30 @@
 			"path": "github.com/imdario/mergo",
 			"revision": "ca3dcc1022bae9b5510f3c83705b72db1b1a96f9",
 			"revisionTime": "2018-11-07T19:11:38Z"
+		},
+		{
+			"checksumSHA1": "J9xETyq2SzbHMWbBpHN7gjPtkIY=",
+			"path": "github.com/johannesboyne/gofakes3",
+			"revision": "5c8dfcfe531093a67ba1a41b4bae5296b9ecfd69",
+			"revisionTime": "2021-08-19T16:14:34Z"
+		},
+		{
+			"checksumSHA1": "vQG+Gt5zoNzE9nCblb2OYIS15Fs=",
+			"path": "github.com/johannesboyne/gofakes3/backend/s3mem",
+			"revision": "5c8dfcfe531093a67ba1a41b4bae5296b9ecfd69",
+			"revisionTime": "2021-08-19T16:14:34Z"
+		},
+		{
+			"checksumSHA1": "m/OW38Ub0LMJnXXKUgz1ueVYxF8=",
+			"path": "github.com/johannesboyne/gofakes3/internal/goskipiter",
+			"revision": "5c8dfcfe531093a67ba1a41b4bae5296b9ecfd69",
+			"revisionTime": "2021-08-19T16:14:34Z"
+		},
+		{
+			"checksumSHA1": "HmedMX0By2G+0Wu12PNNL6GQXn8=",
+			"path": "github.com/johannesboyne/gofakes3/internal/s3io",
+			"revision": "5c8dfcfe531093a67ba1a41b4bae5296b9ecfd69",
+			"revisionTime": "2021-08-19T16:14:34Z"
 		},
 		{
 			"checksumSHA1": "Ah2HsEkTM0gBO7XNPmjtM8MAvKE=",
@@ -917,20 +953,20 @@
 		{
 			"checksumSHA1": "5dHjKxShYVWVB1Fb00dAnR6kqVk=",
 			"path": "github.com/prometheus/client_golang/prometheus",
-			"revision": "2641b987480bca71fb39738eb8c8b0d577cb1d76",
-			"revisionTime": "2019-06-07T14:56:44Z"
+			"revision": "fe7bd95816c4bf8b6482e529a919a0957e631a6e",
+			"revisionTime": "2020-06-23T20:31:09Z"
 		},
 		{
 			"checksumSHA1": "UBqhkyjCz47+S19MVTigxJ2VjVQ=",
 			"path": "github.com/prometheus/client_golang/prometheus/internal",
-			"revision": "2641b987480bca71fb39738eb8c8b0d577cb1d76",
-			"revisionTime": "2019-06-07T14:56:44Z"
+			"revision": "fe7bd95816c4bf8b6482e529a919a0957e631a6e",
+			"revisionTime": "2020-06-23T20:31:09Z"
 		},
 		{
 			"checksumSHA1": "V51yx4gq61QCD9clxnps792Eq2Y=",
 			"path": "github.com/prometheus/client_golang/prometheus/promhttp",
-			"revision": "2641b987480bca71fb39738eb8c8b0d577cb1d76",
-			"revisionTime": "2019-06-07T14:56:44Z"
+			"revision": "fe7bd95816c4bf8b6482e529a919a0957e631a6e",
+			"revisionTime": "2020-06-23T20:31:09Z"
 		},
 		{
 			"checksumSHA1": "DvwvOlPNAgRntBzt3b3OSRMS2N4=",
@@ -2383,6 +2419,12 @@
 			"path": "k8s.io/utils/integer",
 			"revision": "0a110f9eb7ab662220ed640640f50c4be9b6b485",
 			"revisionTime": "2020-02-29T04:10:39Z"
+		},
+		{
+			"checksumSHA1": "q6RbBRVEYZY2eOdaiK5LnBeY1mg=",
+			"path": "sigs.k8s.io/container-object-storage-interface-spec",
+			"revision": "50e143052de84305e124712961fc7528ebc01233",
+			"revisionTime": "2022-02-11T00:10:52Z"
 		},
 		{
 			"checksumSHA1": "ppTACDBGGOjmDVwkUlpq87VL1Lk=",
