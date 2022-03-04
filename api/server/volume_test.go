@@ -114,7 +114,7 @@ func TestVolumeNoAuth(t *testing.T) {
 
 	// CREATE
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -137,7 +137,7 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.EqualValues(t, newsize, res[0].Spec.Size)
 
 	// DELETE
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 }
 
@@ -205,7 +205,7 @@ func TestVolumeCreateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -278,14 +278,14 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	c, err := volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, "")
 	assert.NoError(t, err, "Unexpected error on NewDriverClient")
 	driverclient := volumeclient.VolumeDriver(c)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
 
 	// Send a request without labels
 	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
 	assert.NoError(t, err, "Unexpected error on NewDriverClient")
 	driverclient = volumeclient.VolumeDriver(c)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
 
 	req = &api.VolumeCreateRequest{
@@ -319,7 +319,7 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
 	assert.NoError(t, err, "Unexpected error on NewDriverClient")
 	driverclient = volumeclient.VolumeDriver(c)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
 	mockSecret.EXPECT().
 		String().
@@ -339,7 +339,7 @@ func TestMiddlewareVolumeCreateFailure(t *testing.T) {
 	c, err = volumeclient.NewDriverClient(testMockURL, fakeWithSched, version, fakeWithSched)
 	assert.NoError(t, err, "Unexpected error on NewDriverClient")
 	driverclient = volumeclient.VolumeDriver(c)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err, "Expected an error on Create")
 
 }
@@ -375,7 +375,7 @@ func TestVolumeCreateFailedToAuthenticate(t *testing.T) {
 
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(client)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err)
 }
 
@@ -417,7 +417,7 @@ func TestVolumeCreateGetNodeIdFromIpFailed(t *testing.T) {
 	// create a volume client
 	driverclient := volumeclient.VolumeDriver(client)
 
-	res, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	res, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NotNil(t, err)
 	assert.EqualValues(t, "", res)
 	assert.Contains(t, err.Error(), "Failed to locate IP")
@@ -457,7 +457,7 @@ func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -515,7 +515,7 @@ func TestVolumeSnapshotCreateFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -571,7 +571,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 		},
 	}
 
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -628,7 +628,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 		},
 	}
 
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -682,7 +682,7 @@ func TestVolumeSnapshotList(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -778,7 +778,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 		},
 	}
 
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 
@@ -865,7 +865,7 @@ func TestVolumeSetFailed(t *testing.T) {
 		},
 	}
 
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1013,7 +1013,7 @@ func TestVolumeAttachSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1063,7 +1063,7 @@ func TestVolumeAttachFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1113,7 +1113,7 @@ func TestVolumeDetachSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1166,7 +1166,7 @@ func TestVolumeDetachFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1222,7 +1222,7 @@ func TestVolumeMountSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1272,7 +1272,7 @@ func TestVolumeMountFailedNoMountPath(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1325,7 +1325,7 @@ func TestVolumeStatsSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NoError(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1374,7 +1374,7 @@ func TestVolumeStatsFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1423,7 +1423,7 @@ func TestVolumeUnmountSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1478,7 +1478,7 @@ func TestVolumeUnmountFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1642,7 +1642,7 @@ func TestVolumeRestoreSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1703,7 +1703,7 @@ func TestVolumeRestoreFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1765,7 +1765,7 @@ func TestVolumeUsedSizeSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1814,7 +1814,7 @@ func TestVolumeUsedSizeFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1870,7 +1870,7 @@ func TestVolumeEnumerateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -1942,7 +1942,7 @@ func TestVolumeEnumerateFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -2448,11 +2448,11 @@ func TestVolumeDeleteSuccess(t *testing.T) {
 	driverclient := volumeclient.VolumeDriver(client)
 
 	// Create volume.
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 }
 
@@ -2491,7 +2491,7 @@ func TestMiddlewareVolumeDeleteSuccess(t *testing.T) {
 		Return(map[string]interface{}{secrets.SecretTokenKey: token}, nil).
 		AnyTimes()
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 
 }
@@ -2567,7 +2567,7 @@ func TestMiddlewareVolumeInspectFailureVolumeNotFound(t *testing.T) {
 
 	// Create a volume
 	driverclient := volumeclient.VolumeDriver(c)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
@@ -2598,7 +2598,7 @@ func TestMiddlewareVolumeDeleteFailureVolumeNotFound(t *testing.T) {
 
 	// Deleteing an ID that does not exist should return success since the call is idempotent
 	driverclient := volumeclient.VolumeDriver(c)
-	err = driverclient.Delete("fakeid")
+	err = driverclient.Delete(context.TODO(), "fakeid")
 	assert.Nil(t, err)
 }
 
@@ -2663,7 +2663,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(c)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.NoError(t, err, "Unexpected error on Create")
 	mockSecret.EXPECT().
 		String().
@@ -2680,7 +2680,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 		Return(map[string]interface{}{secrets.SecretTokenKey: incorrectToken}, nil).
 		Times(1)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Error(t, err, "Expected an error on Delete")
 	mockSecret.EXPECT().
 		String().
@@ -2696,7 +2696,7 @@ func TestMiddlewareVolumeDeleteFailureIncorrectToken(t *testing.T) {
 		Return(nil, fmt.Errorf("incorrect secret")).
 		AnyTimes()
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Error(t, err, "Expected an error on Delete")
 
 }
@@ -2748,7 +2748,7 @@ func testMiddlewareCreateVolume(
 		AnyTimes()
 
 	// Create a volume
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
@@ -2790,11 +2790,11 @@ func TestStorkVolumeInspect(t *testing.T) {
 	driverclient := volumeclient.VolumeDriver(client)
 
 	// Create volume.
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 
 	vols, err := driverclient.Inspect([]string{id})
@@ -2859,7 +2859,7 @@ func TestThousandsOfVolumes(t *testing.T) {
 		go func() {
 			for i := range ch {
 				req.GetLocator().Name = fmt.Sprintf("myvol-%d", i)
-				id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+				id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 				assert.Nil(t, err)
 				assert.NotEmpty(t, id)
 			}
@@ -2961,12 +2961,12 @@ func TestRequestOnAuthWithMiddlewareForGuest(t *testing.T) {
 
 	// CREATE
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
 	// DELETE
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 }
@@ -3016,7 +3016,7 @@ func TestRequestOnAuthWithMiddlewareForGuestWithoutGuestMode(t *testing.T) {
 
 	// CREATE
 	driverclient := volumeclient.VolumeDriver(cl)
-	_, err = driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	_, err = driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Error(t, err)
 }
 
@@ -3050,12 +3050,12 @@ func TestRequestOnAuthWithMiddlewareForUser(t *testing.T) {
 
 	// CREATE
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
 	// DELETE
-	err = driverclient.Delete(id)
+	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 }

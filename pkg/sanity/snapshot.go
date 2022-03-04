@@ -17,6 +17,7 @@ limitations under the License.
 package sanity
 
 import (
+	"context"
 	"strconv"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -66,10 +67,10 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(snapID)
+			err = volumedriver.Delete(context.TODO(), snapID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -101,7 +102,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 
@@ -149,11 +150,11 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			for _, snapID := range snapIDs {
-				err = volumedriver.Delete(snapID)
+				err = volumedriver.Delete(context.TODO(), snapID)
 				Expect(err).ToNot(HaveOccurred())
 			}
 
@@ -186,7 +187,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 
@@ -249,10 +250,10 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(snapID)
+			err = volumedriver.Delete(context.TODO(), snapID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -284,7 +285,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 
