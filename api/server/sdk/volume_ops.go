@@ -200,7 +200,7 @@ func (s *VolumeServer) create(
 		// New volume, set ownership
 		spec.Ownership = api.OwnershipSetUsernameFromContext(ctx, spec.Ownership)
 		// Create the volume
-		id, err = s.driver(ctx).Create(locator, source, spec)
+		id, err = s.driver(ctx).Create(ctx, locator, source, spec)
 		if err != nil {
 			return "", status.Errorf(
 				codes.Internal,
@@ -344,7 +344,7 @@ func (s *VolumeServer) Delete(
 	}
 
 	// Delete the volume
-	err = s.driver(ctx).Delete(req.GetVolumeId())
+	err = s.driver(ctx).Delete(ctx, req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

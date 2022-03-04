@@ -156,6 +156,7 @@ func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
 //
 
 func (d *driver) Create(
+	ctx context.Context,
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
@@ -191,7 +192,7 @@ func (d *driver) Create(
 	return v.Id, nil
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(ctx context.Context, volumeID string) error {
 	_, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
@@ -245,7 +246,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	}
 	source := &api.Source{Parent: volumeID}
 	logrus.Infof("Creating snap %s for vol %s", locator.Name, volumeID)
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
+	newVolumeID, err := d.Create(context.TODO(), locator, source, vols[0].Spec)
 	if err != nil {
 		return "", nil
 	}
@@ -575,7 +576,7 @@ func (d *driver) CloudBackupRestore(
 		return nil, err
 	}
 
-	volid, err := d.Create(&api.VolumeLocator{Name: input.RestoreVolumeName}, &api.Source{}, backup.Volume.GetSpec())
+	volid, err := d.Create(context.TODO(), &api.VolumeLocator{Name: input.RestoreVolumeName}, &api.Source{}, backup.Volume.GetSpec())
 	if err != nil {
 		return nil, err
 	}

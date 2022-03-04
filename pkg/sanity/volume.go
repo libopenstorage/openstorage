@@ -68,7 +68,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 			if volumeID != "" {
-				err = volumedriver.Delete(volumeID)
+				err = volumedriver.Delete(context.TODO(), volumeID)
 				Expect(err).ToNot(HaveOccurred())
 
 				volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -100,7 +100,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -131,7 +131,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -166,7 +166,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					},
 				}
 
-				volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+				volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("empty volume name"))
@@ -188,7 +188,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			if volumesToCreate != 0 {
 				for i := 0; i < len(volumeIDs); i++ {
-					err = volumedriver.Delete(volumeIDs[i])
+					err = volumedriver.Delete(context.TODO(), volumeIDs[i])
 					Expect(err).ToNot(HaveOccurred())
 				}
 
@@ -230,7 +230,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					},
 				}
 
-				volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+				volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(volumeID).ToNot(BeNil())
 
@@ -293,14 +293,14 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
 
 			By("Deleting the volume")
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).To(Not(HaveOccurred()))
 
 		})
@@ -310,7 +310,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Trying to delete a volume that doesn't exist")
 
-			err = volumedriver.Delete("id-doesnt-exist")
+			err = volumedriver.Delete(context.TODO(), "id-doesnt-exist")
 			Expect(err).To(HaveOccurred())
 		})
 	})
@@ -326,7 +326,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 
 			for _, id := range volumeIDs {
-				err := volumedriver.Delete(id)
+				err := volumedriver.Delete(context.TODO(), id)
 				Expect(err).ToNot(HaveOccurred())
 			}
 
@@ -358,7 +358,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 					},
 				}
 
-				volumeID, err := volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+				volumeID, err := volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 				Expect(err).NotTo(HaveOccurred())
 				Expect(volumeID).ToNot(BeNil())
 
@@ -399,7 +399,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -429,7 +429,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -482,7 +482,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -513,7 +513,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -558,7 +558,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Deleting the volume successfully")
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -589,7 +589,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -658,7 +658,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -710,7 +710,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -743,7 +743,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -778,7 +778,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -810,7 +810,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -844,7 +844,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 		AfterEach(func() {
 			var err error
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -876,7 +876,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumeID).ToNot(BeNil())
@@ -916,7 +916,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -948,7 +948,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")

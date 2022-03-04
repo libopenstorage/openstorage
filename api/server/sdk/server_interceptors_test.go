@@ -125,7 +125,7 @@ func TestAuthorizationServerInterceptorCreateVolume(t *testing.T) {
 				AnyTimes(),
 			s.MockDriver().
 				EXPECT().
-				Create(gomock.Any(), gomock.Any(), gomock.Any()).
+				Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(id, nil).
 				AnyTimes(),
 		)
