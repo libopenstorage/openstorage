@@ -363,6 +363,20 @@ func (mr *MockClusterMockRecorder) GetData() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetData", reflect.TypeOf((*MockCluster)(nil).GetData))
 }
 
+// GetGossipIntervals mocks base method.
+func (m *MockCluster) GetGossipIntervals() types.GossipIntervals {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetGossipIntervals")
+	ret0, _ := ret[0].(types.GossipIntervals)
+	return ret0
+}
+
+// GetGossipIntervals indicates an expected call of GetGossipIntervals.
+func (mr *MockClusterMockRecorder) GetGossipIntervals() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetGossipIntervals", reflect.TypeOf((*MockCluster)(nil).GetGossipIntervals))
+}
+
 // GetGossipState mocks base method.
 func (m *MockCluster) GetGossipState() *cluster.ClusterState {
 	m.ctrl.T.Helper()
