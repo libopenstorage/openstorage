@@ -36,7 +36,7 @@ require (
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/johannesboyne/gofakes3 v0.0.0-20210819161434-5c8dfcfe5310
 	github.com/kubernetes-csi/csi-test v2.2.0+incompatible
-	github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24
+	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 	github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
 	github.com/mattn/go-colorable v0.1.7 // indirect

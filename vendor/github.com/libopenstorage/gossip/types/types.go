@@ -46,13 +46,14 @@ type ClusterDomainsQuorumMembersMap map[string]int
 // Constant Definitions
 
 const (
-	DEFAULT_GOSSIP_INTERVAL    time.Duration = 2 * time.Second
-	DEFAULT_PUSH_PULL_INTERVAL time.Duration = 2 * time.Second
-	DEFAULT_PROBE_INTERVAL     time.Duration = 5 * time.Second
-	DEFAULT_PROBE_TIMEOUT      time.Duration = 200 * time.Millisecond
-	DEFAULT_QUORUM_TIMEOUT     time.Duration = 1 * time.Minute
-	DEFAULT_GOSSIP_VERSION     string        = "v1"
-	GOSSIP_VERSION_2           string        = "v2"
+	DEFAULT_GOSSIP_INTERVAL      time.Duration = 2 * time.Second
+	DEFAULT_PUSH_PULL_INTERVAL   time.Duration = 2 * time.Second
+	DEFAULT_PROBE_INTERVAL       time.Duration = 5 * time.Second
+	DEFAULT_PROBE_TIMEOUT        time.Duration = 200 * time.Millisecond
+	DEFAULT_QUORUM_TIMEOUT       time.Duration = 1 * time.Minute
+	DEFAULT_SUSPICION_MULTIPLIER int           = 5
+	DEFAULT_GOSSIP_VERSION       string        = "v1"
+	GOSSIP_VERSION_2             string        = "v2"
 )
 
 const (
@@ -164,6 +165,9 @@ type GossipIntervals struct {
 	// QuorumTimeout is the timeout for which a node will stay in the SUSPECT_NOT_IN_QUORUM
 	// and then transition to NOT_IN_QUORUM (Not UP) if quorum is not satisfied
 	QuorumTimeout time.Duration
+	// SuspicionMult is the multiplier for determining the time an
+	// inaccessible node is considered suspect before declaring it dead.
+	SuspicionMult int
 }
 
 // GossipNodeConfiguration is the peer node configuration with which gossip on this

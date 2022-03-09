@@ -296,7 +296,7 @@ github.com/json-iterator/go
 ## explicit
 github.com/kubernetes-csi/csi-test/pkg/sanity
 github.com/kubernetes-csi/csi-test/utils
-# github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24
+# github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
 ## explicit
 github.com/libopenstorage/gossip
 github.com/libopenstorage/gossip/pkg/probation
