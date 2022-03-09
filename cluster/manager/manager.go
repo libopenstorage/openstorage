@@ -73,6 +73,7 @@ type ClusterManager struct {
 	nodeCacheLock        sync.Mutex
 	nodeStatuses         map[string]api.Status // Set of nodes currently marked down.
 	gossip               gossip.Gossiper
+	gossipIntervals      types.GossipIntervals
 	gossipVersion        string
 	gossipPort           string
 	gEnabled             bool
@@ -1083,6 +1084,11 @@ func (c *ClusterManager) GetGossipState() *cluster.ClusterState {
 	return &cluster.ClusterState{NodeStatus: nodes}
 }
 
+// GetGossipIntervals returns the configured gossip intervals
+func (c *ClusterManager) GetGossipIntervals() types.GossipIntervals {
+	return c.gossipIntervals
+}
+
 func (c *ClusterManager) getMaxQuorumRetries() int {
 	// Max quorum retries allowed = 600
 	// 600 * 2 seconds (gossip interval) = 20 minutes before it restarts
@@ -1468,18 +1474,19 @@ func (c *ClusterManager) StartWithConfiguration(
 	if c.config.QuorumTimeoutInSeconds > 0 {
 		quorumTimeout = time.Duration(c.config.QuorumTimeoutInSeconds) * time.Second
 	}
-	gossipIntervals := types.GossipIntervals{
+	c.gossipIntervals = types.GossipIntervals{
 		GossipInterval:   types.DEFAULT_GOSSIP_INTERVAL,
 		PushPullInterval: types.DEFAULT_PUSH_PULL_INTERVAL,
 		ProbeInterval:    types.DEFAULT_PROBE_INTERVAL,
 		ProbeTimeout:     types.DEFAULT_PROBE_TIMEOUT,
 		QuorumTimeout:    quorumTimeout,
+		SuspicionMult:    types.DEFAULT_SUSPICION_MULTIPLIER,
 	}
 	c.gossip = gossip.New(
 		c.selfNode.DataIp+":"+c.gossipPort,
 		types.NodeId(c.config.NodeId),
 		c.selfNode.GenNumber,
-		gossipIntervals,
+		c.gossipIntervals,
 		types.GOSSIP_VERSION_2,
 		c.config.ClusterId,
 		selfClusterDomain,
