@@ -386,6 +386,9 @@ type Cluster interface {
 	// cluster manager of an update on cluster domains
 	ClusterNotifyClusterDomainsUpdate(types.ClusterDomainsActiveMap) error
 
+	// GetGossipIntervals returns the configured values for the gossip intervals
+	GetGossipIntervals() types.GossipIntervals
+
 	ClusterRemove
 	ClusterData
 	ClusterStatus

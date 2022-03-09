@@ -171,6 +171,11 @@ func (m *NullClusterData) GetGossipState() *ClusterState {
 	return nil
 }
 
+// GetGossipIntervals
+func (c *NullClusterData) GetGossipIntervals() types.GossipIntervals {
+	return types.GossipIntervals{}
+}
+
 // NullClusterRemove implementations
 
 // Remove
