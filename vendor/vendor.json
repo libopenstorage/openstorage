@@ -531,10 +531,10 @@
 			"revisionTime": "2019-03-27T23:26:48Z"
 		},
 		{
-			"checksumSHA1": "r837OIUc5srjGGaiuBR1vxhvrjo=",
+			"checksumSHA1": "xYPgbfU1IXF8AVjsJ9y6WLoDow4=",
 			"path": "github.com/libopenstorage/gossip",
-			"revision": "589941f80c96e7f554aa23e9cf5cfeb26d50b891",
-			"revisionTime": "2019-03-24T16:03:46Z"
+			"revision": "44c895e0923e6f2a8235a2c36e2231fc0559cc8d",
+			"revisionTime": "2022-03-09T19:24:31Z"
 		},
 		{
 			"checksumSHA1": "1hTnjiDhpWXrhvdvcjyam0QL1ks=",
