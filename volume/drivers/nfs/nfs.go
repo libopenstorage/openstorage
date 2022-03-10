@@ -262,6 +262,7 @@ func (d *driver) getNewSnapVolName(volumeID string) string {
 //
 
 func (d *driver) Create(
+	ctx context.Context,
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
@@ -349,7 +350,7 @@ func (d *driver) Create(
 		if source != nil && len(source.GetParent()) != 0 {
 			// Need to clone
 			if err := d.clone(volumeID, source.GetParent()); err != nil {
-				d.Delete(v.GetId())
+				d.Delete(ctx, v.GetId())
 				return "", err
 			}
 		}
@@ -357,7 +358,7 @@ func (d *driver) Create(
 		// Set to ready
 		v.State = api.VolumeState_VOLUME_STATE_AVAILABLE
 		if err := d.UpdateVol(v); err != nil {
-			d.Delete(v.GetId())
+			d.Delete(ctx, v.GetId())
 			logrus.Errorf("Failed to update volume %s to ready state: %v", volumeID, err)
 			return "", err
 		}
@@ -384,7 +385,7 @@ func (d *driver) Create(
 		if source != nil && len(source.GetParent()) != 0 {
 			// Need to clone
 			if err := d.clone(volumeID, source.GetParent()); err != nil {
-				d.Delete(v.GetId())
+				d.Delete(ctx, v.GetId())
 				return "", err
 			}
 		} else {
@@ -432,7 +433,7 @@ func (d *driver) Create(
 		// Set to ready
 		v.State = api.VolumeState_VOLUME_STATE_AVAILABLE
 		if err := d.UpdateVol(v); err != nil {
-			d.Delete(v.GetId())
+			d.Delete(ctx, v.GetId())
 			logrus.Errorf("Failed to update volume %s to ready state: %v", volumeID, err)
 			return "", err
 		}
@@ -441,7 +442,7 @@ func (d *driver) Create(
 	return v.Id, nil
 }
 
-func (d *driver) Delete(volumeID string) (e error) {
+func (d *driver) Delete(ctx context.Context, volumeID string) (e error) {
 	defer func() {
 		if e != nil {
 			logrus.Errorf("Delete of %s failed: %v", volumeID, e)
@@ -604,7 +605,7 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 	if d.isShared(v.GetSpec()) {
 		// Copy directory
 		if err := copyDir(nfsVolPath, newNfsVolPath); err != nil {
-			d.Delete(newVolumeID)
+			d.Delete(context.Background(), newVolumeID)
 			return err
 		}
 	} else {
@@ -663,7 +664,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	}
 	source := &api.Source{Parent: volumeID}
 	logrus.Infof("Creating snap vol name: %s", locator.Name)
-	return d.Create(locator, source, vols[0].Spec)
+	return d.Create(context.TODO(), locator, source, vols[0].Spec)
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {

@@ -105,7 +105,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -137,7 +137,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -213,7 +213,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -244,7 +244,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -336,10 +336,10 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(restoredVolume)
+			err = volumedriver.Delete(context.TODO(), restoredVolume)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -371,7 +371,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -478,7 +478,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -510,7 +510,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -556,7 +556,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -588,7 +588,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -648,7 +648,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -680,7 +680,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")
@@ -737,7 +737,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 			err = volumedriver.Detach(context.TODO(), volumeID, nil)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).ToNot(HaveOccurred())
 
 			volumes, err := volumedriver.Enumerate(&api.VolumeLocator{}, nil)
@@ -769,7 +769,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if volume created successfully with the provided params")

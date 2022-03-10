@@ -260,10 +260,10 @@ type ProtoDriver interface {
 	Version() (*api.StorageVersion, error)
 	// Create a new Vol for the specific volume spec.
 	// It returns a system generated VolumeID that uniquely identifies the volume
-	Create(locator *api.VolumeLocator, Source *api.Source, spec *api.VolumeSpec) (string, error)
+	Create(ctx context.Context, locator *api.VolumeLocator, Source *api.Source, spec *api.VolumeSpec) (string, error)
 	// Delete volume.
 	// Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
-	Delete(volumeID string) error
+	Delete(ctx context.Context, volumeID string) error
 	// Mount volume at specified path
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Mount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error

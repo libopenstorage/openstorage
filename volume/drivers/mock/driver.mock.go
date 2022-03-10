@@ -404,18 +404,18 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus(arg0 interface{}) *go
 }
 
 // Create mocks base method.
-func (m *MockVolumeDriver) Create(arg0 *api.VolumeLocator, arg1 *api.Source, arg2 *api.VolumeSpec) (string, error) {
+func (m *MockVolumeDriver) Create(arg0 context.Context, arg1 *api.VolumeLocator, arg2 *api.Source, arg3 *api.VolumeSpec) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Create", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Create indicates an expected call of Create.
-func (mr *MockVolumeDriverMockRecorder) Create(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Create(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockVolumeDriver)(nil).Create), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockVolumeDriver)(nil).Create), arg0, arg1, arg2, arg3)
 }
 
 // CredsCreate mocks base method.
@@ -505,17 +505,17 @@ func (mr *MockVolumeDriverMockRecorder) CredsValidate(arg0 interface{}) *gomock.
 }
 
 // Delete mocks base method.
-func (m *MockVolumeDriver) Delete(arg0 string) error {
+func (m *MockVolumeDriver) Delete(arg0 context.Context, arg1 string) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Delete", arg0)
+	ret := m.ctrl.Call(m, "Delete", arg0, arg1)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // Delete indicates an expected call of Delete.
-func (mr *MockVolumeDriverMockRecorder) Delete(arg0 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Delete(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockVolumeDriver)(nil).Delete), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockVolumeDriver)(nil).Delete), arg0, arg1)
 }
 
 // Detach mocks base method.
