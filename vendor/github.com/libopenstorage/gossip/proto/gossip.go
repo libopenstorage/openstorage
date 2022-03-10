@@ -7,7 +7,6 @@ import (
 	"net"
 	"os"
 	"strconv"
-	"strings"
 	"sync"
 	"time"
 
@@ -84,8 +83,9 @@ func (g *GossiperImpl) Init(
 	// Memberlist Config setup
 	mlConf := ml.DefaultLANConfig()
 
-	s := strings.Split(ipPort, ":")
-	ip, port := s[0], s[1]
+	// Use net.SplitHostPort which handles IPv6 addrs
+	ip, port, _ := net.SplitHostPort(ipPort)
+
 	port64, _ := strconv.ParseInt(port, 10, 64)
 
 	// Memberlist conf Name is the name of the node
@@ -101,6 +101,7 @@ func (g *GossiperImpl) Init(
 	mlConf.GossipInterval = g.gossipInterval
 	// ProbeInterval used for broadcasts and decides probing behavior
 	mlConf.ProbeInterval = gossipIntervals.ProbeInterval
+	mlConf.SuspicionMult = gossipIntervals.SuspicionMult
 
 	// MemberDelegates
 	g.InitGossipDelegate(
@@ -207,7 +208,12 @@ func (g *GossiperImpl) Ping(peerNode types.NodeId, addr string) (time.Duration, 
 		pingDuration time.Duration
 	)
 
-	ipPort := strings.Split(addr, ":")
+	addrHost, addrPort, err := net.SplitHostPort(addr)
+	if err != nil {
+		return pingDuration, err
+	}
+	ipPort := []string{addrHost, addrPort}
+
 	port, err := strconv.ParseInt(ipPort[1], 10, 64)
 	if err != nil {
 		return pingDuration, err

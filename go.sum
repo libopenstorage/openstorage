@@ -494,8 +494,8 @@ github.com/libopenstorage/autopilot-api v0.6.1-0.20210128210103-5fbb67948648/go.
 github.com/libopenstorage/autopilot-api v1.3.0/go.mod h1:6JLrPbR3ZJQFbUY/+QJMl/aF00YdIrLf8/GWAplgvJs=
 github.com/libopenstorage/external-storage v0.20.4-openstorage-rc3/go.mod h1:nffpoeodwwp+wwngmBGbLBCd7TZ9GxHLtxKoaLRW6K4=
 github.com/libopenstorage/gossip v0.0.0-20190507031959-c26073a01952/go.mod h1:TjXt2Iz2bTkpfc4Q6xN0ttiNipTVwEEYoZSMZHlfPek=
-github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24 h1:9PX7cJJDrFo0IbmWI6Np3wNDAwkgUHKg1dXo4VGaLus=
-github.com/libopenstorage/gossip v0.0.0-20200808224301-d5287c7c8b24/go.mod h1:TjXt2Iz2bTkpfc4Q6xN0ttiNipTVwEEYoZSMZHlfPek=
+github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e h1:4l9N2Sw8VGGUqe50yC2BnTFMRJuHJGpIGZcCUZ2S6gg=
+github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e/go.mod h1:TjXt2Iz2bTkpfc4Q6xN0ttiNipTVwEEYoZSMZHlfPek=
 github.com/libopenstorage/openstorage v1.0.0/go.mod h1:Sp1sIObHjat1BeXhfMqLZ14wnOzEhNx2YQedreMcUyc=
 github.com/libopenstorage/openstorage v8.0.0+incompatible/go.mod h1:Sp1sIObHjat1BeXhfMqLZ14wnOzEhNx2YQedreMcUyc=
 github.com/libopenstorage/openstorage v8.0.1-0.20190926212733-daaed777713e+incompatible/go.mod h1:Sp1sIObHjat1BeXhfMqLZ14wnOzEhNx2YQedreMcUyc=
