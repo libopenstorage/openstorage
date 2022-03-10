@@ -76,6 +76,7 @@ func (v *volumeDriver) Version() (*api.StorageVersion, error) {
 }
 
 func (v *volumeDriver) Create(
+	ctx context.Context,
 	volumeLocator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
@@ -102,7 +103,7 @@ func (v *volumeDriver) Create(
 	return volume.Id, nil
 }
 
-func (v *volumeDriver) Delete(volumeID string) error {
+func (v *volumeDriver) Delete(ctx context.Context, volumeID string) error {
 	if _, err := v.GetVol(volumeID); err != nil {
 		return err
 	}
