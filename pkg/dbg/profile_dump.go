@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	path     = "/var/cores/"
+	// Path defailt location for debug/profile output
+	Path     = "/var/cores/"
 	fnameFmt = "2006-01-02T15:04:05.999999-0700MST"
 )
 
@@ -30,6 +31,26 @@ func GetHostNamePrefix() string {
 	return hname
 }
 
+// GoProfileDump output goroutines to file.
+func DumpGoProfileTo(fname string) error {
+	trace := make([]byte, 5120*1024)
+	len := runtime.Stack(trace, true)
+	return ioutil.WriteFile(fname, trace[:len], 0644)
+}
+
+// HeapDump output heap to filename.
+func HeapDumpTo(fname string) {
+	f, err := os.Create(fname)
+	if err != nil {
+		logrus.Errorf("could not create memory profile: %v", err)
+		return
+	}
+	defer f.Close()
+	if err := pprof.WriteHeapProfile(f); err != nil {
+		logrus.Errorf("could not write memory profile: %v", err)
+	}
+}
+
 // DumpGoMemoryTrace output memory profile to logs.
 func DumpGoMemoryTrace() {
 	m := &runtime.MemStats{}
@@ -41,19 +62,10 @@ func DumpGoMemoryTrace() {
 
 // DumpGoProfile output goroutines to file.
 func DumpGoProfile() error {
-	trace := make([]byte, 5120*1024)
-	len := runtime.Stack(trace, true)
-	return ioutil.WriteFile(path+GetHostNamePrefix()+"-"+GetTimeStamp()+".stack", trace[:len], 0644)
+	return DumpGoProfileTo(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".stack")
 }
 
+// DumpHeap output heap to file.
 func DumpHeap() {
-	f, err := os.Create(path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".heap")
-	if err != nil {
-		logrus.Errorf("could not create memory profile: %v", err)
-		return
-	}
-	defer f.Close()
-	if err := pprof.WriteHeapProfile(f); err != nil {
-		logrus.Errorf("could not write memory profile: %v", err)
-	}
+	HeapDumpTo(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".heap")
 }
