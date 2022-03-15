@@ -32,14 +32,14 @@ func GetHostNamePrefix() string {
 }
 
 // GoProfileDump output goroutines to file.
-func GoProfileDump(fname string) error {
+func DumpGoProfileTo(fname string) error {
 	trace := make([]byte, 5120*1024)
 	len := runtime.Stack(trace, true)
 	return ioutil.WriteFile(fname, trace[:len], 0644)
 }
 
 // HeapDump output heap to filename.
-func HeapDump(fname string) {
+func HeapDumpTo(fname string) {
 	f, err := os.Create(fname)
 	if err != nil {
 		logrus.Errorf("could not create memory profile: %v", err)
@@ -62,10 +62,10 @@ func DumpGoMemoryTrace() {
 
 // DumpGoProfile output goroutines to file.
 func DumpGoProfile() error {
-	return GoProfileDump(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".stack")
+	return DumpGoProfileTo(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".stack")
 }
 
 // DumpHeap output heap to file.
 func DumpHeap() {
-	HeapDump(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".heap")
+	HeapDumpTo(Path + GetHostNamePrefix() + "-" + GetTimeStamp() + ".heap")
 }
