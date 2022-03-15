@@ -2,10 +2,11 @@ package server
 
 import (
 	"context"
+	"testing"
+
 	"github.com/libopenstorage/openstorage/api"
 	volumeclient "github.com/libopenstorage/openstorage/api/client/volume"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestMigrateStart(t *testing.T) {
@@ -38,7 +39,7 @@ func TestMigrateStart(t *testing.T) {
 
 	// Create a volume client
 	driverclient := volumeclient.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 

@@ -700,7 +700,7 @@ func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(name, nil).
 			Times(1),
 		s.MockDriver().

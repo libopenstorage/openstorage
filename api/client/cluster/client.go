@@ -318,6 +318,11 @@ func (c *clusterClient) GetGossipState() *cluster.ClusterState {
 	return status
 }
 
+func (c *clusterClient) GetGossipIntervals() types.GossipIntervals {
+	// not implemented
+	return types.GossipIntervals{}
+}
+
 func (c *clusterClient) EnumerateAlerts(ts, te time.Time, resource api.ResourceType) (*api.Alerts, error) {
 	a := api.Alerts{}
 	request := c.c.Get().Resource(clusterPath + "/alerts/" + strconv.FormatInt(int64(resource), 10))

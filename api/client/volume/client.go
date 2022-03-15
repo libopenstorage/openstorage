@@ -131,7 +131,7 @@ func (v *volumeClient) GraphDriverDiffSize(id string, parent string) (int, error
 
 // Create a new Vol for the specific volume spev.c.
 // It returns a system generated VolumeID that uniquely identifies the volume
-func (v *volumeClient) Create(locator *api.VolumeLocator, source *api.Source,
+func (v *volumeClient) Create(ctx context.Context, locator *api.VolumeLocator, source *api.Source,
 	spec *api.VolumeSpec) (string, error) {
 	response := &api.VolumeCreateResponse{}
 	request := &api.VolumeCreateRequest{
@@ -172,7 +172,7 @@ func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
 
 // Delete volume.
 // Errors ErrEnoEnt, ErrVolHasSnaps may be returned.
-func (v *volumeClient) Delete(volumeID string) error {
+func (v *volumeClient) Delete(ctx context.Context, volumeID string) error {
 	response := &api.VolumeResponse{}
 	if err := v.c.Delete().Resource(volumePath).Instance(volumeID).Do().Unmarshal(response); err != nil {
 		return err

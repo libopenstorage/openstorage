@@ -17,6 +17,7 @@ limitations under the License.
 package sanity
 
 import (
+	"context"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -158,7 +159,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 				},
 			}
 
-			volumeID, err = volumedriver.Create(vr.GetLocator(), vr.GetSource(), vr.GetSpec())
+			volumeID, err = volumedriver.Create(context.TODO(), vr.GetLocator(), vr.GetSource(), vr.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Checking if no of volumes present in cluster increases by 1")
@@ -166,7 +167,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 
 			By("Deleting the created volume")
 
-			err = volumedriver.Delete(volumeID)
+			err = volumedriver.Delete(context.TODO(), volumeID)
 			Expect(err).NotTo(HaveOccurred())
 
 			endTime := time.Now()

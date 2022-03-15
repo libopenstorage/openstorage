@@ -1070,8 +1070,9 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Do(func(
+				ctx context.Context,
 				locator *api.VolumeLocator,
 				Source *api.Source,
 				spec *api.VolumeSpec,
@@ -1375,7 +1376,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 
 			s.MockDriver().
 				EXPECT().
-				Create(gomock.Any(), gomock.Any(), gomock.Any()).
+				Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 				Return(id, nil).
 				Times(1),
 
@@ -1443,7 +1444,7 @@ func TestControllerCreateVolumeFails(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return("", fmt.Errorf("createerror")).
 			Times(1),
 	)
@@ -1492,7 +1493,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(id, nil).
 			Times(1),
 
@@ -1553,7 +1554,7 @@ func TestControllerCreateVolume(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(id, nil).
 			Times(1),
 
@@ -1805,7 +1806,7 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Delete(myid).
+			Delete(context.TODO(), myid).
 			Return(fmt.Errorf("MOCKERRORTEST")).
 			Times(1),
 	)
@@ -1866,7 +1867,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Delete(myid).
+			Delete(context.TODO(), myid).
 			Return(nil).
 			Times(1),
 	)
@@ -2064,7 +2065,7 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Delete(id).
+			Delete(context.TODO(), id).
 			Return(nil).
 			Times(1),
 	)

@@ -108,7 +108,7 @@ func (v *volDriver) volumeCreate(cliContext *cli.Context) {
 	source := &api.Source{
 		Seed: cliContext.String("seed"),
 	}
-	if id, err = v.volDriver.Create(locator, source, spec); err != nil {
+	if id, err = v.volDriver.Create(context.Background(), locator, source, spec); err != nil {
 		cmdError(cliContext, fn, err)
 		return
 	}
@@ -270,7 +270,7 @@ func (v *volDriver) volumeDelete(cliContext *cli.Context) {
 	}
 	volumeID := cliContext.Args()[0]
 	v.volumeOptions(cliContext)
-	err := v.volDriver.Delete(volumeID)
+	err := v.volDriver.Delete(context.Background(), volumeID)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return

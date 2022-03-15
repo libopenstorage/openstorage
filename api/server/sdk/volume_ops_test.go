@@ -100,7 +100,7 @@ func TestSdkVolumeCreateCheckIdempotencyWaitForRemoved(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, &api.VolumeSpec{Size: size}).
 			Return(id, nil),
@@ -242,7 +242,7 @@ func TestSdkVolumeCreate(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, &api.VolumeSpec{Size: size}).
 			Return(id, nil).
@@ -358,7 +358,7 @@ func TestSdkVolumeDelete(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Delete(id).
+			Delete(gomock.Any(), id).
 			Return(nil).
 			Times(1),
 	)
@@ -943,7 +943,7 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		Return([]*api.Volume{vpublic}, nil)
 	mv.
 		EXPECT().
-		Delete(id).
+		Delete(gomock.Any(), id).
 		Return(nil)
 	_, err := s.Delete(ctxNoAuth, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
@@ -959,7 +959,7 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		Return([]*api.Volume{vpublic}, nil)
 	mv.
 		EXPECT().
-		Delete(id).
+		Delete(gomock.Any(), id).
 		Return(nil)
 	_, err = s.Delete(ctxWithNotOwner, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
@@ -975,7 +975,7 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		Return([]*api.Volume{vauth}, nil)
 	mv.
 		EXPECT().
-		Delete(id).
+		Delete(gomock.Any(), id).
 		Return(nil)
 	_, err = s.Delete(ctxNoAuth, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
@@ -1004,7 +1004,7 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 		Return([]*api.Volume{vauth}, nil)
 	mv.
 		EXPECT().
-		Delete(id).
+		Delete(gomock.Any(), id).
 		Return(nil)
 	_, err = s.Delete(ctxWithTrusted, &api.SdkVolumeDeleteRequest{
 		VolumeId: id,
@@ -1395,7 +1395,7 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, updatedSpec).
 			Return(id, nil).
@@ -1569,7 +1569,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 			Times(1),
 
 		mv.EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, updatedSpec).
 			Return(id, nil).
@@ -1622,7 +1622,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 			Times(1),
 
 		mv.EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, upSpec).
 			Return(id, nil).
@@ -1768,7 +1768,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 			Times(1),
 
 		mv.EXPECT().
-			Create(&api.VolumeLocator{
+			Create(gomock.Any(), &api.VolumeLocator{
 				Name: name,
 			}, &api.Source{}, volPolSpec).
 			Return(id, nil).

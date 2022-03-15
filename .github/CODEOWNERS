@@ -1,2 +1,10 @@
 .github/ @ggriffiths
 csi/ @ggriffiths
+api/server/sdk/ @ggriffiths
+api/ @ggriffiths
+cosi/ @ggriffiths
+bucket/ @ggriffiths
+pkg/auth @ggriffiths
+pkg/role @ggriffiths
+pkg/correlation @ggriffiths
+pkg/grpcserver @ggriffiths
