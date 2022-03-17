@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.24 - (03/17/2022)
+
+* Add topology requirement field the VolumeSpec
+
 ### v0.101.23 - (02/07/2022)
 
 * Add scheduler topology field to the StorageNode object
