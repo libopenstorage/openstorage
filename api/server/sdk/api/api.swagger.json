@@ -4833,6 +4833,19 @@
         "title": "Version information about the storage system",
         "type": "object"
       },
+      "apiTopologyRequirement": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Key-value pairs defining the required topology for a volume",
+            "type": "object"
+          }
+        },
+        "title": "TopologyRequirement defines the topology requirement for a volume",
+        "type": "object"
+      },
       "apiVolume": {
         "description": "Volume represents an abstract storage volume.",
         "properties": {
@@ -5270,6 +5283,9 @@
             "title": "StoragePolicy if applied/specified while creating volume",
             "type": "string"
           },
+          "topology_requirement": {
+            "$ref": "#/components/schemas/apiTopologyRequirement"
+          },
           "volume_labels": {
             "additionalProperties": {
               "type": "string"
@@ -5692,7 +5708,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.135.0"
+    "version": "0.136.0"
   },
   "openapi": "3.0.0",
   "paths": {

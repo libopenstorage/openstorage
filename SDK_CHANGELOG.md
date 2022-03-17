@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.136.0 - (3/17/2022)
+
+* Add topology requirement field the VolumeSpec.
+
 ### v0.135.0 - (2/7/2022)
 
 * Add serial number to PureBlockSpec.
