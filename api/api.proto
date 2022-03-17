@@ -273,6 +273,11 @@ message StoragePoolOperation {
   SdkStoragePool.OperationStatus status = 4;
 }
 
+// TopologyRequirement defines the topology requirement for a volume
+message TopologyRequirement {
+    // Key-value pairs defining the required topology for a volume
+    map<string, string> labels = 1;
+}
 
 // VolumeLocator is a structure that is attached to a volume
 // and is used to carry opaque metadata.
@@ -672,6 +677,8 @@ message VolumeSpec {
   bool auto_fstrim = 44;
   // IoThrottle specifies maximum io(iops/bandwidth) this volume is restricted to
   IoThrottle io_throttle = 45;
+  // TopologyRequirement topology requirement for this volume
+  TopologyRequirement topology_requirement = 48;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -5008,7 +5015,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 23;
+    Patch = 24;
   }
 
   // The following cannot be set to use the enum Version because the REST

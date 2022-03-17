@@ -482,6 +482,18 @@ func (s *OsdCsiServer) CreateVolume(
 			return nil, err
 		}
 
+		if spec.IsPureVolume() &&
+			req.AccessibilityRequirements != nil &&
+			len(req.AccessibilityRequirements.Preferred) > 0 &&
+			len(req.AccessibilityRequirements.Preferred[0].Segments) > 0 {
+			spec.TopologyRequirement = &api.TopologyRequirement{
+				Labels: map[string]string{},
+			}
+			for k, v := range req.AccessibilityRequirements.Preferred[0].Segments {
+				spec.TopologyRequirement.Labels[k] = v
+			}
+		}
+
 		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 			Name:   req.GetName(),
 			Spec:   spec,
