@@ -373,12 +373,56 @@ func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
 		if cap.GetBlock() != nil {
 			block = true
 		}
+	}
 
-		if block && shared {
-			return status.Errorf(
-				codes.InvalidArgument,
-				"Shared raw block volumes are not supported")
+	if block && shared {
+		return status.Errorf(
+			codes.InvalidArgument,
+			"Shared raw block volumes are not supported")
+	}
+
+	return nil
+}
+
+func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpec *api.ProxySpec) error {
+	if len(caps) == 0 {
+		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	}
+
+	var shared bool
+	var block bool
+	var mount bool
+	for _, cap := range caps {
+		mode := cap.GetAccessMode().GetMode()
+		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
+			shared = true
 		}
+
+		if cap.GetBlock() != nil {
+			block = true
+		}
+
+		if cap.GetMount() != nil {
+			mount = true
+		}
+	}
+
+	// Check for FA DA volumes: all allowed except filesystem RWX
+	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK && shared && mount {
+		return status.Errorf(
+			codes.InvalidArgument,
+			"FlashArray Direct Access shared filesystems are not supported",
+		)
+	}
+
+	// Check for FB DA volumes: all allowed except raw block
+	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE && block {
+		return status.Errorf(
+			codes.InvalidArgument,
+			"FlashBlade Direct Access volumes do not support raw block",
+		)
 	}
 
 	return nil
@@ -397,9 +441,6 @@ func (s *OsdCsiServer) CreateVolume(
 	if len(req.GetName()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
-	if err := validateCreateVolumeCapabilities(req.GetVolumeCapabilities()); err != nil {
-		return nil, err
-	}
 
 	// Get parameters
 	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
@@ -407,6 +448,18 @@ func (s *OsdCsiServer) CreateVolume(
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
 		clogger.WithContext(ctx).Errorln(e)
 		return nil, status.Error(codes.InvalidArgument, e)
+	}
+
+	if spec.IsPureVolume() {
+		err = validateCreateVolumeCapabilitiesPure(req.GetVolumeCapabilities(), spec.GetProxySpec())
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		err = validateCreateVolumeCapabilities(req.GetVolumeCapabilities())
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// Get PVC Metadata and add to locator.VolumeLabels
