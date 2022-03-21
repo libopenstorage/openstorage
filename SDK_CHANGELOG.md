@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.135.0 - (2/7/2022)
+
+* Add serial number to PureBlockSpec.
+
 ### v0.134.0 - (2/7/2022)
 
 * Add scheduler topology field to the StorageNode object.
