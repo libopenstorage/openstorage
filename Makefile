@@ -173,8 +173,7 @@ $(OSDSANITY)-clean:
 docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto --network=host -f Dockerfile.proto .
 
-# the docker-build-proto should be there temporarily for the go mod upgrade
-docker-proto: docker-build-proto $(GOPATH)/bin/protoc-gen-go
+docker-proto:  $(GOPATH)/bin/protoc-gen-go
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
