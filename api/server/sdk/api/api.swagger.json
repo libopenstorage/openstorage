@@ -1341,6 +1341,11 @@
         "type": "object"
       },
       "apiPureBlockSpec": {
+        "properties": {
+          "serial_num": {
+            "type": "string"
+          }
+        },
         "title": "PureBlockSpec is the spec for proxying a volume on pure_block backends",
         "type": "object"
       },
@@ -5687,7 +5692,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.134.0"
+    "version": "0.135.0"
   },
   "openapi": "3.0.0",
   "paths": {
