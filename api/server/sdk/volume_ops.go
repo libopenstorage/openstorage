@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -202,6 +203,13 @@ func (s *VolumeServer) create(
 		// Create the volume
 		id, err = s.driver(ctx).Create(ctx, locator, source, spec)
 		if err != nil {
+			if spec.IsPureVolume() &&
+				strings.Contains(err.Error(), "no storage backends were able to meet the request specification") {
+				return "", status.Errorf(
+					codes.ResourceExhausted,
+					"Failed to create volume: %v",
+					err.Error())
+			}
 			return "", status.Errorf(
 				codes.Internal,
 				"Failed to create volume: %v",

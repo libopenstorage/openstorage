@@ -2161,6 +2161,345 @@ func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
 
 }
 
+func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	name := "myvol"
+	size := int64(1234)
+	id := "myid"
+
+	// TestCase: Topology requirement present, but not a Pure volume
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		AccessibilityRequirements: &csi.TopologyRequirement{
+			Preferred: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"topology.io/zone": "zone-1",
+					},
+				},
+			},
+		},
+	}
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+				assert.Nil(t, spec.TopologyRequirement)
+				return id, nil
+			}).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.Nil(t, volumeInfo.GetAccessibleTopology())
+
+	// TestCase: Pure volume, but topology requirements absent
+	req = &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecBackendType: api.SpecBackendPureBlock,
+		},
+	}
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+				assert.Nil(t, spec.TopologyRequirement)
+				return id, nil
+			}).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err = c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo = r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+}
+
+func TestControllerCreateVolumeWithTopology(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+
+	name := "myvol"
+	size := int64(1234)
+	id := "myid"
+
+	// TestCase: Pure volume and topology requirement present, but Create fails.
+	// This test validates that we don't retry Create if the failure happens because of
+	// any other reason that topology placement.
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecBackendType: api.SpecBackendPureFile,
+		},
+		AccessibilityRequirements: &csi.TopologyRequirement{
+			Preferred: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"topology.io/zone":   "zone-1",
+						"topology.io/region": "region-1",
+					},
+				},
+				{
+					Segments: map[string]string{
+						"topology.io/zone":   "zone-2",
+						"topology.io/region": "region-2",
+					},
+				},
+			},
+		},
+	}
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+				assert.NotNil(t, spec.TopologyRequirement)
+				assert.Equal(t, spec.TopologyRequirement.Labels, req.AccessibilityRequirements.Preferred[0].Segments)
+				return id, nil
+			}).
+			Return("", fmt.Errorf("create failed")).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.NotNil(t, err)
+	assert.Nil(t, r)
+
+	// TestCase: Pure volume and topology requirement present.
+	// This tests mulitple things -
+	// - Multiple topologies are sent by the provisioner in both preferred and requisite sections
+	// - Topologies are de-duped from the requirement
+	// - Retry volume creation only if the create fails because of topology placement
+	req = &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			&csi.VolumeCapability{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		Parameters: map[string]string{
+			api.SpecBackendType: api.SpecBackendPureFile,
+		},
+		AccessibilityRequirements: &csi.TopologyRequirement{
+			Preferred: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"topology.io/zone":   "zone-1",
+						"topology.io/region": "region-1",
+					},
+				},
+			},
+			Requisite: []*csi.Topology{
+				{
+					Segments: map[string]string{
+						"topology.io/zone":   "zone-1",
+						"topology.io/region": "region-1",
+					},
+				},
+				{
+					Segments: map[string]string{
+						"topology.io/zone":   "zone-2",
+						"topology.io/region": "region-2",
+					},
+				},
+			},
+		},
+	}
+
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+				assert.NotNil(t, spec.TopologyRequirement)
+				assert.Equal(t, spec.TopologyRequirement.Labels, req.AccessibilityRequirements.Preferred[0].Segments)
+				return id, nil
+			}).
+			Return("", fmt.Errorf("no storage backends were able to meet the request specification")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Do(func(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+				assert.NotNil(t, spec.TopologyRequirement)
+				assert.Equal(t, spec.TopologyRequirement.Labels, req.AccessibilityRequirements.Requisite[1].Segments)
+				return id, nil
+			}).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+						TopologyRequirement: &api.TopologyRequirement{
+							Labels: req.AccessibilityRequirements.Requisite[1].Segments,
+						},
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err = c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.Len(t, volumeInfo.AccessibleTopology, 1)
+	assert.Equal(t, req.AccessibilityRequirements.Requisite[1].Segments, volumeInfo.AccessibleTopology[0].Segments)
+}
+
 func TestControllerDeleteVolumeInvalidArguments(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
