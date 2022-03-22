@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"reflect"
 	"sort"
 
 	"github.com/portworx/kvdb"
@@ -488,25 +489,32 @@ func (s *OsdCsiServer) CreateVolume(
 			return nil, err
 		}
 
-		if spec.IsPureVolume() &&
-			req.AccessibilityRequirements != nil &&
-			len(req.AccessibilityRequirements.Preferred) > 0 &&
-			len(req.AccessibilityRequirements.Preferred[0].Segments) > 0 {
-			spec.TopologyRequirement = &api.TopologyRequirement{
-				Labels: map[string]string{},
+		var createResp *api.SdkVolumeCreateResponse
+		var createErr error
+		topologies := getAllTopologies(req.AccessibilityRequirements)
+		if spec.IsPureVolume() && len(topologies) > 0 {
+			for _, topo := range topologies {
+				spec.TopologyRequirement = &api.TopologyRequirement{
+					Labels: topo.Segments,
+				}
+				createResp, createErr = volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+					Name:   req.GetName(),
+					Spec:   spec,
+					Labels: locator.GetVolumeLabels(),
+				})
+				if s, ok := status.FromError(createErr); createErr == nil || (ok && s.Code() != codes.ResourceExhausted) {
+					break
+				}
 			}
-			for k, v := range req.AccessibilityRequirements.Preferred[0].Segments {
-				spec.TopologyRequirement.Labels[k] = v
-			}
+		} else {
+			createResp, createErr = volumes.Create(ctx, &api.SdkVolumeCreateRequest{
+				Name:   req.GetName(),
+				Spec:   spec,
+				Labels: locator.GetVolumeLabels(),
+			})
 		}
-
-		createResp, err := volumes.Create(ctx, &api.SdkVolumeCreateRequest{
-			Name:   req.GetName(),
-			Spec:   spec,
-			Labels: locator.GetVolumeLabels(),
-		})
-		if err != nil {
-			return nil, err
+		if createErr != nil {
+			return nil, createErr
 		}
 		newVolumeId = createResp.VolumeId
 	} else {
@@ -660,6 +668,16 @@ func osdToCsiVolumeInfo(dest *csi.Volume, src *api.Volume, req *csi.CreateVolume
 	dest.CapacityBytes = int64(src.Spec.GetSize())
 	dest.VolumeContext = osdVolumeContext(src)
 	dest.ContentSource = req.GetVolumeContentSource()
+	if src.Spec.GetTopologyRequirement() != nil && len(src.Spec.TopologyRequirement.Labels) > 0 {
+		dest.AccessibleTopology = make([]*csi.Topology, 1)
+		segments := map[string]string{}
+		for k, v := range src.Spec.TopologyRequirement.Labels {
+			segments[k] = v
+		}
+		dest.AccessibleTopology[0] = &csi.Topology{
+			Segments: segments,
+		}
+	}
 }
 
 // isFilesystemSpecSet checks if the fs parameter has been declared
@@ -1049,6 +1067,39 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	}
 
 	return listSnapshotsResp, nil
+}
+
+func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {
+	if req == nil {
+		return nil
+	}
+	result := []*csi.Topology{}
+	inputTopologies := append([]*csi.Topology{}, req.Preferred...)
+
+	// Dedup topologies between Preferred and Requisite
+	for _, requisite := range req.Requisite {
+		matched := false
+		for _, preferred := range req.Preferred {
+			if reflect.DeepEqual(requisite, preferred) {
+				matched = true
+				break
+			}
+		}
+		if !matched {
+			inputTopologies = append(inputTopologies, requisite)
+		}
+	}
+
+	for _, t := range inputTopologies {
+		segments := map[string]string{}
+		for key, value := range t.Segments {
+			segments[key] = value
+		}
+		if len(segments) > 0 {
+			result = append(result, &csi.Topology{Segments: segments})
+		}
+	}
+	return result
 }
 
 // roundUpToNearestGiB rounds up given quantity upto chunks of GiB
