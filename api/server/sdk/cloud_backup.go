@@ -406,7 +406,8 @@ func (s *CloudBackupServer) Status(
 		if sts.OpType == api.CloudRestoreOp &&
 			(sts.Status == api.CloudBackupStatusFailed ||
 				sts.Status == api.CloudBackupStatusAborted ||
-				sts.Status == api.CloudBackupStatusStopped) {
+				sts.Status == api.CloudBackupStatusStopped ||
+				sts.SrcVolumeID == "") {
 			continue
 		}
 		if err := checkAccessFromDriverForVolumeIds(ctx, s.driver(ctx), []string{sts.SrcVolumeID}, api.Ownership_Read); err != nil {
