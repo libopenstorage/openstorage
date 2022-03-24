@@ -537,7 +537,7 @@ func (m *Mounter) Mount(
 			}
 		}
 
-		return fmt.Errorf("%s", err)
+		return err
 	}
 
 	info.Mountpoint = append(info.Mountpoint, &PathInfo{Path: path})
