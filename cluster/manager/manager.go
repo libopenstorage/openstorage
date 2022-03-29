@@ -429,15 +429,6 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	return nodeCopy
 }
 
-// Return ip:port string
-func getPeerAddress(ip string, port string) string {
-	if strings.Contains(ip, ":") {
-		// IPv6 addresses and '[]'
-		ip = fmt.Sprintf("[%s]", ip)
-	}
-	return fmt.Sprintf("%s:%s", ip, port)
-}
-
 func (c *ClusterManager) getNonDecommisionedPeers(
 	db cluster.ClusterInfo,
 ) map[types.NodeId]types.NodeUpdate {
@@ -447,7 +438,7 @@ func (c *ClusterManager) getNonDecommisionedPeers(
 			continue
 		}
 		peers[types.NodeId(nodeEntry.Id)] = types.NodeUpdate{
-			Addr:          getPeerAddress(nodeEntry.DataIp, c.gossipPort),
+			Addr:          net.JoinHostPort(nodeEntry.DataIp, c.gossipPort),
 			QuorumMember:  !nodeEntry.NonQuorumMember,
 			ClusterDomain: nodeEntry.ClusterDomain,
 		}
@@ -831,7 +822,7 @@ func (c *ClusterManager) startHeartBeat(
 			gossipPort = c.gossipPort
 		}
 
-		nodeIp := getPeerAddress(nodeEntry.DataIp, gossipPort)
+		nodeIp := net.JoinHostPort(nodeEntry.DataIp, gossipPort)
 		gossipConfig.Nodes[types.NodeId(nodeId)] = types.GossipNodeConfiguration{
 			KnownUrl:      nodeIp,
 			ClusterDomain: nodeEntry.ClusterDomain,
@@ -1492,7 +1483,7 @@ func (c *ClusterManager) StartWithConfiguration(
 		SuspicionMult:    types.DEFAULT_SUSPICION_MULTIPLIER,
 	}
 
-	nodeIp := getPeerAddress(c.selfNode.DataIp, c.gossipPort)
+	nodeIp := net.JoinHostPort(c.selfNode.DataIp, c.gossipPort)
 	logrus.Infoln("Init gossip: ", nodeIp)
 
 	c.gossip = gossip.New(
