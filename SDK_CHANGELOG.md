@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.101.26 - (06/07/2022)
+
+* Adds full_vol_name field to PureBlockSpec.
+* Adds full_vol_name field to PureFileSpec.
+
 ### v0.101.25 - (03/17/2022)
 
 * Add serial number to PureBlockSpec.

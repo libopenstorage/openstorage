@@ -1356,6 +1356,9 @@
       },
       "apiPureBlockSpec": {
         "properties": {
+          "full_vol_name": {
+            "type": "string"
+          },
           "serial_num": {
             "type": "string"
           }
@@ -1366,6 +1369,9 @@
       "apiPureFileSpec": {
         "properties": {
           "export_rules": {
+            "type": "string"
+          },
+          "full_vol_name": {
             "type": "string"
           }
         },
@@ -5672,7 +5678,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.25"
+    "version": "0.101.26"
   },
   "openapi": "3.0.0",
   "paths": {

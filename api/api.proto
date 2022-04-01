@@ -400,11 +400,13 @@ message PXDProxySpec {
 // PureBlockSpec is the spec for proxying a volume on pure_block backends
 message PureBlockSpec {
   string serial_num = 1;
+  string full_vol_name = 2;
 }
 
 // PureFileSpec is the spec for proxying a volume on pure_file backends
 message PureFileSpec {
   string export_rules = 1;
+  string full_vol_name = 2;
 }
 
 // ProxySpec defines how this volume will reflect an external data source.
@@ -5016,7 +5018,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 25;
+    Patch = 26;
   }
 
   // The following cannot be set to use the enum Version because the REST
