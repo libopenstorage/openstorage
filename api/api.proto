@@ -400,11 +400,13 @@ message PXDProxySpec {
 // PureBlockSpec is the spec for proxying a volume on pure_block backends
 message PureBlockSpec {
   string serial_num = 1;
+  string full_vol_name = 2;
 }
 
 // PureFileSpec is the spec for proxying a volume on pure_file backends
 message PureFileSpec {
   string export_rules = 1;
+  string full_vol_name = 2;
 }
 
 // ProxySpec defines how this volume will reflect an external data source.
@@ -5051,7 +5053,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 136;
+    Minor = 137;
     // SDK version patch value of this specification
     Patch = 0;
   }

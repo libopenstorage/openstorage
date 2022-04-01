@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.137.0 - (3/31/2022)
+
+* Adds full_vol_name field to PureBlockSpec.
+* Adds full_vol_name field to PureFileSpec.
+
 ### v0.136.0 - (3/17/2022)
 
 * Add topology requirement field the VolumeSpec.
