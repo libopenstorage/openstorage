@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -552,6 +553,73 @@ func (s *VolumeServer) EnumerateWithFilters(
 	}, nil
 }
 
+func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
+	// spec has been updated fully for all attributes inclusive of requested attr.
+	// But it is possible for the current state to be stale and so requesting update with
+	// all attributes may have a side affect.
+	// For ex: a size update of the volume, could result in a ha-update
+	// So clear other attributes, so as not to cause side effect while applying
+	// the update.
+	// All state based conditionals are set only for requested attribs.
+	// boolean based state can still be stale, but the chances are low, because
+	// they are immediately handled within px, unlike HA updates which needs acknowledgement
+	// from px-storage to complete processing.
+
+	// ScanPolicy
+	if req.GetScanPolicy() == nil {
+		spec.ScanPolicy = nil
+	}
+
+	if req.GetSnapshotIntervalOpt() == nil {
+		spec.SnapshotInterval = math.MaxUint32
+	}
+
+	if req.GetSnapshotScheduleOpt() == nil {
+		spec.SnapshotSchedule = ""
+	}
+
+	// HA Level
+	if req.GetHaLevelOpt() == nil {
+		spec.HaLevel = 0
+	}
+
+	if req.GetSizeOpt() == nil {
+		spec.Size = 0
+	}
+
+	if req.GetCosOpt() == nil {
+		spec.Cos = api.CosType_NONE
+	}
+
+	if req.GetExportSpec() == nil {
+		spec.ExportSpec = nil
+	}
+
+	if req.GetMountOptSpec() == nil {
+		spec.MountOptions = nil
+	}
+
+	if req.GetSharedv4MountOptSpec() == nil {
+		spec.Sharedv4MountOptions = nil
+	}
+
+	if req.GetSharedv4ServiceSpec() == nil {
+		spec.Sharedv4ServiceSpec = nil
+	}
+
+	if req.GetSharedv4Spec() == nil {
+		spec.Sharedv4Spec = nil
+	}
+
+	if req.GetGroupOpt() == nil {
+		spec.Group = nil
+	}
+
+	if req.GetIoStrategy() == nil {
+		spec.IoStrategy = nil
+	}
+}
+
 // Update allows the caller to change values in the volume specification
 func (s *VolumeServer) Update(
 	ctx context.Context,
@@ -609,6 +677,11 @@ func (s *VolumeServer) Update(
 	if err != nil {
 		return nil, err
 	}
+
+	// avoid side effect while applying with stale config by masking
+	// other parts of the spec.
+	maskUnModified(updatedSpec, req.GetSpec())
+
 	// Send to driver
 	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
