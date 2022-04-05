@@ -553,7 +553,10 @@ func (s *VolumeServer) EnumerateWithFilters(
 	}, nil
 }
 
-func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
+// mask all unmodified attributes of the spec before calling Set/Update
+func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
+	new := *spec // not a deep copy, but its okay in this case
+
 	// spec has been updated fully for all attributes inclusive of requested attr.
 	// But it is possible for the current state to be stale and so requesting update with
 	// all attributes may have a side affect.
@@ -567,57 +570,59 @@ func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
 
 	// ScanPolicy
 	if req.GetScanPolicy() == nil {
-		spec.ScanPolicy = nil
+		new.ScanPolicy = nil
 	}
 
 	if req.GetSnapshotIntervalOpt() == nil {
-		spec.SnapshotInterval = math.MaxUint32
+		new.SnapshotInterval = math.MaxUint32
 	}
 
 	if req.GetSnapshotScheduleOpt() == nil {
-		spec.SnapshotSchedule = ""
+		new.SnapshotSchedule = ""
 	}
 
 	// HA Level
 	if req.GetHaLevelOpt() == nil {
-		spec.HaLevel = 0
+		new.HaLevel = 0
 	}
 
 	if req.GetSizeOpt() == nil {
-		spec.Size = 0
+		new.Size = 0
 	}
 
 	if req.GetCosOpt() == nil {
-		spec.Cos = api.CosType_NONE
+		new.Cos = api.CosType_NONE
 	}
 
 	if req.GetExportSpec() == nil {
-		spec.ExportSpec = nil
+		new.ExportSpec = nil
 	}
 
 	if req.GetMountOptSpec() == nil {
-		spec.MountOptions = nil
+		new.MountOptions = nil
 	}
 
 	if req.GetSharedv4MountOptSpec() == nil {
-		spec.Sharedv4MountOptions = nil
+		new.Sharedv4MountOptions = nil
 	}
 
 	if req.GetSharedv4ServiceSpec() == nil {
-		spec.Sharedv4ServiceSpec = nil
+		new.Sharedv4ServiceSpec = nil
 	}
 
 	if req.GetSharedv4Spec() == nil {
-		spec.Sharedv4Spec = nil
+		new.Sharedv4Spec = nil
 	}
 
 	if req.GetGroupOpt() == nil {
-		spec.Group = nil
+		new.Group = nil
 	}
 
 	if req.GetIoStrategy() == nil {
-		spec.IoStrategy = nil
+		new.IoStrategy = nil
 	}
+
+	return &new
 }
 
 // Update allows the caller to change values in the volume specification
@@ -680,10 +685,10 @@ func (s *VolumeServer) Update(
 
 	// avoid side effect while applying with stale config by masking
 	// other parts of the spec.
-	maskUnModified(updatedSpec, req.GetSpec())
+	maskedSpec := maskUnModified(updatedSpec, req.GetSpec())
 
 	// Send to driver
-	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
+	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, maskedSpec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
