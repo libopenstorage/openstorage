@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"net"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
@@ -232,7 +233,7 @@ func (s *NodeServer) needsProxyRequest(
 func (s *NodeServer) getProxyClient(
 	host string,
 ) (api.OpenStorageNodeClient, error) {
-	endpoint := host + ":" + s.server.port()
+	endpoint := net.JoinHostPort(host, s.server.port())
 	// TODO TLS
 	dialOpts := []grpc.DialOption{
 		grpc.WithInsecure(),
