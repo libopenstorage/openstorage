@@ -19,7 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
-	"math"
+	_ "math"
 	"strings"
 	"time"
 
@@ -554,9 +554,7 @@ func (s *VolumeServer) EnumerateWithFilters(
 }
 
 // mask all unmodified attributes of the spec before calling Set/Update
-func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.VolumeSpec {
-	new := *spec // not a deep copy, but its okay in this case
-
+func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
 	// spec has been updated fully for all attributes inclusive of requested attr.
 	// But it is possible for the current state to be stale and so requesting update with
 	// all attributes may have a side affect.
@@ -568,61 +566,73 @@ func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) *api.Volume
 	// they are immediately handled within px, unlike HA updates which needs acknowledgement
 	// from px-storage to complete processing.
 
+	logrus.Infof("maskUnModified: revising spec %v, based on req update %+v", spec, req)
+
 	// ScanPolicy
 	if req.GetScanPolicy() == nil {
-		new.ScanPolicy = nil
+		spec.ScanPolicy = nil
+		logrus.Infof("maskUnModified: spec.ScanPolicy set nil")
 	}
 
-	if req.GetSnapshotIntervalOpt() == nil {
-		new.SnapshotInterval = math.MaxUint32
-	}
+	//if req.GetSnapshotIntervalOpt() == nil {
+	//	spec.SnapshotInterval = math.MaxUint32
+	//}
 
 	if req.GetSnapshotScheduleOpt() == nil {
-		new.SnapshotSchedule = ""
+		spec.SnapshotSchedule = ""
+		logrus.Infof("maskUnModified: spec.SnapshotSchedule set \"\"")
 	}
 
 	// HA Level
 	if req.GetHaLevelOpt() == nil {
-		new.HaLevel = 0
+		spec.HaLevel = 0
+		logrus.Infof("maskUnModified: spec.HaLevel set zero")
 	}
 
 	if req.GetSizeOpt() == nil {
-		new.Size = 0
+		spec.Size = 0
+		logrus.Infof("maskUnModified: spec.Size set zero")
 	}
 
 	if req.GetCosOpt() == nil {
-		new.Cos = api.CosType_NONE
+		spec.Cos = api.CosType_NONE
+		logrus.Infof("maskUnModified: spec.Cos set None")
 	}
 
 	if req.GetExportSpec() == nil {
-		new.ExportSpec = nil
+		spec.ExportSpec = nil
+		logrus.Infof("maskUnModified: spec.ExportSpec set nil")
 	}
 
 	if req.GetMountOptSpec() == nil {
-		new.MountOptions = nil
+		spec.MountOptions = nil
+		logrus.Infof("maskUnModified: spec.MountOptions set nil")
 	}
 
 	if req.GetSharedv4MountOptSpec() == nil {
-		new.Sharedv4MountOptions = nil
+		spec.Sharedv4MountOptions = nil
+		logrus.Infof("maskUnModified: spec.Sharedv4MountOptions set nil")
 	}
 
 	if req.GetSharedv4ServiceSpec() == nil {
-		new.Sharedv4ServiceSpec = nil
+		spec.Sharedv4ServiceSpec = nil
+		logrus.Infof("maskUnModified: spec.Sharedv4ServiceSpec set nil")
 	}
 
 	if req.GetSharedv4Spec() == nil {
-		new.Sharedv4Spec = nil
+		spec.Sharedv4Spec = nil
+		logrus.Infof("maskUnModified: spec.Sharedv4Spec set nil")
 	}
 
 	if req.GetGroupOpt() == nil {
-		new.Group = nil
+		spec.Group = nil
+		logrus.Infof("maskUnModified: spec.Group set nil")
 	}
 
 	if req.GetIoStrategy() == nil {
-		new.IoStrategy = nil
+		spec.IoStrategy = nil
+		logrus.Infof("maskUnModified: spec.IoStrategy set nil")
 	}
-
-	return &new
 }
 
 // Update allows the caller to change values in the volume specification
@@ -685,10 +695,10 @@ func (s *VolumeServer) Update(
 
 	// avoid side effect while applying with stale config by masking
 	// other parts of the spec.
-	maskedSpec := maskUnModified(updatedSpec, req.GetSpec())
+	maskUnModified(updatedSpec, req.GetSpec())
 
 	// Send to driver
-	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, maskedSpec); err != nil {
+	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
