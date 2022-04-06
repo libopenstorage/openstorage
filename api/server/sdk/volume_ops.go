@@ -19,7 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
-	_ "math"
+	"math"
 	"strings"
 	"time"
 
@@ -574,9 +574,9 @@ func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
 		logrus.Infof("maskUnModified: spec.ScanPolicy set nil")
 	}
 
-	//if req.GetSnapshotIntervalOpt() == nil {
-	//	spec.SnapshotInterval = math.MaxUint32
-	//}
+	if req.GetSnapshotIntervalOpt() == nil {
+		spec.SnapshotInterval = math.MaxUint32
+	}
 
 	if req.GetSnapshotScheduleOpt() == nil {
 		spec.SnapshotSchedule = ""

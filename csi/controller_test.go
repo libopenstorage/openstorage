@@ -19,6 +19,7 @@ package csi
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/golang/protobuf/ptypes"
@@ -2675,7 +2676,8 @@ func TestControllerExpandVolume(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Set(gomock.Any(), gomock.Any(), &api.VolumeSpec{
-				Size: 46 * units.GiB, // Round up from 45.5 to 46
+				Size: uint64(46 * units.GiB), // Round up from 45.5 to 46
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
