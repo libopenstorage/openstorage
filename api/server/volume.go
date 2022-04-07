@@ -16,7 +16,6 @@ import (
 	"github.com/urfave/negroni"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -93,7 +92,7 @@ func (vd *volAPI) annotateContext(r *http.Request) (context.Context, context.Can
 	// Get the context if any passed over the request Headers
 	ctx := r.Context()
 
-	// Translate correlation ID from http headers to outgoing gRPC context
+	// Translate correlation ID from http headers to request context object.
 	rc := &correlation.RequestContext{}
 	if correlationID := r.Header.Get(correlation.ContextIDKey); len(correlationID) > 0 {
 		rc.ID = correlationID
@@ -101,11 +100,10 @@ func (vd *volAPI) annotateContext(r *http.Request) (context.Context, context.Can
 	if origin := r.Header.Get(correlation.ContextOriginKey); len(origin) > 0 {
 		rc.Origin = correlation.Component(origin)
 	}
-	rcMap := rc.AsMap()
-	if len(rcMap) > 0 {
-		md := metadata.New(rcMap)
-		ctx = metadata.NewOutgoingContext(ctx, md)
-	}
+
+	// Add request context object to current context.
+	// correlation client interceptor will handle translating this over gRPC
+	ctx = context.WithValue(ctx, correlation.ContextKey, rc)
 
 	// Set the timeout if non set. context.WithTimeout will set the soonest of the
 	// two, either the amount requested in the second argument, or the timeout
@@ -130,7 +128,6 @@ func (vd *volAPI) annotateContext(r *http.Request) (context.Context, context.Can
 	}
 	return ctx, cancel, nil
 }
-
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
 	// Check if the driver has registered by it's user agent name
 	userAgent := r.Header.Get("User-Agent")
