@@ -109,6 +109,7 @@ func create(t *testing.T, ctx *Context) {
 	fmt.Println("create")
 
 	volID, err := ctx.Create(
+		context.TODO(),
 		&api.VolumeLocator{Name: "foo", VolumeLabels: map[string]string{"oh": "create"}},
 		nil,
 		&api.VolumeSpec{
@@ -300,13 +301,13 @@ func deleteBad(t *testing.T, ctx *Context) {
 	fmt.Println("deleteBad")
 	require.NotEqual(t, ctx.mountPath, "", "Device is not mounted")
 
-	err := ctx.Delete(ctx.volID)
+	err := ctx.Delete(context.TODO(), ctx.volID)
 	require.Error(t, err, "Delete on mounted device must fail")
 }
 
 func delete(t *testing.T, ctx *Context) {
 	fmt.Println("delete")
-	err := ctx.Delete(ctx.volID)
+	err := ctx.Delete(context.TODO(), ctx.volID)
 	require.NoError(t, err, "Delete failed")
 	ctx.volID = ""
 }

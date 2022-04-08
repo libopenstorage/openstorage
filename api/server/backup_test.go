@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -38,10 +39,10 @@ func TestClientBackupCreateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(context.TODO(), id)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -285,10 +286,10 @@ func TestClientBackupEnumerateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(context.TODO(), id)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -347,10 +348,10 @@ func TestClientBackupEnumerateFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(context.TODO(), id)
 
 	// Create a backup
 	resp, err := driverclient.CloudBackupCreate(&api.CloudBackupCreateRequest{
@@ -515,10 +516,10 @@ func TestClientBackupSchedCreateSuccess(t *testing.T) {
 
 	// Create a volume client
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(context.TODO(), id)
 
 	goodRequest := api.CloudBackupSchedCreateRequest{}
 	goodRequest.SrcVolumeID = id
@@ -562,10 +563,10 @@ func TestClientBackupSchedCreateFailed(t *testing.T) {
 
 	// Create a volume client
 	driverclient := client.VolumeDriver(cl)
-	id, err := driverclient.Create(req.GetLocator(), req.GetSource(), req.GetSpec())
+	id, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
-	defer driverclient.Delete(id)
+	defer driverclient.Delete(context.TODO(), id)
 
 	// Cannot get this to fail.
 	badRequest := api.CloudBackupSchedCreateRequest{}

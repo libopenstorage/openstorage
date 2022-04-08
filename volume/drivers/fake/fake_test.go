@@ -17,6 +17,7 @@ limitations under the License.
 package fake
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -84,7 +85,7 @@ func TestFakeCreateVolume(t *testing.T) {
 	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
-	vid, err := d.Create(&api.VolumeLocator{
+	vid, err := d.Create(context.TODO(), &api.VolumeLocator{
 		Name: "myvol",
 	}, &api.Source{}, &api.VolumeSpec{
 		Size: 1234,
@@ -92,7 +93,7 @@ func TestFakeCreateVolume(t *testing.T) {
 	assert.Error(t, err)
 	assert.Empty(t, vid)
 
-	vid, err = d.Create(&api.VolumeLocator{
+	vid, err = d.Create(context.TODO(), &api.VolumeLocator{
 		Name: "myvol",
 	}, &api.Source{}, &api.VolumeSpec{
 		Size:    1234,
@@ -124,7 +125,7 @@ func TestFakeInspect(t *testing.T) {
 func TestFakeCapacityUsage(t *testing.T) {
 	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
-	vid, err := d.Create(&api.VolumeLocator{
+	vid, err := d.Create(context.TODO(), &api.VolumeLocator{
 		Name: "myvol",
 	}, &api.Source{}, &api.VolumeSpec{
 		Size:    87654321,
@@ -155,7 +156,7 @@ func TestFakeCloudBackupCreate(t *testing.T) {
 	// Create a vol
 	name := "myvol"
 	size := uint64(1234)
-	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
+	volid, err := d.Create(context.TODO(), &api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
 		Size:    size,
 		HaLevel: 1,
 	})
@@ -185,7 +186,7 @@ func testInitForCloudBackups(t *testing.T, d *driver) (string, string, *api.Clou
 	// Create a vol
 	name := "myvol"
 	size := uint64(1234)
-	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
+	volid, err := d.Create(context.TODO(), &api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
 		Size:    size,
 		HaLevel: 1,
 	})
@@ -706,7 +707,7 @@ func TestFakeSet(t *testing.T) {
 	// Create a vol
 	name := "myvol"
 	size := uint64(1234)
-	volid, err := d.Create(&api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
+	volid, err := d.Create(context.TODO(), &api.VolumeLocator{Name: name}, &api.Source{}, &api.VolumeSpec{
 		Size:    size,
 		HaLevel: 1,
 	})

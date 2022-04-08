@@ -15,6 +15,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -170,6 +171,7 @@ func (d *driver) Status() [][2]string {
 }
 
 func (d *driver) Create(
+	ctx context.Context,
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
@@ -238,7 +240,7 @@ func (d *driver) Create(
 	return v.Id, err
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(ctx context.Context, volumeID string) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		logrus.Println(err)
@@ -317,7 +319,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	}
 
 	source := &api.Source{Parent: volumeID}
-	newVolumeID, err := d.Create(locator, source, vols[0].Spec)
+	newVolumeID, err := d.Create(correlation.TODO(), locator, source, vols[0].Spec)
 	if err != nil {
 		return "", nil
 	}
@@ -325,7 +327,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	// BUSE does not support snapshots, so just copy the block files.
 	err = copyFile(BuseMountPath+volumeID, BuseMountPath+newVolumeID)
 	if err != nil {
-		d.Delete(newVolumeID)
+		d.Delete(correlation.TODO(), newVolumeID)
 		return "", nil
 	}
 

@@ -80,6 +80,7 @@ func (d *driver) Version() (*api.StorageVersion, error) {
 
 // Create a new subvolume. The volume spec is not taken into account.
 func (d *driver) Create(
+	ctx context.Context,
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
@@ -108,7 +109,7 @@ func (d *driver) Create(
 	return volume.Id, d.UpdateVol(volume)
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(ctx context.Context, volumeID string) error {
 	if err := d.DeleteVol(volumeID); err != nil {
 		return err
 	}

@@ -72,7 +72,7 @@ func (d *driver) Version() (*api.StorageVersion, error) {
 	}, nil
 }
 
-func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
+func (d *driver) Create(ctx context.Context, locator *api.VolumeLocator, source *api.Source, spec *api.VolumeSpec) (string, error) {
 	volumeID := strings.TrimSuffix(uuid.New(), "\n")
 	// Create a directory on the Local machine with this UUID.
 	if err := os.MkdirAll(filepath.Join(volume.VolumeBase, string(volumeID)), 0744); err != nil {
@@ -92,7 +92,7 @@ func (d *driver) Create(locator *api.VolumeLocator, source *api.Source, spec *ap
 	return v.Id, d.UpdateVol(v)
 }
 
-func (d *driver) Delete(volumeID string) error {
+func (d *driver) Delete(ctx context.Context, volumeID string) error {
 	if _, err := d.GetVol(volumeID); err != nil {
 		return err
 	}
