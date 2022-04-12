@@ -242,8 +242,12 @@ errcheck: $(GOPATH)/bin/errcheck
 contextcheck: $(GOPATH)/bin/contextcheck
 	contextcheck $(PKGS)
 
-misspell: $(GOPATH)/bin/misspell
-	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | xargs misspell
+spellcheck: $(GOPATH)/bin/misspell
+	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | grep -v .go | xargs misspell
+	git ls-files | grep -v vendor | grep -v .pb.go | grep .go | xargs misspell -source=go
+
+spellcheck-fix: $(GOPATH)/bin/misspell
+	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | xargs misspell -w
 
 pretest: lint vet errcheck
 
@@ -456,5 +460,6 @@ pr-verify: vet fmt sdk-check-version
 	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
 	hack/check-api-version.sh
 	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
+	make spellcheck
 
 pr-test: osd-tests docker-test e2e
