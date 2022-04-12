@@ -182,7 +182,7 @@ var _ = Describe("Cluster [Cluster Tests]", func() {
 					noOfOccurence++
 				}
 			}
-			// No of occurence should be 2  [one for create and one for delete]
+			// No of occurrence should be 2  [one for create and one for delete]
 			Expect(noOfOccurence).To(BeEquivalentTo(2))
 		})
 

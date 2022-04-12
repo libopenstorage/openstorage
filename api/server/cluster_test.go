@@ -249,7 +249,7 @@ func TestClusterNodeStatusSuccess(t *testing.T) {
 	restClient, err := clusterclient.NewClusterClient(ts.URL, "v1")
 	assert.NoError(t, err)
 
-	// Set expections
+	// Set exceptions
 	tc.MockCluster().
 		EXPECT().
 		NodeStatus().
@@ -588,7 +588,7 @@ func TestClusterNodeStatusFailed(t *testing.T) {
 	restClient, err := clusterclient.NewClusterClient(ts.URL, "v1")
 	assert.NoError(t, err)
 
-	// Set expections
+	// Set exceptions
 	tc.MockCluster().
 		EXPECT().
 		NodeStatus().

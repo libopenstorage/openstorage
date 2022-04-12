@@ -7,7 +7,7 @@ import (
 var (
 	// ErrNotImplemented default secrets in OSD
 	ErrNotImplemented = errors.New("Not Implemented")
-	// ErrKeyEmpty returned when the secrety key provided is empty
+	// ErrKeyEmpty returned when the secretly key provided is empty
 	ErrKeyEmpty = errors.New("Secret key cannot be empty")
 	// ErrNotAuthenticated returned when not authenticated with secrets endpoint
 	ErrNotAuthenticated = errors.New("Not authenticated with the secrets endpoint")

@@ -491,7 +491,7 @@ func (a *authMiddleware) parseSecret(
 }
 
 func parseSecretFromLabels(specLabels, locatorLabels map[string]string) (*api.TokenSecretContext, error) {
-	// Locator labels take precendence
+	// Locator labels take precedence
 	secretName := locatorLabels[osecrets.SecretNameKey]
 	secretNamespace := locatorLabels[osecrets.SecretNamespaceKey]
 	if secretName == "" {

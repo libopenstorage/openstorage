@@ -265,7 +265,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 				Expect(str).NotTo(BeNil())
 
 				_, err = volumedriver.CloudBackupCreate(bkpReq)
-				Expect(err).To(BeNil()) // give 3 attempts for backup to be successfull before declaring failed
+				Expect(err).To(BeNil()) // give 3 attempts for backup to be successful before declaring failed
 
 				By("Checking backup status")
 

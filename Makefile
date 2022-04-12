@@ -130,6 +130,14 @@ $(GOPATH)/bin/gotestcover:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/pierrre/gotestcover
 
+$(GOPATH)/bin/contextcheck:
+	@echo "Installing missing $@ ..."
+	GO111MODULE=off go get -u github.com/sylvia7788/contextcheck
+
+$(GOPATH)/bin/misspell:
+	@echo "Installing missing $@ ..."
+	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
+
 # DEPS build rules
 #
 
@@ -230,6 +238,12 @@ fmt:
 
 errcheck: $(GOPATH)/bin/errcheck
 	errcheck -tags "$(TAGS)" $(PKGS)
+
+contextcheck: $(GOPATH)/bin/contextcheck
+	contextcheck $(PKGS)
+
+misspell: $(GOPATH)/bin/misspell
+	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | xargs misspell
 
 pretest: lint vet errcheck
 
