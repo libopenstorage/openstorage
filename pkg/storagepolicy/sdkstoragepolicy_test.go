@@ -289,7 +289,7 @@ func TestSdkStoragePolicyUpdateBadArgument(t *testing.T) {
 
 	updateReq = &api.SdkOpenStoragePolicyUpdateRequest{
 		StoragePolicy: &api.SdkStoragePolicy{
-			Name:   "non-existant-key",
+			Name:   "non-existent-key",
 			Policy: volSpec,
 		},
 	}

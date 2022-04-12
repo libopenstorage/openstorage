@@ -442,7 +442,7 @@
 ### v0.34.0 - Tech Preview (1/2/2019)
 
 * Role support
-* Added Cluster Pair and Migrate to Capabilites since they were missing
+* Added Cluster Pair and Migrate to Capabilities since they were missing
 
 ### v0.33.0 - Tech Preview (12/05/2018)
 

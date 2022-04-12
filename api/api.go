@@ -345,7 +345,7 @@ type CloudBackupCreateRequest struct {
 	// Labels are list of key value pairs to tag the cloud backup. These labels
 	// are stored in the metadata associated with the backup.
 	Labels map[string]string
-	// FullBackupFrequency indicates number of incremental backup after whcih
+	// FullBackupFrequency indicates number of incremental backup after which
 	// a fullbackup must be created. This is to override the default value for
 	// manual/user triggerred backups and not applicable for scheduled backups.
 	// Value of 0 retains the default behavior.
@@ -627,7 +627,7 @@ type CloudBackupScheduleInfo struct {
 	SrcVolumeID string
 	// CredentialUUID is the cloud credential used with this schedule
 	CredentialUUID string
-	// Schedule is the frequence of backup
+	// Schedule is the frequencies of backup
 	Schedule string
 	// MaxBackups are the maximum number of backups retained
 	// in cloud.Older backups are deleted

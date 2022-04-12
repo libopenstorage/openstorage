@@ -12,9 +12,9 @@ library and the community and you will try to keep it up to date.
 
 Adding a driver is fairly straightforward:
 
-1. Add your driver decleration in `volumes/drivers.go`
+1. Add your driver declaration in `volumes/drivers.go`
 2. Add your driver `mydriver` implementation in the `volumes/drivers/mydriver` directory.  The driver must implement the `VolumeDriver` interface specified in [`volumes/volume.go`](https://github.com/libopenstorage/openstorage/blob/master/volume/volume.go).  This interface is an implementation of the specification available at [api.openstorage.org](http://api.openstorage.org/).
-3. You're driver must be a `File Volume` driver or a `Block Volume` driver.  A `File Volume` driver will not implement a few low level primatives, such as `Format`, `Attach` and `Detach`.
+3. You're driver must be a `File Volume` driver or a `Block Volume` driver.  A `File Volume` driver will not implement a few low level primitives, such as `Format`, `Attach` and `Detach`.
 
 Here is an example of `drivers.go`:
 

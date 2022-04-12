@@ -824,7 +824,7 @@ func (d *driver) CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.
 	}, nil
 }
 
-// CloudBackupStateChange allows a current backup state transisions(pause/resume/stop)
+// CloudBackupStateChange allows a current backup state transitions(pause/resume/stop)
 func (d *driver) CloudBackupStateChange(input *api.CloudBackupStateChangeRequest) error {
 
 	if len(input.Name) == 0 {
