@@ -68,7 +68,6 @@ var (
 )
 
 func main() {
-	// test typo occured here
 	if reexec.Init() {
 		return
 	}

@@ -242,12 +242,13 @@ errcheck: $(GOPATH)/bin/errcheck
 contextcheck: $(GOPATH)/bin/contextcheck
 	contextcheck $(PKGS)
 
-spellcheck: $(GOPATH)/bin/misspell
+spell-check: $(GOPATH)/bin/misspell
 	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | grep -v .go | xargs misspell -error
 	git ls-files | grep -v vendor | grep -v .pb.go | grep .go | xargs misspell -source=go -error
 
-spellcheck-fix: $(GOPATH)/bin/misspell
-	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | xargs misspell -w
+spell-check-fix: $(GOPATH)/bin/misspell
+	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | grep -v .go | xargs misspell -w
+	git ls-files | grep -v vendor | grep -v .pb.go | grep .go | xargs misspell -source=go -w
 
 pretest: lint vet errcheck
 
@@ -460,6 +461,6 @@ pr-verify: vet fmt sdk-check-version
 	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
 	hack/check-api-version.sh
 	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-	make spellcheck
+	make spell-check
 
 pr-test: osd-tests docker-test e2e
