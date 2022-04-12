@@ -243,8 +243,8 @@ contextcheck: $(GOPATH)/bin/contextcheck
 	contextcheck $(PKGS)
 
 spellcheck: $(GOPATH)/bin/misspell
-	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | grep -v .go | xargs misspell
-	git ls-files | grep -v vendor | grep -v .pb.go | grep .go | xargs misspell -source=go
+	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | grep -v .go | xargs misspell -error
+	git ls-files | grep -v vendor | grep -v .pb.go | grep .go | xargs misspell -source=go -error
 
 spellcheck-fix: $(GOPATH)/bin/misspell
 	git ls-files | grep -v vendor | grep -v .pb.go | grep -v .js | grep -v .css | xargs misspell -w
