@@ -23,6 +23,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
@@ -74,10 +75,10 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	var err error
 
 	// Audit log
-	log := logrus.New()
+	log := correlation.NewFunctionLogger(ctx)
 	log.Out = s.auditLogOutput
 	auditLogWarningf := func(c codes.Code, format string, a ...interface{}) error {
-		log.WithFields(logrus.Fields{
+		log.WithContext(ctx).WithFields(logrus.Fields{
 			"method": "Authentication",
 			"code":   c.String(),
 		}).Warningf(format, a...)
@@ -122,11 +123,11 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	}
 }
 
-func (s *sdkGrpcServer) loggerInterceptor(handler func() error, fullMethod string) error {
+func (s *sdkGrpcServer) loggerInterceptor(ctx context.Context, handler func() error, fullMethod string) error {
 	reqid := uuid.New()
-	log := logrus.New()
+	log := correlation.NewFunctionLogger(ctx)
 	log.Out = s.accessLogOutput
-	logger := log.WithFields(logrus.Fields{
+	logger := log.WithContext(ctx).WithFields(logrus.Fields{
 		"method": fullMethod,
 		"reqid":  reqid,
 	})
@@ -153,7 +154,7 @@ func (s *sdkGrpcServer) loggerServerUnaryInterceptor(
 	var i interface{}
 	var err error
 
-	err = s.loggerInterceptor(func() error {
+	err = s.loggerInterceptor(ctx, func() error {
 		i, err = handler(ctx, req)
 		return err
 	}, info.FullMethod)
@@ -169,7 +170,7 @@ func (s *sdkGrpcServer) loggerServerStreamInterceptor(
 ) error {
 	var err error
 
-	return s.loggerInterceptor(func() error {
+	return s.loggerInterceptor(stream.Context(), func() error {
 		err = handler(srv, stream)
 		if err != nil {
 			return err
@@ -195,7 +196,7 @@ func (s *sdkGrpcServer) authorizationInterceptor(
 	reqService, reqAPI := grpcserver.GetMethodInformation(api.SdkRootPath, fullMethod)
 
 	// Setup auditor log
-	log := logrus.New()
+	log := correlation.NewFunctionLogger(ctx)
 	log.Out = s.auditLogOutput
 	logger := log.WithFields(logrus.Fields{
 		"username": userinfo.Username,
@@ -205,7 +206,7 @@ func (s *sdkGrpcServer) authorizationInterceptor(
 		"roles":    claims.Roles,
 		"groups":   claims.Groups,
 		"method":   fmt.Sprintf("%s.%s", reqService, reqAPI),
-	})
+	}).WithContext(ctx)
 
 	// Authorize
 	if err := s.roleServer.Verify(ctx, claims.Roles, fullMethod); err != nil {
