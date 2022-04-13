@@ -18,3 +18,4 @@ jobs:
         WITH_V: true
         DEFAULT_BUMP: patch
         TAG_CONTEXT: branch
+        RELEASE_BRANCHES: master,release-.+\..+
