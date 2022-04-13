@@ -445,7 +445,7 @@ func VerifyRules(rules []*api.SdkRule, rootPath, fullmethod string) error {
 		}
 	}
 
-	return fmt.Errorf("no accessable rule to authorize access found")
+	return fmt.Errorf("no accessible rule to authorize access found")
 }
 
 func (r *SdkRoleManager) validateRole(role *api.SdkRole) error {

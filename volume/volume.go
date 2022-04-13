@@ -179,7 +179,7 @@ type CloudBackupDriver interface {
 	CloudBackupCatalog(input *api.CloudBackupCatalogRequest) (*api.CloudBackupCatalogResponse, error)
 	// CloudBackupHistory displays past backup/restore operations on a volume
 	CloudBackupHistory(input *api.CloudBackupHistoryRequest) (*api.CloudBackupHistoryResponse, error)
-	// CloudBackupStateChange allows a current backup state transisions(pause/resume/stop)
+	// CloudBackupStateChange allows a current backup state transitions(pause/resume/stop)
 	CloudBackupStateChange(input *api.CloudBackupStateChangeRequest) error
 	// CloudBackupSchedCreate creates a schedule to backup volume to cloud
 	CloudBackupSchedCreate(input *api.CloudBackupSchedCreateRequest) (*api.CloudBackupSchedCreateResponse, error)

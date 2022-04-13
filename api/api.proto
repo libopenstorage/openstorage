@@ -342,13 +342,13 @@ message Xattr {
 enum ExportProtocol  {
   // Invalid uninitialized value
   INVALID = 0;
-  // PXD the volume is exported over Portworx block interace.
+  // PXD the volume is exported over Portworx block interface.
   PXD = 1;
   // ISCSI the volume is exported over ISCSI.
   ISCSI = 2;
   // NFS the volume is exported over NFS.
   NFS = 3;
-  // Custom the volume is exported over custom interace.
+  // Custom the volume is exported over custom interface.
   CUSTOM = 4;
 }
 
@@ -1032,7 +1032,7 @@ message Stats {
 
 // Provides details on exclusive and shared storage used by
 // snapshot/volume specifically for copy-on-write(COW) snapshots. Deletion
-// of snapshots and overwirte of volume will affect the exclusive storage
+// of snapshots and overwrite of volume will affect the exclusive storage
 // used by the other dependent snaps and parent volume.
 message CapacityUsageInfo {
   // Storage consumed exclusively by this single snapshot. Deletion of this
@@ -1120,11 +1120,11 @@ message Alert {
   int64 alert_type = 3;
   // Message describing the Alert
   string message = 4;
-  //Timestamp when Alert occured
+  //Timestamp when Alert occurred
   google.protobuf.Timestamp timestamp = 5;
-  // ResourceId where Alert occured
+  // ResourceId where Alert occurred
   string resource_id = 6;
-  // Resource where Alert occured
+  // Resource where Alert occurred
   ResourceType resource = 7;
   // Cleared Flag
   bool cleared = 8;
@@ -1140,9 +1140,9 @@ message Alert {
 
 // SdkAlertsTimeSpan to store time window information.
 message SdkAlertsTimeSpan {
-    //Start timestamp when Alert occured
+    //Start timestamp when Alert occurred
     google.protobuf.Timestamp start_time = 1;
-    //End timestamp when Alert occured
+    //End timestamp when Alert occurred
     google.protobuf.Timestamp end_time = 2;
 }
 
@@ -1250,7 +1250,7 @@ service OpenStorageAlerts {
     //
     // #### Input
     // SdkAlertsEnumerateRequest takes a list of such queries and the returned
-    // output is a collective ouput from each of these queries. In that sense,
+    // output is a collective output from each of these queries. In that sense,
     // the filtering of these queries has a behavior of OR operation.
     // Each query also has a list of optional options. These options allow
     // narrowing down the scope of alerts search. These options have a
@@ -1533,7 +1533,7 @@ message StorageNode {
     SECURED = 2;
     // Node is secured, but in the process of removing security. This state allows
     // other unsecured nodes to join the cluster since the cluster is in the process
-    // of removing secuirty authenticaiton and authorization.
+    // of removing security authentication and authorization.
     SECURED_ALLOW_SECURITY_REMOVAL = 3;
   }
 
@@ -2274,7 +2274,7 @@ service OpenStorageVolume {
 
   // SnapshotEnumerate returns a list of snapshots.
   // To filter all the snapshots for a specific volume which may no longer exist,
-  // specifiy a volume id.
+  // specify a volume id.
   // Labels can also be used to filter the snapshot list.
   // If neither are provided all snapshots will be returned.
   rpc SnapshotEnumerateWithFilters(SdkVolumeSnapshotEnumerateWithFiltersRequest)
@@ -3405,7 +3405,7 @@ message SdkVolumeUpdateRequest {
 message SdkVolumeUpdateResponse {
 }
 
-// Defines a request to retreive volume statistics
+// Defines a request to retrieve volume statistics
 message SdkVolumeStatsRequest {
   // Id of the volume to get statistics
   string volume_id = 1;
@@ -3956,7 +3956,7 @@ message StorageRebalanceTriggerThreshold {
     // AbsolutePercent indicates absolute percent comparison.
     // Example, 75 % used of capacity, or 50 % provisioned of capacity.
     ABSOLUTE_PERCENT = 0;
-    // DeltaMeanPercent indicates mean percent comparision threshold.
+    // DeltaMeanPercent indicates mean percent comparison threshold.
     // Example, 10 % more than mean for cluster.
     DELTA_MEAN_PERCENT = 1;
   }
@@ -4258,7 +4258,7 @@ message SdkCloudBackupCreateRequest {
   // Labels are list of key value pairs to tag the cloud backup. These labels
   // are stored in the metadata associated with the backup.
   map<string, string> labels = 5;
-  // FullBackupFrequency indicates number of incremental backup after whcih
+  // FullBackupFrequency indicates number of incremental backup after which
   // a fullbackup must be created. This is to override the default value for
   // manual/user triggerred backups and not applicable for scheduled backups
   // Value of 0 retains the default behavior.
@@ -4454,7 +4454,7 @@ enum SdkCloudBackupOpType {
 
 // CloudBackup status types
 enum SdkCloudBackupStatusType {
-  // Unkonwn
+  // Unknown
   SdkCloudBackupStatusTypeUnknown = 0;
   // Not started
   SdkCloudBackupStatusTypeNotStarted = 1;
@@ -4508,7 +4508,7 @@ message SdkCloudBackupStatus {
   string group_id = 13;
 }
 
-// Defines a request to retreive the status of a backup or restore for a
+// Defines a request to retrieve the status of a backup or restore for a
 // specified volume
 message SdkCloudBackupStatusRequest {
   // (optional) VolumeId is a value which is used to get information on the
@@ -4555,7 +4555,7 @@ message SdkCloudBackupHistoryItem {
   SdkCloudBackupStatusType status = 3;
 }
 
-// Defines a request to retreive the history of the backups for
+// Defines a request to retrieve the history of the backups for
 // a specific volume to a cloud provider
 message SdkCloudBackupHistoryRequest {
   // This optional value defines which history of backups is being
@@ -4971,9 +4971,9 @@ message SdkFilesystemCheckStopResponse{
 message SdkIdentityCapabilitiesRequest {
 }
 
-// Defines a response containing the capabilites of the cluster
+// Defines a response containing the capabilities of the cluster
 message SdkIdentityCapabilitiesResponse {
-  // Provides all the capabilites supported by the cluster
+  // Provides all the capabilities supported by the cluster
   repeated SdkServiceCapability capabilities = 1;
 }
 
@@ -5053,7 +5053,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 137;
+    Minor = 138;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -5391,7 +5391,7 @@ message SdkClusterPairInspectRequest{
     string id = 1;
 }
 
-// Reponse to get a cluster pair
+// Response to get a cluster pair
 message ClusterPairGetResponse {
     // Info about the cluster pair
     ClusterPairInfo pair_info = 1;

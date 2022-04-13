@@ -1,6 +1,6 @@
 # Style Guide
 
-This is the official openstorage style guide for golang code. This is in addition to the offical style guide at https://github.com/golang/go/wiki/CodeReviewComments.
+This is the official openstorage style guide for golang code. This is in addition to the official style guide at https://github.com/golang/go/wiki/CodeReviewComments.
 
 This is just a rough outline for now, we will formalize this as we go.
 
@@ -64,7 +64,7 @@ func init() {
 // foo.go
 package foo
 
-type Runner interace {
+type Runner interface {
   Run(one string, i int) error
 }
 

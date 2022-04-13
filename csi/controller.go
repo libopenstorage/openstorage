@@ -741,7 +741,7 @@ func isFilesystemSpecSet(params map[string]string) bool {
 
 // resolveSharedSpec makes the following assumptions:
 // 1. When a volume is set to RWX or a similar multi-node access mode, we default to Sharedv4
-// 2. If a user prefers shared over sharedv4, they may still use it by explicity declaring "shared": true
+// 2. If a user prefers shared over sharedv4, they may still use it by explicitly declaring "shared": true
 func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
 	// shared or sharedv4 parameter doesn't apply to pure backends so don't set them
 	if spec.IsPureVolume() {

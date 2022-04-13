@@ -733,7 +733,7 @@ func (v *volumeClient) CloudBackupHistory(
 }
 
 // CloudBackupState allows a current backup
-// state transisions(pause/resume/stop)
+// state transitions(pause/resume/stop)
 func (v *volumeClient) CloudBackupStateChange(
 	input *api.CloudBackupStateChangeRequest,
 ) error {
