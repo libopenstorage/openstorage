@@ -2,6 +2,7 @@ package pwx
 
 import (
 	"fmt"
+	"net"
 	"os"
 	"strconv"
 	"strings"
@@ -142,6 +143,7 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 	}
 
 	// PX mgmt API was decided not to be protected with TLS
+	// Using names not IP, so no need for ipv6 protection here
 	pxMgmtEndpoint = fmt.Sprintf("http://%s:%d", endpoint, restPort)
 	sdkEndpoint = fmt.Sprintf("%s:%d", endpoint, sdkPort)
 
@@ -227,7 +229,8 @@ func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, erro
 		return "", "", fmt.Errorf("static REST port value should be greater than 0")
 	}
 
-	pxMgmtEndpoint, sdkEndpoint := fmt.Sprintf("http://%s:%d", endpoint, restPort), fmt.Sprintf("%s:%d", endpoint, sdkPort)
+	pxMgmtEndpoint := fmt.Sprintf("http://%s", net.JoinHostPort(endpoint, strconv.Itoa(restPort)))
+	sdkEndpoint := net.JoinHostPort(endpoint, strconv.Itoa(sdkPort))
 
 	return pxMgmtEndpoint, sdkEndpoint, nil
 }
