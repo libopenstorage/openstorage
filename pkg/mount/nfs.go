@@ -4,6 +4,7 @@ package mount
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strings"
 
@@ -81,8 +82,14 @@ func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
 	if info.Fstype != "nfs" {
 		return
 	}
+
 	s := strings.Split(info.Source, ":")
 	if len(s) == 2 && len(s[0]) == 0 {
+		if net.ParseIP(host) != nil { // Check for IPv6 IP Address
+			if strings.Contains(host, ":") && !strings.Contains(host, "[") {
+				host = fmt.Sprintf("[%s]", host)
+			}
+		}
 		info.Source = host + info.Source
 	}
 }
