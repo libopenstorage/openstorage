@@ -218,7 +218,7 @@ func retainInternalSpecYamlByteToSdkSched(
 	var specs []sched.RetainIntervalSpec
 	err := yaml.Unmarshal(in, &specs)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to retreive schedule: %v", err)
+		return nil, status.Errorf(codes.Internal, "Failed to retrieve schedule: %v", err)
 	}
 
 	// Convert each one to Sdk messages

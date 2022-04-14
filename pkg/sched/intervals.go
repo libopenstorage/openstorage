@@ -29,7 +29,7 @@ var (
 	speedUp = false
 )
 
-// SpeedUp advances teh clock faster for tests.
+// SpeedUp advances the clock faster for tests.
 func SpeedUp() {
 	speedUp = true
 }

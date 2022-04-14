@@ -222,11 +222,11 @@ func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, erro
 	}
 
 	if sdkPort < 1 {
-		return "", "", fmt.Errorf("static SDK port value sould be greater than 0")
+		return "", "", fmt.Errorf("static SDK port value should be greater than 0")
 	}
 
 	if restPort < 1 {
-		return "", "", fmt.Errorf("static REST port value sould be greater than 0")
+		return "", "", fmt.Errorf("static REST port value should be greater than 0")
 	}
 
 	pxMgmtEndpoint := fmt.Sprintf("http://%s", net.JoinHostPort(endpoint, strconv.Itoa(restPort)))

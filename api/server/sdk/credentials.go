@@ -535,7 +535,7 @@ func (s *CredentialServer) getOwnershipFromCred(cred interface{}) (*api.Ownershi
 		if err != nil {
 			return nil, status.Errorf(
 				codes.Internal,
-				"Failed to retreive ownership from credential object: %v", err)
+				"Failed to retrieve ownership from credential object: %v", err)
 		}
 	}
 	return ownership, nil

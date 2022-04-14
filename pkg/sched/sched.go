@@ -60,7 +60,7 @@ type taskInfo struct {
 
 type manager struct {
 	sync.Mutex
-	// minimumInterval defines minumum task scheduling interval
+	// minimumInterval defines minimum task scheduling interval
 	minimumInterval time.Duration
 	// tasks is list of scheduled tasks
 	tasks *list.List

@@ -149,7 +149,7 @@ func TestSchedPolicyDeleteWithCaseSensitiveName(t *testing.T) {
 
 	name := "TestSchedPolicy1"
 	// mock the cluster schedulePolicy response
-	// this should be recived it as "TestSchedPolicy1" only
+	// this should be received it as "TestSchedPolicy1" only
 	tc.MockCluster().
 		EXPECT().
 		SchedPolicyDelete(name).

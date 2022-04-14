@@ -212,7 +212,7 @@
       },
       "StorageNodeSecurityStatus": {
         "default": "UNSPECIFIED",
-        "description": " - UNSPECIFIED: Security status type is unknown\n - UNSECURED: Node is unsecure\n - SECURED: Node is secured with authentication and authorization\n - SECURED_ALLOW_SECURITY_REMOVAL: Node is secured, but in the process of removing security. This state allows\nother unsecured nodes to join the cluster since the cluster is in the process\nof removing secuirty authenticaiton and authorization.",
+        "description": " - UNSPECIFIED: Security status type is unknown\n - UNSECURED: Node is unsecure\n - SECURED: Node is secured with authentication and authorization\n - SECURED_ALLOW_SECURITY_REMOVAL: Node is secured, but in the process of removing security. This state allows\nother unsecured nodes to join the cluster since the cluster is in the process\nof removing security authentication and authorization.",
         "enum": [
           "UNSPECIFIED",
           "UNSECURED",
@@ -286,7 +286,7 @@
             "$ref": "#/components/schemas/apiResourceType"
           },
           "resource_id": {
-            "title": "ResourceId where Alert occured",
+            "title": "ResourceId where Alert occurred",
             "type": "string"
           },
           "severity": {
@@ -294,7 +294,7 @@
           },
           "timestamp": {
             "format": "date-time",
-            "title": "Timestamp when Alert occured",
+            "title": "Timestamp when Alert occurred",
             "type": "string"
           },
           "ttl": {
@@ -321,7 +321,7 @@
         "type": "string"
       },
       "apiCapacityUsageInfo": {
-        "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
+        "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwrite of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
         "properties": {
           "exclusive_bytes": {
             "description": "Storage consumed exclusively by this single snapshot. Deletion of this\nsnapshot may increase the free storage available by this amount.",
@@ -593,7 +593,7 @@
             "$ref": "#/components/schemas/apiClusterPairInfo"
           }
         },
-        "title": "Reponse to get a cluster pair",
+        "title": "Response to get a cluster pair",
         "type": "object"
       },
       "apiClusterPairInfo": {
@@ -797,7 +797,7 @@
       },
       "apiExportProtocol": {
         "default": "INVALID",
-        "description": "ExportProtocol defines how the device is exported..\n\n - INVALID: Invalid uninitialized value\n - PXD: PXD the volume is exported over Portworx block interace.\n - ISCSI: ISCSI the volume is exported over ISCSI.\n - NFS: NFS the volume is exported over NFS.\n - CUSTOM: Custom the volume is exported over custom interace.",
+        "description": "ExportProtocol defines how the device is exported..\n\n - INVALID: Invalid uninitialized value\n - PXD: PXD the volume is exported over Portworx block interface.\n - ISCSI: ISCSI the volume is exported over ISCSI.\n - NFS: NFS the volume is exported over NFS.\n - CUSTOM: Custom the volume is exported over custom interface.",
         "enum": [
           "INVALID",
           "PXD",
@@ -1782,12 +1782,12 @@
         "properties": {
           "end_time": {
             "format": "date-time",
-            "title": "End timestamp when Alert occured",
+            "title": "End timestamp when Alert occurred",
             "type": "string"
           },
           "start_time": {
             "format": "date-time",
-            "title": "Start timestamp when Alert occured",
+            "title": "Start timestamp when Alert occurred",
             "type": "string"
           }
         },
@@ -1964,7 +1964,7 @@
             "type": "boolean"
           },
           "full_backup_frequency": {
-            "description": "FullBackupFrequency indicates number of incremental backup after whcih\na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
+            "description": "FullBackupFrequency indicates number of incremental backup after which\na fullbackup must be created. This is to override the default value for\nmanual/user triggerred backups and not applicable for scheduled backups\nValue of 0 retains the default behavior.",
             "format": "int64",
             "type": "integer"
           },
@@ -2483,7 +2483,7 @@
             "type": "string"
           }
         },
-        "title": "Defines a request to retreive the status of a backup or restore for a\nspecified volume",
+        "title": "Defines a request to retrieve the status of a backup or restore for a\nspecified volume",
         "type": "object"
       },
       "apiSdkCloudBackupStatusResponse": {
@@ -2501,7 +2501,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unknown\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -3054,11 +3054,11 @@
             "items": {
               "$ref": "#/components/schemas/apiSdkServiceCapability"
             },
-            "title": "Provides all the capabilites supported by the cluster",
+            "title": "Provides all the capabilities supported by the cluster",
             "type": "array"
           }
         },
-        "title": "Defines a response containing the capabilites of the cluster",
+        "title": "Defines a response containing the capabilities of the cluster",
         "type": "object"
       },
       "apiSdkIdentityVersionResponse": {
@@ -4712,7 +4712,7 @@
       },
       "apiStorageRebalanceTriggerThresholdType": {
         "default": "ABSOLUTE_PERCENT",
-        "description": "- ABSOLUTE_PERCENT: AbsolutePercent indicates absolute percent comparison.\nExample, 75 % used of capacity, or 50 % provisioned of capacity.\n - DELTA_MEAN_PERCENT: DeltaMeanPercent indicates mean percent comparision threshold.\nExample, 10 % more than mean for cluster.",
+        "description": "- ABSOLUTE_PERCENT: AbsolutePercent indicates absolute percent comparison.\nExample, 75 % used of capacity, or 50 % provisioned of capacity.\n - DELTA_MEAN_PERCENT: DeltaMeanPercent indicates mean percent comparison threshold.\nExample, 10 % more than mean for cluster.",
         "enum": [
           "ABSOLUTE_PERCENT",
           "DELTA_MEAN_PERCENT"
@@ -5714,7 +5714,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.137.0"
+    "version": "0.138.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5762,7 +5762,7 @@
     },
     "/v1/alerts/filters": {
       "post": {
-        "description": "EnumerateWithFilters allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective ouput from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of an AND operation.\n\n#### Examples\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
+        "description": "EnumerateWithFilters allows 3 different types of queries as defined below:\n\n* Query that takes only resource type as input\n* Query that takes resource type and alert type as input and\n* Query that takes resource id, alert type and resource type as input.\n\n#### Input\nSdkAlertsEnumerateRequest takes a list of such queries and the returned\noutput is a collective output from each of these queries. In that sense,\nthe filtering of these queries has a behavior of OR operation.\nEach query also has a list of optional options. These options allow\nnarrowing down the scope of alerts search. These options have a\nbehavior of an AND operation.\n\n#### Examples\nTo search by a resource type in a given time window would require\ninitializing SdkAlertsResourceTypeQuery query and pass in\nSdkAlertsTimeSpan option into SdkAlertsQuery struct and finally\npacking any other such queries into SdkAlertsEnumerateRequest object.\nAlternatively, to search by both resource type and alert type, use\nSdkAlertsAlertTypeQuery as query builder.\nFinally to search all alerts of a given resource type and some\nalerts of another resource type but with specific alert type,\nuse two queries, first initialized with SdkAlertsResourceTypeQuery\nand second initialized with SdkAlertsAlertTypeQuery and both\neventually packed as list in SdkAlertsEnumerateRequest.",
         "operationId": "OpenStorageAlerts_EnumerateWithFilters",
         "requestBody": {
           "content": {
@@ -9890,7 +9890,7 @@
             "description": "An unexpected error response."
           }
         },
-        "summary": "SnapshotEnumerate returns a list of snapshots.\nTo filter all the snapshots for a specific volume which may no longer exist,\nspecifiy a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
+        "summary": "SnapshotEnumerate returns a list of snapshots.\nTo filter all the snapshots for a specific volume which may no longer exist,\nspecify a volume id.\nLabels can also be used to filter the snapshot list.\nIf neither are provided all snapshots will be returned.",
         "tags": [
           "OpenStorageVolume"
         ]

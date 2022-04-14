@@ -2379,7 +2379,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	assert.Nil(t, r)
 
 	// TestCase: Pure volume and topology requirement present.
-	// This tests mulitple things -
+	// This tests multiple things -
 	// - Multiple topologies are sent by the provisioner in both preferred and requisite sections
 	// - Topologies are de-duped from the requirement
 	// - Retry volume creation only if the create fails because of topology placement

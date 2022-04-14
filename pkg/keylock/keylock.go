@@ -39,7 +39,7 @@ type KeyLock interface {
 	Dump() []string
 }
 
-// LockHandle is an opaque handle to an aquired lock.
+// LockHandle is an opaque handle to an acquired lock.
 type LockHandle struct {
 	id     string
 	genNum int64

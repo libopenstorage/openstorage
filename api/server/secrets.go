@@ -199,7 +199,7 @@ func (c *clusterApi) setSecret(w http.ResponseWriter, r *http.Request) {
 // parameters:
 // - name: id
 //   in: query
-//   description: secret id/key whose value to be retrived
+//   description: secret id/key whose value to be retrieved
 //   type: string
 //   required: true
 // responses:

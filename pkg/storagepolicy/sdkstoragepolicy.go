@@ -229,7 +229,7 @@ func (p *SdkPolicyManager) Delete(
 	return &api.SdkOpenStoragePolicyDeleteResponse{}, nil
 }
 
-// Inspect storage policy specifed by name
+// Inspect storage policy specified by name
 func (p *SdkPolicyManager) Inspect(
 	ctx context.Context,
 	req *api.SdkOpenStoragePolicyInspectRequest,

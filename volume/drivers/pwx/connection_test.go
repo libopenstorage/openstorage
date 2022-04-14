@@ -196,7 +196,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService(t *testing.T)
 
 	_, _, err = paramsBuilder.BuildClientsEndpoints()
 	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
 	}
 }
 
@@ -211,7 +211,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService(t *testing
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
 	}
 
 	if pxMgmtEndpoint != "http://portworx-service.non-default-ns:9901" {
@@ -234,7 +234,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts(t *testing
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
 	}
 
 	if pxMgmtEndpoint != "http://k8s-node-0:9001" {
@@ -317,7 +317,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
 	}
 
 	if pxMgmtEndpoint != "http://portworx-service.kube-system:9901" {
@@ -476,13 +476,13 @@ func setEnvs(t *testing.T, vars ...string) func() {
 		existingValue := os.Getenv(env)
 		err := os.Setenv(env, value)
 		if err != nil {
-			t.Fatalf("cannot set env varaibles for test: %+v", err)
+			t.Fatalf("cannot set env variables for test: %+v", err)
 		}
 
 		cleanUp = append(cleanUp, func() {
 			err = os.Setenv(env, existingValue)
 			if err != nil {
-				t.Errorf("cannot set back env varaibles for test: %+v", err)
+				t.Errorf("cannot set back env variables for test: %+v", err)
 			}
 		})
 	}

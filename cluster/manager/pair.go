@@ -181,7 +181,7 @@ func (c *ClusterManager) RefreshPair(
 			Token:            pair.Token,
 		}
 		// Use original options and override with updates ones. This
-		// prevents any options we created locally from getting overriden
+		// prevents any options we created locally from getting overridden
 		pairInfo.Options = pair.Options
 		for k, v := range resp.Options {
 			pairInfo.Options[k] = v
@@ -420,7 +420,7 @@ func pairCreate(info *api.ClusterPairInfo, setDefault bool) error {
 
 	defaultId, err := getDefaultPairId()
 	// Set this pair as the default if no default is set or it has
-	// explicilty been asked
+	// explicitly been asked
 	if setDefault || err == kvdb.ErrNotFound || defaultId == "" {
 		err = setDefaultPairId(info.Id)
 		if err != nil {

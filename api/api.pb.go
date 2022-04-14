@@ -1043,13 +1043,13 @@ type ExportProtocol int32
 const (
 	// Invalid uninitialized value
 	ExportProtocol_INVALID ExportProtocol = 0
-	// PXD the volume is exported over Portworx block interace.
+	// PXD the volume is exported over Portworx block interface.
 	ExportProtocol_PXD ExportProtocol = 1
 	// ISCSI the volume is exported over ISCSI.
 	ExportProtocol_ISCSI ExportProtocol = 2
 	// NFS the volume is exported over NFS.
 	ExportProtocol_NFS ExportProtocol = 3
-	// Custom the volume is exported over custom interace.
+	// Custom the volume is exported over custom interface.
 	ExportProtocol_CUSTOM ExportProtocol = 4
 )
 
@@ -1521,7 +1521,7 @@ func (SdkCloudBackupOpType) EnumDescriptor() ([]byte, []int) {
 type SdkCloudBackupStatusType int32
 
 const (
-	// Unkonwn
+	// Unknown
 	SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown SdkCloudBackupStatusType = 0
 	// Not started
 	SdkCloudBackupStatusType_SdkCloudBackupStatusTypeNotStarted SdkCloudBackupStatusType = 1
@@ -2145,7 +2145,7 @@ const (
 	StorageNode_SECURED StorageNode_SecurityStatus = 2
 	// Node is secured, but in the process of removing security. This state allows
 	// other unsecured nodes to join the cluster since the cluster is in the process
-	// of removing secuirty authenticaiton and authorization.
+	// of removing security authentication and authorization.
 	StorageNode_SECURED_ALLOW_SECURITY_REMOVAL StorageNode_SecurityStatus = 3
 )
 
@@ -2390,7 +2390,7 @@ const (
 	// AbsolutePercent indicates absolute percent comparison.
 	// Example, 75 % used of capacity, or 50 % provisioned of capacity.
 	StorageRebalanceTriggerThreshold_ABSOLUTE_PERCENT StorageRebalanceTriggerThreshold_Type = 0
-	// DeltaMeanPercent indicates mean percent comparision threshold.
+	// DeltaMeanPercent indicates mean percent comparison threshold.
 	// Example, 10 % more than mean for cluster.
 	StorageRebalanceTriggerThreshold_DELTA_MEAN_PERCENT StorageRebalanceTriggerThreshold_Type = 1
 )
@@ -2991,7 +2991,7 @@ const (
 	// SDK version major value of this specification
 	SdkVersion_Major SdkVersion_Version = 0
 	// SDK version minor value of this specification
-	SdkVersion_Minor SdkVersion_Version = 137
+	SdkVersion_Minor SdkVersion_Version = 138
 	// SDK version patch value of this specification
 	SdkVersion_Patch SdkVersion_Version = 0
 )
@@ -3001,13 +3001,13 @@ var (
 	SdkVersion_Version_name = map[int32]string{
 		0: "MUST_HAVE_ZERO_VALUE",
 		// Duplicate value: 0: "Major",
-		137: "Minor",
+		138: "Minor",
 		// Duplicate value: 0: "Patch",
 	}
 	SdkVersion_Version_value = map[string]int32{
 		"MUST_HAVE_ZERO_VALUE": 0,
 		"Major":                0,
-		"Minor":                137,
+		"Minor":                138,
 		"Patch":                0,
 	}
 )
@@ -8171,7 +8171,7 @@ func (x *Stats) GetUniqueBlocks() uint64 {
 
 // Provides details on exclusive and shared storage used by
 // snapshot/volume specifically for copy-on-write(COW) snapshots. Deletion
-// of snapshots and overwirte of volume will affect the exclusive storage
+// of snapshots and overwrite of volume will affect the exclusive storage
 // used by the other dependent snaps and parent volume.
 type CapacityUsageInfo struct {
 	state         protoimpl.MessageState
@@ -8626,11 +8626,11 @@ type Alert struct {
 	AlertType int64 `protobuf:"varint,3,opt,name=alert_type,json=alertType,proto3" json:"alert_type,omitempty"`
 	// Message describing the Alert
 	Message string `protobuf:"bytes,4,opt,name=message,proto3" json:"message,omitempty"`
-	//Timestamp when Alert occured
+	//Timestamp when Alert occurred
 	Timestamp *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	// ResourceId where Alert occured
+	// ResourceId where Alert occurred
 	ResourceId string `protobuf:"bytes,6,opt,name=resource_id,json=resourceId,proto3" json:"resource_id,omitempty"`
-	// Resource where Alert occured
+	// Resource where Alert occurred
 	Resource ResourceType `protobuf:"varint,7,opt,name=resource,proto3,enum=openstorage.api.ResourceType" json:"resource,omitempty"`
 	// Cleared Flag
 	Cleared bool `protobuf:"varint,8,opt,name=cleared,proto3" json:"cleared,omitempty"`
@@ -8766,9 +8766,9 @@ type SdkAlertsTimeSpan struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	//Start timestamp when Alert occured
+	//Start timestamp when Alert occurred
 	StartTime *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	//End timestamp when Alert occured
+	//End timestamp when Alert occurred
 	EndTime *timestamppb.Timestamp `protobuf:"bytes,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 }
 
@@ -15330,7 +15330,7 @@ func (*SdkVolumeUpdateResponse) Descriptor() ([]byte, []int) {
 	return file_api_api_proto_rawDescGZIP(), []int{149}
 }
 
-// Defines a request to retreive volume statistics
+// Defines a request to retrieve volume statistics
 type SdkVolumeStatsRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -20410,7 +20410,7 @@ type SdkCloudBackupCreateRequest struct {
 	// Labels are list of key value pairs to tag the cloud backup. These labels
 	// are stored in the metadata associated with the backup.
 	Labels map[string]string `protobuf:"bytes,5,rep,name=labels,proto3" json:"labels,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	// FullBackupFrequency indicates number of incremental backup after whcih
+	// FullBackupFrequency indicates number of incremental backup after which
 	// a fullbackup must be created. This is to override the default value for
 	// manual/user triggerred backups and not applicable for scheduled backups
 	// Value of 0 retains the default behavior.
@@ -21552,7 +21552,7 @@ func (x *SdkCloudBackupStatus) GetGroupId() string {
 	return ""
 }
 
-// Defines a request to retreive the status of a backup or restore for a
+// Defines a request to retrieve the status of a backup or restore for a
 // specified volume
 type SdkCloudBackupStatusRequest struct {
 	state         protoimpl.MessageState
@@ -21849,7 +21849,7 @@ func (x *SdkCloudBackupHistoryItem) GetStatus() SdkCloudBackupStatusType {
 	return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 }
 
-// Defines a request to retreive the history of the backups for
+// Defines a request to retrieve the history of the backups for
 // a specific volume to a cloud provider
 type SdkCloudBackupHistoryRequest struct {
 	state         protoimpl.MessageState
@@ -24257,13 +24257,13 @@ func (*SdkIdentityCapabilitiesRequest) Descriptor() ([]byte, []int) {
 	return file_api_api_proto_rawDescGZIP(), []int{304}
 }
 
-// Defines a response containing the capabilites of the cluster
+// Defines a response containing the capabilities of the cluster
 type SdkIdentityCapabilitiesResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Provides all the capabilites supported by the cluster
+	// Provides all the capabilities supported by the cluster
 	Capabilities []*SdkServiceCapability `protobuf:"bytes,1,rep,name=capabilities,proto3" json:"capabilities,omitempty"`
 }
 
@@ -26431,7 +26431,7 @@ func (x *SdkClusterPairInspectRequest) GetId() string {
 	return ""
 }
 
-// Reponse to get a cluster pair
+// Response to get a cluster pair
 type ClusterPairGetResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -31340,7 +31340,7 @@ var file_api_api_proto_rawDesc = []byte{
 	0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x14, 0x4d, 0x55, 0x53, 0x54, 0x5f, 0x48,
 	0x41, 0x56, 0x45, 0x5f, 0x5a, 0x45, 0x52, 0x4f, 0x5f, 0x56, 0x41, 0x4c, 0x55, 0x45, 0x10, 0x00,
 	0x12, 0x09, 0x0a, 0x05, 0x4d, 0x61, 0x6a, 0x6f, 0x72, 0x10, 0x00, 0x12, 0x0a, 0x0a, 0x05, 0x4d,
-	0x69, 0x6e, 0x6f, 0x72, 0x10, 0x89, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x50, 0x61, 0x74, 0x63, 0x68,
+	0x69, 0x6e, 0x6f, 0x72, 0x10, 0x8a, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x50, 0x61, 0x74, 0x63, 0x68,
 	0x10, 0x00, 0x1a, 0x02, 0x10, 0x01, 0x22, 0xc6, 0x01, 0x0a, 0x0e, 0x53, 0x74, 0x6f, 0x72, 0x61,
 	0x67, 0x65, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a, 0x06, 0x64, 0x72, 0x69,
 	0x76, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x64, 0x72, 0x69, 0x76, 0x65,
@@ -38895,7 +38895,7 @@ type OpenStorageAlertsClient interface {
 	//
 	// #### Input
 	// SdkAlertsEnumerateRequest takes a list of such queries and the returned
-	// output is a collective ouput from each of these queries. In that sense,
+	// output is a collective output from each of these queries. In that sense,
 	// the filtering of these queries has a behavior of OR operation.
 	// Each query also has a list of optional options. These options allow
 	// narrowing down the scope of alerts search. These options have a
@@ -38990,7 +38990,7 @@ type OpenStorageAlertsServer interface {
 	//
 	// #### Input
 	// SdkAlertsEnumerateRequest takes a list of such queries and the returned
-	// output is a collective ouput from each of these queries. In that sense,
+	// output is a collective output from each of these queries. In that sense,
 	// the filtering of these queries has a behavior of OR operation.
 	// Each query also has a list of optional options. These options allow
 	// narrowing down the scope of alerts search. These options have a
@@ -41321,7 +41321,7 @@ type OpenStorageVolumeClient interface {
 	SnapshotEnumerate(ctx context.Context, in *SdkVolumeSnapshotEnumerateRequest, opts ...grpc.CallOption) (*SdkVolumeSnapshotEnumerateResponse, error)
 	// SnapshotEnumerate returns a list of snapshots.
 	// To filter all the snapshots for a specific volume which may no longer exist,
-	// specifiy a volume id.
+	// specify a volume id.
 	// Labels can also be used to filter the snapshot list.
 	// If neither are provided all snapshots will be returned.
 	SnapshotEnumerateWithFilters(ctx context.Context, in *SdkVolumeSnapshotEnumerateWithFiltersRequest, opts ...grpc.CallOption) (*SdkVolumeSnapshotEnumerateWithFiltersResponse, error)
@@ -41567,7 +41567,7 @@ type OpenStorageVolumeServer interface {
 	SnapshotEnumerate(context.Context, *SdkVolumeSnapshotEnumerateRequest) (*SdkVolumeSnapshotEnumerateResponse, error)
 	// SnapshotEnumerate returns a list of snapshots.
 	// To filter all the snapshots for a specific volume which may no longer exist,
-	// specifiy a volume id.
+	// specify a volume id.
 	// Labels can also be used to filter the snapshot list.
 	// If neither are provided all snapshots will be returned.
 	SnapshotEnumerateWithFilters(context.Context, *SdkVolumeSnapshotEnumerateWithFiltersRequest) (*SdkVolumeSnapshotEnumerateWithFiltersResponse, error)

@@ -26,7 +26,7 @@ Note that the `chainfs.volume_driver` parameter will indicate the actual volume 
 
 ### Building
 
-#### Installing Dependancies
+#### Installing Dependencies
 1. Make sure you have `fuse` installed.
 2. Make sure you have `libchainfs` installed.  Visit https://github.com/libopenstorage/chainfs to obtain `libchainfs`.
 
