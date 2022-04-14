@@ -99,7 +99,7 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 	// Determine issuer
 	issuer, err := auth.TokenIssuer(token)
 	if err != nil {
-		return nil, auditLogWarningf(codes.Unauthenticated, "Unable to obtain token issuer from authorization token: %v", err)
+		return nil, auditLogWarningf(codes.Unauthenticated, "Unable to obtain token issuer from authorization token")
 	}
 
 	// Authenticate user
@@ -116,7 +116,7 @@ func (s *sdkGrpcServer) auth(ctx context.Context) (context.Context, error) {
 			})
 			return ctx, nil
 		} else {
-			return nil, auditLogWarningf(codes.PermissionDenied, err.Error())
+			return nil, auditLogWarningf(codes.PermissionDenied, "Unable to authenticate token")
 		}
 	} else {
 		return nil, auditLogWarningf(codes.Unauthenticated, "%s is not a trusted issuer", issuer)

@@ -4,6 +4,7 @@ import (
 	"crypto/rand"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"time"
 
@@ -48,7 +49,7 @@ func (c *ClusterManager) CreatePair(
 		CredentialId:       request.CredentialId,
 	}
 
-	endpoint := remoteIp + ":" + strconv.FormatUint(uint64(request.RemoteClusterPort), 10)
+	endpoint := net.JoinHostPort(remoteIp, strconv.FormatUint(uint64(request.RemoteClusterPort), 10))
 	clnt, err := clusterclient.NewInsecureTLSAuthClusterClient(endpoint, cluster.APIVersion, request.RemoteClusterToken, "")
 	if err != nil {
 		return nil, err
