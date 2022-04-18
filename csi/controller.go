@@ -50,6 +50,10 @@ const (
 	intreePvcNameKey      = "pvc"
 	intreePvcNamespaceKey = "namespace"
 
+	// CSI keys for PVC metadata
+	csiPVCNameKey      = "csi.storage.k8s.io/pvc/name"
+	csiPVCNamespaceKey = "csi.storage.k8s.io/pvc/namespace"
+
 	volumeCapabilityMessageMultinodeVolume    = "Volume is a multinode volume"
 	volumeCapabilityMessageNotMultinodeVolume = "Volume is not a multinode volume"
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
@@ -342,6 +346,12 @@ func getPVCMetadata(params map[string]string) (map[string]string, error) {
 	metadata, err = addJsonMapToMetadata(params[osdPvcLabelsKey], metadata)
 	if err != nil {
 		return nil, err
+	}
+	if pvcName, ok := params[csiPVCNameKey]; ok {
+		metadata[intreePvcNameKey] = pvcName
+	}
+	if pvcNamespace, ok := params[csiPVCNamespaceKey]; ok {
+		metadata[intreePvcNamespaceKey] = pvcNamespace
 	}
 
 	return metadata, nil
