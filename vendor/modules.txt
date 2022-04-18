@@ -88,7 +88,7 @@ github.com/cloudfoundry/gosigar
 # github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
 ## explicit
 github.com/codegangsta/cli
-# github.com/container-storage-interface/spec v1.5.0
+# github.com/container-storage-interface/spec v1.6.0
 ## explicit
 github.com/container-storage-interface/spec/lib/go/csi
 # github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59
