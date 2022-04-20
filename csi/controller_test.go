@@ -70,7 +70,7 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp)
 
-	assert.Len(t, resp.GetCapabilities(), 7)
+	assert.Len(t, resp.GetCapabilities(), 8)
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_GET_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CLONE_VOLUME, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME, resp))
@@ -78,6 +78,7 @@ func TestControllerGetCapabilities(t *testing.T) {
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS, resp))
 	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_VOLUME_CONDITION, resp))
+	assert.True(t, containsCap(csi.ControllerServiceCapability_RPC_GET_CAPACITY, resp))
 
 	assert.False(t, containsCap(csi.ControllerServiceCapability_RPC_UNKNOWN, resp))
 }
@@ -3223,4 +3224,80 @@ func TestResolveSpecFromCSI(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGetCapacity(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Make a call
+	c := csi.NewControllerClient(s.Conn())
+
+	// TestCase; Error in cluster enumerate
+	cluster := api.Cluster{NodeId: "node-1"}
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(cluster, fmt.Errorf("enumerate error")).
+		Times(1)
+
+	_, err := c.GetCapacity(context.Background(), &csi.GetCapacityRequest{})
+	assert.NotNil(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "enumerate error")
+
+	// TestCase: Error in cluster inspect
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(cluster, nil).
+		AnyTimes()
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(api.Node{}, fmt.Errorf("inspect error")).
+		Times(1)
+
+	_, err = c.GetCapacity(context.Background(), &csi.GetCapacityRequest{})
+	assert.NotNil(t, err)
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Contains(t, serverError.Message(), "inspect error")
+
+	// TestCase: Successful get capacity info
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(api.Node{
+			Pools: []api.StoragePool{
+				{
+					Used:      6,
+					TotalSize: 11,
+				},
+			},
+		}, nil).
+		Times(1)
+
+	res, err := c.GetCapacity(context.Background(), &csi.GetCapacityRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, int64(5), res.AvailableCapacity)
+
+	// TestCase: Node info with no capacity
+	s.MockCluster().EXPECT().
+		Inspect("node-1").
+		Return(api.Node{
+			Pools: []api.StoragePool{
+				{
+					Used:      11,
+					TotalSize: 11,
+				},
+			},
+		}, nil).
+		Times(1)
+
+	res, err = c.GetCapacity(context.Background(), &csi.GetCapacityRequest{})
+	assert.Nil(t, err)
+	assert.NotNil(t, res)
+	assert.Equal(t, int64(0), res.AvailableCapacity)
 }
