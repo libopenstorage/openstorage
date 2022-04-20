@@ -424,7 +424,8 @@ sdk-check-version:
 
 mockgen:
 	go get github.com/golang/mock/gomock
-	go get github.com/golang/mock/mockgen
+	go get github.com/golang/mock/mockgen || echo "ignoring go get build error"
+	cd ${GOPATH}/src/github.com/golang/mock/mockgen && git checkout v1.2.0 && go install github.com/golang/mock/mockgen
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_cluster.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageClusterServer,OpenStorageClusterClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
