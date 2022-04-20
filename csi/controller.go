@@ -88,6 +88,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// Volume condition
 		csi.ControllerServiceCapability_RPC_VOLUME_CONDITION,
+
+		// GetCapacity
+		csi.ControllerServiceCapability_RPC_GET_CAPACITY,
 	}
 
 	var serviceCapabilities []*csi.ControllerServiceCapability
@@ -1163,6 +1166,29 @@ func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {
 		}
 	}
 	return result
+}
+
+// GetCapacity returns the available capacity for this node
+func (s *OsdCsiServer) GetCapacity(context.Context, *csi.GetCapacityRequest) (*csi.GetCapacityResponse, error) {
+	clus, err := s.cluster.Enumerate()
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to Enumerate cluster: %s", err)
+	}
+
+	node, err := s.cluster.Inspect(clus.NodeId)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Unable to Inspect node %s: %s", clus.NodeId, err)
+	}
+
+	var totalAvailable uint64 = 0
+	for i := range node.Pools {
+		available := node.Pools[i].GetTotalSize() - node.Pools[i].GetUsed()
+		totalAvailable = available + totalAvailable
+	}
+
+	return &csi.GetCapacityResponse{
+		AvailableCapacity: int64(totalAvailable),
+	}, nil
 }
 
 // roundUpToNearestGiB rounds up given quantity upto chunks of GiB
