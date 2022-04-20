@@ -84,7 +84,7 @@ func TestGetNodeInfo(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.Equal(t, "node-1", res.NodeId)
-	assert.Empty(t, res.AccessibleTopology)
+	assert.Empty(t, res.AccessibleTopology.Segments)
 
 	// TestCase: Node info with empty topology
 	node.SchedulerTopology = &api.SchedulerTopology{}
@@ -97,7 +97,7 @@ func TestGetNodeInfo(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.Equal(t, "node-1", res.NodeId)
-	assert.Empty(t, res.AccessibleTopology)
+	assert.Empty(t, res.AccessibleTopology.Segments)
 
 	// TestCase: Node info with empty topology labels
 	node.SchedulerTopology.Labels = map[string]string{}
@@ -110,7 +110,7 @@ func TestGetNodeInfo(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.Equal(t, "node-1", res.NodeId)
-	assert.Empty(t, res.AccessibleTopology)
+	assert.Empty(t, res.AccessibleTopology.Segments)
 
 	// TestCase: Node info with empty topology labels
 	node.SchedulerTopology.Labels["zone"] = "zone-1"
