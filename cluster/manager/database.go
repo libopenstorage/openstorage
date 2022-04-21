@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 
@@ -117,7 +118,7 @@ func readClusterInfo() (cluster.ClusterInfo, uint64, error) {
 func lockAndUpdateDB(fn, lockID string, cb updateCallbackFn) (*kvdb.KVPair, error) {
 	kv := kvdb.Instance()
 
-	kvlock, err := kv.LockWithID(clusterLockKey, lockID)
+	kvlock, err := kv.LockWithTimeout(clusterLockKey, lockID, 10 * time.Minute, kv.GetLockTimeout())
 	if err != nil {
 		logrus.Warnf("Unable to obtain cluster lock for %v op: %v", fn, err)
 		return nil, err
