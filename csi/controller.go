@@ -409,12 +409,21 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 		}
 	}
 
-	// Check for FA DA volumes: all allowed except filesystem RWX
-	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK && shared && mount {
-		return status.Errorf(
-			codes.InvalidArgument,
-			"FlashArray Direct Access shared filesystems are not supported",
-		)
+	// Check for shared FA DA volumes. Shared filesystems aren't supported.
+	// Shared raw block volumes are temporarily disabled due to PWX-23530.
+	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK && shared {
+		if mount {
+			return status.Errorf(
+				codes.InvalidArgument,
+				"FlashArray Direct Access shared filesystems are not supported",
+			)
+		}
+		if block {
+			return status.Errorf(
+				codes.InvalidArgument,
+				"FlashArray Direct Access shared block devices are not yet supported",
+			)
+		}
 	}
 
 	// Check for FB DA volumes: all allowed except raw block
