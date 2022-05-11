@@ -18,7 +18,9 @@ package csi
 
 import (
 	"fmt"
+	"sort"
 	"sync"
+	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
@@ -55,6 +57,7 @@ type OsdCsiServerConfig struct {
 	DriverName string
 	Cluster    cluster.Cluster
 	SdkUds     string
+	SdkPort    string
 
 	// Name to be reported back to the CO. If not provided,
 	// the name will be in the format of <driver>.openstorage.org
@@ -73,14 +76,17 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler        spec.SpecHandler
-	driver             volume.VolumeDriver
-	cluster            cluster.Cluster
-	sdkUds             string
-	conn               *grpc.ClientConn
-	mu                 sync.Mutex
-	csiDriverName      string
-	allowInlineVolumes bool
+	specHandler          spec.SpecHandler
+	driver               volume.VolumeDriver
+	cluster              cluster.Cluster
+	sdkUds               string
+	sdkPort              string
+	conn                 *grpc.ClientConn
+	connMap              map[string]*grpc.ClientConn
+	nextCreateNodeNumber int
+	mu                   sync.Mutex
+	csiDriverName        string
+	allowInlineVolumes   bool
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -125,12 +131,17 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
 	}
 
+	sdkPort := config.SdkPort
+	if len(config.SdkPort) == 0 {
+		sdkPort = "9020"
+	}
 	return &OsdCsiServer{
 		specHandler:        spec.NewSpecHandler(),
 		GrpcServer:         gServer,
 		driver:             d,
 		cluster:            config.Cluster,
 		sdkUds:             config.SdkUds,
+		sdkPort:            sdkPort,
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
 	}, nil
@@ -153,6 +164,48 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 		}
 	}
 	return s.conn, nil
+}
+
+func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	// Get all nodes and sort them
+	nodesResp, err := s.cluster.Enumerate()
+	if err != nil {
+		return nil, err
+	}
+	sort.Slice(nodesResp.Nodes, func(i, j int) bool {
+		return nodesResp.Nodes[i].Id < nodesResp.Nodes[j].Id
+	})
+
+	// Get target node info and set next round robbin node
+	var targetNodeNumber int
+	if s.nextCreateNodeNumber != 0 {
+		targetNodeNumber = s.nextCreateNodeNumber
+	}
+	targetNodeEndpoint := nodesResp.Nodes[targetNodeNumber].MgmtIp
+	s.nextCreateNodeNumber = (targetNodeNumber + 1) % len(nodesResp.Nodes)
+
+	// Get conn for this node, otherwise create new conn
+	if len(s.connMap) == 0 {
+		s.connMap = make(map[string]*grpc.ClientConn)
+	}
+	if s.connMap[targetNodeEndpoint] == nil {
+		var err error
+		logrus.Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
+		s.connMap[targetNodeEndpoint], err = grpcserver.ConnectWithTimeout(
+			fmt.Sprintf("%s:%s", targetNodeEndpoint, s.sdkPort),
+			[]grpc.DialOption{
+				grpc.WithInsecure(),
+				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+			}, 10*time.Second)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return s.connMap[targetNodeEndpoint], nil
 }
 
 // driverGetVolume returns a volume for a given ID. This function skips
