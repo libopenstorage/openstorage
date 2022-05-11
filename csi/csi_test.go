@@ -206,6 +206,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	config.Net = "tcp"
 	config.Address = "127.0.0.1:0"
 	config.SdkUds = tester.uds
+	config.SdkPort = tester.port
 	tester.server, err = NewOsdCsiServer(config)
 	assert.Nil(t, err)
 	err = tester.server.Start()
