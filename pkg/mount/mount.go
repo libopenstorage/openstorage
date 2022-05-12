@@ -643,7 +643,7 @@ func (m *Mounter) Unmount(
 		return nil
 	}
 	logrus.Warnf("Device %q is not mounted at path %q", device, path)
-	return nil
+	return ErrEnoent
 }
 
 func (m *Mounter) removeMountPath(path string) error {
