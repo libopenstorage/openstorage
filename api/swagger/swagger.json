@@ -500,7 +500,7 @@
         "parameters": [
           {
             "type": "string",
-            "description": "secret id/key whose value to be retrived",
+            "description": "secret id/key whose value to be retrieved",
             "name": "id",
             "in": "query",
             "required": true
@@ -1345,6 +1345,44 @@
         }
       }
     },
+    "/osd-volumes/volservice/{id}": {
+      "post": {
+        "description": "Does Volume Service operation in the background on a given volume",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "volume"
+        ],
+        "operationId": "VolumeService",
+        "parameters": [
+          {
+            "type": "integer",
+            "description": "id to get volume with",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "description": "Contains the volume service command and parameters for the command",
+            "name": "VolumeServiceRequest",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/VolumeServiceRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "volume service response",
+            "schema": {
+              "$ref": "#/definitions/VolumeServiceResponse"
+            }
+          }
+        }
+      }
+    },
     "/osd-volumes/{id}": {
       "get": {
         "produces": [
@@ -1478,639 +1516,24 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
-    "CapacityUsageInfo": {
-      "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
+    "AuthenticateOKBody": {
+      "description": "AuthenticateOKBody authenticate o k body",
       "type": "object",
+      "required": [
+        "IdentityToken",
+        "Status"
+      ],
       "properties": {
-        "exclusive_bytes": {
-          "description": "Storage consumed exclusively by this single snapshot. Deletion of this\nsnapshot may increase the free storage available by this amount.",
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "ExclusiveBytes"
-        },
-        "shared_bytes": {
-          "description": "Storage consumed by this snapshot that is shared with parent and children",
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "SharedBytes"
-        },
-        "total_bytes": {
-          "description": "TotalBytes used by this volume",
-          "type": "integer",
-          "format": "int64",
-          "x-go-name": "TotalBytes"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CapacityUsageResponse": {
-      "description": "Defines the response for CapacityUsage request",
-      "type": "object",
-      "properties": {
-        "CapacityUsageInfo": {
-          "$ref": "#/definitions/CapacityUsageInfo"
-        },
-        "Error": {
-          "description": "Describes the err if all of the usage details could not be obtained",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupCatalogRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential for cloud",
-          "type": "string"
-        },
-        "ID": {
-          "description": "ID is Backup ID in the cloud",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupCatalogResponse": {
-      "type": "object",
-      "properties": {
-        "Contents": {
-          "description": "Contents is listing of backup contents",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupCreateRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is cloud credential to be used for backup",
-          "type": "string"
-        },
-        "Full": {
-          "description": "Full indicates if full backup is desired even though incremental is possible",
-          "type": "boolean"
-        },
-        "Labels": {
-          "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "Name": {
-          "description": "Name is optional unique id to be used for this backup\nIf not specified backup creates this by default",
-          "type": "string"
-        },
-        "VolumeID": {
-          "description": "VolumeID of the volume for which cloudbackup is requested",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupCreateResponse": {
-      "type": "object",
-      "properties": {
-        "Name": {
-          "description": "Name of the task performing this backup",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupDeleteAllRequest": {
-      "type": "object",
-      "properties": {
-        "All": {
-          "description": "All if set to true, backups for all clusters in the cloud are processed",
-          "type": "boolean"
-        },
-        "ClusterID": {
-          "description": "ClusterID is the optional clusterID for the request",
-          "type": "string"
-        },
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is optional Source VolumeID for the request",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupDeleteRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
-          "type": "string"
-        },
-        "Force": {
-          "description": "Force Delete cloudbackup even if there are dependencies",
-          "type": "boolean"
-        },
-        "ID": {
-          "description": "ID is the ID of the cloud backup",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupEnumerateRequest": {
-      "type": "object",
-      "properties": {
-        "All": {
-          "description": "All if set to true, backups for all clusters in the cloud are processed",
-          "type": "boolean"
-        },
-        "ClusterID": {
-          "description": "ClusterID is the optional clusterID for the request",
-          "type": "string"
-        },
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is optional Source VolumeID for the request",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "Backups": {
-          "description": "Backups is list of backups in cloud for given volume/cluster/s",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CloudBackupInfo"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupGenericRequest": {
-      "type": "object",
-      "properties": {
-        "All": {
-          "description": "All if set to true, backups for all clusters in the cloud are processed",
-          "type": "boolean"
-        },
-        "ClusterID": {
-          "description": "ClusterID is the optional clusterID for the request",
-          "type": "string"
-        },
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential for cloud to be used for the request",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is optional Source VolumeID for the request",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupGroupCreateRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is cloud credential to be used for backup",
-          "type": "string"
-        },
-        "Full": {
-          "description": "Full indicates if full backup is desired even though incremental is possible",
-          "type": "boolean"
-        },
-        "GroupID": {
-          "description": "GroupID indicates backup request for a volumegroup with this group id",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "Labels indicates backup request for a volume group with these labels",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "VolumeIDs": {
-          "description": "VolumeIDs are a list of volume IDs to use for the backup request\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching all of\nthem are backed up to cloud",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupGroupCreateResponse": {
-      "type": "object",
-      "properties": {
-        "GroupCloudBackupID": {
-          "description": "ID for this group of backups",
-          "type": "string"
-        },
-        "Names": {
-          "description": "Names of the tasks performing this group backup",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupGroupSchedCreateRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is cloud credential to be used with this schedule",
-          "type": "string"
-        },
-        "Full": {
-          "description": "Full indicates if scheduled backups must be full always",
-          "type": "boolean"
-        },
-        "GroupID": {
-          "description": "GroupID indicates the group of volumes for which cloudbackup schedule is\nbeing created",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "Labels indicates a volume group for which this group cloudsnap schedule is\nbeing created. If this is provided GroupId is not needed and vice-versa.",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "MaxBackups": {
-          "description": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
-          "type": "integer",
-          "format": "uint64"
-        },
-        "Schedule": {
-          "description": "Schedule is the frequency of backup",
-          "type": "string"
-        },
-        "VolumeIDs": {
-          "description": "VolumeIDs are a list of volume IDs to use for the backup request\nIf multiple of GroupID, Labels or VolumeIDs are specified, volumes matching all of\nthem are backed up to cloud",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupHistoryItem": {
-      "type": "object",
-      "properties": {
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is volume ID which was backedup",
+        "IdentityToken": {
+          "description": "An opaque token used to authenticate a user after a successful login",
           "type": "string"
         },
         "Status": {
-          "description": "Status indicates whether backup was completed/failed",
-          "type": "string"
-        },
-        "Timestamp": {
-          "description": "TimeStamp is the time at which either backup completed/failed",
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupHistoryRequest": {
-      "type": "object",
-      "properties": {
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is volumeID for which history of backup/restore\nis being requested",
+          "description": "The status of the authentication",
           "type": "string"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupHistoryResponse": {
-      "type": "object",
-      "properties": {
-        "HistoryList": {
-          "description": "HistoryList is list of past backup/restores in the cluster",
-          "type": "array",
-          "items": {
-            "$ref": "#/definitions/CloudBackupHistoryItem"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupInfo": {
-      "type": "object",
-      "properties": {
-        "ID": {
-          "description": "ID is the ID of the cloud backup",
-          "type": "string"
-        },
-        "Metadata": {
-          "description": "Metadata associated with the backup",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is Source volumeID of the backup",
-          "type": "string"
-        },
-        "SrcVolumeName": {
-          "description": "SrcvolumeName is name of the sourceVolume of the backup",
-          "type": "string"
-        },
-        "Status": {
-          "description": "Status indicates the status of the backup",
-          "type": "string"
-        },
-        "Timestamp": {
-          "description": "Timestamp is the timestamp at which the source volume\nwas backed up to cloud",
-          "type": "string",
-          "format": "date-time"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupOpType": {
-      "type": "string",
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupRestoreRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is the credential to be used for restore operation",
-          "type": "string"
-        },
-        "ID": {
-          "description": "ID is the backup ID being restored",
-          "type": "string"
-        },
-        "Name": {
-          "description": "Name is optional unique id to be used for this restore op\nrestore creates this by default",
-          "type": "string"
-        },
-        "NodeID": {
-          "description": "NodeID is the optional NodeID for provisioning restore\nvolume (ResoreVolumeName should not be specified)",
-          "type": "string"
-        },
-        "RestoreVolumeName": {
-          "description": "RestoreVolumeName is optional volume Name of the new volume to be created\nin the cluster for restoring the cloudbackup",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupRestoreResponse": {
-      "type": "object",
-      "properties": {
-        "Name": {
-          "description": "Name of the task performing this restore",
-          "type": "string"
-        },
-        "RestoreVolumeID": {
-          "description": "RestoreVolumeID is the volumeID to which the backup is being restored",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupSchedCreateRequest": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is the cloud credential used with this schedule",
-          "type": "string"
-        },
-        "Full": {
-          "description": "Full indicates if scheduled backups must be full always",
-          "type": "boolean"
-        },
-        "GroupID": {
-          "description": "GroupID indicates the group of volumes for this cloudbackup schedule",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "Labels indicates a volume group for this cloudsnap schedule",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "MaxBackups": {
-          "description": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
-          "type": "integer",
-          "format": "uint64"
-        },
-        "Schedule": {
-          "description": "Schedule is the frequence of backup",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is the schedule's source volume",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupSchedCreateResponse": {
-      "type": "object",
-      "properties": {
-        "UUID": {
-          "description": "UUID is the UUID of the newly created schedule",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupSchedDeleteRequest": {
-      "type": "object",
-      "properties": {
-        "UUID": {
-          "description": "UUID is UUID of the schedule to be deleted",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupSchedEnumerateResponse": {
-      "type": "object",
-      "properties": {
-        "Schedules": {
-          "description": "Schedule is map of schedule uuid to scheduleInfo",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/CloudBackupScheduleInfo"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupScheduleInfo": {
-      "type": "object",
-      "properties": {
-        "CredentialUUID": {
-          "description": "CredentialUUID is the cloud credential used with this schedule",
-          "type": "string"
-        },
-        "Full": {
-          "description": "Full indicates if scheduled backups must be full always",
-          "type": "boolean"
-        },
-        "GroupID": {
-          "description": "GroupID indicates the group of volumes for this cloudbackup schedule",
-          "type": "string"
-        },
-        "Labels": {
-          "description": "Labels indicates a volume group for this cloudsnap schedule",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "MaxBackups": {
-          "description": "MaxBackups are the maximum number of backups retained\nin cloud.Older backups are deleted",
-          "type": "integer",
-          "format": "uint64"
-        },
-        "Schedule": {
-          "description": "Schedule is the frequence of backup",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is the schedule's source volume",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupStateChangeRequest": {
-      "type": "object",
-      "properties": {
-        "Name": {
-          "description": "Name of the backup/restore task for which state change\nis being requested",
-          "type": "string"
-        },
-        "RequestedState": {
-          "description": "RequestedState is desired state of the op\ncan be pause/resume/stop",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupStatus": {
-      "type": "object",
-      "properties": {
-        "BytesDone": {
-          "description": "BytesDone indicates Bytes uploaded/downloaded so far",
-          "type": "integer",
-          "format": "uint64"
-        },
-        "BytesTotal": {
-          "description": "BytesTotal is the total number of bytes being transferred",
-          "type": "integer",
-          "format": "uint64"
-        },
-        "CompletedTime": {
-          "description": "CompletedTime indicates Op's completed time",
-          "type": "string",
-          "format": "date-time"
-        },
-        "CredentialUUID": {
-          "description": "CredentialUUID used for this backup/restore op",
-          "type": "string"
-        },
-        "EtaSeconds": {
-          "description": "EtaSeconds estimated time in seconds for backup/restore completion",
-          "type": "integer",
-          "format": "int64"
-        },
-        "GroupCloudBackupID": {
-          "description": "GroupCloudBackupID is valid for backups that were started as part of group\ncloudbackup request",
-          "type": "string"
-        },
-        "ID": {
-          "description": "ID is the ID for the operation",
-          "type": "string"
-        },
-        "Info": {
-          "description": "Info currently indicates only failure cause in case of failed backup/restore",
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
-        "NodeID": {
-          "description": "NodeID is the ID of the node where this Op is active",
-          "type": "string"
-        },
-        "OpType": {
-          "$ref": "#/definitions/CloudBackupOpType"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID is either the volume being backed-up or target volume to\nwhich a cloud backup is being restored",
-          "type": "string"
-        },
-        "StartTime": {
-          "description": "StartTime indicates Op's start time",
-          "type": "string",
-          "format": "date-time"
-        },
-        "Status": {
-          "$ref": "#/definitions/CloudBackupStatusType"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupStatusRequest": {
-      "type": "object",
-      "properties": {
-        "Local": {
-          "description": "Local indicates if only those backups/restores that are\nactive on current node must be returned",
-          "type": "boolean"
-        },
-        "Name": {
-          "description": "Name of the backup/restore task. If this is specified, SrcVolumeID is\nignored. This could be GroupCloudBackupId too, and in that case multiple\nstatuses belonging to the groupCloudBackupID is returned.",
-          "type": "string"
-        },
-        "SrcVolumeID": {
-          "description": "SrcVolumeID optional volumeID to list status of backup/restore",
-          "type": "string"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupStatusResponse": {
-      "type": "object",
-      "properties": {
-        "Statuses": {
-          "description": "statuses is list of currently active/failed/done backup/restores\nmap key is the id of the task",
-          "type": "object",
-          "additionalProperties": {
-            "$ref": "#/definitions/CloudBackupStatus"
-          }
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CloudBackupStatusType": {
-      "type": "string",
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
+      "x-go-package": "github.com/docker/docker/api/types/registry"
     },
     "Cluster": {
       "type": "object",
@@ -2124,10 +1547,6 @@
         },
         "Id": {
           "description": "Id of the cluster.",
-          "type": "string"
-        },
-        "LoggingURL": {
-          "description": "Logging url for the cluster.",
           "type": "string"
         },
         "ManagementURL": {
@@ -2147,9 +1566,6 @@
         },
         "Status": {
           "$ref": "#/definitions/Status"
-        },
-        "TunnelConfig": {
-          "$ref": "#/definitions/TunnelConfig"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2230,34 +1646,127 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
-    "CosType": {
-      "type": "integer",
-      "format": "int32",
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
-    },
-    "CredCreateRequest": {
-      "description": "CredCreateRequest is the input for CredCreate command",
+    "ContainerChangeResponseItem": {
+      "description": "ContainerChangeResponseItem change item in response to ContainerChanges operation",
       "type": "object",
+      "required": [
+        "Kind",
+        "Path"
+      ],
       "properties": {
-        "InputParams": {
-          "description": "InputParams is map describing cloud provide",
-          "type": "object",
-          "additionalProperties": {
+        "Kind": {
+          "description": "Kind of change",
+          "type": "integer",
+          "format": "uint8"
+        },
+        "Path": {
+          "description": "Path to file that has changed",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types/container"
+    },
+    "ContainerCreateCreatedBody": {
+      "description": "ContainerCreateCreatedBody OK response to ContainerCreate operation",
+      "type": "object",
+      "required": [
+        "Id",
+        "Warnings"
+      ],
+      "properties": {
+        "Id": {
+          "description": "The ID of the created container",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "Warnings": {
+          "description": "Warnings encountered when creating the container",
+          "type": "array",
+          "items": {
             "type": "string"
           }
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
+      "x-go-package": "github.com/docker/docker/api/types/container"
     },
-    "CredCreateResponse": {
-      "description": "CredCreateResponse is returned for CredCreate command",
+    "ContainerTopOKBody": {
+      "description": "ContainerTopOKBody OK response to ContainerTop operation",
+      "type": "object",
+      "required": [
+        "Processes",
+        "Titles"
+      ],
+      "properties": {
+        "Processes": {
+          "description": "Each process running in the container, where each is process\nis an array of values corresponding to the titles.",
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "Titles": {
+          "description": "The ps column titles",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types/container"
+    },
+    "ContainerUpdateOKBody": {
+      "description": "ContainerUpdateOKBody OK response to ContainerUpdate operation",
+      "type": "object",
+      "required": [
+        "Warnings"
+      ],
+      "properties": {
+        "Warnings": {
+          "description": "warnings",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types/container"
+    },
+    "ContainerWaitOKBody": {
+      "description": "ContainerWaitOKBody OK response to ContainerWait operation",
+      "type": "object",
+      "required": [
+        "Error",
+        "StatusCode"
+      ],
+      "properties": {
+        "Error": {
+          "$ref": "#/definitions/ContainerWaitOKBodyError"
+        },
+        "StatusCode": {
+          "description": "Exit code of the container",
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types/container"
+    },
+    "ContainerWaitOKBodyError": {
+      "description": "ContainerWaitOKBodyError container waiting error, if any",
       "type": "object",
       "properties": {
-        "UUID": {
-          "description": "UUID of the credential that was just created",
+        "Message": {
+          "description": "Details of an error",
           "type": "string"
         }
       },
+      "x-go-package": "github.com/docker/docker/api/types/container"
+    },
+    "CosType": {
+      "type": "integer",
+      "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "DefaultSecretKeyRequest": {
@@ -2272,6 +1781,21 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/secrets"
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "title": "ErrorResponse Represents an error.",
+      "required": [
+        "message"
+      ],
+      "properties": {
+        "message": {
+          "description": "The error message.",
+          "type": "string",
+          "x-go-name": "Message"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
     },
     "FluentDConfig": {
       "description": "DEPRECATED",
@@ -2317,6 +1841,139 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/secrets"
+    },
+    "GraphDriverData": {
+      "type": "object",
+      "title": "GraphDriverData Information about a container's graph driver.",
+      "required": [
+        "Data",
+        "Name"
+      ],
+      "properties": {
+        "Data": {
+          "description": "data",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "HardwareType": {
+      "type": "integer",
+      "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "IdResponse": {
+      "description": "IDResponse Response to an API call that returns just an Id",
+      "type": "object",
+      "required": [
+        "Id"
+      ],
+      "properties": {
+        "Id": {
+          "description": "The id of the newly created object.",
+          "type": "string",
+          "x-go-name": "ID"
+        }
+      },
+      "x-go-name": "IDResponse",
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "ImageDeleteResponseItem": {
+      "description": "ImageDeleteResponseItem image delete response item",
+      "type": "object",
+      "properties": {
+        "Deleted": {
+          "description": "The image ID of an image that was deleted",
+          "type": "string"
+        },
+        "Untagged": {
+          "description": "The image ID of an image that was untagged",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "ImageSummary": {
+      "description": "ImageSummary image summary",
+      "type": "object",
+      "required": [
+        "Containers",
+        "Created",
+        "Id",
+        "Labels",
+        "ParentId",
+        "RepoDigests",
+        "RepoTags",
+        "SharedSize",
+        "Size",
+        "VirtualSize"
+      ],
+      "properties": {
+        "Containers": {
+          "description": "containers",
+          "type": "integer",
+          "format": "int64"
+        },
+        "Created": {
+          "description": "created",
+          "type": "integer",
+          "format": "int64"
+        },
+        "Id": {
+          "description": "Id",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "Labels": {
+          "description": "labels",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "ParentId": {
+          "description": "parent Id",
+          "type": "string",
+          "x-go-name": "ParentID"
+        },
+        "RepoDigests": {
+          "description": "repo digests",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "RepoTags": {
+          "description": "repo tags",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "SharedSize": {
+          "description": "shared size",
+          "type": "integer",
+          "format": "int64"
+        },
+        "Size": {
+          "description": "size",
+          "type": "integer",
+          "format": "int64"
+        },
+        "VirtualSize": {
+          "description": "virtual size",
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
     },
     "KvdbConfig": {
       "description": "KvdbConfig stores parameters defining kvdb configuration",
@@ -2430,6 +2087,9 @@
           "description": "GossipPort is the port used by the gossip protocol",
           "type": "string"
         },
+        "HWType": {
+          "$ref": "#/definitions/HardwareType"
+        },
         "Hostname": {
           "description": "Hostname of this node",
           "type": "string"
@@ -2482,6 +2142,12 @@
           "description": "SchedulerNodeName is name of the node in scheduler context. It can be\nempty if unable to get the name from the scheduler.",
           "type": "string"
         },
+        "SchedulerTopology": {
+          "$ref": "#/definitions/SchedulerTopology"
+        },
+        "SecurityStatus": {
+          "$ref": "#/definitions/StorageNode_SecurityStatus"
+        },
         "StartTime": {
           "description": "Start time of this node",
           "type": "string",
@@ -2502,6 +2168,10 @@
       "description": "NodeConfig is a node level config data",
       "type": "object",
       "properties": {
+        "cluster_domain": {
+          "type": "string",
+          "x-go-name": "ClusterDomain"
+        },
         "csi_endpoint": {
           "type": "string",
           "x-go-name": "CSIEndpoint"
@@ -2534,6 +2204,481 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
+    "Plugin": {
+      "description": "Plugin A plugin for the Engine API",
+      "type": "object",
+      "required": [
+        "Config",
+        "Enabled",
+        "Name",
+        "Settings"
+      ],
+      "properties": {
+        "Config": {
+          "$ref": "#/definitions/PluginConfig"
+        },
+        "Enabled": {
+          "description": "True if the plugin is running. False if the plugin is not running, only installed.",
+          "type": "boolean"
+        },
+        "Id": {
+          "description": "Id",
+          "type": "string",
+          "x-go-name": "ID"
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        },
+        "PluginReference": {
+          "description": "plugin remote reference used to push/pull the plugin",
+          "type": "string"
+        },
+        "Settings": {
+          "$ref": "#/definitions/PluginSettings"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfig": {
+      "type": "object",
+      "title": "PluginConfig The config of a plugin.",
+      "required": [
+        "Args",
+        "Description",
+        "Documentation",
+        "Entrypoint",
+        "Env",
+        "Interface",
+        "IpcHost",
+        "Linux",
+        "Mounts",
+        "Network",
+        "PidHost",
+        "PropagatedMount",
+        "WorkDir"
+      ],
+      "properties": {
+        "Args": {
+          "$ref": "#/definitions/PluginConfigArgs"
+        },
+        "Description": {
+          "description": "description",
+          "type": "string"
+        },
+        "DockerVersion": {
+          "description": "Docker Version used to create the plugin",
+          "type": "string"
+        },
+        "Documentation": {
+          "description": "documentation",
+          "type": "string"
+        },
+        "Entrypoint": {
+          "description": "entrypoint",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Env": {
+          "description": "env",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginEnv"
+          }
+        },
+        "Interface": {
+          "$ref": "#/definitions/PluginConfigInterface"
+        },
+        "IpcHost": {
+          "description": "ipc host",
+          "type": "boolean"
+        },
+        "Linux": {
+          "$ref": "#/definitions/PluginConfigLinux"
+        },
+        "Mounts": {
+          "description": "mounts",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginMount"
+          }
+        },
+        "Network": {
+          "$ref": "#/definitions/PluginConfigNetwork"
+        },
+        "PidHost": {
+          "description": "pid host",
+          "type": "boolean"
+        },
+        "PropagatedMount": {
+          "description": "propagated mount",
+          "type": "string"
+        },
+        "User": {
+          "$ref": "#/definitions/PluginConfigUser"
+        },
+        "WorkDir": {
+          "description": "work dir",
+          "type": "string"
+        },
+        "rootfs": {
+          "$ref": "#/definitions/PluginConfigRootfs"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigArgs": {
+      "description": "PluginConfigArgs plugin config args",
+      "type": "object",
+      "required": [
+        "Description",
+        "Name",
+        "Settable",
+        "Value"
+      ],
+      "properties": {
+        "Description": {
+          "description": "description",
+          "type": "string"
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        },
+        "Settable": {
+          "description": "settable",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Value": {
+          "description": "value",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigInterface": {
+      "description": "PluginConfigInterface The interface between Docker and the plugin",
+      "type": "object",
+      "required": [
+        "Socket",
+        "Types"
+      ],
+      "properties": {
+        "ProtocolScheme": {
+          "description": "Protocol to use for clients connecting to the plugin.",
+          "type": "string"
+        },
+        "Socket": {
+          "description": "socket",
+          "type": "string"
+        },
+        "Types": {
+          "description": "types",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginInterfaceType"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigLinux": {
+      "description": "PluginConfigLinux plugin config linux",
+      "type": "object",
+      "required": [
+        "AllowAllDevices",
+        "Capabilities",
+        "Devices"
+      ],
+      "properties": {
+        "AllowAllDevices": {
+          "description": "allow all devices",
+          "type": "boolean"
+        },
+        "Capabilities": {
+          "description": "capabilities",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Devices": {
+          "description": "devices",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginDevice"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigNetwork": {
+      "description": "PluginConfigNetwork plugin config network",
+      "type": "object",
+      "required": [
+        "Type"
+      ],
+      "properties": {
+        "Type": {
+          "description": "type",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigRootfs": {
+      "description": "PluginConfigRootfs plugin config rootfs",
+      "type": "object",
+      "properties": {
+        "diff_ids": {
+          "description": "diff ids",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "DiffIds"
+        },
+        "type": {
+          "description": "type",
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginConfigUser": {
+      "description": "PluginConfigUser plugin config user",
+      "type": "object",
+      "properties": {
+        "GID": {
+          "description": "g ID",
+          "type": "integer",
+          "format": "uint32"
+        },
+        "UID": {
+          "description": "UID",
+          "type": "integer",
+          "format": "uint32"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginDevice": {
+      "description": "PluginDevice plugin device",
+      "type": "object",
+      "required": [
+        "Description",
+        "Name",
+        "Path",
+        "Settable"
+      ],
+      "properties": {
+        "Description": {
+          "description": "description",
+          "type": "string"
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        },
+        "Path": {
+          "description": "path",
+          "type": "string"
+        },
+        "Settable": {
+          "description": "settable",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginEnv": {
+      "description": "PluginEnv plugin env",
+      "type": "object",
+      "required": [
+        "Description",
+        "Name",
+        "Settable",
+        "Value"
+      ],
+      "properties": {
+        "Description": {
+          "description": "description",
+          "type": "string"
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        },
+        "Settable": {
+          "description": "settable",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Value": {
+          "description": "value",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginInterfaceType": {
+      "description": "PluginInterfaceType plugin interface type",
+      "type": "object",
+      "required": [
+        "Capability",
+        "Prefix",
+        "Version"
+      ],
+      "properties": {
+        "Capability": {
+          "description": "capability",
+          "type": "string"
+        },
+        "Prefix": {
+          "description": "prefix",
+          "type": "string"
+        },
+        "Version": {
+          "description": "version",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginMount": {
+      "description": "PluginMount plugin mount",
+      "type": "object",
+      "required": [
+        "Description",
+        "Destination",
+        "Name",
+        "Options",
+        "Settable",
+        "Source",
+        "Type"
+      ],
+      "properties": {
+        "Description": {
+          "description": "description",
+          "type": "string"
+        },
+        "Destination": {
+          "description": "destination",
+          "type": "string"
+        },
+        "Name": {
+          "description": "name",
+          "type": "string"
+        },
+        "Options": {
+          "description": "options",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Settable": {
+          "description": "settable",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Source": {
+          "description": "source",
+          "type": "string"
+        },
+        "Type": {
+          "description": "type",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "PluginSettings": {
+      "type": "object",
+      "title": "PluginSettings Settings that can be modified by users.",
+      "required": [
+        "Args",
+        "Devices",
+        "Env",
+        "Mounts"
+      ],
+      "properties": {
+        "Args": {
+          "description": "args",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Devices": {
+          "description": "devices",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginDevice"
+          }
+        },
+        "Env": {
+          "description": "env",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "Mounts": {
+          "description": "mounts",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PluginMount"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "Port": {
+      "description": "Port An open port on a container",
+      "type": "object",
+      "required": [
+        "PrivatePort",
+        "Type"
+      ],
+      "properties": {
+        "IP": {
+          "description": "Host IP address that the container's port is mapped to",
+          "type": "string"
+        },
+        "PrivatePort": {
+          "description": "Port on the container",
+          "type": "integer",
+          "format": "uint16"
+        },
+        "PublicPort": {
+          "description": "Port exposed on the host",
+          "type": "integer",
+          "format": "uint16"
+        },
+        "Type": {
+          "description": "type",
+          "type": "string"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
     "SchedPolicy": {
       "description": "SchedPolicy specify name and schedule to create/update/list schedule policy",
       "type": "object",
@@ -2546,6 +2691,33 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/schedpolicy"
+    },
+    "SchedulerTopology": {
+      "description": "SchedulerTopology defines the topology information of the storage node\nin scheduler context",
+      "type": "object",
+      "properties": {
+        "labels": {
+          "description": "Key-value pairs defining the topology of the node",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Labels"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkStoragePool_OperationStatus": {
+      "description": "OperationStatus captures the various statuses of a storage pool operation",
+      "type": "integer",
+      "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "SdkStoragePool_OperationType": {
+      "description": "OperationType defines the various operations that are performed on a storage pool",
+      "type": "integer",
+      "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "SecretLoginRequest": {
       "description": "SecretLoginRequest specify secret store and config to initiate\nsecret store session",
@@ -2584,6 +2756,20 @@
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
+    "ServiceUpdateResponse": {
+      "description": "ServiceUpdateResponse service update response",
+      "type": "object",
+      "properties": {
+        "Warnings": {
+          "description": "Optional warning messages",
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
     "SetSecretRequest": {
       "description": "SetSecretRequest stores the given value/data against the key",
       "type": "object",
@@ -2593,36 +2779,6 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/secrets"
-    },
-    "StatPoint": {
-      "description": "StatPoint represents the basic structure of a single Stat reported\nTODO: This is the first step to introduce stats in openstorage.\nFollow up task is to introduce an API for logging stats",
-      "type": "object",
-      "properties": {
-        "Fields": {
-          "description": "Fields and values of the stat",
-          "type": "object",
-          "additionalProperties": {
-            "type": "object"
-          }
-        },
-        "Name": {
-          "description": "Name of the Stat",
-          "type": "string"
-        },
-        "Tags": {
-          "description": "Tags for the Stat",
-          "type": "object",
-          "additionalProperties": {
-            "type": "string"
-          }
-        },
-        "Timestamp": {
-          "description": "Timestamp in Unix format",
-          "type": "integer",
-          "format": "int64"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "Status": {
       "type": "integer",
@@ -2673,6 +2829,11 @@
       "format": "int32",
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
+    "StorageNode_SecurityStatus": {
+      "type": "integer",
+      "format": "int32",
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
     "StoragePool": {
       "description": "StoragePool groups different storage devices based on their CosType",
       "type": "object",
@@ -2681,7 +2842,7 @@
           "$ref": "#/definitions/CosType"
         },
         "ID": {
-          "description": "ID pool ID",
+          "description": "Deprecated! Use `uuid` instead. ID pool ID",
           "type": "integer",
           "format": "int32"
         },
@@ -2709,6 +2870,40 @@
             "type": "string"
           },
           "x-go-name": "Labels"
+        },
+        "last_operation": {
+          "$ref": "#/definitions/StoragePoolOperation"
+        },
+        "uuid": {
+          "description": "UUID is the unique identifier for a storage pool",
+          "type": "string",
+          "x-go-name": "Uuid"
+        }
+      },
+      "x-go-package": "github.com/libopenstorage/openstorage/api"
+    },
+    "StoragePoolOperation": {
+      "description": "StoragePoolOperation defines an operation being performed on a storage pool",
+      "type": "object",
+      "properties": {
+        "msg": {
+          "description": "Msg is a user friendly message for the operation",
+          "type": "string",
+          "x-go-name": "Msg"
+        },
+        "params": {
+          "description": "Params for the parameters for the operation",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          },
+          "x-go-name": "Params"
+        },
+        "status": {
+          "$ref": "#/definitions/SdkStoragePool_OperationStatus"
+        },
+        "type": {
+          "$ref": "#/definitions/SdkStoragePool_OperationType"
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/api"
@@ -2793,9 +2988,9 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "Timestamp": {
-      "description": "# Examples\n\nExample 1: Compute Timestamp from POSIX `time()`.\n\nTimestamp timestamp;\ntimestamp.set_seconds(time(NULL));\ntimestamp.set_nanos(0);\n\nExample 2: Compute Timestamp from POSIX `gettimeofday()`.\n\nstruct timeval tv;\ngettimeofday(\u0026tv, NULL);\n\nTimestamp timestamp;\ntimestamp.set_seconds(tv.tv_sec);\ntimestamp.set_nanos(tv.tv_usec * 1000);\n\nExample 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\nFILETIME ft;\nGetSystemTimeAsFileTime(\u0026ft);\nUINT64 ticks = (((UINT64)ft.dwHighDateTime) \u003c\u003c 32) | ft.dwLowDateTime;\n\nA Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\nis 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\nTimestamp timestamp;\ntimestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\ntimestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\nExample 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\nlong millis = System.currentTimeMillis();\n\nTimestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n.setNanos((int) ((millis % 1000) * 1000000)).build();\n\n\nExample 5: Compute Timestamp from current time in Python.\n\ntimestamp = Timestamp()\ntimestamp.GetCurrentTime()\n\n# JSON Mapping\n\nIn JSON format, the Timestamp type is encoded as a string in the\n[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\nformat is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\nwhere {year} is always expressed using four digits while {month}, {day},\n{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\nseconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\nare optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\nis required, though only UTC (as indicated by \"Z\") is presently supported.\n\nFor example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n01:30 UTC on January 15, 2017.\n\nIn JavaScript, one can convert a Date object to this format using the\nstandard [toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString]\nmethod. In Python, a standard `datetime.datetime` object can be converted\nto this format using [`strftime`](https://docs.python.org/2/library/time.html#time.strftime)\nwith the time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one\ncan use the Joda Time's [`ISODateTimeFormat.dateTime()`](\nhttp://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime--)\nto obtain a formatter capable of generating timestamps in this format.",
+      "description": "All minutes are 60 seconds long. Leap seconds are \"smeared\" so that no leap\nsecond table is needed for interpretation, using a [24-hour linear\nsmear](https://developers.google.com/time/smear).\n\nThe range is from 0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z. By\nrestricting to that range, we ensure that we can convert to and from [RFC\n3339](https://www.ietf.org/rfc/rfc3339.txt) date strings.\n\n# Examples\n\nExample 1: Compute Timestamp from POSIX `time()`.\n\nTimestamp timestamp;\ntimestamp.set_seconds(time(NULL));\ntimestamp.set_nanos(0);\n\nExample 2: Compute Timestamp from POSIX `gettimeofday()`.\n\nstruct timeval tv;\ngettimeofday(\u0026tv, NULL);\n\nTimestamp timestamp;\ntimestamp.set_seconds(tv.tv_sec);\ntimestamp.set_nanos(tv.tv_usec * 1000);\n\nExample 3: Compute Timestamp from Win32 `GetSystemTimeAsFileTime()`.\n\nFILETIME ft;\nGetSystemTimeAsFileTime(\u0026ft);\nUINT64 ticks = (((UINT64)ft.dwHighDateTime) \u003c\u003c 32) | ft.dwLowDateTime;\n\nA Windows tick is 100 nanoseconds. Windows epoch 1601-01-01T00:00:00Z\nis 11644473600 seconds before Unix epoch 1970-01-01T00:00:00Z.\nTimestamp timestamp;\ntimestamp.set_seconds((INT64) ((ticks / 10000000) - 11644473600LL));\ntimestamp.set_nanos((INT32) ((ticks % 10000000) * 100));\n\nExample 4: Compute Timestamp from Java `System.currentTimeMillis()`.\n\nlong millis = System.currentTimeMillis();\n\nTimestamp timestamp = Timestamp.newBuilder().setSeconds(millis / 1000)\n.setNanos((int) ((millis % 1000) * 1000000)).build();\n\n\nExample 5: Compute Timestamp from Java `Instant.now()`.\n\nInstant now = Instant.now();\n\nTimestamp timestamp =\nTimestamp.newBuilder().setSeconds(now.getEpochSecond())\n.setNanos(now.getNano()).build();\n\n\nExample 6: Compute Timestamp from current time in Python.\n\ntimestamp = Timestamp()\ntimestamp.GetCurrentTime()\n\n# JSON Mapping\n\nIn JSON format, the Timestamp type is encoded as a string in the\n[RFC 3339](https://www.ietf.org/rfc/rfc3339.txt) format. That is, the\nformat is \"{year}-{month}-{day}T{hour}:{min}:{sec}[.{frac_sec}]Z\"\nwhere {year} is always expressed using four digits while {month}, {day},\n{hour}, {min}, and {sec} are zero-padded to two digits each. The fractional\nseconds, which can go up to 9 digits (i.e. up to 1 nanosecond resolution),\nare optional. The \"Z\" suffix indicates the timezone (\"UTC\"); the timezone\nis required. A proto3 JSON serializer should always use UTC (as indicated by\n\"Z\") when printing the Timestamp type and a proto3 JSON parser should be\nable to accept both UTC and other timezones (as indicated by an offset).\n\nFor example, \"2017-01-15T01:30:15.01Z\" encodes 15.01 seconds past\n01:30 UTC on January 15, 2017.\n\nIn JavaScript, one can convert a Date object to this format using the\nstandard\n[toISOString()](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date/toISOString)\nmethod. In Python, a standard `datetime.datetime` object can be converted\nto this format using\n[`strftime`](https://docs.python.org/2/library/time.html#time.strftime) with\nthe time format spec '%Y-%m-%dT%H:%M:%S.%fZ'. Likewise, in Java, one can use\nthe Joda Time's [`ISODateTimeFormat.dateTime()`](\nhttp://www.joda.org/joda-time/apidocs/org/joda/time/format/ISODateTimeFormat.html#dateTime%2D%2D\n) to obtain a formatter capable of generating timestamps in this format.",
       "type": "object",
-      "title": "A Timestamp represents a point in time independent of any time zone\nor calendar, represented as seconds and fractions of seconds at\nnanosecond resolution in UTC Epoch time. It is encoded using the\nProleptic Gregorian Calendar which extends the Gregorian calendar\nbackwards to year one. It is encoded assuming all minutes are 60\nseconds long, i.e. leap seconds are \"smeared\" so that no leap second\ntable is needed for interpretation. Range is from\n0001-01-01T00:00:00Z to 9999-12-31T23:59:59.999999999Z.\nBy restricting to that range, we ensure that we can convert to\nand from  RFC 3339 date strings.\nSee [https://www.ietf.org/rfc/rfc3339.txt](https://www.ietf.org/rfc/rfc3339.txt).",
+      "title": "A Timestamp represents a point in time independent of any time zone or local\ncalendar, encoded as a count of seconds and fractions of seconds at\nnanosecond resolution. The count is relative to an epoch at UTC midnight on\nJanuary 1, 1970, in the proleptic Gregorian calendar which extends the\nGregorian calendar backwards to year one.",
       "properties": {
         "nanos": {
           "description": "Non-negative fractions of a second at nanosecond resolution. Negative\nsecond values with fractions must still have non-negative nanos values\nthat count forward in time. Must be from 0 to 999,999,999\ninclusive.",
@@ -2810,26 +3005,7 @@
           "x-go-name": "Seconds"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/vendor/github.com/golang/protobuf/ptypes/timestamp"
-    },
-    "TunnelConfig": {
-      "description": "TunnelConfig describes key, cert and endpoint of a reverse proxy tunnel\nDEPRECATED",
-      "type": "object",
-      "properties": {
-        "cert": {
-          "type": "string",
-          "x-go-name": "Cert"
-        },
-        "key": {
-          "type": "string",
-          "x-go-name": "Key"
-        },
-        "tunnel_endpoint": {
-          "type": "string",
-          "x-go-name": "Endpoint"
-        }
-      },
-      "x-go-package": "github.com/libopenstorage/openstorage/api"
+      "x-go-package": "google.golang.org/protobuf/types/known/timestamppb"
     },
     "VaultConfig": {
       "description": "VaultConfig is a vault configuration parameters struct",
@@ -2877,6 +3053,86 @@
         }
       },
       "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+    },
+    "Volume": {
+      "description": "Volume volume",
+      "type": "object",
+      "required": [
+        "Driver",
+        "Labels",
+        "Mountpoint",
+        "Name",
+        "Options",
+        "Scope"
+      ],
+      "properties": {
+        "CreatedAt": {
+          "description": "Date/Time the volume was created.",
+          "type": "string"
+        },
+        "Driver": {
+          "description": "Name of the volume driver used by the volume.",
+          "type": "string"
+        },
+        "Labels": {
+          "description": "User-defined key/value metadata.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Mountpoint": {
+          "description": "Mount path of the volume on the host.",
+          "type": "string"
+        },
+        "Name": {
+          "description": "Name of the volume.",
+          "type": "string"
+        },
+        "Options": {
+          "description": "The driver specific options used when creating the volume.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "string"
+          }
+        },
+        "Scope": {
+          "description": "The level at which the volume exists. Either `global` for cluster-wide,\nor `local` for machine level.",
+          "type": "string"
+        },
+        "Status": {
+          "description": "Low-level details about the volume, provided by the volume driver.\nDetails are returned as a map with key/value pairs:\n`{\"key\":\"value\",\"key2\":\"value2\"}`.\n\nThe `Status` field is optional, and is omitted if the volume driver\ndoes not support this feature.",
+          "type": "object",
+          "additionalProperties": {
+            "type": "object"
+          }
+        },
+        "UsageData": {
+          "$ref": "#/definitions/VolumeUsageData"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
+    },
+    "VolumeUsageData": {
+      "description": "VolumeUsageData Usage details about the volume. This information is used by the\n`GET /system/df` endpoint, and omitted in other endpoints.",
+      "type": "object",
+      "required": [
+        "RefCount",
+        "Size"
+      ],
+      "properties": {
+        "RefCount": {
+          "description": "The number of containers referencing this volume. This field\nis set to `-1` if the reference-count is not available.",
+          "type": "integer",
+          "format": "int64"
+        },
+        "Size": {
+          "description": "Amount of disk space used by the volume (in bytes). This information\nis only available for volumes created with the `\"local\"` volume\ndriver. For volumes created with other volume drivers, this field\nis set to `-1` (\"not available\")",
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "x-go-package": "github.com/docker/docker/api/types"
     }
   }
 }

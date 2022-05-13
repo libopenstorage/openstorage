@@ -116,7 +116,7 @@ $(GOPATH)/bin/protoc-gen-grpc-gateway:
 
 $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
-	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
 
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
@@ -137,6 +137,15 @@ $(GOPATH)/bin/contextcheck:
 $(GOPATH)/bin/misspell:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/client9/misspell/cmd/misspell
+
+$(GOPATH)/bin/gomock:
+	GO111MODULE=off go get github.com/golang/mock/gomock
+
+$(GOPATH)/bin/mockgen:
+	GO111MODULE=off go get github.com/golang/mock/mockgen
+
+$(GOPATH)/bin/swagger:
+	go install github.com/go-swagger/go-swagger/cmd/swagger@latest
 
 # DEPS build rules
 #
@@ -261,18 +270,18 @@ test-sdk: install-sdk-test launch-sdk
 # TODO: Remove GODEBUG and fix test certs
 test: packr
 	GODEBUG=x509ignoreCN=0 go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
-
-docs:
+	
+docs: $(GOPATH)/bin/gomock $(GOPATH)/bin/swagger $(GOPATH)/bin/mockgen
 	go generate ./cmd/osd/main.go
 
 packr: $(GOPATH)/bin/packr2
 	packr2 clean
 	packr2
 
-generate-mockfiles:
+generate-mockfiles: $(GOPATH)/bin/gomock $(GOPATH)/bin/swagger $(GOPATH)/bin/mockgen
 	go generate $(PKGS)
 
-generate: docs generate-mockfiles
+generate: docs generate-mockfiles 
 
 sdk: docker-proto docker-build-mock-sdk-server
 
@@ -389,7 +398,7 @@ install-flexvolume-plugin: install-flexvolume
 
 clean: $(OSDSANITY)-clean
 	go clean -i $(PKGS)
-	packr clean
+	packr2 clean
 
 # Generate test-coverage HTML report
 # - note: the 'go test -coverprofile...' does append results, so we're merging individual pkgs in for-loop
