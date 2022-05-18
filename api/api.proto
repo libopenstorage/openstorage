@@ -2110,6 +2110,47 @@ service OpenStorageNode {
     }
 }
 
+// BucketService to manage the bucket driver
+service OpenStorageBucket {
+  rpc Create(BucketCreateRequest)
+    returns (BucketCreateResponse) {
+      option(google.api.http) = {
+        post: "/v1/bucket"
+        body: "*"
+      };
+    }
+
+  rpc Delete(BucketDeleteRequest)
+  returns (BucketDeleteResponse) {
+    option(google.api.http) = {
+      delete: "/v1/bucket/{bucket_id}"
+    };
+  }
+}
+
+// Defines a request to create a bucket.
+message BucketCreateRequest {
+  // Unique name of the bucket. This will be used for idempotency.
+  string name = 1;
+}
+
+
+// Defines a response to the creation of a bucket
+message BucketCreateResponse {
+  // Id of new bucket
+  string bucket_id = 1;
+}
+
+// Defines the request to delete a bucket
+message BucketDeleteRequest {
+  // Id of bucket to delete
+  string bucket_id = 1;
+}
+
+// Empty response
+message BucketDeleteResponse {
+}
+
 // OpenStorageVolume is a service used to manage the volumes of a storage system
 service OpenStorageVolume {
 
@@ -5053,7 +5094,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 138;
+    Minor = 139;
     // SDK version patch value of this specification
     Patch = 0;
   }
