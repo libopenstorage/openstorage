@@ -321,6 +321,30 @@
         "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
         "type": "string"
       },
+      "apiBucketCreateRequest": {
+        "description": "Defines a request to create a bucket.",
+        "properties": {
+          "name": {
+            "description": "Unique name of the bucket. This will be used for idempotency.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "apiBucketCreateResponse": {
+        "properties": {
+          "bucket_id": {
+            "title": "Id of new bucket",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response to the creation of a bucket",
+        "type": "object"
+      },
+      "apiBucketDeleteResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiCapacityUsageInfo": {
         "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwirte of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
         "properties": {
@@ -5678,7 +5702,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.26"
+    "version": "0.139.27"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5743,6 +5767,66 @@
         "summary": "Allows querying alerts.",
         "tags": [
           "OpenStorageAlerts"
+        ]
+      }
+    },
+    "/v1/bucket": {
+      "post": {
+        "operationId": "Create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiBucketCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiBucketCreateResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageBucket"
+        ]
+      }
+    },
+    "/v1/bucket/{bucket_id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "bucket_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiBucketDeleteResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "tags": [
+          "OpenStorageBucket"
         ]
       }
     },
