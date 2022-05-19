@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"errors"
 	"testing"
 	"time"
 
@@ -25,7 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestBucketCreate(t *testing.T) {
+func TestBucketCreateSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -58,7 +59,36 @@ func TestBucketCreate(t *testing.T) {
 	assert.Equal(t, resp.BucketId, testMockResp.BucketId)
 }
 
-func TestBucketDelete(t *testing.T) {
+func TestBucketCreateFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	name := "test_bucket"
+	req := &api.BucketCreateRequest{
+		Name: name,
+	}
+
+	id := "test_bucket_id"
+
+	// Create CreateBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		CreateBucket(name).
+		Return(id, errors.New("failed")).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	_, err := c.Create(context.Background(), req)
+
+	assert.Error(t, err)
+}
+
+func TestBucketDeleteSuccess(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -83,4 +113,31 @@ func TestBucketDelete(t *testing.T) {
 	_, err := c.Delete(context.Background(), req)
 
 	assert.NoError(t, err)
+}
+
+func TestBucketDeleteFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	id := "test_bucket_id"
+	req := &api.BucketDeleteRequest{
+		BucketId: id,
+	}
+
+	// Create DeleteBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		DeleteBucket(id).
+		Return(errors.New("failed")).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	_, err := c.Delete(context.Background(), req)
+
+	assert.Error(t, err)
 }
