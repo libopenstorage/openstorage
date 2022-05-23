@@ -27,6 +27,7 @@ var statusToStatusKind = map[Status]StatusKind{
 	Status_STATUS_STORAGE_REBALANCE:        StatusSeverityMedium,
 	Status_STATUS_STORAGE_DRIVE_REPLACE:    StatusSeverityMedium,
 	Status_STATUS_NOT_IN_QUORUM_NO_STORAGE: StatusSeverityHigh,
+	Status_STATUS_POOLMAINTENANCE:          StatusSeverityHigh,
 	// Add statuses before MAX
 	Status_STATUS_MAX: StatusSeverityHigh,
 }
