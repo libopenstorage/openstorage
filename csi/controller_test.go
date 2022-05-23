@@ -917,17 +917,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	tests := []struct {
 		name      string
@@ -1012,17 +1002,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	req := &csi.CreateVolumeRequest{
@@ -1096,17 +1076,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := 2 * int64(units.GiB)
@@ -1201,17 +1171,7 @@ func TestControllerCreateVolumeBadParameters(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -1242,17 +1202,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -1321,17 +1271,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -1402,17 +1342,7 @@ func TestControllerCreateVolumeWithSharedv4Volume(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	modes := []csi.VolumeCapability_AccessMode_Mode{
 		csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 		csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER,
@@ -1493,17 +1423,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	modes := []csi.VolumeCapability_AccessMode_Mode{
 		csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 		csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER,
@@ -1588,17 +1508,7 @@ func TestControllerCreateVolumeFails(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -1647,17 +1557,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -1804,16 +1704,7 @@ func TestControllerCreateVolume(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	secretKeyForLabels := "key123"
 	secretValForLabels := "val123"
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
+	s.mockClusterEnumerateNode(t, "node-1")
 
 	// Setup request
 	name := "myvol"
@@ -1891,17 +1782,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	secretKeyForLabels := "key123"
 	secretValForLabels := "val123"
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(units.GiB * 1.5)
@@ -1985,17 +1866,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	mockParentID := "parendId"
 	name := "myvol"
@@ -2109,17 +1980,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	mockParentID := "parendId"
 	name := "myvol"
@@ -2273,17 +2134,7 @@ func TestControllerCreateVolumeBlock(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	secretKeyForLabels := "key123"
 	secretValForLabels := "val123"
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	// Setup request
 	name := "myvol"
 	size := int64(1234)
@@ -2364,17 +2215,7 @@ func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
 	c := csi.NewControllerClient(s.Conn())
 	secretKeyForLabels := "key123"
 	secretValForLabels := "val123"
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-	// Setup request
+	s.mockClusterEnumerateNode(t, "node-1") // Setup request
 	name := "myvol"
 	size := int64(1234)
 	secretsMap := map[string]string{
@@ -2413,17 +2254,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	name := "myvol"
 	size := int64(1234)
 	id := "myid"
@@ -2569,17 +2400,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	s.MockCluster().EXPECT().
-		Enumerate().
-		Return(api.Cluster{
-			NodeId: "node-1",
-			Nodes: []*api.Node{{
-				Id:     "1",
-				MgmtIp: "[::]:",
-			}},
-		}, nil).
-		AnyTimes()
-
+	s.mockClusterEnumerateNode(t, "node-1")
 	name := "myvol"
 	size := int64(1234)
 	id := "myid"

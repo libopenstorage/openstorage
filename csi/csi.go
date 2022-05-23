@@ -31,6 +31,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
@@ -158,6 +159,12 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 			[]grpc.DialOption{
 				grpc.WithInsecure(),
 				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+				grpc.WithKeepaliveParams(keepalive.ClientParameters{
+					// Pings every 60 seconds to keep the connection alive.
+					// Each ping times out at 10s
+					Time:    60 * time.Second,
+					Timeout: 10 * time.Second,
+				}),
 			})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
@@ -179,6 +186,18 @@ func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
 		return nodesResp.Nodes[i].Id < nodesResp.Nodes[j].Id
 	})
 
+	// Clean up connections for missing node
+	nodesMap := make(map[string]bool)
+	for _, node := range nodesResp.Nodes {
+		nodesMap[node.MgmtIp] = true
+	}
+	for ip := range s.connMap {
+		// If key in connmap is not in current nodes, remove it
+		if ok := nodesMap[ip]; !ok {
+			delete(s.connMap, ip)
+		}
+	}
+
 	// Get target node info and set next round robbin node
 	var targetNodeNumber int
 	if s.nextCreateNodeNumber != 0 {
@@ -199,6 +218,12 @@ func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
 			[]grpc.DialOption{
 				grpc.WithInsecure(),
 				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+				grpc.WithKeepaliveParams(keepalive.ClientParameters{
+					// Pings every 60 seconds to keep the connection alive.
+					// Each ping times out at 10s
+					Time:    60 * time.Second,
+					Timeout: 10 * time.Second,
+				}),
 			}, 10*time.Second)
 		if err != nil {
 			return nil, err
