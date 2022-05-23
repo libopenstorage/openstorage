@@ -241,6 +241,19 @@ func (s *testServer) setPorts() {
 	s.uds = fmt.Sprintf("/tmp/osd-csi-ut-%d.sock", port)
 }
 
+func (s *testServer) mockClusterEnumerateNode(_ *testing.T, nodeName string) {
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(api.Cluster{
+			NodeId: nodeName,
+			Nodes: []*api.Node{{
+				Id:     "1",
+				MgmtIp: "[::]:",
+			}},
+		}, nil).
+		AnyTimes()
+}
+
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
 }
