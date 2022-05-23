@@ -1,6 +1,6 @@
 /*
 Package sdk is the gRPC implementation of the SDK gRPC server
-Copyright 2019 Portworx
+Copyright 2022 Portworx
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -53,7 +53,6 @@ func (s *BucketServer) Create(
 	}
 	// Create bucket
 	id, err := s.driver(ctx).CreateBucket(name)
-
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +78,6 @@ func (s *BucketServer) Delete(
 
 	// Delete the bucket
 	err := s.driver(ctx).DeleteBucket(id)
-
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
