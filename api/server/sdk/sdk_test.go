@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/alerts"
 	mockalerts "github.com/libopenstorage/openstorage/alerts/mock"
 	"github.com/libopenstorage/openstorage/api"
+	mockbucketdriver "github.com/libopenstorage/openstorage/bucket/drivers/mock"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
@@ -66,6 +67,7 @@ type testServer struct {
 	conn   *grpc.ClientConn
 	server *Server
 	m      *mockdriver.MockVolumeDriver
+	b      *mockbucketdriver.MockBucketDriver
 	c      *mockcluster.MockCluster
 	a      *mockalerts.MockFilterDeleter
 	mc     *gomock.Controller
@@ -90,6 +92,12 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 	assert.Nil(t, err)
 }
 
+func setupMockBucketDriver(tester *testServer, t *testing.T) {
+	var err error
+	tester.server.UseBucketDrivers(tester.b)
+	assert.Nil(t, err)
+}
+
 func newTestServer(t *testing.T) *testServer {
 	tester := &testServer{}
 	tester.setPorts()
@@ -97,6 +105,7 @@ func newTestServer(t *testing.T) *testServer {
 	// Add driver to registry
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
+	tester.b = mockbucketdriver.NewMockBucketDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
 	tester.a = mockalerts.NewMockFilterDeleter(tester.mc)
 
@@ -130,6 +139,7 @@ func newTestServer(t *testing.T) *testServer {
 			},
 		},
 	})
+
 	assert.Nil(t, err)
 	err = tester.server.Start()
 	assert.Nil(t, err)
@@ -151,6 +161,9 @@ func newTestServer(t *testing.T) *testServer {
 	assert.NoError(t, err)
 	assert.NotNil(t, mux)
 	tester.gw = httptest.NewServer(mux)
+
+	// Add mock bucket driver to the server
+	setupMockBucketDriver(tester, t)
 
 	return tester
 }
@@ -242,6 +255,10 @@ func (s *testServer) setPorts() {
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {
 	return s.m
+}
+
+func (s *testServer) MockBucketDriver() *mockbucketdriver.MockBucketDriver {
+	return s.b
 }
 
 func (s *testServer) MockCluster() *mockcluster.MockCluster {
