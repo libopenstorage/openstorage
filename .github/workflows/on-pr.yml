@@ -24,3 +24,4 @@ jobs:
           m_max_size: '500'
           l_max_size: '1000'
           fail_if_xl: 'false'
+          files_to_ignore: 'vendor/'
