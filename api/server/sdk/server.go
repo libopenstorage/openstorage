@@ -31,7 +31,6 @@ import (
 	"github.com/libopenstorage/openstorage/alerts"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/spec"
-	bucket "github.com/libopenstorage/openstorage/bucket"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
@@ -152,7 +151,6 @@ type serverAccessor interface {
 	alert() alerts.FilterDeleter
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
-	bucketDriver(ctx context.Context) bucket.BucketDriver
 	auditLogWriter() io.Writer
 	port() string
 }
@@ -175,10 +173,9 @@ type sdkGrpcServer struct {
 	accessLogOutput io.Writer
 
 	// Interface implementations
-	clusterHandler      cluster.Cluster
-	driverHandlers      map[string]volume.VolumeDriver
-	bucketDriverHandler bucket.BucketDriver
-	alertHandler        alerts.FilterDeleter
+	clusterHandler cluster.Cluster
+	driverHandlers map[string]volume.VolumeDriver
+	alertHandler   alerts.FilterDeleter
 
 	// gRPC Handlers
 	clusterServer         *ClusterServer
@@ -199,7 +196,6 @@ type sdkGrpcServer struct {
 	jobServer             api.OpenStorageJobServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
-	bucketServer          *BucketServer
 }
 
 // Interface check
@@ -351,7 +347,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		d   volume.VolumeDriver
 		err error
 	)
-
 	if len(config.DriverName) != 0 {
 		d, err = volumedrivers.Get(config.DriverName)
 		if err != nil {
@@ -398,7 +393,6 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		alertHandler: config.AlertsFilterDeleter,
 		policyServer: config.StoragePolicy,
 	}
-
 	s.identityServer = &IdentityServer{
 		server: s,
 	}
@@ -439,6 +433,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.filesystemCheckServer = &FilesystemCheckServer{
 		server: s,
 	}
+
 	s.storagePoolServer = &StoragePoolServer{
 		server: s,
 	}
@@ -448,13 +443,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.jobServer = &JobServer{
 		server: s,
 	}
-	s.bucketServer = &BucketServer{
-		server: s,
-	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
-
 	return s, nil
 }
 
@@ -541,11 +532,6 @@ func (s *sdkGrpcServer) Start() error {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
 
-		if s.bucketServer != nil {
-			api.RegisterOpenStorageBucketServer(grpcServer, s.bucketServer)
-
-		}
-
 		if s.storagePoolServer != nil {
 			api.RegisterOpenStoragePoolServer(grpcServer, s.storagePoolServer)
 		}
@@ -601,19 +587,6 @@ func (s *sdkGrpcServer) useVolumeDrivers(d map[string]volume.VolumeDriver) {
 	s.driverHandlers = d
 }
 
-// UseBucketDrivers will setup a new bucket driver object for the gRPC handlers
-func (s *Server) UseBucketDrivers(d bucket.BucketDriver) {
-	s.netServer.useBucketDrivers(d)
-	s.udsServer.useBucketDrivers(d)
-}
-
-func (s *sdkGrpcServer) useBucketDrivers(d bucket.BucketDriver) {
-	s.lock.Lock()
-	defer s.lock.Unlock()
-
-	s.bucketDriverHandler = d
-}
-
 func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
@@ -629,10 +602,6 @@ func (s *sdkGrpcServer) driver(ctx context.Context) volume.VolumeDriver {
 	} else {
 		return s.driverHandlers[DefaultDriverName]
 	}
-}
-
-func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
-	return s.bucketDriverHandler
 }
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {

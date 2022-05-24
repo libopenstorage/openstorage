@@ -2,10 +2,6 @@
 
 ## Releases
 
-### v0.139.0 - (5/17/2022)
-
-* Added Create and Delete api for SDK Bucket driver interface.
-
 ### v0.138.0 - (4/12/2022)
 
 * Fixes many typos
