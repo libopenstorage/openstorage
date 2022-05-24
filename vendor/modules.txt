@@ -82,9 +82,10 @@ github.com/beorn7/perks/quantile
 github.com/cenkalti/backoff
 # github.com/cespare/xxhash/v2 v2.1.1
 github.com/cespare/xxhash/v2
-# github.com/cloudfoundry/gosigar v0.0.0-20150402170747-3ed7c74352da
+# github.com/cloudfoundry/gosigar v1.3.3
 ## explicit
 github.com/cloudfoundry/gosigar
+github.com/cloudfoundry/gosigar/sys/windows
 # github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
 ## explicit
 github.com/codegangsta/cli
@@ -522,7 +523,7 @@ golang.org/x/oauth2/internal
 # golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 ## explicit
 golang.org/x/sync/errgroup
-# golang.org/x/sys v0.0.0-20210921065528-437939a70204
+# golang.org/x/sys v0.0.0-20220110181412-a018aaa089fe
 ## explicit
 golang.org/x/sys/execabs
 golang.org/x/sys/internal/unsafeheader

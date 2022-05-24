@@ -7,7 +7,7 @@ require (
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/aws/aws-sdk-go v1.35.24
 	github.com/cenkalti/backoff v2.2.1+incompatible
-	github.com/cloudfoundry/gosigar v0.0.0-20150402170747-3ed7c74352da // indirect
+	github.com/cloudfoundry/gosigar v1.3.3 // indirect
 	github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
 	github.com/container-storage-interface/spec v1.6.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
@@ -68,7 +68,7 @@ require (
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/net v0.0.0-20211216030914-fe4d6282115f
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20210921065528-437939a70204
+	golang.org/x/sys v0.0.0-20220110181412-a018aaa089fe
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/genproto v0.0.0-20210921142501-181ce0d877f6
