@@ -206,6 +206,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	config.Net = "tcp"
 	config.Address = "127.0.0.1:0"
 	config.SdkUds = tester.uds
+	config.SdkPort = tester.port
 	tester.server, err = NewOsdCsiServer(config)
 	assert.Nil(t, err)
 	err = tester.server.Start()
@@ -238,6 +239,19 @@ func (s *testServer) setPorts() {
 	s.port = fmt.Sprintf("%d", port)
 	s.gwport = fmt.Sprintf("%d", port+1)
 	s.uds = fmt.Sprintf("/tmp/osd-csi-ut-%d.sock", port)
+}
+
+func (s *testServer) mockClusterEnumerateNode(_ *testing.T, nodeName string) {
+	s.MockCluster().EXPECT().
+		Enumerate().
+		Return(api.Cluster{
+			NodeId: nodeName,
+			Nodes: []*api.Node{{
+				Id:     "1",
+				MgmtIp: "[::]:",
+			}},
+		}, nil).
+		AnyTimes()
 }
 
 func (s *testServer) MockDriver() *mockdriver.MockVolumeDriver {

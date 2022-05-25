@@ -23,6 +23,7 @@ import (
 	"sort"
 
 	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -459,11 +460,15 @@ func (s *OsdCsiServer) CreateVolume(
 	locator.VolumeLabels = cleanupVolumeLabels(locator.VolumeLabels)
 
 	// Get grpc connection
-	conn, err := s.getConn()
+	conn, err := s.getRemoteConn()
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Unable to connect to SDK server: %v", err)
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Internal,
+				"Unable to connect to SDK server: %v", err)
+		}
 	}
 
 	// Get secret if any was passed
