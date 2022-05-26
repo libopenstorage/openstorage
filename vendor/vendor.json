@@ -39,10 +39,10 @@
 			"revisionTime": "2017-03-29T03:22:34Z"
 		},
 		{
-			"checksumSHA1": "rXq5zXSW6ZfBBSV2xc6Dz1Wor2w=",
+			"checksumSHA1": "RAfDIibzGwQc9t3H8tBrNKJu+lc=",
 			"path": "github.com/cloudfoundry/gosigar",
-			"revision": "3ed7c74352dae6dc00bdc8c74045375352e3ec05",
-			"revisionTime": "2015-04-02T17:07:47Z"
+			"revision": "4674909a6e332c3128511fed132ebfa721c6ca02",
+			"revisionTime": "2022-01-10T23:15:14Z"
 		},
 		{
 			"checksumSHA1": "UreyFm6qibs6udPclyMI6Lqdz7k=",
