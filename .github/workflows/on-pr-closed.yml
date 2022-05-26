@@ -1,11 +1,11 @@
 on:
-  pull_request:
+  pull_request_target:
     branches:
       - master
     types: ["closed"]
 
 jobs:
-  cherry_pick_release_9.4:
+  cherry_pick_release_9_4:
     runs-on: ubuntu-latest
     name: Cherry pick into release-9.4
     if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-9.4')
@@ -20,7 +20,7 @@ jobs:
           branch: release-9.4
           labels: |
             cherry-pick
-  cherry_pick_release_9.3:
+  cherry_pick_release_9_3:
     runs-on: ubuntu-latest
     name: Cherry pick into release-9.3
     if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-9.3')
