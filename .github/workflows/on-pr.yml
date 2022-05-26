@@ -23,4 +23,5 @@ jobs:
           s_max_size: '100'
           m_max_size: '500'
           l_max_size: '1000'
+          message_if_xl: ''
           fail_if_xl: 'false'
