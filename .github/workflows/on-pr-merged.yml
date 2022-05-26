@@ -15,11 +15,21 @@ jobs:
         with:
           fetch-depth: 0
       - name: Cherry pick into release-9.4
-        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
         with:
           branch: release-9.4
           labels: |
             cherry-pick
+      - name: Failure message
+        if: ${{ failure() }}
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            This pull request cannot be automatically cherry-picked to the target release branch.
+            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false
   cherry_pick_release_9_3:
     runs-on: ubuntu-latest
     name: Cherry pick into release-9.3
@@ -30,10 +40,20 @@ jobs:
         with:
           fetch-depth: 0
       - name: Cherry pick into release-9.3
-        uses: carloscastrojumo/github-cherry-pick-action@v1.0.1
+        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
         with:
           branch: release-9.3
           labels: |
             cherry-pick
+      - name: Failure message
+        if: ${{ failure() }}
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            This pull request cannot be automatically cherry-picked to the target release branch.
+            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
