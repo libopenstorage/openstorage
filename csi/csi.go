@@ -132,17 +132,13 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
 	}
 
-	sdkPort := config.SdkPort
-	if len(config.SdkPort) == 0 {
-		sdkPort = "9020"
-	}
 	return &OsdCsiServer{
 		specHandler:        spec.NewSpecHandler(),
 		GrpcServer:         gServer,
 		driver:             d,
 		cluster:            config.Cluster,
 		sdkUds:             config.SdkUds,
-		sdkPort:            sdkPort,
+		sdkPort:            config.SdkPort,
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
 	}, nil
@@ -170,10 +166,11 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
 		}
 	}
+
 	return s.conn, nil
 }
 
-func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
+func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -191,9 +188,12 @@ func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
 	for _, node := range nodesResp.Nodes {
 		nodesMap[node.MgmtIp] = true
 	}
-	for ip := range s.connMap {
-		// If key in connmap is not in current nodes, remove it
+	for ip, conn := range s.connMap {
 		if ok := nodesMap[ip]; !ok {
+			// If key in connmap is not in current nodes, close and remove it
+			if err := conn.Close(); err != nil {
+				logrus.WithContext(ctx).Errorf("failed to close conn to %s: %v", ip, err)
+			}
 			delete(s.connMap, ip)
 		}
 	}
@@ -212,7 +212,7 @@ func (s *OsdCsiServer) getRemoteConn() (*grpc.ClientConn, error) {
 	}
 	if s.connMap[targetNodeEndpoint] == nil {
 		var err error
-		logrus.Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
+		logrus.WithContext(ctx).Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
 		s.connMap[targetNodeEndpoint], err = grpcserver.ConnectWithTimeout(
 			fmt.Sprintf("%s:%s", targetNodeEndpoint, s.sdkPort),
 			[]grpc.DialOption{

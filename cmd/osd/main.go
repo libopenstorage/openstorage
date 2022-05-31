@@ -484,12 +484,14 @@ func start(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
+		sdkPort := c.String("sdkport")
 		csiServer, err := csi.NewOsdCsiServer(&csi.OsdCsiServerConfig{
 			Net:           "unix",
 			Address:       csisock,
 			DriverName:    d,
 			Cluster:       cm,
 			SdkUds:        sdksocket,
+			SdkPort:       sdkPort,
 			CsiDriverName: c.String("csidrivername"),
 		})
 		if err != nil {
@@ -546,7 +548,7 @@ func start(c *cli.Context) error {
 		os.Remove(sdksocket)
 		sdkServer, err := sdk.New(&sdk.ServerConfig{
 			Net:           "tcp",
-			Address:       ":" + c.String("sdkport"),
+			Address:       ":" + sdkPort,
 			RestPort:      c.String("sdkrestport"),
 			Socket:        sdksocket,
 			DriverName:    d,
