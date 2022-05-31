@@ -65,6 +65,36 @@ func (mr *MockOpenStorageBucketServerMockRecorder) Delete(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).Delete), arg0, arg1)
 }
 
+// GrantAccess mocks base method
+func (m *MockOpenStorageBucketServer) GrantAccess(arg0 context.Context, arg1 *api.BucketGrantAccessRequest) (*api.BucketGrantAccessResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GrantAccess", arg0, arg1)
+	ret0, _ := ret[0].(*api.BucketGrantAccessResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GrantAccess indicates an expected call of GrantAccess
+func (mr *MockOpenStorageBucketServerMockRecorder) GrantAccess(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantAccess", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).GrantAccess), arg0, arg1)
+}
+
+// RevokeAccess mocks base method
+func (m *MockOpenStorageBucketServer) RevokeAccess(arg0 context.Context, arg1 *api.BucketRevokeAccessRequest) (*api.BucketRevokeAccessResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeAccess", arg0, arg1)
+	ret0, _ := ret[0].(*api.BucketRevokeAccessResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RevokeAccess indicates an expected call of RevokeAccess
+func (mr *MockOpenStorageBucketServerMockRecorder) RevokeAccess(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeAccess", reflect.TypeOf((*MockOpenStorageBucketServer)(nil).RevokeAccess), arg0, arg1)
+}
+
 // MockOpenStorageBucketClient is a mock of OpenStorageBucketClient interface
 type MockOpenStorageBucketClient struct {
 	ctrl     *gomock.Controller
@@ -126,4 +156,44 @@ func (mr *MockOpenStorageBucketClientMockRecorder) Delete(arg0, arg1 interface{}
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).Delete), varargs...)
+}
+
+// GrantAccess mocks base method
+func (m *MockOpenStorageBucketClient) GrantAccess(arg0 context.Context, arg1 *api.BucketGrantAccessRequest, arg2 ...grpc.CallOption) (*api.BucketGrantAccessResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GrantAccess", varargs...)
+	ret0, _ := ret[0].(*api.BucketGrantAccessResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GrantAccess indicates an expected call of GrantAccess
+func (mr *MockOpenStorageBucketClientMockRecorder) GrantAccess(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantAccess", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).GrantAccess), varargs...)
+}
+
+// RevokeAccess mocks base method
+func (m *MockOpenStorageBucketClient) RevokeAccess(arg0 context.Context, arg1 *api.BucketRevokeAccessRequest, arg2 ...grpc.CallOption) (*api.BucketRevokeAccessResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "RevokeAccess", varargs...)
+	ret0, _ := ret[0].(*api.BucketRevokeAccessResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// RevokeAccess indicates an expected call of RevokeAccess
+func (mr *MockOpenStorageBucketClientMockRecorder) RevokeAccess(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeAccess", reflect.TypeOf((*MockOpenStorageBucketClient)(nil).RevokeAccess), varargs...)
 }

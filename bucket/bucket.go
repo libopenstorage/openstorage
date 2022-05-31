@@ -11,6 +11,13 @@ type BucketDriver interface {
 	// CreateBucket provisions a new bucket
 	CreateBucket(name string) (string, error)
 
-	// DeleteBucket deprovisions a bucket
+	// DeleteBucket deprovisions the bucket
 	DeleteBucket(id string) error
+
+	// GrantBucketAccess grants access to the bucket
+	// Returns accountId and creadentials for access
+	GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error)
+
+	// RevokeBucketAccess revokes access to the bucket
+	RevokeBucketAccess(id string, accountId string) error
 }

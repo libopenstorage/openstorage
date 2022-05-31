@@ -141,3 +141,70 @@ func TestBucketDeleteFailure(t *testing.T) {
 
 	assert.Error(t, err)
 }
+
+func TestBucketGrantAccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	id := "test_bucket_id"
+	accountName := "test_account_name"
+	accessPolicy := "access_policy"
+	req := &api.BucketGrantAccessRequest{
+		BucketId:     id,
+		AccountName:  accountName,
+		AccessPolicy: accessPolicy,
+	}
+
+	accountId := "test_bucket_id"
+	cred := "account_credentials"
+	testMockResp := &api.BucketGrantAccessResponse{
+		AccountId:   accountId,
+		Credentials: cred,
+	}
+
+	// Create CreateBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		GrantBucketAccess(id, accountName, accessPolicy).
+		Return(accountId, cred, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	resp, err := c.GrantAccess(context.Background(), req)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.AccountId, testMockResp.AccountId)
+	assert.Equal(t, resp.Credentials, testMockResp.Credentials)
+}
+
+func TestBucketRevokeAccess(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	id := "test_bucket_id"
+	accountId := "test_bucket_id"
+	req := &api.BucketRevokeAccessRequest{
+		BucketId:  id,
+		AccountId: accountId,
+	}
+	// Create CreateBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		RevokeBucketAccess(id, accountId).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	_, err := c.RevokeAccess(context.Background(), req)
+
+	assert.NoError(t, err)
+}

@@ -5,6 +5,7 @@
 ### v0.101.27 - (07/25/2022)
 
 * Added Create and Delete api for SDK Bucket driver interface.
+* Added Access and Revoke api for SDK Bucket driver interface.
 
 ### v0.101.26 - (06/07/2022)
 
