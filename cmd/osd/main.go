@@ -560,6 +560,10 @@ func start(c *cli.Context) error {
 		if err != nil {
 			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)
 		}
+
+		// Set the fake bucket driver handler on SDK server
+		sdkServer.UseBucketDrivers(fakeDriver)
+
 		sdkServer.Start()
 	}
 
