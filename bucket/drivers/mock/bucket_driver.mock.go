@@ -62,6 +62,36 @@ func (mr *MockBucketDriverMockRecorder) DeleteBucket(arg0 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBucket", reflect.TypeOf((*MockBucketDriver)(nil).DeleteBucket), arg0)
 }
 
+// GrantBucketAccess mocks base method.
+func (m *MockBucketDriver) GrantBucketAccess(arg0, arg1, arg2 string) (string, string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GrantBucketAccess", arg0, arg1, arg2)
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(string)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GrantBucketAccess indicates an expected call of GrantBucketAccess.
+func (mr *MockBucketDriverMockRecorder) GrantBucketAccess(arg0, arg1, arg2 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GrantBucketAccess", reflect.TypeOf((*MockBucketDriver)(nil).GrantBucketAccess), arg0, arg1, arg2)
+}
+
+// RevokeBucketAccess mocks base method.
+func (m *MockBucketDriver) RevokeBucketAccess(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RevokeBucketAccess", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RevokeBucketAccess indicates an expected call of RevokeBucketAccess.
+func (mr *MockBucketDriverMockRecorder) RevokeBucketAccess(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RevokeBucketAccess", reflect.TypeOf((*MockBucketDriver)(nil).RevokeBucketAccess), arg0, arg1)
+}
+
 // Start mocks base method.
 func (m *MockBucketDriver) Start() error {
 	m.ctrl.T.Helper()

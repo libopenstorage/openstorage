@@ -43,9 +43,8 @@ func (s *BucketServer) Create(
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
-	logrus.Info("bucket_driver.Fake delete bucket received")
+	logrus.Info("bucket_driver create bucket received")
 	name := req.GetName()
-
 	if len(name) == 0 {
 		return nil, status.Error(
 			codes.InvalidArgument,
@@ -87,4 +86,67 @@ func (s *BucketServer) Delete(
 	}
 
 	return &api.BucketDeleteResponse{}, nil
+}
+
+func (s *BucketServer) GrantAccess(
+	ctx context.Context,
+	req *api.BucketGrantAccessRequest,
+) (*api.BucketGrantAccessResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	id := req.GetBucketId()
+	if len(id) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a valid bucket id")
+	}
+
+	accountName := req.GetAccountName()
+	if len(accountName) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a valid account name")
+	}
+
+	accessPolicy := req.GetAccessPolicy()
+	// To implement after S3 implementation once we have more clarity on the policy
+	// if len(accessPolicy) == 0 {
+	// 	 return nil, status.Error(codes.InvalidArgument, "Must supply valid access policy")
+	// }
+
+	// Grant Bucket Access
+	id, credentials, err := s.driver(ctx).GrantBucketAccess(id, accountName, accessPolicy)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.BucketGrantAccessResponse{
+		AccountId:   id,
+		Credentials: credentials,
+	}, nil
+}
+
+func (s *BucketServer) RevokeAccess(
+	ctx context.Context,
+	req *api.BucketRevokeAccessRequest,
+) (*api.BucketRevokeAccessResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	id := req.GetBucketId()
+	if len(id) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a valid bucket id")
+	}
+
+	accountId := req.GetAccountId()
+	if len(accountId) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply a valid account id")
+	}
+
+	// Revoke Bucket Access
+	err := s.driver(ctx).RevokeBucketAccess(id, accountId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.BucketRevokeAccessResponse{}, nil
 }
