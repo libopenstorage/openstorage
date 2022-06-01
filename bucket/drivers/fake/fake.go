@@ -54,3 +54,19 @@ func (f *Fake) DeleteBucket(name string) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
 	return f.backend.DeleteBucket(name)
 }
+
+// AccessBucket grants access to the in-memory bucket
+// Dummy impplementation
+// Actual implementation to be done once we have more clarity on the downstream API
+func (f *Fake) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error) {
+	logrus.Info("bucket_driver.Fake access bucket received")
+	return accountName, "", nil
+}
+
+// DeleteBucket deprovisions an in-memory bucket
+// Dummy impplementation
+// Actual implementation to be done once we have more clarity on the downstream API
+func (f *Fake) RevokeBucketAccess(id string, accountId string) error {
+	logrus.Info("bucket_driver.Fake revoke bucket received")
+	return nil
+}

@@ -2126,6 +2126,22 @@ service OpenStorageBucket {
       delete: "/v1/bucket/{bucket_id}"
     };
   }
+
+  rpc GrantAccess(BucketGrantAccessRequest)
+  returns (BucketGrantAccessResponse) {
+    option(google.api.http) = {
+      post: "/v1/bucket/access/{bucket_id}"
+      body: "*"
+    };
+  }
+
+  rpc RevokeAccess(BucketRevokeAccessRequest)
+  returns (BucketRevokeAccessResponse) {
+    option(google.api.http) = {
+      post: "/v1/bucket/revoke/{bucket_id}"
+      body: "*"
+    };
+  }
 }
 
 // Defines a request to create a bucket.
@@ -2133,7 +2149,6 @@ message BucketCreateRequest {
   // Unique name of the bucket. This will be used for idempotency.
   string name = 1;
 }
-
 
 // Defines a response to the creation of a bucket
 message BucketCreateResponse {
@@ -2149,6 +2164,42 @@ message BucketDeleteRequest {
 
 // Empty response
 message BucketDeleteResponse {
+}
+
+// Defines a request to grant access to the bucket
+message BucketGrantAccessRequest {
+  // Id of the bucket
+  string bucket_id = 1;
+
+  // Name of the account to which access to be provided
+  string account_name = 2;
+
+  // Access policy to be applied for the account
+  string access_policy = 3;
+}
+
+
+// Defines a response to the creation of a bucket
+message BucketGrantAccessResponse {
+  // This is the account_id that is being provided access. This will
+  // This will be required later to revoke access.
+  string account_id = 1;
+
+  // Credentials supplied for accessing the bucket ex: aws access key id and secret, etc.
+  string credentials = 2;
+}
+
+// Defines the request to rovoke access to the bucket
+message BucketRevokeAccessRequest {
+  // Id of bucket to delete
+  string bucket_id = 1;
+
+  // AccountId that is having its access revoked.
+  string account_id = 2;
+}
+
+// Empty response
+message BucketRevokeAccessResponse {
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -5094,7 +5145,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 139;
+    Minor = 140;
     // SDK version patch value of this specification
     Patch = 0;
   }

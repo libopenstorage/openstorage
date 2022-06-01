@@ -344,6 +344,56 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiBucketGrantAccessRequest": {
+        "properties": {
+          "access_policy": {
+            "title": "Access policy to be applied for the account",
+            "type": "string"
+          },
+          "account_name": {
+            "title": "Name of the account to which access to be provided",
+            "type": "string"
+          },
+          "bucket_id": {
+            "title": "Id of the bucket",
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to grant access to the bucket",
+        "type": "object"
+      },
+      "apiBucketGrantAccessResponse": {
+        "properties": {
+          "account_id": {
+            "description": "This is the account_id that is being provided access. This will\nThis will be required later to revoke access.",
+            "type": "string"
+          },
+          "credentials": {
+            "description": "Credentials supplied for accessing the bucket ex: aws access key id and secret, etc.",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response to the creation of a bucket",
+        "type": "object"
+      },
+      "apiBucketRevokeAccessRequest": {
+        "properties": {
+          "account_id": {
+            "description": "AccountId that is having its access revoked.",
+            "type": "string"
+          },
+          "bucket_id": {
+            "title": "Id of bucket to delete",
+            "type": "string"
+          }
+        },
+        "title": "Defines the request to rovoke access to the bucket",
+        "type": "object"
+      },
+      "apiBucketRevokeAccessResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiCapacityUsageInfo": {
         "description": "Provides details on exclusive and shared storage used by\nsnapshot/volume specifically for copy-on-write(COW) snapshots. Deletion\nof snapshots and overwrite of volume will affect the exclusive storage\nused by the other dependent snaps and parent volume.",
         "properties": {
@@ -5738,7 +5788,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.139.0"
+    "version": "0.140.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -5854,6 +5904,108 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/apiBucketCreateResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "tags": [
+          "OpenStorageBucket"
+        ]
+      }
+    },
+    "/v1/bucket/access/{bucket_id}": {
+      "post": {
+        "operationId": "OpenStorageBucket_GrantAccess",
+        "parameters": [
+          {
+            "description": "Id of the bucket",
+            "in": "path",
+            "name": "bucket_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiBucketGrantAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiBucketGrantAccessResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "tags": [
+          "OpenStorageBucket"
+        ]
+      }
+    },
+    "/v1/bucket/revoke/{bucket_id}": {
+      "post": {
+        "operationId": "OpenStorageBucket_RevokeAccess",
+        "parameters": [
+          {
+            "description": "Id of bucket to delete",
+            "in": "path",
+            "name": "bucket_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiBucketRevokeAccessRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiBucketRevokeAccessResponse"
                 }
               }
             },
