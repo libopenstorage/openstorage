@@ -100,7 +100,7 @@ func (d *driver) volNotFound(request string, id string, e error, w http.Response
 	if e == volume.ErrDriverInitializing {
 		d.logRequest(request, id).Warnln(http.StatusInternalServerError, " ", err.Error())
 	} else {
-		d.logRequest(request, id).Warnln(http.StatusNotFound, " ", err.Error())
+		d.logRequest(request, id).Traceln(http.StatusNotFound, " ", err.Error())
 	}
 	return err
 }
