@@ -574,9 +574,11 @@ func start(c *cli.Context) error {
 		*/
 		// s3Config := &aws.Config{
 		// 	Credentials: credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
-		// 	Region: aws.String("eu-central-1"),
 		// }
-		// s3Driver := s3.New(s3Config)
+		// s3Driver, err := s3.New(s3Config)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to initialize S3 session for bucket driver")
+		// }
 		// sdkServer.UseBucketDrivers(s3Driver)
 
 		sdkServer.Start()

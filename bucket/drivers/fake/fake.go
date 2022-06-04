@@ -44,13 +44,13 @@ func (f *Fake) Stop() error {
 }
 
 // CreateBucket provisions a new in-memory bucket
-func (f *Fake) CreateBucket(name string) (string, error) {
+func (f *Fake) CreateBucket(name string, region string) (string, error) {
 	logrus.Info("bucket_driver.Fake create bucket received")
 	return name, f.backend.CreateBucket(name)
 }
 
 // DeleteBucket deprovisions an in-memory bucket
-func (f *Fake) DeleteBucket(name string) error {
+func (f *Fake) DeleteBucket(name string, clearBucket bool) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
 	return f.backend.DeleteBucket(name)
 }

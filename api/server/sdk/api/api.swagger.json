@@ -327,6 +327,10 @@
           "name": {
             "description": "Unique name of the bucket. This will be used for idempotency.",
             "type": "string"
+          },
+          "region": {
+            "description": "Region in which bucket will be created.",
+            "type": "string"
           }
         },
         "type": "object"
@@ -5940,6 +5944,16 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Flag to allow non empty bucket deletion.",
+            "in": "query",
+            "name": "clear_bucket",
+            "required": false,
+            "schema": {
+              "format": "boolean",
+              "type": "boolean"
             }
           }
         ],

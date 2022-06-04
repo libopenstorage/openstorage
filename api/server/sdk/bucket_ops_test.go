@@ -33,8 +33,10 @@ func TestBucketCreateSuccess(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	name := "test_bucket"
+	region := "eu-central-1"
 	req := &api.BucketCreateRequest{
-		Name: name,
+		Name:   name,
+		Region: region,
 	}
 
 	id := "test_bucket_id"
@@ -45,7 +47,7 @@ func TestBucketCreateSuccess(t *testing.T) {
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name).
+		CreateBucket(name, region).
 		Return(id, nil).
 		Times(1)
 
@@ -59,7 +61,7 @@ func TestBucketCreateSuccess(t *testing.T) {
 	assert.Equal(t, resp.BucketId, testMockResp.BucketId)
 }
 
-func TestBucketCreateFailure(t *testing.T) {
+func TestBucketCreateRegionMissing(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -70,12 +72,33 @@ func TestBucketCreateFailure(t *testing.T) {
 		Name: name,
 	}
 
-	id := "test_bucket_id"
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
 
+	// Get info
+	_, err := c.Create(context.Background(), req)
+
+	assert.Error(t, err)
+}
+
+func TestBucketCreateFailure(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	name := "test_bucket"
+	region := "eu-central-1"
+	req := &api.BucketCreateRequest{
+		Name:   name,
+		Region: region,
+	}
+
+	id := "test_bucket_id"
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name).
+		CreateBucket(name, region).
 		Return(id, errors.New("failed")).
 		Times(1)
 
@@ -96,13 +119,14 @@ func TestBucketDeleteSuccess(t *testing.T) {
 
 	id := "test_bucket_id"
 	req := &api.BucketDeleteRequest{
-		BucketId: id,
+		BucketId:    id,
+		ClearBucket: true,
 	}
 
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id).
+		DeleteBucket(id, true).
 		Return(nil).
 		Times(1)
 
@@ -129,7 +153,7 @@ func TestBucketDeleteFailure(t *testing.T) {
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id).
+		DeleteBucket(id, false).
 		Return(errors.New("failed")).
 		Times(1)
 
