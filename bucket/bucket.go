@@ -9,10 +9,10 @@ type BucketDriver interface {
 	Start() error
 
 	// CreateBucket provisions a new bucket
-	CreateBucket(name string) (string, error)
+	CreateBucket(name string, region string) (string, error)
 
 	// DeleteBucket deprovisions the bucket
-	DeleteBucket(id string) error
+	DeleteBucket(id string, clearBucket bool) error
 
 	// GrantBucketAccess grants access to the bucket
 	// Returns accountId and creadentials for access
