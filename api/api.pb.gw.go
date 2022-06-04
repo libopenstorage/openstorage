@@ -876,6 +876,10 @@ func request_OpenStorageBucket_Create_0(ctx context.Context, marshaler runtime.M
 
 }
 
+var (
+	filter_OpenStorageBucket_Delete_0 = &utilities.DoubleArray{Encoding: map[string]int{"bucket_id": 0}, Base: []int{1, 1, 0}, Check: []int{0, 1, 2}}
+)
+
 func request_OpenStorageBucket_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageBucketClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq BucketDeleteRequest
 	var metadata runtime.ServerMetadata
@@ -896,6 +900,10 @@ func request_OpenStorageBucket_Delete_0(ctx context.Context, marshaler runtime.M
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "bucket_id", err)
+	}
+
+	if err := runtime.PopulateQueryParameters(&protoReq, req.URL.Query(), filter_OpenStorageBucket_Delete_0); err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
 	}
 
 	msg, err := client.Delete(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
