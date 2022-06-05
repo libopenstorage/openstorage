@@ -2,6 +2,11 @@
 
 ## Releases
 
+### v0.101.23 - (06/05/2022)
+
+* Extend storage resource for thin pool metadata disk.
+* PWX-23690: missed pool maintenance severity
+
 ### v0.101.22 - (02/03/2022)
 
 * Add new api to upadte existing credentials

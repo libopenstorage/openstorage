@@ -4781,6 +4781,11 @@
             "format": "uint64",
             "type": "string"
           },
+          "thin_pool_md": {
+            "format": "boolean",
+            "title": "True if the resource is used as thin pool metadata disk",
+            "type": "boolean"
+          },
           "used": {
             "description": "Physical Bytes used.",
             "format": "uint64",
@@ -5635,7 +5640,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.22"
+    "version": "0.101.23"
   },
   "openapi": "3.0.0",
   "paths": {
