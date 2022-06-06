@@ -17,6 +17,7 @@ limitations under the License.
 package csi
 
 import (
+	"errors"
 	"fmt"
 	"sort"
 	"sync"
@@ -31,7 +32,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/keepalive"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
 
@@ -44,7 +44,14 @@ import (
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
 )
 
-var clogger *logrus.Logger
+var (
+	clogger *logrus.Logger
+)
+
+const (
+	connCleanupInterval = 15 * time.Minute
+	connIdleConnLength  = 1 * time.Hour
+)
 
 func init() {
 	clogger = correlation.NewPackageLogger(correlation.ComponentCSIDriver)
@@ -69,6 +76,12 @@ type OsdCsiServerConfig struct {
 	EnableInlineVolumes bool
 }
 
+// TimedSDKConn represents a gRPC connection and the last time it was used
+type TimedSDKConn struct {
+	Conn      *grpc.ClientConn
+	LastUsage time.Time
+}
+
 // OsdCsiServer is a OSD CSI compliant server which
 // proxies CSI requests for a single specific driver
 type OsdCsiServer struct {
@@ -83,11 +96,12 @@ type OsdCsiServer struct {
 	sdkUds               string
 	sdkPort              string
 	conn                 *grpc.ClientConn
-	connMap              map[string]*grpc.ClientConn
+	connMap              map[string]*TimedSDKConn
 	nextCreateNodeNumber int
 	mu                   sync.Mutex
 	csiDriverName        string
 	allowInlineVolumes   bool
+	stopCleanupCh        chan bool
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -155,12 +169,6 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 			[]grpc.DialOption{
 				grpc.WithInsecure(),
 				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
-				grpc.WithKeepaliveParams(keepalive.ClientParameters{
-					// Pings every 60 seconds to keep the connection alive.
-					// Each ping times out at 10s
-					Time:    60 * time.Second,
-					Timeout: 10 * time.Second,
-				}),
 			})
 		if err != nil {
 			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
@@ -179,26 +187,18 @@ func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, err
 	if err != nil {
 		return nil, err
 	}
+	if len(nodesResp.Nodes) < 1 {
+		return nil, errors.New("cluster nodes for remote connection not found")
+	}
 	sort.Slice(nodesResp.Nodes, func(i, j int) bool {
 		return nodesResp.Nodes[i].Id < nodesResp.Nodes[j].Id
 	})
 
-	// Clean up connections for missing node
-	nodesMap := make(map[string]bool)
-	for _, node := range nodesResp.Nodes {
-		nodesMap[node.MgmtIp] = true
-	}
-	for ip, conn := range s.connMap {
-		if ok := nodesMap[ip]; !ok {
-			// If key in connmap is not in current nodes, close and remove it
-			if err := conn.Close(); err != nil {
-				logrus.WithContext(ctx).Errorf("failed to close conn to %s: %v", ip, err)
-			}
-			delete(s.connMap, ip)
-		}
-	}
+	// Clean up connections for missing nodes
+	s.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
 
-	// Get target node info and set next round robbin node
+	// Get target node info and set next round robbin node.
+	// nextNode is always lastNode + 1 mod (numOfNodes), to loop back to zero
 	var targetNodeNumber int
 	if s.nextCreateNodeNumber != 0 {
 		targetNodeNumber = s.nextCreateNodeNumber
@@ -208,29 +208,30 @@ func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, err
 
 	// Get conn for this node, otherwise create new conn
 	if len(s.connMap) == 0 {
-		s.connMap = make(map[string]*grpc.ClientConn)
+		s.connMap = make(map[string]*TimedSDKConn)
 	}
 	if s.connMap[targetNodeEndpoint] == nil {
 		var err error
-		logrus.WithContext(ctx).Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
-		s.connMap[targetNodeEndpoint], err = grpcserver.ConnectWithTimeout(
+		clogger.WithContext(ctx).Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
+		remoteConn, err := grpcserver.ConnectWithTimeout(
 			fmt.Sprintf("%s:%s", targetNodeEndpoint, s.sdkPort),
 			[]grpc.DialOption{
 				grpc.WithInsecure(),
 				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
-				grpc.WithKeepaliveParams(keepalive.ClientParameters{
-					// Pings every 60 seconds to keep the connection alive.
-					// Each ping times out at 10s
-					Time:    60 * time.Second,
-					Timeout: 10 * time.Second,
-				}),
 			}, 10*time.Second)
 		if err != nil {
 			return nil, err
 		}
+
+		s.connMap[targetNodeEndpoint] = &TimedSDKConn{
+			Conn: remoteConn,
+		}
 	}
 
-	return s.connMap[targetNodeEndpoint], nil
+	// Keep track of when this conn was last accessed
+	clogger.WithContext(ctx).Infof("Using remote connection to SDK node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
+	s.connMap[targetNodeEndpoint].LastUsage = time.Now()
+	return s.connMap[targetNodeEndpoint].Conn, nil
 }
 
 // driverGetVolume returns a volume for a given ID. This function skips
@@ -300,8 +301,89 @@ func (s *OsdCsiServer) addEncryptionInfoToLabels(labels, csiSecrets map[string]s
 // It will return an error if the server is already running.
 func (s *OsdCsiServer) Start() error {
 	return s.GrpcServer.Start(func(grpcServer *grpc.Server) {
+		go s.cleanupConnections()
+
 		csi.RegisterIdentityServer(grpcServer, s)
 		csi.RegisterControllerServer(grpcServer, s)
 		csi.RegisterNodeServer(grpcServer, s)
 	})
+}
+
+// Start is used to stop the server.
+func (s *OsdCsiServer) Stop() {
+	if s.stopCleanupCh != nil {
+		close(s.stopCleanupCh)
+	}
+	s.GrpcServer.Stop()
+}
+
+func (s *OsdCsiServer) cleanupConnections() {
+	s.stopCleanupCh = make(chan bool)
+	ticker := time.NewTicker(connCleanupInterval)
+
+	// Check every so often and delete/close connections
+	for {
+		select {
+		case <-s.stopCleanupCh:
+			ticker.Stop()
+			return
+
+		case _ = <-ticker.C:
+			ctx := correlation.WithCorrelationContext(context.Background(), correlation.ComponentCSIDriver)
+
+			// Anonymous function for using defer to unlock mutex
+			func() {
+				s.mu.Lock()
+				defer s.mu.Unlock()
+				clogger.Infof("Cleaning up open gRPC connections for CSI distributed provisioning")
+
+				// Clean all expired connections
+				numConnsClosed := 0
+				for ip, timedConn := range s.connMap {
+					expiryTime := timedConn.LastUsage.Add(connIdleConnLength)
+
+					// Connection has expired after 1hr of no usage.
+					// Close connection and remove from connMap
+					if expiryTime.Before(time.Now()) {
+						clogger.Infof("SDK gRPC connection to %s is has expired after %v minutes of no usage. Closing this connection", ip, connIdleConnLength.Minutes())
+						if err := timedConn.Conn.Close(); err != nil {
+							clogger.Errorf("failed to close connection to %s: %v", ip, timedConn.Conn)
+						}
+						delete(s.connMap, ip)
+						numConnsClosed++
+					}
+				}
+
+				// Get all nodes and cleanup conns for missing/deprovisioned nodes
+				nodesResp, err := s.cluster.Enumerate()
+				if err != nil {
+					clogger.Errorf("failed to get all nodes for connection cleanup: %v", err)
+					return
+				}
+				if len(nodesResp.Nodes) < 1 {
+					clogger.Errorf("no nodes available to cleanup: %v", err)
+					return
+				}
+				s.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
+
+				clogger.Infof("Cleaned up %v connections for CSI distributed provisioning. %v connections remaining", numConnsClosed, len(s.connMap))
+			}()
+		}
+	}
+}
+
+func (s *OsdCsiServer) cleanupMissingNodeConnections(ctx context.Context, nodes []*api.Node) {
+	nodesMap := make(map[string]bool)
+	for _, node := range nodes {
+		nodesMap[node.MgmtIp] = true
+	}
+	for ip, timedConn := range s.connMap {
+		if ok := nodesMap[ip]; !ok {
+			// If key in connmap is not in current nodes, close and remove it
+			if err := timedConn.Conn.Close(); err != nil {
+				clogger.WithContext(ctx).Errorf("failed to close conn to %s: %v", ip, err)
+			}
+			delete(s.connMap, ip)
+		}
+	}
 }

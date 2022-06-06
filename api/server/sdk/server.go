@@ -23,7 +23,6 @@ import (
 	"net"
 	"os"
 	"sync"
-	"time"
 
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	grpc_auth "github.com/grpc-ecosystem/go-grpc-middleware/auth"
@@ -44,7 +43,6 @@ import (
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
-	"google.golang.org/grpc/keepalive"
 )
 
 const (
@@ -478,13 +476,6 @@ func (s *sdkGrpcServer) Start() error {
 	} else {
 		s.log.Info("SDK TLS disabled")
 	}
-
-	// Clients will always keep connections open with KeepAlive,
-	// however we will always recycle these after 15mins.
-	// This will handle CSI Provisioner leader changes and force regular new connections.
-	opts = append(opts, grpc.KeepaliveParams(keepalive.ServerParameters{
-		MaxConnectionAge: 15 * time.Minute,
-	}))
 
 	// Add correlation interceptor
 	correlationInterceptor := correlation.ContextInterceptor{
