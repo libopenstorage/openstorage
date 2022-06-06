@@ -2139,8 +2139,11 @@ message BucketDeleteRequest {
   // Id of bucket to delete
   string bucket_id = 1;
 
+  // Region in which bucket will be created.
+  string region = 2;
+
   // Flag to allow non empty bucket deletion.
-  bool clear_bucket = 2;
+  bool clear_bucket = 3;
 }
 
 // Empty response

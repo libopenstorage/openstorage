@@ -82,10 +82,16 @@ func (s *BucketServer) Delete(
 	if len(id) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a valid bucket id")
 	}
+	region := req.GetRegion()
+	if len(region) == 0 {
+		return nil, status.Error(
+			codes.InvalidArgument,
+			"Must supply the region")
+	}
 	logrus.Infof("Delete bucket request received for Bucket: %s", id)
 
 	// Delete the bucket
-	err := s.driver(ctx).DeleteBucket(id, req.GetClearBucket())
+	err := s.driver(ctx).DeleteBucket(id, region, req.GetClearBucket())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
