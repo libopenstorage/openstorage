@@ -12,7 +12,7 @@ type BucketDriver interface {
 	CreateBucket(name string, region string) (string, error)
 
 	// DeleteBucket deprovisions the bucket
-	DeleteBucket(id string, clearBucket bool) error
+	DeleteBucket(id string, region string, clearBucket bool) error
 
 	// GrantBucketAccess grants access to the bucket
 	// Returns accountId and creadentials for access

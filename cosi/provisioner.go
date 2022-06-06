@@ -32,7 +32,8 @@ func (s *Server) ProvisionerDeleteBucket(ctx context.Context, req *cosi.Provisio
 	logrus.Info("cosi.ProvisionerDeleteBucket received")
 	// Passing clearBucket as true as it is not possible to delete a bucket with objects available.
 	// This value is to be made configurable.
-	if err := s.driver.DeleteBucket(req.GetBucketId(), true); err != nil {
+	// Region information has to be saved in Bucket object and passed here
+	if err := s.driver.DeleteBucket(req.GetBucketId(), "region", true); err != nil {
 		return &cosi.ProvisionerDeleteBucketResponse{}, status.Error(codes.Internal, fmt.Sprintf("failed to delete bucket: %s", err))
 	}
 

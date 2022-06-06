@@ -8,7 +8,6 @@
 * Added Access and Revoke api for SDK Bucket driver interface.
 * Updating api params for Create and Delete Bucket service.
 
-
 ### v0.101.26 - (06/07/2022)
 
 * Adds full_vol_name field to PureBlockSpec.

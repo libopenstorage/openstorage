@@ -50,7 +50,7 @@ func (f *Fake) CreateBucket(name string, region string) (string, error) {
 }
 
 // DeleteBucket deprovisions an in-memory bucket
-func (f *Fake) DeleteBucket(name string, clearBucket bool) error {
+func (f *Fake) DeleteBucket(name string, region string, clearBucket bool) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
 	return f.backend.DeleteBucket(name)
 }
