@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.141.0 - (6/6/2022)
+
+* Extend storage resource for thin pool metadata disk
+
 ### v0.140.0 - (5/31/2022)
 
 * Added Access and Revoke api for SDK Bucket driver interface.
