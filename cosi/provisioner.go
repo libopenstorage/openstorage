@@ -16,7 +16,7 @@ import (
 //    2. If a bucket by same name, but different parameters is provided, then the appropriate error code ALREADY_EXISTS must be returned.
 func (s *Server) ProvisionerCreateBucket(ctx context.Context, req *cosi.ProvisionerCreateBucketRequest) (*cosi.ProvisionerCreateBucketResponse, error) {
 	logrus.Info("cosi.ProvisionerCreateBucket received")
-	id, err := s.driver.CreateBucket(req.GetName())
+	id, err := s.driver.CreateBucket(req.GetName(), req.GetParameters()["region"])
 	if err != nil {
 		return &cosi.ProvisionerCreateBucketResponse{}, status.Error(codes.Internal, fmt.Sprintf("failed to create bucket: %s", err))
 	}
@@ -30,7 +30,10 @@ func (s *Server) ProvisionerCreateBucket(ctx context.Context, req *cosi.Provisio
 // If the bucket has already been deleted, then no error should be returned.
 func (s *Server) ProvisionerDeleteBucket(ctx context.Context, req *cosi.ProvisionerDeleteBucketRequest) (*cosi.ProvisionerDeleteBucketResponse, error) {
 	logrus.Info("cosi.ProvisionerDeleteBucket received")
-	if err := s.driver.DeleteBucket(req.GetBucketId()); err != nil {
+	// Passing clearBucket as true as it is not possible to delete a bucket with objects available.
+	// This value is to be made configurable.
+	// Region information has to be saved in Bucket object and passed here
+	if err := s.driver.DeleteBucket(req.GetBucketId(), "region", true); err != nil {
 		return &cosi.ProvisionerDeleteBucketResponse{}, status.Error(codes.Internal, fmt.Sprintf("failed to delete bucket: %s", err))
 	}
 

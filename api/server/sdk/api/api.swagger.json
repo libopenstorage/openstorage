@@ -326,6 +326,10 @@
           "name": {
             "description": "Unique name of the bucket. This will be used for idempotency.",
             "type": "string"
+          },
+          "region": {
+            "description": "Region in which bucket will be created.",
+            "type": "string"
           }
         },
         "type": "object"
@@ -5792,7 +5796,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.141.0"
+    "version": "0.142.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6042,6 +6046,24 @@
             "required": true,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "description": "Region in which bucket will be created.",
+            "in": "query",
+            "name": "region",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Flag to allow non empty bucket deletion.",
+            "in": "query",
+            "name": "clear_bucket",
+            "required": false,
+            "schema": {
+              "type": "boolean"
             }
           }
         ],

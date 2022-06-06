@@ -40,6 +40,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/bucket/drivers/fake"
+
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -563,6 +564,20 @@ func start(c *cli.Context) error {
 
 		// Set the fake bucket driver handler on SDK server
 		sdkServer.UseBucketDrivers(fakeDriver)
+
+		/* Uncomment the below code to configure s3 client & test OpenStorageBucket API
+		This will update the S3 driver handler on SDK server and any API calls from the
+		test client will be routed to S3. Make sure to update the AWS credentials.
+		With COSI maturation, this configuration will be set by the Cosi provisioner.
+		*/
+		// s3Config := &aws.Config{
+		// 	Credentials: credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
+		// }
+		// s3Driver, err := s3.New(s3Config)
+		// if err != nil {
+		// 	return fmt.Errorf("failed to initialize S3 session for bucket driver")
+		// }
+		// sdkServer.UseBucketDrivers(s3Driver)
 
 		sdkServer.Start()
 	}

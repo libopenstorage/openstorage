@@ -1,6 +1,9 @@
 # Changelog
 
 ## Releases
+### v0.142.0 - (6/6/2022)
+
+* Updating api params for Create and Delete Bucket service.
 
 ### v0.141.0 - (6/6/2022)
 

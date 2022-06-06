@@ -2150,6 +2150,9 @@ service OpenStorageBucket {
 message BucketCreateRequest {
   // Unique name of the bucket. This will be used for idempotency.
   string name = 1;
+
+  // Region in which bucket will be created.
+  string region = 2;
 }
 
 // Defines a response to the creation of a bucket
@@ -2162,6 +2165,12 @@ message BucketCreateResponse {
 message BucketDeleteRequest {
   // Id of bucket to delete
   string bucket_id = 1;
+
+  // Region in which bucket will be created.
+  string region = 2;
+
+  // Flag to allow non empty bucket deletion.
+  bool clear_bucket = 3;
 }
 
 // Empty response
@@ -5147,7 +5156,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 141;
+    Minor = 142;
     // SDK version patch value of this specification
     Patch = 0;
   }

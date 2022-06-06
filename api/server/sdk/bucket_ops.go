@@ -43,17 +43,26 @@ func (s *BucketServer) Create(
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
-	logrus.Info("bucket_driver create bucket received")
 	name := req.GetName()
 	if len(name) == 0 {
 		return nil, status.Error(
 			codes.InvalidArgument,
 			"Must supply a unique name")
 	}
+	region := req.GetRegion()
+	if len(region) == 0 {
+		return nil, status.Error(
+			codes.InvalidArgument,
+			"Must supply the region")
+	}
+	logrus.Infof("Create bucket request received for Bucket: %s, Region: %s", name, region)
+
 	// Create bucket
-	id, err := s.driver(ctx).CreateBucket(name)
+	id, err := s.driver(ctx).CreateBucket(name, region)
 	if err != nil {
-		return nil, err
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to create the Bucket: %v", err)
 	}
 
 	return &api.BucketCreateResponse{
@@ -73,10 +82,16 @@ func (s *BucketServer) Delete(
 	if len(id) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a valid bucket id")
 	}
-	logrus.Infof("bucket_driver. delete bucket request received for %s", id)
+	region := req.GetRegion()
+	if len(region) == 0 {
+		return nil, status.Error(
+			codes.InvalidArgument,
+			"Must supply the region")
+	}
+	logrus.Infof("Delete bucket request received for Bucket: %s", id)
 
 	// Delete the bucket
-	err := s.driver(ctx).DeleteBucket(id)
+	err := s.driver(ctx).DeleteBucket(id, region, req.GetClearBucket())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
