@@ -27,9 +27,13 @@ func New(config *aws.Config) (*S3Driver, error) {
 }
 
 // Returns a new S3 service client
-func (d *S3Driver) NewSvc() (*s3.S3, error) {
+func (d *S3Driver) NewSvc(region string) (*s3.S3, error) {
 	// Override the aws config with the region
-	sess, err := session.NewSession(d.config)
+	s3Config := &aws.Config{
+		Credentials: d.config.Credentials,
+		Region:      aws.String(region),
+	}
+	sess, err := session.NewSession(s3Config)
 	if err != nil {
 		return nil, err
 	}
@@ -38,14 +42,9 @@ func (d *S3Driver) NewSvc() (*s3.S3, error) {
 	return svc, nil
 }
 
-func (d *S3Driver) updateRegion(region string) {
-	d.config.Region = aws.String(region)
-}
-
 func (d *S3Driver) CreateBucket(name string, region string) (string, error) {
 	// Update driver region config
-	d.updateRegion(region)
-	svc, err := d.NewSvc()
+	svc, err := d.NewSvc(region)
 	if err != nil {
 		return "", fmt.Errorf("unable to create S3 session, %v ", err)
 	}
@@ -91,8 +90,8 @@ func deleteObjectsInBucket(id string, svc *s3.S3) error {
 	return nil
 }
 
-func (d *S3Driver) DeleteBucket(id string, clearBucket bool) error {
-	svc, err := d.NewSvc()
+func (d *S3Driver) DeleteBucket(id string, region string, clearBucket bool) error {
+	svc, err := d.NewSvc(region)
 	if err != nil {
 		return fmt.Errorf("unable to create S3 session: %v ", err)
 	}

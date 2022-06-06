@@ -118,15 +118,17 @@ func TestBucketDeleteSuccess(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	id := "test_bucket_id"
+	region := "eu-central-1"
 	req := &api.BucketDeleteRequest{
 		BucketId:    id,
+		Region:      region,
 		ClearBucket: true,
 	}
 
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id, true).
+		DeleteBucket(id, region, true).
 		Return(nil).
 		Times(1)
 
@@ -146,16 +148,38 @@ func TestBucketDeleteFailure(t *testing.T) {
 	time.Sleep(1 * time.Second)
 
 	id := "test_bucket_id"
+	region := "eu-central-1"
 	req := &api.BucketDeleteRequest{
+		Region:   region,
 		BucketId: id,
 	}
 
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id, false).
+		DeleteBucket(id, region, false).
 		Return(errors.New("failed")).
 		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	_, err := c.Delete(context.Background(), req)
+
+	assert.Error(t, err)
+}
+
+func TestBucketDeleteFailureRegionMissing(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	id := "test_bucket_id"
+	req := &api.BucketDeleteRequest{
+		BucketId: id,
+	}
 
 	// Setup client
 	c := api.NewOpenStorageBucketClient(s.Conn())
