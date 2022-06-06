@@ -4888,6 +4888,10 @@
             "format": "uint64",
             "type": "string"
           },
+          "thin_pool_md": {
+            "title": "True if the resource is used as thin pool metadata disk",
+            "type": "boolean"
+          },
           "used": {
             "description": "Physical Bytes used.",
             "format": "uint64",
