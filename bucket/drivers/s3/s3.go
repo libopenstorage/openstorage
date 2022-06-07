@@ -258,7 +258,7 @@ func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy
 		return "", "", err
 	}
 
-	logrus.Info("Account %s granted access to bucket %s", accountName, id)
+	logrus.Infof("Account %s granted access to bucket %s", accountName, id)
 	return accountId, credentials, nil
 }
 
@@ -272,7 +272,7 @@ func (d *S3Driver) RevokeBucketAccess(id string, accountId string) error {
 	if err != nil {
 		return err
 	}
-	logrus.Info("Account %s revoked access to bucket %s", accountId, id)
+	logrus.Infof("Account %s revoked access to bucket %s", accountId, id)
 	return nil
 }
 
