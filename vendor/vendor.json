@@ -33,6 +33,12 @@
 			"revisionTime": "2020-11-09T17:14:18Z"
 		},
 		{
+			"checksumSHA1": "GDBu0HOkUJ3zbds1Jek3I/Ad5gU=",
+			"path": "github.com/aws/aws-sdk-go/service/iam",
+			"revision": "2ec70f79013894dc50949a0cbe5b2f2a2d268fce",
+			"revisionTime": "2022-05-27T18:19:47Z"
+		},
+		{
 			"checksumSHA1": "spyv5/YFBjYyZLZa1U2LBfDR8PM=",
 			"path": "github.com/beorn7/perks/quantile",
 			"revision": "4c0e84591b9aa9e6dcfdf3e020114cd81f89d5f9",
