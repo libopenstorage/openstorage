@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/libopenstorage/openstorage/api"
 	bucket "github.com/libopenstorage/openstorage/bucket"
@@ -103,6 +104,11 @@ func (s *BucketServer) Delete(
 	return &api.BucketDeleteResponse{}, nil
 }
 
+func isJSON(input string) bool {
+	var js interface{}
+	return json.Unmarshal([]byte(input), &js) == nil
+}
+
 func (s *BucketServer) GrantAccess(
 	ctx context.Context,
 	req *api.BucketGrantAccessRequest,
@@ -122,10 +128,11 @@ func (s *BucketServer) GrantAccess(
 	}
 
 	accessPolicy := req.GetAccessPolicy()
-	// To implement after S3 implementation once we have more clarity on the policy
-	// if len(accessPolicy) == 0 {
-	// 	 return nil, status.Error(codes.InvalidArgument, "Must supply valid access policy")
-	// }
+	if len(accessPolicy) != 0 && !isJSON(accessPolicy) {
+		return nil, status.Error(
+			codes.InvalidArgument,
+			"Supply a valid access policy or leave it empty to allow account complete access to the bucket")
+	}
 
 	// Grant Bucket Access
 	id, credentials, err := s.driver(ctx).GrantBucketAccess(id, accountName, accessPolicy)

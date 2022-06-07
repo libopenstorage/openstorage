@@ -198,7 +198,7 @@ func TestBucketGrantAccess(t *testing.T) {
 
 	id := "test_bucket_id"
 	accountName := "test_account_name"
-	accessPolicy := "access_policy"
+	accessPolicy := "{\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"
 	req := &api.BucketGrantAccessRequest{
 		BucketId:     id,
 		AccountName:  accountName,
