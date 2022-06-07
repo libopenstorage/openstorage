@@ -2978,6 +2978,11 @@
           "format": "uint64",
           "x-go-name": "Size"
         },
+        "thin_pool_md": {
+          "description": "True if the resource is used as thin pool metadata disk",
+          "type": "boolean",
+          "x-go-name": "ThinPoolMd"
+        },
         "used": {
           "description": "Physical Bytes used.",
           "type": "integer",
