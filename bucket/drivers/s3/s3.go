@@ -1,13 +1,16 @@
 package s3
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/libopenstorage/openstorage/bucket"
 
 	"github.com/sirupsen/logrus"
 )
@@ -27,7 +30,7 @@ func New(config *aws.Config) (*S3Driver, error) {
 }
 
 // Returns a new S3 service client
-func (d *S3Driver) NewSvc(region string) (*s3.S3, error) {
+func (d *S3Driver) NewS3Svc(region string) (*s3.S3, error) {
 	// Override the aws config with the region
 	s3Config := &aws.Config{
 		Credentials: d.config.Credentials,
@@ -42,9 +45,23 @@ func (d *S3Driver) NewSvc(region string) (*s3.S3, error) {
 	return svc, nil
 }
 
+// Returns a new IAM service client
+func (d *S3Driver) NewIamSvc() (*iam.IAM, error) {
+	iamConfig := &aws.Config{
+		Credentials: d.config.Credentials,
+	}
+	sess, err := session.NewSession(iamConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	iamSvc := iam.New(sess)
+	return iamSvc, nil
+}
+
 func (d *S3Driver) CreateBucket(name string, region string) (string, error) {
 	// Update driver region config
-	svc, err := d.NewSvc(region)
+	svc, err := d.NewS3Svc(region)
 	if err != nil {
 		return "", fmt.Errorf("unable to create S3 session, %v ", err)
 	}
@@ -91,7 +108,7 @@ func deleteObjectsInBucket(id string, svc *s3.S3) error {
 }
 
 func (d *S3Driver) DeleteBucket(id string, region string, clearBucket bool) error {
-	svc, err := d.NewSvc(region)
+	svc, err := d.NewS3Svc(region)
 	if err != nil {
 		return fmt.Errorf("unable to create S3 session: %v ", err)
 	}
@@ -120,19 +137,139 @@ func (d *S3Driver) DeleteBucket(id string, region string, clearBucket bool) erro
 	return nil
 }
 
-// AccessBucket grants access to the S3 bucket
-// Dummy impplementation
-// Actual implementation to be done once we have more clarity on the downstream API
-func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error) {
-	logrus.Info("bucket_driver.S3 access bucket received")
-	return accountName, "", nil
+// Creates IAM user based on the given account name
+// Returns accounName as accountId as access can be granted
+// and revoked based on accounName
+func createUser(accountName string, iamSvc *iam.IAM) (string, error) {
+	createUserResult, err := iamSvc.CreateUser(&iam.CreateUserInput{
+		UserName: aws.String(accountName),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == iam.ErrCodeEntityAlreadyExistsException {
+			// If the account already exists then we can return success
+			logrus.Infof("User %s already exists", accountName)
+			return accountName, nil
+		}
+		return "", fmt.Errorf("unable to create user %s: %v", accountName, err)
+	}
+	// Arn format : arn:aws:iam::981779513211:user/name
+	logrus.Infof("Created arn %s", *createUserResult.User.Arn)
+	return accountName, nil
 }
 
-// DeleteBucket deprovisions an S3 buceket
-// Dummy impplementation
+// createAccessKey creates access key for the account
+func createAccessKey(accountName string, iamSvc *iam.IAM) (*bucket.BucketAccessCredentials, error) {
+	accessKeyResult, err := iamSvc.CreateAccessKey(&iam.CreateAccessKeyInput{
+		UserName: aws.String(accountName),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("unable to retrieve access credentials for user %s: %v", accountName, err)
+	}
+
+	credentials := &bucket.BucketAccessCredentials{
+		AccessKeyId:     *accessKeyResult.AccessKey.AccessKeyId,
+		SecretAccessKey: *accessKeyResult.AccessKey.SecretAccessKey,
+	}
+	return credentials, nil
+}
+
+// getUserPolicyInput gets the policy input that can be applied to the iam account
+func getUserPolicyInput(bucketId string, accountName string, inputAccessPolicy string, effect string) (*iam.PutUserPolicyInput, error) {
+	accessPolicy := inputAccessPolicy
+	// If acces policy is not specified, use default access policy for the bucket
+	if len(accessPolicy) == 0 {
+		bucketPolicy := map[string]interface{}{
+			"Statement": []map[string]interface{}{
+				{
+					"Effect": effect,
+					"Action": []string{
+						"s3:*",
+					},
+					"Resource": []string{
+						fmt.Sprintf("arn:aws:s3:::%s/*", bucketId),
+						fmt.Sprintf("arn:aws:s3:::%s", bucketId),
+					},
+				},
+			},
+		}
+		policy, err := json.Marshal(bucketPolicy)
+		if err != nil {
+			return nil, err
+		}
+		accessPolicy = string(policy[:])
+	}
+	input := &iam.PutUserPolicyInput{
+		// PolicyDocument: aws.String("{\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"),
+		PolicyDocument: aws.String(accessPolicy),
+		PolicyName:     aws.String(bucketId + "-AccessPolicy"),
+		UserName:       aws.String(accountName),
+	}
+	return input, nil
+}
+
+// grantAccessToBucket allows iam account access to the bucket
+func grantAccessToBucket(bucketId string, accountName string, accessPolicy string, iamSvc *iam.IAM) error {
+	input, err := getUserPolicyInput(bucketId, accountName, accessPolicy, "Allow")
+	if err != nil {
+		return err
+	}
+	_, err = iamSvc.PutUserPolicy(input)
+	if err != nil {
+		return fmt.Errorf("unable to provide user %s access to bucket %s : %v", accountName, bucketId, err)
+	}
+	return nil
+}
+
+// revokeAccessToBucket revoks iam account access to the bucket
+func revokeAccessToBucket(bucketId string, accountName string, iamSvc *iam.IAM) error {
+	input, err := getUserPolicyInput(bucketId, accountName, "", "Deny")
+	if err != nil {
+		return err
+	}
+	_, err = iamSvc.PutUserPolicy(input)
+	if err != nil {
+		return fmt.Errorf("unable to revoke user %s access to bucket %s : %v", accountName, bucketId, err)
+	}
+	return nil
+}
+
+// AccessBucket grants access to the S3 bucket
+func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
+	iamSvc, err := d.NewIamSvc()
+	if err != nil {
+		return "", nil, fmt.Errorf("unable to create iam session: %v ", err)
+	}
+
+	accountId, err := createUser(accountName, iamSvc)
+	if err != nil {
+		return "", nil, err
+	}
+
+	err = grantAccessToBucket(id, accountName, accessPolicy, iamSvc)
+	if err != nil {
+		return "", nil, err
+	}
+
+	credentials, err := createAccessKey(accountName, iamSvc)
+	if err != nil {
+		return "", nil, err
+	}
+
+	logrus.Infof("Account %s granted access to bucket %s", accountName, id)
+	return accountId, credentials, nil
+}
+
 // Actual implementation to be done once we have more clarity on the downstream API
 func (d *S3Driver) RevokeBucketAccess(id string, accountId string) error {
-	logrus.Info("bucket_driver.S3 revoke bucket received")
+	iamSvc, err := d.NewIamSvc()
+	if err != nil {
+		return fmt.Errorf("unable to create iam session: %v ", err)
+	}
+	err = revokeAccessToBucket(id, accountId, iamSvc)
+	if err != nil {
+		return err
+	}
+	logrus.Infof("Account %s revoked access to bucket %s", accountId, id)
 	return nil
 }
 

@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.143.0 - (8/6/2022)
+
+* Updating open storage bucket access credential object.
+
 ### v0.142.0 - (6/6/2022)
 
 * Updating api params for Create and Delete Bucket service.

@@ -8,6 +8,7 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
+	bucket "github.com/libopenstorage/openstorage/bucket"
 )
 
 // MockBucketDriver is a mock of BucketDriver interface.
@@ -63,11 +64,11 @@ func (mr *MockBucketDriverMockRecorder) DeleteBucket(arg0, arg1, arg2 interface{
 }
 
 // GrantBucketAccess mocks base method.
-func (m *MockBucketDriver) GrantBucketAccess(arg0, arg1, arg2 string) (string, string, error) {
+func (m *MockBucketDriver) GrantBucketAccess(arg0, arg1, arg2 string) (string, *bucket.BucketAccessCredentials, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GrantBucketAccess", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
-	ret1, _ := ret[1].(string)
+	ret1, _ := ret[1].(*bucket.BucketAccessCredentials)
 	ret2, _ := ret[2].(error)
 	return ret0, ret1, ret2
 }
