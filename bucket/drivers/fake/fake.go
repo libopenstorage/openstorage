@@ -58,9 +58,13 @@ func (f *Fake) DeleteBucket(name string, region string, clearBucket bool) error 
 // AccessBucket grants access to the in-memory bucket
 // Dummy impplementation
 // Actual implementation to be done once we have more clarity on the downstream API
-func (f *Fake) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error) {
+func (f *Fake) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
 	logrus.Info("bucket_driver.Fake access bucket received")
-	return accountName, "", nil
+	return accountName,
+		&bucket.BucketAccessCredentials{
+			AccessKeyId:     "YOUR-ACCESSKEYID",
+			SecretAccessKey: "YOUR-SECRETACCESSKEY",
+		}, nil
 }
 
 // DeleteBucket deprovisions an in-memory bucket

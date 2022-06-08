@@ -2197,10 +2197,10 @@ message BucketGrantAccessResponse {
   string account_id = 1;
 
   // Credentials supplied for accessing the bucket ex: aws access key id and secret, etc.
-  string credentials = 2;
+  BucketAccessCredentials credentials = 2;
 }
 
-// Defines the request to rovoke access to the bucket
+// Defines the request to revoke access to the bucket
 message BucketRevokeAccessRequest {
   // Id of bucket to delete
   string bucket_id = 1;
@@ -2211,6 +2211,15 @@ message BucketRevokeAccessRequest {
 
 // Empty response
 message BucketRevokeAccessResponse {
+}
+
+// Defines the bucket access credential object
+message BucketAccessCredentials {
+  // Access key id
+  string access_key_id = 1;
+
+  // Secret access key
+  string secret_access_key = 2;
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -5156,7 +5165,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 142;
+    Minor = 143;
     // SDK version patch value of this specification
     Patch = 0;
   }
