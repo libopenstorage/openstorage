@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/libopenstorage/openstorage/bucket"
 
 	"github.com/sirupsen/logrus"
 )
@@ -157,22 +158,18 @@ func createUser(accountName string, iamSvc *iam.IAM) (string, error) {
 }
 
 // createAccessKey creates access key for the account
-func createAccessKey(accountName string, iamSvc *iam.IAM) (string, error) {
+func createAccessKey(accountName string, iamSvc *iam.IAM) (*bucket.BucketAccessCredentials, error) {
 	accessKeyResult, err := iamSvc.CreateAccessKey(&iam.CreateAccessKeyInput{
 		UserName: aws.String(accountName),
 	})
 	if err != nil {
-		return "", fmt.Errorf("unable to retrieve access credentials for user %s: %v", accountName, err)
+		return nil, fmt.Errorf("unable to retrieve access credentials for user %s: %v", accountName, err)
 	}
-	accessKeyMap := map[string]interface{}{
-		"AccessKeyId":     accessKeyResult.AccessKey.AccessKeyId,
-		"SecretAccessKey": accessKeyResult.AccessKey.SecretAccessKey,
+
+	credentials := &bucket.BucketAccessCredentials{
+		AccessKeyId:     *accessKeyResult.AccessKey.AccessKeyId,
+		SecretAccessKey: *accessKeyResult.AccessKey.SecretAccessKey,
 	}
-	accessKeyMarshalled, err := json.Marshal(accessKeyMap)
-	if err != nil {
-		return "", fmt.Errorf("unable to decode the credentials for account %s: %v", accountName, err)
-	}
-	credentials := string(accessKeyMarshalled[:])
 	return credentials, nil
 }
 
@@ -237,25 +234,25 @@ func revokeAccessToBucket(bucketId string, accountName string, iamSvc *iam.IAM) 
 }
 
 // AccessBucket grants access to the S3 bucket
-func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error) {
+func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
 	iamSvc, err := d.NewIamSvc()
 	if err != nil {
-		return "", "", fmt.Errorf("unable to create iam session: %v ", err)
+		return "", nil, fmt.Errorf("unable to create iam session: %v ", err)
 	}
 
 	accountId, err := createUser(accountName, iamSvc)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	err = grantAccessToBucket(id, accountName, accessPolicy, iamSvc)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	credentials, err := createAccessKey(accountName, iamSvc)
 	if err != nil {
-		return "", "", err
+		return "", nil, err
 	}
 
 	logrus.Infof("Account %s granted access to bucket %s", accountName, id)

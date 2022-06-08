@@ -16,8 +16,15 @@ type BucketDriver interface {
 
 	// GrantBucketAccess grants access to the bucket
 	// Returns accountId and creadentials for access
-	GrantBucketAccess(id string, accountName string, accessPolicy string) (string, string, error)
+	GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *BucketAccessCredentials, error)
 
 	// RevokeBucketAccess revokes access to the bucket
 	RevokeBucketAccess(id string, accountId string) error
+}
+
+type BucketAccessCredentials struct {
+	// Access key id for accessing the bucket
+	AccessKeyId string
+	// Secret access key for access the bucket
+	SecretAccessKey string
 }
