@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/bucket"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -205,19 +206,25 @@ func TestBucketGrantAccess(t *testing.T) {
 		AccessPolicy: accessPolicy,
 	}
 
-	accountId := "test_bucket_id"
-	cred := "account_credentials"
-	testMockResp := &api.BucketGrantAccessResponse{
-		AccountId:   accountId,
-		Credentials: cred,
+	bucketCredentials := &bucket.BucketAccessCredentials{
+		AccessKeyId:     "YOUR-ACCESSKEYID",
+		SecretAccessKey: "YOUR-SECRETACCESSKEY",
 	}
 
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
 		GrantBucketAccess(id, accountName, accessPolicy).
-		Return(accountId, cred, nil).
+		Return(accountName, bucketCredentials, nil).
 		Times(1)
+
+	testMockResp := &api.BucketGrantAccessResponse{
+		AccountId: accountName,
+		Credentials: &api.BucketAccessCredentials{
+			AccessKeyId:     "YOUR-ACCESSKEYID",
+			SecretAccessKey: "YOUR-SECRETACCESSKEY",
+		},
+	}
 
 	// Setup client
 	c := api.NewOpenStorageBucketClient(s.Conn())
@@ -226,7 +233,8 @@ func TestBucketGrantAccess(t *testing.T) {
 	resp, err := c.GrantAccess(context.Background(), req)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.AccountId, testMockResp.AccountId)
-	assert.Equal(t, resp.Credentials, testMockResp.Credentials)
+	assert.Equal(t, resp.Credentials.AccessKeyId, testMockResp.Credentials.AccessKeyId)
+	assert.Equal(t, resp.Credentials.SecretAccessKey, testMockResp.Credentials.SecretAccessKey)
 }
 
 func TestBucketRevokeAccess(t *testing.T) {

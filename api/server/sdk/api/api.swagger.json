@@ -321,6 +321,20 @@
         "title": "- ATTACH_STATE_EXTERNAL: Attached and available externally\n - ATTACH_STATE_INTERNAL: Attached but only available internally\n - ATTACH_STATE_INTERNAL_SWITCH: Switching from External to Internal",
         "type": "string"
       },
+      "apiBucketAccessCredentials": {
+        "properties": {
+          "access_key_id": {
+            "title": "Access key id",
+            "type": "string"
+          },
+          "secret_access_key": {
+            "title": "Secret access key",
+            "type": "string"
+          }
+        },
+        "title": "Defines the bucket access credential object",
+        "type": "object"
+      },
       "apiBucketCreateRequest": {
         "description": "Defines a request to create a bucket.",
         "properties": {
@@ -374,8 +388,7 @@
             "type": "string"
           },
           "credentials": {
-            "description": "Credentials supplied for accessing the bucket ex: aws access key id and secret, etc.",
-            "type": "string"
+            "$ref": "#/components/schemas/apiBucketAccessCredentials"
           }
         },
         "title": "Defines a response to the creation of a bucket",
@@ -392,7 +405,7 @@
             "type": "string"
           }
         },
-        "title": "Defines the request to rovoke access to the bucket",
+        "title": "Defines the request to revoke access to the bucket",
         "type": "object"
       },
       "apiBucketRevokeAccessResponse": {

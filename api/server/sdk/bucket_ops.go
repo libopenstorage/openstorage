@@ -135,14 +135,17 @@ func (s *BucketServer) GrantAccess(
 	}
 
 	// Grant Bucket Access
-	id, credentials, err := s.driver(ctx).GrantBucketAccess(id, accountName, accessPolicy)
+	id, bucketCredentials, err := s.driver(ctx).GrantBucketAccess(id, accountName, accessPolicy)
 	if err != nil {
 		return nil, err
 	}
 
 	return &api.BucketGrantAccessResponse{
-		AccountId:   id,
-		Credentials: credentials,
+		AccountId: id,
+		Credentials: &api.BucketAccessCredentials{
+			AccessKeyId:     bucketCredentials.AccessKeyId,
+			SecretAccessKey: bucketCredentials.SecretAccessKey,
+		},
 	}, nil
 }
 
