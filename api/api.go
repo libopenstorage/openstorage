@@ -98,6 +98,7 @@ const (
 	SpecSharedv4ExternalAccess              = "sharedv4_external_access"
 	SpecFastpath                            = "fastpath"
 	SpecAutoFstrim                          = "auto_fstrim"
+	SpecBackendVolName                      = "pure_vol_name"
 	SpecBackendType                         = "backend"
 	SpecBackendPureBlock                    = "pure_block"
 	SpecBackendPureFile                     = "pure_file"
@@ -1354,6 +1355,14 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+func (s *ProxySpec) IsPureImport() bool {
+	if !s.IsPureBackend() {
+		return false
+	}
+
+	return (s.PureBlockSpec != nil && s.PureBlockSpec.FullVolName != "") || (s.PureFileSpec != nil && s.PureFileSpec.FullVolName != "")
 }
 
 // GetAllEnumInfo returns an EnumInfo for every proto enum
