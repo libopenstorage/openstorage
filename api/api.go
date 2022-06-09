@@ -11,6 +11,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/mohae/deepcopy"
+	"google.golang.org/protobuf/runtime/protoimpl"
 )
 
 // Strings for VolumeSpec
@@ -95,15 +96,19 @@ const (
 	SpecSharedv4FailoverStrategyNormal      = "normal"
 	SpecSharedv4FailoverStrategyAggressive  = "aggressive"
 	SpecSharedv4FailoverStrategyUnspecified = ""
+	SpecSharedv4ExternalAccess              = "sharedv4_external_access"
+	SpecFastpath                            = "fastpath"
+	SpecAutoFstrim                          = "auto_fstrim"
+	SpecBackendVolName                      = "pure_vol_name"
 	SpecBackendType                         = "backend"
 	SpecBackendPureBlock                    = "pure_block"
 	SpecBackendPureFile                     = "pure_file"
 	SpecPureFileExportRules                 = "pure_export_rules"
-	SpecAutoFstrim           = "auto_fstrim"
-	SpecIoThrottleRdIOPS     = "io_throttle_rd_iops"
-	SpecIoThrottleWrIOPS     = "io_throttle_wr_iops"
-	SpecIoThrottleRdBW       = "io_throttle_rd_bw"
-	SpecIoThrottleWrBW       = "io_throttle_wr_bw"
+	SpecAutoFstrim                          = "auto_fstrim"
+	SpecIoThrottleRdIOPS                    = "io_throttle_rd_iops"
+	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
+	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
+	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -1351,4 +1356,17 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+func (s *ProxySpec) IsPureImport() bool {
+	if !s.IsPureBackend() {
+		return false
+	}
+
+	return (s.PureBlockSpec != nil && s.PureBlockSpec.FullVolName != "") || (s.PureFileSpec != nil && s.PureFileSpec.FullVolName != "")
+}
+
+// GetAllEnumInfo returns an EnumInfo for every proto enum
+func GetAllEnumInfo() []protoimpl.EnumInfo {
+	return file_api_api_proto_enumTypes
 }
