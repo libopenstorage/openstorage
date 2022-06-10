@@ -4757,6 +4757,11 @@
             "description": "Path device path for this storage resource.",
             "type": "string"
           },
+          "pool_metadata_dev": {
+            "format": "boolean",
+            "title": "True if the resource is used as thin pool metadata disk",
+            "type": "boolean"
+          },
           "randRW": {
             "format": "double",
             "title": "RandRW",
@@ -4780,11 +4785,6 @@
             "description": "Total size in bytes.",
             "format": "uint64",
             "type": "string"
-          },
-          "thin_pool_md": {
-            "format": "boolean",
-            "title": "True if the resource is used as thin pool metadata disk",
-            "type": "boolean"
           },
           "used": {
             "description": "Physical Bytes used.",
@@ -5640,7 +5640,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.23"
+    "version": "0.101.24"
   },
   "openapi": "3.0.0",
   "paths": {
