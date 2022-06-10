@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.144.0 - (6/8/2022)
+
+* Revise for thin pool metadata device in storage resource
+
 ### v0.143.0 - (8/6/2022)
 
 * Updating open storage bucket access credential object.

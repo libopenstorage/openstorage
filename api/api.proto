@@ -231,7 +231,7 @@ message StorageResource {
   // True if dedicated as cache
   bool cache = 14;
   // True if the resource is used as thin pool metadata disk
-  bool thin_pool_md = 15;
+  bool pool_metadata_dev = 15;
 }
 
 // StoragePool groups different storage devices based on their CosType
@@ -5165,7 +5165,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 143;
+    Minor = 144;
     // SDK version patch value of this specification
     Patch = 0;
   }
