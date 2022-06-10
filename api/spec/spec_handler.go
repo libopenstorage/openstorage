@@ -222,6 +222,11 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			VolumeLabels: make(map[string]string),
 		}
 	}
+
+	// Since we don't know which kind of Pure proxy spec this will be, we set this in
+	// a variable outside the loop and then set it in the proper field at the end
+	var pureBackendVolName *string
+
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
@@ -601,6 +606,9 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				}
 				spec.ProxySpec.ProxyProtocol = backendType
 			}
+		case api.SpecBackendVolName:
+			volName := v
+			pureBackendVolName = &volName
 		case api.SpecPureFileExportRules:
 			if spec.ProxySpec == nil {
 				spec.ProxySpec = &api.ProxySpec{}
@@ -648,6 +656,26 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 
 		default:
 			locator.VolumeLabels[k] = v
+		}
+	}
+
+	if pureBackendVolName != nil {
+		if spec.ProxySpec == nil || !spec.ProxySpec.IsPureBackend() {
+			return nil, nil, nil, fmt.Errorf("%s parameter can only be used with Pure DirectAccess volumes", api.SpecBackendVolName)
+		}
+
+		if spec.ProxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK {
+			if spec.ProxySpec.PureBlockSpec == nil {
+				spec.ProxySpec.PureBlockSpec = &api.PureBlockSpec{}
+			}
+			spec.ProxySpec.PureBlockSpec.FullVolName = *pureBackendVolName
+		}
+
+		if spec.ProxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE {
+			if spec.ProxySpec.PureFileSpec == nil {
+				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			spec.ProxySpec.PureFileSpec.FullVolName = *pureBackendVolName
 		}
 	}
 
@@ -891,6 +919,11 @@ func (d *specHandler) RestoreSpecFromOpts(
 	spec := &api.RestoreVolumeSpec{}
 	locator := &api.VolumeLocator{}
 	locator.VolumeLabels = make(map[string]string)
+
+	// Since we don't know which kind of Pure proxy spec this will be, we set this in
+	// a variable outside the loop and then set it in the proper field at the end
+	var pureBackendVolName *string
+
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
@@ -1184,6 +1217,9 @@ func (d *specHandler) RestoreSpecFromOpts(
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.ExportRules = v
+		case api.SpecBackendVolName:
+			volName := v
+			pureBackendVolName = &volName
 		case api.SpecIoThrottleRdIOPS:
 			if spec.IoThrottle == nil {
 				spec.IoThrottle = &api.IoThrottle{}
@@ -1222,6 +1258,27 @@ func (d *specHandler) RestoreSpecFromOpts(
 			}
 		}
 	}
+
+	if pureBackendVolName != nil {
+		if spec.ProxySpec == nil || !spec.ProxySpec.IsPureBackend() {
+			return nil, nil, fmt.Errorf("%s parameter can only be used with Pure DirectAccess volumes", api.SpecBackendVolName)
+		}
+
+		if spec.ProxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK {
+			if spec.ProxySpec.PureBlockSpec == nil {
+				spec.ProxySpec.PureBlockSpec = &api.PureBlockSpec{}
+			}
+			spec.ProxySpec.PureBlockSpec.FullVolName = *pureBackendVolName
+		}
+
+		if spec.ProxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE {
+			if spec.ProxySpec.PureFileSpec == nil {
+				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			spec.ProxySpec.PureFileSpec.FullVolName = *pureBackendVolName
+		}
+	}
+
 	return spec, locator, nil
 }
 
