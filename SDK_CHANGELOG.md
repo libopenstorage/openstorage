@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.24 - (06/10/2022)
+
+* Extend storage resource for thin pool metadata disk.
+
 ### v0.101.23 - (06/05/2022)
 
 * Extend storage resource for thin pool metadata disk.

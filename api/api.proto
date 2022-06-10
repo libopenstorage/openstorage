@@ -231,7 +231,7 @@ message StorageResource {
   // True if dedicated as cache
   bool cache = 14;
   // True if the resource is used as thin pool metadata disk
-  bool thin_pool_md = 15;
+  bool pool_metadata_dev = 15;
 }
 
 // StoragePool groups different storage devices based on their CosType
@@ -5001,7 +5001,7 @@ message SdkVersion {
     // Frozen for this branch. Bump the Patch value instead.
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 23;
+    Patch = 24;
   }
 
   // The following cannot be set to use the enum Version because the REST
