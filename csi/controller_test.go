@@ -1661,7 +1661,7 @@ func TestControllerCreateVolumeFailedRemoteConn(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Create(gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(id, nil).
 			Times(1),
 
