@@ -543,7 +543,6 @@ func (s *sdkGrpcServer) Start() error {
 
 		if s.bucketServer != nil {
 			api.RegisterOpenStorageBucketServer(grpcServer, s.bucketServer)
-
 		}
 
 		if s.storagePoolServer != nil {
