@@ -524,7 +524,7 @@ func (s *OsdCsiServer) CreateVolume(
 	locator.VolumeLabels = cleanupVolumeLabels(locator.VolumeLabels)
 
 	// Get grpc connection
-	conn, err := s.getRemoteConn()
+	conn, err := s.getRemoteConn(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
 		conn, err = s.getConn()

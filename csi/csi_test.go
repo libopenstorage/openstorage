@@ -248,7 +248,7 @@ func (s *testServer) mockClusterEnumerateNode(_ *testing.T, nodeName string) {
 			NodeId: nodeName,
 			Nodes: []*api.Node{{
 				Id:     "1",
-				MgmtIp: "[::]:",
+				MgmtIp: "[::]",
 			}},
 		}, nil).
 		AnyTimes()
