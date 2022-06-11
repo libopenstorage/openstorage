@@ -50,7 +50,7 @@ var (
 
 const (
 	connCleanupInterval = 15 * time.Minute
-	connIdleConnLength  = 1 * time.Hour
+	connIdleConnLength  = 30 * time.Minute
 )
 
 func init() {
