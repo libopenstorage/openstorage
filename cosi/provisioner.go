@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -16,7 +17,7 @@ import (
 //    2. If a bucket by same name, but different parameters is provided, then the appropriate error code ALREADY_EXISTS must be returned.
 func (s *Server) ProvisionerCreateBucket(ctx context.Context, req *cosi.ProvisionerCreateBucketRequest) (*cosi.ProvisionerCreateBucketResponse, error) {
 	logrus.Info("cosi.ProvisionerCreateBucket received")
-	id, err := s.driver.CreateBucket(req.GetName(), req.GetParameters()["region"])
+	id, err := s.driver.CreateBucket(req.GetName(), req.GetParameters()["region"], api.AnonymousBucketAccessMode_Private)
 	if err != nil {
 		return &cosi.ProvisionerCreateBucketResponse{}, status.Error(codes.Internal, fmt.Sprintf("failed to create bucket: %s", err))
 	}

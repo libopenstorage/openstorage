@@ -8,6 +8,7 @@
 * Added Access and Revoke api for SDK Bucket driver interface.
 * Updating api params for Create and Delete Bucket service.
 * Updating open storage bucket access credential object.
+* Update create bucket api param to include anonymous bucket access mode.
 
 ### v0.101.26 - (06/07/2022)
 

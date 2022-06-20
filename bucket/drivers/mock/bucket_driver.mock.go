@@ -6,6 +6,7 @@ package mock
 
 import (
 	gomock "github.com/golang/mock/gomock"
+	api "github.com/libopenstorage/openstorage/api"
 	bucket "github.com/libopenstorage/openstorage/bucket"
 	reflect "reflect"
 )
@@ -34,18 +35,18 @@ func (m *MockBucketDriver) EXPECT() *MockBucketDriverMockRecorder {
 }
 
 // CreateBucket mocks base method
-func (m *MockBucketDriver) CreateBucket(arg0, arg1 string) (string, error) {
+func (m *MockBucketDriver) CreateBucket(arg0, arg1 string, arg2 api.AnonymousBucketAccessMode) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateBucket", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateBucket", arg0, arg1, arg2)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateBucket indicates an expected call of CreateBucket
-func (mr *MockBucketDriverMockRecorder) CreateBucket(arg0, arg1 interface{}) *gomock.Call {
+func (mr *MockBucketDriverMockRecorder) CreateBucket(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBucket", reflect.TypeOf((*MockBucketDriver)(nil).CreateBucket), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBucket", reflect.TypeOf((*MockBucketDriver)(nil).CreateBucket), arg0, arg1, arg2)
 }
 
 // DeleteBucket mocks base method

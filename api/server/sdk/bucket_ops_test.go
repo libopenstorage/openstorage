@@ -36,8 +36,9 @@ func TestBucketCreateSuccess(t *testing.T) {
 	name := "test_bucket"
 	region := "eu-central-1"
 	req := &api.BucketCreateRequest{
-		Name:   name,
-		Region: region,
+		Name:                      name,
+		Region:                    region,
+		AnonymousBucketAccessMode: api.AnonymousBucketAccessMode_Private,
 	}
 
 	id := "test_bucket_id"
@@ -48,7 +49,7 @@ func TestBucketCreateSuccess(t *testing.T) {
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name, region).
+		CreateBucket(name, region, api.AnonymousBucketAccessMode_Private).
 		Return(id, nil).
 		Times(1)
 
@@ -91,15 +92,16 @@ func TestBucketCreateFailure(t *testing.T) {
 	name := "test_bucket"
 	region := "eu-central-1"
 	req := &api.BucketCreateRequest{
-		Name:   name,
-		Region: region,
+		Name:                      name,
+		Region:                    region,
+		AnonymousBucketAccessMode: api.AnonymousBucketAccessMode_Private,
 	}
 
 	id := "test_bucket_id"
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name, region).
+		CreateBucket(name, region, api.AnonymousBucketAccessMode_Private).
 		Return(id, errors.New("failed")).
 		Times(1)
 

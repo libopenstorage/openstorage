@@ -59,7 +59,7 @@ func (s *BucketServer) Create(
 	logrus.Infof("Create bucket request received for Bucket: %s, Region: %s", name, region)
 
 	// Create bucket
-	id, err := s.driver(ctx).CreateBucket(name, region)
+	id, err := s.driver(ctx).CreateBucket(name, region, req.AnonymousBucketAccessMode)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
