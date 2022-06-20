@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/bucket"
 
 	"github.com/sirupsen/logrus"
@@ -59,7 +60,7 @@ func (d *S3Driver) NewIamSvc() (*iam.IAM, error) {
 	return iamSvc, nil
 }
 
-func (d *S3Driver) CreateBucket(name string, region string) (string, error) {
+func (d *S3Driver) CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
 	// Update driver region config
 	svc, err := d.NewS3Svc(region)
 	if err != nil {
@@ -86,9 +87,68 @@ func (d *S3Driver) CreateBucket(name string, region string) (string, error) {
 		}
 		return "", err
 	}
+	// Wait until bucket is created before finishing
+	err = svc.WaitUntilBucketExists(&s3.HeadBucketInput{
+		Bucket: aws.String(name),
+	})
+	if err != nil {
+		return "", err
+	}
 	logrus.Infof("Created S3 Bucket: %s in region %s ", name, region)
+
+	err = updateAnonymousBucketAccessPolicy(name, anonymousBucketAccessMode, svc)
+	if err != nil {
+		logrus.Errorf("Unable to set anonymous bucket policy: %s  for bucket: %s.", anonymousBucketAccessMode.String(), name)
+		return "", fmt.Errorf("unable to set anonymous bucket policy: %s for bucket %s", anonymousBucketAccessMode.String(), name)
+	}
+
+	logrus.Infof("Updated anynymous bucket access policy %s on S3 Bucket: %s ", anonymousBucketAccessMode.String(), name)
 	// Bucket name is same as bucket_id in S3
 	return name, nil
+}
+
+func updateAnonymousBucketAccessPolicy(name string, anonymousBucketAccessMode api.AnonymousBucketAccessMode, svc *s3.S3) error {
+	var action []string
+	switch anonymousBucketAccessMode {
+	case api.AnonymousBucketAccessMode_ReadOnly:
+		action = []string{"s3:GetObject"}
+	case api.AnonymousBucketAccessMode_WriteOnly:
+		action = []string{"s3:PutObject"}
+	case api.AnonymousBucketAccessMode_ReadWrite:
+		action = []string{"s3:GetObject", "s3:PutObject"}
+	default:
+		logrus.Info("No explicit bucket policy needs to be updated.")
+		return nil
+	}
+	// Create a policy using map interface.
+	readOnlyAnonUserPolicy := map[string]interface{}{
+		"Statement": []map[string]interface{}{
+			{
+				"Effect":    "Allow",
+				"Principal": "*",
+				"Action":    action,
+				"Resource": []string{
+					fmt.Sprintf("arn:aws:s3:::%s/*", name),
+				},
+			},
+		},
+	}
+
+	// Marshal the policy into a JSON value so that it can be sent to S3.
+	policy, err := json.Marshal(readOnlyAnonUserPolicy)
+	if err != nil {
+		return err
+	}
+
+	// Call S3 to put the policy for the bucket.
+	_, err = svc.PutBucketPolicy(&s3.PutBucketPolicyInput{
+		Bucket: aws.String(name),
+		Policy: aws.String(string(policy)),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 func deleteObjectsInBucket(id string, svc *s3.S3) error {

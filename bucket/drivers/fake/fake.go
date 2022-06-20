@@ -5,6 +5,7 @@ import (
 
 	"github.com/johannesboyne/gofakes3"
 	"github.com/johannesboyne/gofakes3/backend/s3mem"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/bucket"
 	"github.com/sirupsen/logrus"
 )
@@ -44,7 +45,7 @@ func (f *Fake) Stop() error {
 }
 
 // CreateBucket provisions a new in-memory bucket
-func (f *Fake) CreateBucket(name string, region string) (string, error) {
+func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
 	logrus.Info("bucket_driver.Fake create bucket received")
 	return name, f.backend.CreateBucket(name)
 }
