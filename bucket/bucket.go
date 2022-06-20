@@ -1,5 +1,9 @@
 package bucket
 
+import (
+	"github.com/libopenstorage/openstorage/api"
+)
+
 // BucketDriver represents an method for interacting with various object storage backends
 type BucketDriver interface {
 	// String returns a name for the driver implementation
@@ -9,7 +13,7 @@ type BucketDriver interface {
 	Start() error
 
 	// CreateBucket provisions a new bucket
-	CreateBucket(name string, region string) (string, error)
+	CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error)
 
 	// DeleteBucket deprovisions the bucket
 	DeleteBucket(id string, region string, clearBucket bool) error

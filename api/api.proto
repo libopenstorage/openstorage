@@ -2153,6 +2153,9 @@ message BucketCreateRequest {
 
   // Region in which bucket will be created.
   string region = 2;
+
+  //Anonymous access policy for the bucket.
+  AnonymousBucketAccessMode anonymousBucketAccessMode  = 3;
 }
 
 // Defines a response to the creation of a bucket
@@ -2220,6 +2223,18 @@ message BucketAccessCredentials {
 
   // Secret access key
   string secret_access_key = 2;
+}
+
+enum AnonymousBucketAccessMode {
+    UnknownBucketAccessMode = 0;
+    // Default, disallow uncredentialed access to the backend storage.
+    Private = 1;
+    // Read only, uncredentialed users can call ListBucket and GetObject.
+    ReadOnly = 2;
+    // Write only, uncredentialed users can only call PutObject.
+    WriteOnly = 3;
+    // Read/Write, uncredentialed users can read objects as well as PutObject.
+    ReadWrite = 4;
 }
 
 // OpenStorageVolume is a service used to manage the volumes of a storage system
@@ -5165,7 +5180,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 144;
+    Minor = 145;
     // SDK version patch value of this specification
     Patch = 0;
   }

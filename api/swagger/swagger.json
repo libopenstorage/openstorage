@@ -1571,62 +1571,46 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
+      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "AllowSecurityRemoval": {
-          "type": "boolean"
+        "cluster_id": {
+          "type": "string",
+          "x-go-name": "ClusterId"
         },
-        "ClusterId": {
-          "type": "string"
+        "created": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
         },
-        "ClusterUuid": {
-          "type": "string"
+        "description": {
+          "type": "string",
+          "x-go-name": "Description"
         },
-        "DataIface": {
-          "type": "string"
+        "domain": {
+          "type": "string",
+          "x-go-name": "Domain"
         },
-        "DataIp": {
-          "type": "string"
+        "kvdb": {
+          "$ref": "#/definitions/KvdbConfig"
         },
-        "DefaultDriver": {
-          "type": "string"
+        "mode": {
+          "type": "string",
+          "x-go-name": "Mode"
         },
-        "FluentDHost": {
-          "type": "string"
+        "private": {
+          "type": "object",
+          "x-go-name": "Private"
         },
-        "HWType": {
-          "$ref": "#/definitions/HardwareType"
+        "secrets": {
+          "$ref": "#/definitions/SecretsConfig"
         },
-        "ManagementURL": {
-          "type": "string"
-        },
-        "MgmtIp": {
-          "type": "string"
-        },
-        "MgtIface": {
-          "type": "string"
-        },
-        "NodeId": {
-          "type": "string"
-        },
-        "QuorumTimeoutInSeconds": {
-          "description": "QuorumTimeoutInSeconds configures time after which an\nout of quorum node will restart",
-          "type": "integer",
-          "format": "int64"
-        },
-        "SchedulerNodeName": {
-          "type": "string"
-        },
-        "SnapLockTryDurationInMinutes": {
-          "description": "SnapLockTryDurationInMinutes is the time for which\nthe cluster manager will try acquiring a lock for cluster snapshot",
-          "type": "integer",
-          "format": "int64"
-        },
-        "SystemSharedSecret": {
-          "type": "string"
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/config"
+      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
     },
     "Config": {
       "type": "object",
@@ -2965,6 +2949,11 @@
           "type": "string",
           "x-go-name": "Path"
         },
+        "pool_metadata_dev": {
+          "description": "True if the resource is used as thin pool metadata disk",
+          "type": "boolean",
+          "x-go-name": "PoolMetadataDev"
+        },
         "randRW": {
           "description": "RandRW",
           "type": "number",
@@ -2993,11 +2982,6 @@
           "type": "integer",
           "format": "uint64",
           "x-go-name": "Size"
-        },
-        "thin_pool_md": {
-          "description": "True if the resource is used as thin pool metadata disk",
-          "type": "boolean",
-          "x-go-name": "ThinPoolMd"
         },
         "used": {
           "description": "Physical Bytes used.",

@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.145.0 - (6/20/2022)
+
+* Update create bucket api param to include anonymous bucket access mode.
+
 ### v0.144.0 - (6/8/2022)
 
 * Revise for thin pool metadata device in storage resource
