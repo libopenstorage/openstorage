@@ -310,6 +310,18 @@
         "title": "Alert is a structure that represents an alert object",
         "type": "object"
       },
+      "apiAnonymousBucketAccessMode": {
+        "default": "UnknownBucketAccessMode",
+        "description": " - Private: Default, disallow uncredentialed access to the backend storage.\n - ReadOnly: Read only, uncredentialed users can call ListBucket and GetObject.\n - WriteOnly: Write only, uncredentialed users can only call PutObject.\n - ReadWrite: Read/Write, uncredentialed users can read objects as well as PutObject.",
+        "enum": [
+          "UnknownBucketAccessMode",
+          "Private",
+          "ReadOnly",
+          "WriteOnly",
+          "ReadWrite"
+        ],
+        "type": "string"
+      },
       "apiAttachState": {
         "default": "ATTACH_STATE_EXTERNAL",
         "enum": [
@@ -337,6 +349,9 @@
       "apiBucketCreateRequest": {
         "description": "Defines a request to create a bucket.",
         "properties": {
+          "anonymousBucketAccessMode": {
+            "$ref": "#/components/schemas/apiAnonymousBucketAccessMode"
+          },
           "name": {
             "description": "Unique name of the bucket. This will be used for idempotency.",
             "type": "string"
@@ -5809,7 +5824,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.144.0"
+    "version": "0.145.0"
   },
   "openapi": "3.0.0",
   "paths": {
