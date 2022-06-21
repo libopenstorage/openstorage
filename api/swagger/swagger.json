@@ -1552,46 +1552,62 @@
       "x-go-package": "github.com/libopenstorage/openstorage/api"
     },
     "ClusterConfig": {
-      "description": "ClusterConfig is a cluster level config parameter struct",
       "type": "object",
       "properties": {
-        "cluster_id": {
-          "type": "string",
-          "x-go-name": "ClusterId"
+        "AllowSecurityRemoval": {
+          "type": "boolean"
         },
-        "created": {
-          "type": "string",
-          "format": "date-time",
-          "x-go-name": "Created"
+        "ClusterId": {
+          "type": "string"
         },
-        "description": {
-          "type": "string",
-          "x-go-name": "Description"
+        "ClusterUuid": {
+          "type": "string"
         },
-        "domain": {
-          "type": "string",
-          "x-go-name": "Domain"
+        "DataIface": {
+          "type": "string"
         },
-        "kvdb": {
-          "$ref": "#/definitions/KvdbConfig"
+        "DataIp": {
+          "type": "string"
         },
-        "mode": {
-          "type": "string",
-          "x-go-name": "Mode"
+        "DefaultDriver": {
+          "type": "string"
         },
-        "private": {
-          "type": "object",
-          "x-go-name": "Private"
+        "FluentDHost": {
+          "type": "string"
         },
-        "secrets": {
-          "$ref": "#/definitions/SecretsConfig"
+        "HWType": {
+          "$ref": "#/definitions/HardwareType"
         },
-        "version": {
-          "type": "string",
-          "x-go-name": "Version"
+        "ManagementURL": {
+          "type": "string"
+        },
+        "MgmtIp": {
+          "type": "string"
+        },
+        "MgtIface": {
+          "type": "string"
+        },
+        "NodeId": {
+          "type": "string"
+        },
+        "QuorumTimeoutInSeconds": {
+          "description": "QuorumTimeoutInSeconds configures time after which an\nout of quorum node will restart",
+          "type": "integer",
+          "format": "int64"
+        },
+        "SchedulerNodeName": {
+          "type": "string"
+        },
+        "SnapLockTryDurationInMinutes": {
+          "description": "SnapLockTryDurationInMinutes is the time for which\nthe cluster manager will try acquiring a lock for cluster snapshot",
+          "type": "integer",
+          "format": "int64"
+        },
+        "SystemSharedSecret": {
+          "type": "string"
         }
       },
-      "x-go-package": "github.com/libopenstorage/openstorage/osdconfig"
+      "x-go-package": "github.com/libopenstorage/openstorage/config"
     },
     "Config": {
       "type": "object",
