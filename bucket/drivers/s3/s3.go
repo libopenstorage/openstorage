@@ -18,6 +18,8 @@ import (
 
 type S3Driver struct {
 	config *aws.Config
+	// Map to cache bucket access credentials for the account
+	bucketAccountAccessMap map[string]*bucket.BucketAccessCredentials
 }
 
 func New(config *aws.Config) (*S3Driver, error) {
@@ -26,7 +28,8 @@ func New(config *aws.Config) (*S3Driver, error) {
 	}
 
 	return &S3Driver{
-		config: config,
+		config:                 config,
+		bucketAccountAccessMap: make(map[string]*bucket.BucketAccessCredentials),
 	}, nil
 }
 
@@ -293,11 +296,20 @@ func revokeAccessToBucket(bucketId string, accountName string, iamSvc *iam.IAM) 
 	return nil
 }
 
+// Creates the map id based on bucket and account info
+func getAccountAccessKey(bucketId string, accountName string) string {
+	return bucketId + "-" + accountName
+}
+
 // AccessBucket grants access to the S3 bucket
 func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
 	iamSvc, err := d.NewIamSvc()
 	if err != nil {
 		return "", nil, fmt.Errorf("unable to create iam session: %v ", err)
+	}
+	if d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)] != nil {
+		logrus.Infof("Account %s has been already granted access to the bucket %s", accountName, id)
+		return accountName, d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)], nil
 	}
 
 	accountId, err := createUser(accountName, iamSvc)
@@ -314,6 +326,7 @@ func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy
 	if err != nil {
 		return "", nil, err
 	}
+	d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)] = credentials
 
 	logrus.Infof("Account %s granted access to bucket %s", accountName, id)
 	return accountId, credentials, nil
@@ -325,6 +338,9 @@ func (d *S3Driver) RevokeBucketAccess(id string, accountId string) error {
 	if err != nil {
 		return fmt.Errorf("unable to create iam session: %v ", err)
 	}
+	// Delete the cached value from ther map
+	delete(d.bucketAccountAccessMap, getAccountAccessKey(id, accountId))
+
 	err = revokeAccessToBucket(id, accountId, iamSvc)
 	if err != nil {
 		return err
