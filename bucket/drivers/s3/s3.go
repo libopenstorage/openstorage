@@ -264,7 +264,7 @@ func getUserPolicyInput(bucketId string, accountName string, inputAccessPolicy s
 	input := &iam.PutUserPolicyInput{
 		// PolicyDocument: aws.String("{\"Statement\":{\"Effect\":\"Allow\",\"Action\":\"*\",\"Resource\":\"*\"}}"),
 		PolicyDocument: aws.String(accessPolicy),
-		PolicyName:     aws.String(bucketId + "-AccessPolicy"),
+		PolicyName:     aws.String(getIAMBucketPolicyName(bucketId)),
 		UserName:       aws.String(accountName),
 	}
 	return input, nil
@@ -283,22 +283,22 @@ func grantAccessToBucket(bucketId string, accountName string, accessPolicy strin
 	return nil
 }
 
-// revokeAccessToBucket revoks iam account access to the bucket
-func revokeAccessToBucket(bucketId string, accountName string, iamSvc *iam.IAM) error {
-	input, err := getUserPolicyInput(bucketId, accountName, "", "Deny")
-	if err != nil {
-		return err
+//Deletes IAM policy for bucket access
+func deleteUserAccessPolicy(bucketId string, accountName string, iamSvc *iam.IAM) error {
+	input := &iam.DeleteUserPolicyInput{
+		PolicyName: aws.String(getIAMBucketPolicyName(bucketId)),
+		UserName:   aws.String(accountName),
 	}
-	_, err = iamSvc.PutUserPolicy(input)
+	_, err := iamSvc.DeleteUserPolicy(input)
 	if err != nil {
-		return fmt.Errorf("unable to revoke user %s access to bucket %s : %v", accountName, bucketId, err)
+		return fmt.Errorf("iam policy deletion failed for account %s: bucket-policy %s: %v", accountName, getIAMBucketPolicyName(bucketId), err)
 	}
 	return nil
 }
 
-// Creates the map id based on bucket and account info
-func getAccountAccessKey(bucketId string, accountName string) string {
-	return bucketId + "-" + accountName
+// Get bucket policy name to be associated with user IAM policy
+func getIAMBucketPolicyName(bucketId string) string {
+	return bucketId + "-AccessPolicy"
 }
 
 // AccessBucket grants access to the S3 bucket
@@ -306,10 +306,6 @@ func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy
 	iamSvc, err := d.NewIamSvc()
 	if err != nil {
 		return "", nil, fmt.Errorf("unable to create iam session: %v ", err)
-	}
-	if d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)] != nil {
-		logrus.Infof("Account %s has been already granted access to the bucket %s", accountName, id)
-		return accountName, d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)], nil
 	}
 
 	accountId, err := createUser(accountName, iamSvc)
@@ -322,30 +318,103 @@ func (d *S3Driver) GrantBucketAccess(id string, accountName string, accessPolicy
 		return "", nil, err
 	}
 
+	if d.bucketAccountAccessMap[accountName] != nil {
+		logrus.Infof("Access keys for account %s have already been created", accountName)
+		return accountName, d.bucketAccountAccessMap[accountName], nil
+	}
 	credentials, err := createAccessKey(accountName, iamSvc)
 	if err != nil {
 		return "", nil, err
 	}
-	d.bucketAccountAccessMap[getAccountAccessKey(id, accountName)] = credentials
+	d.bucketAccountAccessMap[accountName] = credentials
 
 	logrus.Infof("Account %s granted access to bucket %s", accountName, id)
 	return accountId, credentials, nil
 }
 
-// Actual implementation to be done once we have more clarity on the downstream API
+//isUserAccountActive returns true is the account has an active user policy associated with is
+func isUserAccountActive(accountId string, iamSvc *iam.IAM) (bool, error) {
+	listUserPolicyOutput, err := iamSvc.ListUserPolicies(&iam.ListUserPoliciesInput{
+		UserName: aws.String(accountId),
+	})
+	if err != nil {
+		if aerr, ok := err.(awserr.Error); ok && aerr.Code() == iam.ErrCodeNoSuchEntityException {
+			return true, nil
+		}
+		return false, fmt.Errorf("unable to fetch user policies for account %s: %v", accountId, err)
+	}
+
+	return len(listUserPolicyOutput.PolicyNames) > 0, err
+}
+
+// deleteAccessKey deletes all access keys associated with the user account
+func (d *S3Driver) deleteAccessKey(accountName string, iamSvc *iam.IAM) error {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(accountName),
+	}
+	listAccessKeysOutput, err := iamSvc.ListAccessKeys(input)
+	if err != nil {
+		return err
+	}
+	for _, accessKeyMetadata := range listAccessKeysOutput.AccessKeyMetadata {
+		_, err := iamSvc.DeleteAccessKey(&iam.DeleteAccessKeyInput{
+			AccessKeyId: aws.String(*accessKeyMetadata.AccessKeyId),
+			UserName:    aws.String(accountName),
+		})
+		if err != nil {
+			logrus.Errorf("errror during access policy deletion for account %s: %s,", accountName, err)
+		}
+	}
+	return nil
+}
+
+func (d *S3Driver) deleteUser(accountName string, iamSvc *iam.IAM) error {
+	_, err := iamSvc.DeleteUser(&iam.DeleteUserInput{
+		UserName: aws.String(accountName),
+	})
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// RevokeBucketAccess Revokes access to a bucket
+// If access to all the buckets have been revoked, this call results in
+// deletion of access policies followed by user account deletion.
 func (d *S3Driver) RevokeBucketAccess(id string, accountId string) error {
 	iamSvc, err := d.NewIamSvc()
 	if err != nil {
 		return fmt.Errorf("unable to create iam session: %v ", err)
 	}
-	// Delete the cached value from ther map
-	delete(d.bucketAccountAccessMap, getAccountAccessKey(id, accountId))
 
-	err = revokeAccessToBucket(id, accountId, iamSvc)
+	err = deleteUserAccessPolicy(id, accountId, iamSvc)
 	if err != nil {
 		return err
 	}
 	logrus.Infof("Account %s revoked access to bucket %s", accountId, id)
+
+	isActive, err := isUserAccountActive(accountId, iamSvc)
+	if err != nil || isActive {
+		return nil
+	}
+
+	// If the account is inactive, user needs to be deleted.
+	// Delete the Access keys for the account
+	// User deletion is possible only after deleting access keys
+	err = d.deleteAccessKey(accountId, iamSvc)
+	if err != nil {
+		logrus.Errorf("Unable to delete access keys for user %s", accountId)
+	}
+
+	// Delete the cached value from ther map
+	delete(d.bucketAccountAccessMap, accountId)
+
+	// Delete the user account
+	err = d.deleteUser(accountId, iamSvc)
+	if err != nil {
+		logrus.Errorf("Unable to delete user %s", accountId)
+	}
+	logrus.Infof("Account %s deleted", accountId)
 	return nil
 }
 
