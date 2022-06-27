@@ -47,13 +47,23 @@ func (f *Fake) Stop() error {
 // CreateBucket provisions a new in-memory bucket
 func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
 	logrus.Info("bucket_driver.Fake create bucket received")
-	return name, f.backend.CreateBucket(name)
+	err := f.backend.CreateBucket(name)
+	if err == gofakes3.ErrBucketAlreadyExists {
+		return name, nil
+	}
+
+	return name, err
 }
 
 // DeleteBucket deprovisions an in-memory bucket
 func (f *Fake) DeleteBucket(name string, region string, clearBucket bool) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
-	return f.backend.DeleteBucket(name)
+	err := f.backend.DeleteBucket(name)
+	if err == gofakes3.ErrNoSuchBucket {
+		return nil
+	}
+
+	return err
 }
 
 // AccessBucket grants access to the in-memory bucket
