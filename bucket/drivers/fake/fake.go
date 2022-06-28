@@ -48,7 +48,7 @@ func (f *Fake) Stop() error {
 func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
 	logrus.Info("bucket_driver.Fake create bucket received")
 	err := f.backend.CreateBucket(name)
-	if err == gofakes3.ErrBucketAlreadyExists {
+	if gofakes3.HasErrorCode(err, gofakes3.ErrBucketAlreadyExists) {
 		return name, nil
 	}
 
@@ -59,7 +59,7 @@ func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMod
 func (f *Fake) DeleteBucket(name string, region string, clearBucket bool) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
 	err := f.backend.DeleteBucket(name)
-	if err == gofakes3.ErrNoSuchBucket {
+	if gofakes3.HasErrorCode(err, gofakes3.ErrBucketAlreadyExists) {
 		return nil
 	}
 
