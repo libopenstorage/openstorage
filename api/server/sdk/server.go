@@ -175,10 +175,10 @@ type sdkGrpcServer struct {
 	accessLogOutput io.Writer
 
 	// Interface implementations
-	clusterHandler      cluster.Cluster
-	driverHandlers      map[string]volume.VolumeDriver
-	bucketDriverHandler bucket.BucketDriver
-	alertHandler        alerts.FilterDeleter
+	clusterHandler       cluster.Cluster
+	volumeDriverHandlers map[string]volume.VolumeDriver
+	bucketDriverHandler  map[string]bucket.BucketDriver
+	alertHandler         alerts.FilterDeleter
 
 	// gRPC Handlers
 	clusterServer         *ClusterServer
@@ -391,7 +391,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		name:            name,
 		log:             log,
 		clusterHandler:  config.Cluster,
-		driverHandlers: map[string]volume.VolumeDriver{
+		volumeDriverHandlers: map[string]volume.VolumeDriver{
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
@@ -597,16 +597,16 @@ func (s *sdkGrpcServer) useVolumeDrivers(d map[string]volume.VolumeDriver) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
-	s.driverHandlers = d
+	s.volumeDriverHandlers = d
 }
 
 // UseBucketDrivers will setup a new bucket driver object for the gRPC handlers
-func (s *Server) UseBucketDrivers(d bucket.BucketDriver) {
+func (s *Server) UseBucketDrivers(d map[string]bucket.BucketDriver) {
 	s.netServer.useBucketDrivers(d)
 	s.udsServer.useBucketDrivers(d)
 }
 
-func (s *sdkGrpcServer) useBucketDrivers(d bucket.BucketDriver) {
+func (s *sdkGrpcServer) useBucketDrivers(d map[string]bucket.BucketDriver) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 
@@ -623,15 +623,20 @@ func (s *sdkGrpcServer) useAlert(a alerts.FilterDeleter) {
 // Accessors
 func (s *sdkGrpcServer) driver(ctx context.Context) volume.VolumeDriver {
 	driverName := grpcserver.GetMetadataValueFromKey(ctx, ContextDriverKey)
-	if handler, ok := s.driverHandlers[driverName]; ok {
+	if handler, ok := s.volumeDriverHandlers[driverName]; ok {
 		return handler
 	} else {
-		return s.driverHandlers[DefaultDriverName]
+		return s.volumeDriverHandlers[DefaultDriverName]
 	}
 }
 
 func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
-	return s.bucketDriverHandler
+	driverName := grpcserver.GetMetadataValueFromKey(ctx, ContextDriverKey)
+	if handler, ok := s.bucketDriverHandler[driverName]; ok {
+		return handler
+	} else {
+		return s.bucketDriverHandler[DefaultDriverName]
+	}
 }
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {

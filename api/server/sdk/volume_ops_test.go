@@ -900,7 +900,7 @@ func TestSdkDeleteOnlyByOwner(t *testing.T) {
 	mcluster := mockcluster.NewMockCluster(mc)
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandlers: map[string]volume.VolumeDriver{
+			volumeDriverHandlers: map[string]volume.VolumeDriver{
 				"mock":            mv,
 				DefaultDriverName: mv,
 			},
@@ -1020,7 +1020,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 	mcluster := mockcluster.NewMockCluster(mc)
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandlers: map[string]volume.VolumeDriver{
+			volumeDriverHandlers: map[string]volume.VolumeDriver{
 				"mock":            mv,
 				DefaultDriverName: mv,
 			},
@@ -1431,7 +1431,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandlers: map[string]volume.VolumeDriver{
+			volumeDriverHandlers: map[string]volume.VolumeDriver{
 				"mock":            mv,
 				DefaultDriverName: mv,
 			},
@@ -1662,7 +1662,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 
 	s := VolumeServer{
 		server: &sdkGrpcServer{
-			driverHandlers: map[string]volume.VolumeDriver{
+			volumeDriverHandlers: map[string]volume.VolumeDriver{
 				"mock":            mv,
 				DefaultDriverName: mv,
 			},

@@ -28,6 +28,7 @@ import (
 	"time"
 
 	jwt "github.com/dgrijalva/jwt-go"
+	bucket "github.com/libopenstorage/openstorage/bucket"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/role"
 
@@ -94,7 +95,9 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 
 func setupMockBucketDriver(tester *testServer, t *testing.T) {
 	var err error
-	tester.server.UseBucketDrivers(tester.b)
+	driverMap := make(map[string]bucket.BucketDriver)
+	driverMap[DefaultDriverName] = tester.b
+	tester.server.UseBucketDrivers(driverMap)
 	assert.Nil(t, err)
 }
 
