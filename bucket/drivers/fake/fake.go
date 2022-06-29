@@ -30,7 +30,7 @@ func New() *Fake {
 
 // String name representation of driver
 func (f *Fake) String() string {
-	return "fake"
+	return "FakeDriver"
 }
 
 // Start starts a new fake object storage server

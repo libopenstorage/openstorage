@@ -34,12 +34,16 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/codegangsta/cli"
 	"github.com/docker/docker/pkg/reexec"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/server"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
+	"github.com/libopenstorage/openstorage/bucket"
 	"github.com/libopenstorage/openstorage/bucket/drivers/fake"
+	"github.com/libopenstorage/openstorage/bucket/drivers/s3"
 
 	osdcli "github.com/libopenstorage/openstorage/cli"
 	"github.com/libopenstorage/openstorage/cluster"
@@ -564,22 +568,25 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Failed to start SDK server for driver %s: %v", d, err)
 		}
 
-		// Set the fake bucket driver handler on SDK server
-		sdkServer.UseBucketDrivers(fakeDriver)
-
 		/* Uncomment the below code to configure s3 client & test OpenStorageBucket API
 		This will update the S3 driver handler on SDK server and any API calls from the
 		test client will be routed to S3. Make sure to update the AWS credentials.
 		With COSI maturation, this configuration will be set by the Cosi provisioner.
 		*/
-		// s3Config := &aws.Config{
-		// 	Credentials: credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
-		// }
-		// s3Driver, err := s3.New(s3Config)
-		// if err != nil {
-		// 	return fmt.Errorf("failed to initialize S3 session for bucket driver")
-		// }
-		// sdkServer.UseBucketDrivers(s3Driver)
+		s3Config := &aws.Config{
+			Credentials: credentials.NewStaticCredentials("YOUR-ACCESSKEYID", "YOUR-SECRETACCESSKEY", ""),
+		}
+		s3Driver, err := s3.New(s3Config)
+		if err != nil {
+			return fmt.Errorf("failed to initialize S3 session for bucket driver")
+		}
+
+		// Set the fake bucket driver handler on SDK server
+		driverMap := make(map[string]bucket.BucketDriver)
+		driverMap[fakeDriver.String()] = fakeDriver
+		driverMap[s3Driver.String()] = s3Driver
+		driverMap[sdk.DefaultDriverName] = s3Driver
+		sdkServer.UseBucketDrivers(driverMap)
 
 		sdkServer.Start()
 	}

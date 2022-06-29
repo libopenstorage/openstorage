@@ -918,7 +918,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	mcluster := mockcluster.NewMockCluster(mc)
 	s := CredentialServer{
 		server: &sdkGrpcServer{
-			driverHandlers: map[string]volume.VolumeDriver{
+			volumeDriverHandlers: map[string]volume.VolumeDriver{
 				"mock":            mv,
 				DefaultDriverName: mv,
 			},
