@@ -30,7 +30,7 @@ func New() *Fake {
 
 // String name representation of driver
 func (f *Fake) String() string {
-	return "FakeDriver"
+	return "fake"
 }
 
 // Start starts a new fake object storage server
@@ -45,7 +45,7 @@ func (f *Fake) Stop() error {
 }
 
 // CreateBucket provisions a new in-memory bucket
-func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
+func (f *Fake) CreateBucket(name string, region string, endpoint string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error) {
 	logrus.Info("bucket_driver.Fake create bucket received")
 	err := f.backend.CreateBucket(name)
 	if gofakes3.HasErrorCode(err, gofakes3.ErrBucketAlreadyExists) {
@@ -56,7 +56,7 @@ func (f *Fake) CreateBucket(name string, region string, anonymousBucketAccessMod
 }
 
 // DeleteBucket deprovisions an in-memory bucket
-func (f *Fake) DeleteBucket(name string, region string, clearBucket bool) error {
+func (f *Fake) DeleteBucket(name string, region string, endpoint string, clearBucket bool) error {
 	logrus.Info("bucket_driver.Fake delete bucket received")
 	err := f.backend.DeleteBucket(name)
 	if gofakes3.HasErrorCode(err, gofakes3.ErrBucketAlreadyExists) {
@@ -78,7 +78,7 @@ func (f *Fake) GrantBucketAccess(id string, accountName string, accessPolicy str
 		}, nil
 }
 
-// DeleteBucket deprovisions an in-memory bucket
+// DeleteBucket deprovisions an in-memory bucketz
 // Dummy impplementation
 // Actual implementation to be done once we have more clarity on the downstream API
 func (f *Fake) RevokeBucketAccess(id string, accountId string) error {

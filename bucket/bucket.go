@@ -13,10 +13,10 @@ type BucketDriver interface {
 	Start() error
 
 	// CreateBucket provisions a new bucket
-	CreateBucket(name string, region string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error)
+	CreateBucket(name string, region string, endpoint string, anonymousBucketAccessMode api.AnonymousBucketAccessMode) (string, error)
 
 	// DeleteBucket deprovisions the bucket
-	DeleteBucket(id string, region string, clearBucket bool) error
+	DeleteBucket(id string, region string, endpoint string, clearBucket bool) error
 
 	// GrantBucketAccess grants access to the bucket
 	// Returns accountId and creadentials for access
