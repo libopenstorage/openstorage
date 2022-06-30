@@ -36,10 +36,9 @@ func New(config *aws.Config) (*S3Driver, error) {
 // Returns a new S3 service client
 func (d *S3Driver) NewS3Svc(region string) (*s3.S3, error) {
 	// Override the aws config with the region
-	s3Config := &aws.Config{
-		Credentials: d.config.Credentials,
-		Region:      aws.String(region),
-	}
+	s3Config := d.config
+	s3Config.Region = aws.String(region)
+
 	sess, err := session.NewSession(s3Config)
 	if err != nil {
 		return nil, err
