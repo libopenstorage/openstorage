@@ -6,6 +6,8 @@ import (
 	"github.com/libopenstorage/openstorage/bucket/drivers/s3"
 )
 
+// PureFBDriver represents a way to interact with a Pure FlashBlade
+// object storage backend via the AWS SDK
 type PureFBDriver struct {
 	*s3.S3Driver
 
@@ -13,6 +15,7 @@ type PureFBDriver struct {
 	SecretAccessKey string
 }
 
+// New create a new PureFBDriver instance
 func New(cfg *aws.Config, accessKeyID, secretAccessKey string) (*PureFBDriver, error) {
 	s3Driver, err := s3.New(cfg)
 	if err != nil {
@@ -27,6 +30,7 @@ func New(cfg *aws.Config, accessKeyID, secretAccessKey string) (*PureFBDriver, e
 	}, nil
 }
 
+// GrantBucketAccess gives admin access to a bucket
 func (p *PureFBDriver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
 	return "", &bucket.BucketAccessCredentials{
 		AccessKeyId:     p.AccessKeyID,
@@ -34,7 +38,7 @@ func (p *PureFBDriver) GrantBucketAccess(id string, accountName string, accessPo
 	}, nil
 }
 
-// RevokeBucketAccess
+// RevokeBucketAccess is a no-op for admin access to a bucket
 func (p *PureFBDriver) RevokeBucketAccess(id string, accountId string) error {
 	return nil
 }
