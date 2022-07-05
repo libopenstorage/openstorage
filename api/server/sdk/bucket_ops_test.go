@@ -49,7 +49,7 @@ func TestBucketCreateSuccess(t *testing.T) {
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name, region, api.AnonymousBucketAccessMode_Private).
+		CreateBucket(name, region, "", api.AnonymousBucketAccessMode_Private).
 		Return(id, nil).
 		Times(1)
 
@@ -101,7 +101,7 @@ func TestBucketCreateFailure(t *testing.T) {
 	// Create CreateBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		CreateBucket(name, region, api.AnonymousBucketAccessMode_Private).
+		CreateBucket(name, region, "", api.AnonymousBucketAccessMode_Private).
 		Return(id, errors.New("failed")).
 		Times(1)
 
@@ -131,7 +131,7 @@ func TestBucketDeleteSuccess(t *testing.T) {
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id, region, true).
+		DeleteBucket(id, region, "", true).
 		Return(nil).
 		Times(1)
 
@@ -160,7 +160,7 @@ func TestBucketDeleteFailure(t *testing.T) {
 	// Create DeleteBucket response
 	s.MockBucketDriver().
 		EXPECT().
-		DeleteBucket(id, region, false).
+		DeleteBucket(id, region, "", false).
 		Return(errors.New("failed")).
 		Times(1)
 
