@@ -2154,8 +2154,11 @@ message BucketCreateRequest {
   // Region in which bucket will be created.
   string region = 2;
 
+  // Endpoint to use when creating the bucket
+  string endpoint = 3;
+
   //Anonymous access policy for the bucket.
-  AnonymousBucketAccessMode anonymousBucketAccessMode  = 3;
+  AnonymousBucketAccessMode anonymousBucketAccessMode  = 4;
 }
 
 // Defines a response to the creation of a bucket
@@ -2172,8 +2175,11 @@ message BucketDeleteRequest {
   // Region in which bucket will be created.
   string region = 2;
 
+  // Endpoint to use when deleting the bucket
+  string endpoint = 3;
+
   // Flag to allow non empty bucket deletion.
-  bool clear_bucket = 3;
+  bool clear_bucket = 4;
 }
 
 // Empty response
@@ -5180,7 +5186,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 145;
+    Minor = 146;
     // SDK version patch value of this specification
     Patch = 0;
   }

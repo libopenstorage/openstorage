@@ -36,32 +36,32 @@ func (m *MockBucketDriver) EXPECT() *MockBucketDriverMockRecorder {
 }
 
 // CreateBucket mocks base method.
-func (m *MockBucketDriver) CreateBucket(arg0, arg1 string, arg2 api.AnonymousBucketAccessMode) (string, error) {
+func (m *MockBucketDriver) CreateBucket(arg0, arg1, arg2 string, arg3 api.AnonymousBucketAccessMode) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateBucket", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "CreateBucket", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CreateBucket indicates an expected call of CreateBucket.
-func (mr *MockBucketDriverMockRecorder) CreateBucket(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockBucketDriverMockRecorder) CreateBucket(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBucket", reflect.TypeOf((*MockBucketDriver)(nil).CreateBucket), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateBucket", reflect.TypeOf((*MockBucketDriver)(nil).CreateBucket), arg0, arg1, arg2, arg3)
 }
 
 // DeleteBucket mocks base method.
-func (m *MockBucketDriver) DeleteBucket(arg0, arg1 string, arg2 bool) error {
+func (m *MockBucketDriver) DeleteBucket(arg0, arg1, arg2 string, arg3 bool) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteBucket", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "DeleteBucket", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
 // DeleteBucket indicates an expected call of DeleteBucket.
-func (mr *MockBucketDriverMockRecorder) DeleteBucket(arg0, arg1, arg2 interface{}) *gomock.Call {
+func (mr *MockBucketDriverMockRecorder) DeleteBucket(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBucket", reflect.TypeOf((*MockBucketDriver)(nil).DeleteBucket), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteBucket", reflect.TypeOf((*MockBucketDriver)(nil).DeleteBucket), arg0, arg1, arg2, arg3)
 }
 
 // GrantBucketAccess mocks base method.

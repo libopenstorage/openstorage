@@ -352,6 +352,10 @@
           "anonymousBucketAccessMode": {
             "$ref": "#/components/schemas/apiAnonymousBucketAccessMode"
           },
+          "endpoint": {
+            "title": "Endpoint to use when creating the bucket",
+            "type": "string"
+          },
           "name": {
             "description": "Unique name of the bucket. This will be used for idempotency.",
             "type": "string"
@@ -5824,7 +5828,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.145.0"
+    "version": "0.146.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6080,6 +6084,15 @@
             "description": "Region in which bucket will be created.",
             "in": "query",
             "name": "region",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Endpoint to use when deleting the bucket.",
+            "in": "query",
+            "name": "endpoint",
             "required": false,
             "schema": {
               "type": "string"

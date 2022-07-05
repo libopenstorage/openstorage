@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.146.0 - (7/1/2022)
+
+* Update create/delete bucket api param to include endpoint.
+
 ### v0.145.0 - (6/20/2022)
 
 * Update create bucket api param to include anonymous bucket access mode.
