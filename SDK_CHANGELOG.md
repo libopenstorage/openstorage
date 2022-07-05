@@ -9,6 +9,7 @@
 * Updating api params for Create and Delete Bucket service.
 * Updating open storage bucket access credential object.
 * Update create bucket api param to include anonymous bucket access mode.
+* Update create/delete bucket api param to include endpoint.
 
 ### v0.101.26 - (06/07/2022)
 

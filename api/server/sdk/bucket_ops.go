@@ -59,7 +59,7 @@ func (s *BucketServer) Create(
 	logrus.Infof("Create bucket request received for Bucket: %s, Region: %s", name, region)
 
 	// Create bucket
-	id, err := s.driver(ctx).CreateBucket(name, region, req.AnonymousBucketAccessMode)
+	id, err := s.driver(ctx).CreateBucket(name, region, req.GetEndpoint(), req.GetAnonymousBucketAccessMode())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -92,7 +92,7 @@ func (s *BucketServer) Delete(
 	logrus.Infof("Delete bucket request received for Bucket: %s", id)
 
 	// Delete the bucket
-	err := s.driver(ctx).DeleteBucket(id, region, req.GetClearBucket())
+	err := s.driver(ctx).DeleteBucket(id, region, req.GetEndpoint(), req.GetClearBucket())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
