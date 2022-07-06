@@ -42,3 +42,8 @@ func (p *PureFBDriver) GrantBucketAccess(id string, accountName string, accessPo
 func (p *PureFBDriver) RevokeBucketAccess(id string, accountId string) error {
 	return nil
 }
+
+// String returns the driver name for Pure FlashBlade
+func (p *PureFBDriver) String() string {
+	return "PureFBDriver"
+}
