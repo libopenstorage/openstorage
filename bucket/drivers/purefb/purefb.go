@@ -32,7 +32,7 @@ func New(cfg *aws.Config, accessKeyID, secretAccessKey string) (*PureFBDriver, e
 
 // GrantBucketAccess gives admin access to a bucket
 func (p *PureFBDriver) GrantBucketAccess(id string, accountName string, accessPolicy string) (string, *bucket.BucketAccessCredentials, error) {
-	return "", &bucket.BucketAccessCredentials{
+	return "fb-admin-account", &bucket.BucketAccessCredentials{
 		AccessKeyId:     p.AccessKeyID,
 		SecretAccessKey: p.SecretAccessKey,
 	}, nil
