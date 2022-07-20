@@ -3,6 +3,7 @@
 package mount
 
 import (
+	"regexp"
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
@@ -20,7 +21,7 @@ type bindMounter struct {
 
 // NewBindMounter returns a new bindMounter
 func NewBindMounter(
-	rootSubstrings []string,
+	rootSubstrings []*regexp.Regexp,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
@@ -43,7 +44,7 @@ func NewBindMounter(
 
 func (b *bindMounter) Reload(rootSubstring string) error {
 	newBm, err := NewBindMounter(
-		[]string{rootSubstring},
+		[]*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta(rootSubstring))},
 		b.mountImpl,
 		b.allowedDirs,
 		b.trashLocation,
@@ -55,13 +56,13 @@ func (b *bindMounter) Reload(rootSubstring string) error {
 	return b.reload(rootSubstring, newBm.mounts[rootSubstring])
 }
 
-func (b *bindMounter) Load(rootSubstrings []string) error {
+func (b *bindMounter) Load(rootSubstrings []*regexp.Regexp) error {
 	return b.load(rootSubstrings, bindFindMountPoint)
 }
 
-func bindFindMountPoint(sInfo *mount.Info, destination string, infos []*mount.Info) (bool, string, string) {
+func bindFindMountPoint(sInfo *mount.Info, destination *regexp.Regexp, infos []*mount.Info) (bool, string, string) {
 	for _, dInfo := range infos {
-		if !strings.Contains(dInfo.Mountpoint, destination) {
+		if !destination.MatchString(dInfo.Mountpoint) {
 			continue
 		}
 		// Check if the root device is the same for the bind mount

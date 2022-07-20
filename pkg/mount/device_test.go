@@ -2,6 +2,7 @@ package mount
 
 import (
 	"os"
+	"regexp"
 	"testing"
 
 	"github.com/docker/docker/pkg/mount"
@@ -65,7 +66,7 @@ func TestBasicDeviceMounter(t *testing.T) {
 	orderedDevices := []string{device1}
 	orderedPaths := []string{mountPath1}
 
-	dm, err := New(DeviceMount, nil, []string{osdDevicePrefix}, nil, []string{}, "")
+	dm, err := New(DeviceMount, nil, []*regexp.Regexp{regexp.MustCompile(osdDevicePrefix)}, nil, []string{}, "")
 	require.NoError(t, err, "Unexpected error on mount.New")
 
 	// Inspect
@@ -105,7 +106,7 @@ func TestBasicDeviceMounterWithMultipleMounts(t *testing.T) {
 	orderedDevices := []string{device1, device1}
 	orderedPaths := []string{mountPath1, mountPath2}
 
-	dm, err := New(DeviceMount, nil, []string{osdDevicePrefix}, nil, []string{}, "")
+	dm, err := New(DeviceMount, nil, []*regexp.Regexp{regexp.MustCompile(osdDevicePrefix)}, nil, []string{}, "")
 	require.NoError(t, err, "Unexpected error on mount.New")
 
 	// Inspect

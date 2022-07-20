@@ -4,6 +4,7 @@ package mount
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/sirupsen/logrus"
@@ -25,7 +26,7 @@ func NewDeletedMounter(
 	mountImpl MountImpl,
 ) (*deletedMounter, error) {
 
-	devMounter, err := NewDeviceMounter([]string{"/dev/"}, mountImpl, nil, "")
+	devMounter, err := NewDeviceMounter([]*regexp.Regexp{regexp.MustCompile("/dev/")}, mountImpl, nil, "")
 	if err != nil {
 		return nil, err
 	}

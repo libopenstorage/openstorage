@@ -4,6 +4,7 @@ package mount
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
@@ -21,7 +22,7 @@ type rawMounter struct {
 
 // NewRawBindMounter returns a new rawBindMounter
 func NewRawBindMounter(
-	rootSubstrings []string,
+	rootSubstrings []*regexp.Regexp,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
@@ -44,7 +45,7 @@ func NewRawBindMounter(
 
 func (rm *rawMounter) Reload(rootSubstring string) error {
 	newRBM, err := NewRawBindMounter(
-		[]string{rootSubstring},
+		[]*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta(rootSubstring))},
 		rm.mountImpl,
 		rm.allowedDirs,
 		rm.trashLocation,
@@ -66,14 +67,14 @@ func shouldSkipMountPoint(mountPoint string) bool {
 }
 
 // this mount filtering implementation is done based on logic implemented in findmnt + libmount
-func (rm *rawMounter) Load(rawVolumeDevicesPaths []string) error {
+func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 	mountPoints, err := GetMounts()
 	if err != nil {
 		return err
 	}
 
 	// try to find all bind mounts of raw volumes
-	if len(rawVolumeDevicesPaths) == 0 || rawVolumeDevicesPaths[0] == "" {
+	if len(rawVolumeDevicesPaths) == 0 {
 		mountPointsByMajMin := make(map[string]*[]mount.Info)
 		mountPointsByTarget := make(map[string]*mount.Info)
 
@@ -136,7 +137,7 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []string) error {
 	for _, rawVolumeDevicePath := range rawVolumeDevicesPaths {
 		var mountPointForRoot *mount.Info
 		for _, mp := range mountPoints {
-			if strings.HasSuffix(rawVolumeDevicePath, mp.Root) {
+			if rawVolumeDevicePath.MatchString(mp.Root) {
 				mountPointForRoot = mp
 				break
 			}
