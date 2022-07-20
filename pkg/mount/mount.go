@@ -12,6 +12,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -34,7 +35,7 @@ type Manager interface {
 	// Reload mount table for specified device.
 	Reload(source string) error
 	// Load mount table for all devices that match the list of identifiers
-	Load(source []string) error
+	Load(source []*regexp.Regexp) error
 	// Inspect mount table for specified source. ErrEnoent may be returned.
 	Inspect(source string) []*PathInfo
 	// Mounts returns paths for specified source.
@@ -150,7 +151,7 @@ type Mounter struct {
 	trashLocation string
 }
 
-type findMountPoint func(source *mount.Info, destination string, mountInfo []*mount.Info) (bool, string, string)
+type findMountPoint func(source *mount.Info, destination *regexp.Regexp, mountInfo []*mount.Info) (bool, string, string)
 
 // DefaultMounter defaults to syscall implementation.
 type DefaultMounter struct {
@@ -362,7 +363,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	return nil
 }
 
-func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
+func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 	info, err := GetMounts()
 	if err != nil {
 		return err
@@ -374,14 +375,14 @@ func (m *Mounter) load(prefixes []string, fmp findMountPoint) error {
 		)
 		for _, devPrefix := range prefixes {
 			foundPrefix, sourcePath, devicePath = fmp(v, devPrefix, info)
-			targetDevice = getTargetDevice(devPrefix)
+			targetDevice = getTargetDevice(devPrefix.String())
 			if !foundPrefix && targetDevice != "" {
-				foundTarget, _, _ = fmp(v, targetDevice, info)
+				foundTarget, _, _ = fmp(v, regexp.MustCompile(regexp.QuoteMeta(targetDevice)), info)
 				// We could not find a mountpoint for devPrefix (/dev/mapper/vg-lvm1) but found
 				// one for its target device (/dev/dm-0). Change the sourcePath to devPrefix
 				// as fmp might have returned an incorrect or empty sourcePath
-				sourcePath = devPrefix
-				devicePath = devPrefix
+				sourcePath = devPrefix.String()
+				devicePath = devPrefix.String()
 			}
 
 			if foundPrefix || foundTarget {
@@ -662,7 +663,7 @@ func (m *Mounter) removeMountPath(path string) error {
 	}
 
 	var bindMountPath string
-	bindMounter, err := New(BindMount, nil, []string{""}, nil, []string{}, "")
+	bindMounter, err := New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
 	if err != nil {
 		return err
 	}
@@ -805,7 +806,7 @@ func (m *Mounter) makeMountpathWriteable(mountpath string) error {
 func New(
 	mounterType MountType,
 	mountImpl MountImpl,
-	identifiers []string,
+	identifiers []*regexp.Regexp,
 	customMounter CustomMounter,
 	allowedDirs []string,
 	trashLocation string,

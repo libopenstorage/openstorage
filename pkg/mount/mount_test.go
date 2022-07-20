@@ -3,6 +3,7 @@ package mount
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"sync"
 	"syscall"
 	"testing"
@@ -50,7 +51,7 @@ func allTests(t *testing.T, source, dest string) {
 
 func setupNFS(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, nil, []string{""}, nil, []string{}, trashLocation)
+	m, err = New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -60,7 +61,7 @@ func setupNFS(t *testing.T) {
 
 func setupBindMounter(t *testing.T) {
 	var err error
-	m, err = New(BindMount, nil, []string{""}, nil, []string{}, trashLocation)
+	m, err = New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -70,7 +71,7 @@ func setupBindMounter(t *testing.T) {
 
 func setupRawMounter(t *testing.T) {
 	var err error
-	m, err = New(RawMount, nil, []string{""}, nil, []string{}, trashLocation)
+	m, err = New(RawMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -85,7 +86,7 @@ func cleandir(dir string) {
 }
 
 func load(t *testing.T, source, dest string) {
-	require.NoError(t, m.Load([]string{""}), "Failed in load")
+	require.NoError(t, m.Load([]*regexp.Regexp{regexp.MustCompile("")}), "Failed in load")
 }
 
 func mountTest(t *testing.T, source, dest string) {
