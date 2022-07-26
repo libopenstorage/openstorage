@@ -49,7 +49,6 @@ import (
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/cosi"
 	"github.com/libopenstorage/openstorage/csi"
 	graphdrivers "github.com/libopenstorage/openstorage/graph/drivers"
 	"github.com/libopenstorage/openstorage/objectstore"
@@ -513,29 +512,6 @@ func start(c *cli.Context) error {
 				logrus.Errorf("failed to start fake driver: %v", err)
 			}
 		}()
-
-		// Start COSI server
-		cosisock := os.Getenv("COSI_ENDPOINT")
-		if len(cosisock) == 0 {
-			cosisock = fmt.Sprintf("/var/lib/osd/driver/%s-cosi.sock", d)
-		}
-		os.Remove(cosisock)
-		if err := os.MkdirAll(filepath.Dir(cosisock), 0750); err != nil {
-			logrus.Errorf("failed to create COSI sock")
-		}
-		cosiServer, err := cosi.NewServer(&cosi.Config{
-			Driver:  fakeDriver,
-			Net:     "unix",
-			Address: cosisock,
-		})
-		if err != nil {
-			return fmt.Errorf("failed to create COSI server for driver %s: %v", fakeDriver, err)
-		}
-
-		err = cosiServer.Start()
-		if err != nil {
-			return fmt.Errorf("failed to start COSI server for driver %s: %v", fakeDriver, err)
-		}
 
 		// Create a role manager
 		rm, err := role.NewSdkRoleManager(kv)
