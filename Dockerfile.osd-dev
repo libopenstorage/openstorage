@@ -1,4 +1,4 @@
-FROM docker.io/openstorage/osd-dev-base:1.16
+FROM quay.io/openstorage/osd-dev-base:1.14
 MAINTAINER gou@portworx.com
 
 EXPOSE 9005
