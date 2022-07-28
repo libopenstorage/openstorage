@@ -5,6 +5,7 @@ package mount
 import (
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/docker/docker/pkg/mount"
@@ -18,7 +19,7 @@ type deviceMounter struct {
 
 // NewDeviceMounter returns a new deviceMounter
 func NewDeviceMounter(
-	devPrefixes []string,
+	devRegexes []*regexp.Regexp,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
@@ -34,7 +35,7 @@ func NewDeviceMounter(
 			trashLocation: trashLocation,
 		},
 	}
-	err := m.Load(devPrefixes)
+	err := m.Load(devRegexes)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +51,7 @@ func NewDeviceMounter(
 
 // Reload reloads the mount table
 func (m *deviceMounter) Reload(device string) error {
-	newDm, err := NewDeviceMounter([]string{device},
+	newDm, err := NewDeviceMounter([]*regexp.Regexp{regexp.MustCompile(regexp.QuoteMeta(device))},
 		m.mountImpl,
 		m.Mounter.allowedDirs,
 		m.trashLocation,
@@ -63,12 +64,12 @@ func (m *deviceMounter) Reload(device string) error {
 }
 
 // Load mount table
-func (m *deviceMounter) Load(devPrefixes []string) error {
-	return m.load(devPrefixes, deviceFindMountPoint)
+func (m *deviceMounter) Load(devRegexes []*regexp.Regexp) error {
+	return m.load(devRegexes, deviceFindMountPoint)
 }
 
-func deviceFindMountPoint(info *mount.Info, destination string, infos []*mount.Info) (bool, string, string) {
-	if strings.HasPrefix(info.Source, destination) {
+func deviceFindMountPoint(info *mount.Info, destination *regexp.Regexp, infos []*mount.Info) (bool, string, string) {
+	if destination.MatchString(info.Source) {
 		return true, info.Source, info.Source
 	}
 	return false, "", ""
