@@ -1,6 +1,13 @@
 # Changelog
 
 ## Releases
+### v0.147.0 - (7/29/2022)
+
+* Update volume spec for windows share
+
+### v0.146.0 - (7/1/2022)
+
+* extend spec for experimental window share property
 
 ### v0.101.37 - (07/26/2023)
 

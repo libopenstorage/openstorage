@@ -694,6 +694,8 @@ message VolumeSpec {
   IoThrottle io_throttle = 45;
   // TopologyRequirement topology requirement for this volume
   TopologyRequirement topology_requirement = 48;
+  // winshare is true if this volume can be accessed from windows pods.
+  bool winshare = 49;
   // Filesystem create options to be honored.
   string fa_create_options = 50;
   // NearSync specifies the volume has a near-sync replica
@@ -771,6 +773,8 @@ message VolumeSpecUpdate {
   oneof io_throttle_opt { IoThrottle io_throttle = 40;}
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 41;}
+  // winshare is true if this volume can be accessed from windows pods.
+  oneof winshare_opt { bool winshare = 42; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -860,6 +864,8 @@ message VolumeSpecPolicy {
   oneof auto_fstrim_opt { bool auto_fstrim = 65; }
   // io_throttle_opt defines the io throttle limits for the volume
   oneof io_throttle_opt { IoThrottle io_throttle = 66;}
+  // winshare is true if this volume can be accessed from windows.
+  oneof winshare_opt { bool winshare = 68; }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -5287,7 +5293,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 101;
+    Minor = 147;
     // SDK version patch value of this specification
     Patch = 37;
   }
