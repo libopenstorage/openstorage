@@ -5411,6 +5411,9 @@ message ClusterPairCreateRequest {
   // Use for the cluster pairing, if given
   // credential id will be used in ClusterPairCreate service
   string credential_id = 6;
+  // When set the target cluster will start
+  // an objectstore
+  bool EnableInClusterObjectstore = 7;
 }
 
 // Response for a pair request
@@ -5443,6 +5446,9 @@ message ClusterPairProcessRequest {
     // Use for the cluster pairing, if given
     // credential id will be used in ClusterPairCreate service
     string credential_id = 4;
+    // When set the target cluster will start
+    // an objectstore
+    bool EnableInClusterObjectstore = 7;
 }
 
 // Response after a pairing has been processed
@@ -5516,6 +5522,9 @@ message ClusterPairInfo {
     map<string, string> options = 7;
     // Mode for the cluster pair
     ClusterPairMode.Mode mode = 8;
+    // When set the target cluster will start
+    // an objectstore
+    bool EnableInClusterObjectstore = 9;
 }
 
 // Defines a cluster pair inspect request

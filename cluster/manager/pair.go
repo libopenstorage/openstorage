@@ -43,10 +43,11 @@ func (c *ClusterManager) CreatePair(
 	// Pair with remote server
 	logrus.Infof("Attempting to pair with cluster at IP %v", remoteIp)
 	processRequest := &api.ClusterPairProcessRequest{
-		SourceClusterId:    c.Uuid(),
-		RemoteClusterToken: request.RemoteClusterToken,
-		Mode:               request.Mode,
-		CredentialId:       request.CredentialId,
+		SourceClusterId:            c.Uuid(),
+		RemoteClusterToken:         request.RemoteClusterToken,
+		Mode:                       request.Mode,
+		CredentialId:               request.CredentialId,
+		EnableInClusterObjectstore: request.EnableInClusterObjectstore,
 	}
 
 	endpoint := net.JoinHostPort(remoteIp, strconv.FormatUint(uint64(request.RemoteClusterPort), 10))
@@ -86,6 +87,7 @@ func (c *ClusterManager) CreatePair(
 		Token:            request.RemoteClusterToken,
 		Options:          resp.Options,
 		Mode:             request.Mode,
+		EnableInClusterObjectstore: request.EnableInClusterObjectstore,
 	}
 
 	err = pairCreate(pairInfo, request.SetDefault)
@@ -179,6 +181,7 @@ func (c *ClusterManager) RefreshPair(
 			Endpoint:         pair.Endpoint,
 			CurrentEndpoints: resp.RemoteClusterEndpoints,
 			Token:            pair.Token,
+			EnableInClusterObjectstore: pair.EnableInClusterObjectstore,
 		}
 		// Use original options and override with updates ones. This
 		// prevents any options we created locally from getting overridden

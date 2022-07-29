@@ -655,6 +655,10 @@
       },
       "apiClusterPairCreateRequest": {
         "properties": {
+          "EnableInClusterObjectstore": {
+            "title": "When set the target cluster will start\nan objectstore",
+            "type": "boolean"
+          },
           "credential_id": {
             "title": "Use for the cluster pairing, if given\ncredential id will be used in ClusterPairCreate service",
             "type": "string"
@@ -708,6 +712,10 @@
       },
       "apiClusterPairInfo": {
         "properties": {
+          "EnableInClusterObjectstore": {
+            "title": "When set the target cluster will start\nan objectstore",
+            "type": "boolean"
+          },
           "current_endpoints": {
             "items": {
               "type": "string"
