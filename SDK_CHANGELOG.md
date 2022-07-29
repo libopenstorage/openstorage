@@ -1,6 +1,10 @@
 # Changelog
 
 ## Releases
+### v0.147.0 - (7/29/2022)
+
+* Update volume spec for windows share
+
 ### v0.146.0 - (7/1/2022)
 
 * Update create/delete bucket api param to include endpoint.
