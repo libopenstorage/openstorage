@@ -190,13 +190,11 @@ func (cpb *ConnectionParamsBuilder) BuildTlsConfig() (*tls.Config, error) {
 }
 
 func setRootCA(tlsCfg *tls.Config, rootCA []byte) error {
-
 	clientCertPool, err := x509.SystemCertPool()
 	if err != nil || clientCertPool == nil {
 		logrus.Warnf("Warning: Failed to load system certs, root CA param data only: %v\n", err)
 	}
 
-	// JAR: Replace below conds with above 'appendRootCA(rootCAs *x509.CertPool, rootCA []byte)'
 	if clientCertPool == nil && len(rootCA) > 0 {
 		// Only create if system cert is nil && rootCA exists
 		clientCertPool = x509.NewCertPool()
@@ -245,24 +243,26 @@ func (cpb *ConnectionParamsBuilder) getCaCertBytes() ([]byte, error) {
 	var caCertSecretKey = strings.TrimSpace(os.Getenv(cpb.Config.CaCertSecretKeyEnv))
 	var pxNamespace = getPxNamespace(cpb.Config.NamespaceNameEnv, cpb.Config.DefaultServiceNamespaceName)
 
-	if caCertSecretName != "" && caCertSecretKey == "" {
-		return nil, fmt.Errorf("failed to load CA cert from secret: %s, secret key should be defined using env PX_CA_CERT_SECRET_KEY", caCertSecretName)
+	if caCertSecretName == "" {
+		logrus.Infof("CA cert secret name was not provided using env %s", cpb.Config.CaCertSecretEnv)
+		return rootCA, nil
+	} else if caCertSecretKey == "" {
+		return nil, fmt.Errorf("failed to load CA cert from secret: %s, secret key should be defined using env %s",
+			caCertSecretName, cpb.Config.CaCertSecretKeyEnv)
 	}
 
-	if caCertSecretName != "" && caCertSecretKey != "" {
-		secret, err := cpb.kubeOps.GetSecret(caCertSecretName, pxNamespace)
-		if err != nil {
-			return nil, fmt.Errorf("failed to load CA cert secret: %v", err)
-		}
+	secret, err := cpb.kubeOps.GetSecret(caCertSecretName, pxNamespace)
+	if err != nil {
+		return nil, fmt.Errorf("failed to load CA cert secret: %v", err)
+	}
 
-		exist := false
-		rootCA, exist = secret.Data[caCertSecretKey]
-		if !exist {
-			return nil, fmt.Errorf("failed to load CA cert from secret: %s using key: %s", caCertSecretName, caCertSecretKey)
-		}
-		if len(rootCA) == 0 {
-			return nil, fmt.Errorf("CA cert fetchecd from secret: %s using key: %s is empty", caCertSecretName, caCertSecretKey)
-		}
+	exist := false
+	rootCA, exist = secret.Data[caCertSecretKey]
+	if !exist {
+		return nil, fmt.Errorf("failed to load CA cert from secret: %s using key: %s", caCertSecretName, caCertSecretKey)
+	}
+	if len(rootCA) == 0 {
+		return nil, fmt.Errorf("CA cert fetchecd from secret: %s using key: %s is empty", caCertSecretName, caCertSecretKey)
 	}
 	return rootCA, nil
 }
