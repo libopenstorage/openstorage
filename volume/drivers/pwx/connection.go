@@ -175,8 +175,7 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 
 // BuildTlsConfig returns the TLS configuration (if needed) to connect to the Porx API
 func (cpb *ConnectionParamsBuilder) BuildTlsConfig() (*tls.Config, error) {
-	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
-	if !isTLSEnabled {
+	if !isTLSEnabled(cpb.Config.EnableTLSEnv) {
 		return nil, nil
 	}
 	rootCA, err := cpb.getCaCertBytes()
@@ -295,8 +294,7 @@ func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, erro
 	}
 
 	scheme := "http"
-	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
-	if isTLSEnabled {
+	if isTLSEnabled(cpb.Config.EnableTLSEnv) {
 		scheme = "https"
 	}
 	pxMgmtEndpoint := fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(endpoint, strconv.Itoa(restPort)))
