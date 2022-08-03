@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.32 - (12/09/2022)
+
+* Update SDK cloudBackup delete API 
+
 ### v0.101.31 - (12/04/2022)
 
 * Add NFS Credential support 

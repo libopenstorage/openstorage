@@ -276,9 +276,13 @@ func (s *CloudBackupServer) Delete(
 			return nil, err
 		}
 	}
-
+	// for curl queries, separate the bucket from cloudbackupID
+	cloudBackupID := req.GetBackupId()
+	if len(req.GetBucket()) > 0 {
+		cloudBackupID = req.GetBucket() + "/" + cloudBackupID
+	}
 	if err := s.driver(ctx).CloudBackupDelete(&api.CloudBackupDeleteRequest{
-		ID:             req.GetBackupId(),
+		ID:             cloudBackupID,
 		CredentialUUID: credId,
 		Force:          req.GetForce(),
 	}); err != nil {

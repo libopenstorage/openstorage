@@ -5855,7 +5855,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.31"
+    "version": "0.101.32"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -6152,6 +6152,15 @@
             "schema": {
               "format": "boolean",
               "type": "boolean"
+            }
+          },
+          {
+            "description": "Bucket name to which cloud backup belongs to.",
+            "in": "query",
+            "name": "bucket",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
