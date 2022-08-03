@@ -4483,6 +4483,8 @@ message SdkCloudBackupDeleteRequest {
   // needed if the backup is an incremental backup and subsequent backups
   // depend on this backup specified by `backup_id`.
   bool force = 3;
+  // Bucket name to which cloud backup belongs to
+  string bucket = 4;
 }
 
 // Empty response
@@ -5192,7 +5194,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 147;
+    Minor = 148;
     // SDK version patch value of this specification
     Patch = 0;
   }

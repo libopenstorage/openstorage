@@ -1,6 +1,11 @@
 # Changelog
 
 ## Releases
+
+### v0.148.0 - (8/2/2022)
+
+* Update SDK cloudBackup delete API 
+
 ### v0.147.0 - (7/29/2022)
 
 * Update volume spec for windows share
