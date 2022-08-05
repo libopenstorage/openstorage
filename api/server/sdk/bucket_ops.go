@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	bucket "github.com/libopenstorage/openstorage/bucket"
@@ -52,9 +53,13 @@ func (s *BucketServer) Create(
 	}
 	region := req.GetRegion()
 	if len(region) == 0 {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"Must supply the region")
+		if strings.Compare(s.driver(ctx).String(), "PureFBDriver") == 0 {
+			region = "default"
+		} else {
+			return nil, status.Error(
+				codes.InvalidArgument,
+				"Must supply the region")
+		}
 	}
 	logrus.Infof("Create bucket request received for Bucket: %s, Region: %s", name, region)
 
@@ -85,9 +90,14 @@ func (s *BucketServer) Delete(
 	}
 	region := req.GetRegion()
 	if len(region) == 0 {
-		return nil, status.Error(
-			codes.InvalidArgument,
-			"Must supply the region")
+		if strings.Compare(s.driver(ctx).String(), "PureFBDriver") == 0 {
+			region = "default"
+		} else {
+			return nil, status.Error(
+				codes.InvalidArgument,
+				"Must supply the region")
+		}
+
 	}
 	logrus.Infof("Delete bucket request received for Bucket: %s", id)
 
