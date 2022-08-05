@@ -3179,6 +3179,8 @@ message SdkCredentialCreateRequest {
     SdkAzureCredentialRequest azure_credential = 201;
     // Credentials for Google
     SdkGoogleCredentialRequest google_credential = 202;
+    // Credentials for NFS
+    SdkNfsCredentialRequest nfs_credential = 203;
   }
 }
 
@@ -3230,6 +3232,18 @@ message SdkGoogleCredentialRequest {
   string json_key = 2;
 }
 
+// Defines credentials for NFS
+message SdkNfsCredentialRequest {
+  // NFS Server address
+  string server = 1;
+  // NFS export path
+  string sub_path = 2;
+  // mount options for nfs mount
+  string mount_opts = 3;
+  // timeout for nfs IO in seconds
+  uint32 timeout_seconds = 4;
+}
+
 // Defines the response for AWS/S3 credentials
 message SdkAwsCredentialResponse {
   // Access key
@@ -3256,6 +3270,18 @@ message SdkAzureCredentialResponse {
 message SdkGoogleCredentialResponse {
   // Project ID
   string project_id = 2;
+}
+
+// Defines the response for NFS credential
+message SdkNfsCredentialResponse {
+  // NFS Server Address
+  string server = 1;
+  // NFS export path
+  string sub_path = 2;
+  // mount options ( "," separated)
+  string mount_opts = 3;
+  // timeout in seconds
+  uint32 timeout_seconds = 4;
 }
 
 // Empty request
@@ -3299,6 +3325,8 @@ message SdkCredentialInspectResponse {
     SdkAzureCredentialResponse azure_credential = 201;
     // Google credentials
     SdkGoogleCredentialResponse google_credential = 202;
+    // NFS credentials
+    SdkNfsCredentialResponse nfs_credential = 203;
   }
 }
 
@@ -5194,7 +5222,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 148;
+    Minor = 149;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -167,6 +167,14 @@ const (
 	OptCredOwnership = "CredOwnership"
 	// OptCredProxy proxy key in params
 	OptCredProxy = "CredProxy"
+	// OptCredNFSServer is the server address for NFS access
+	OptCredNFSServer = "CredNFSServer"
+	// OptCredNFSSubPath is the sub-path for objects
+	OptCredNFSSubPath = "CredNFSSubPath"
+	// OptCredNFSMountOpts is the optional mount options
+	OptCredNFSMountOpts = "CredNFSMountOpts"
+	// OptCredNFSTimeout is the optional timeout value
+	OptCredNFSTimeoutSeconds = "CredNFSTimeout"
 	// OptCredIAMPolicy if "true", indicates IAM creds to be used
 	OptCredIAMPolicy = "CredIAMPolicy"
 	// OptRemoteCredUUID is the UUID of the remote cluster credential
