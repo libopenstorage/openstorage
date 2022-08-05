@@ -63,6 +63,46 @@ func TestBucketCreateSuccess(t *testing.T) {
 	assert.Equal(t, resp.BucketId, testMockResp.BucketId)
 }
 
+func TestBucketCreateSuccessRegionMissingPureFB(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	name := "test_bucket"
+	req := &api.BucketCreateRequest{
+		Name:                      name,
+		AnonymousBucketAccessMode: api.AnonymousBucketAccessMode_Private,
+	}
+
+	id := "test_bucket_id"
+	testMockResp := &api.BucketCreateResponse{
+		BucketId: id,
+	}
+
+	// Return PureFBDriver drive string
+	s.MockBucketDriver().
+		EXPECT().
+		String().
+		Return(PureFBDriver).
+		Times(1)
+
+	// Create CreateBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		CreateBucket(name, "default", "", api.AnonymousBucketAccessMode_Private).
+		Return(id, nil).
+		Times(1)
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	resp, err := c.Create(context.Background(), req)
+
+	assert.NoError(t, err)
+	assert.Equal(t, resp.BucketId, testMockResp.BucketId)
+}
+
 func TestBucketCreateRegionMissing(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -74,12 +114,17 @@ func TestBucketCreateRegionMissing(t *testing.T) {
 		Name: name,
 	}
 
+	// Return Non PureFBDriver name as String() response
+	s.MockBucketDriver().
+		EXPECT().
+		String().
+		Return("S3Driver").
+		Times(1)
 	// Setup client
 	c := api.NewOpenStorageBucketClient(s.Conn())
 
 	// Get info
 	_, err := c.Create(context.Background(), req)
-
 	assert.Error(t, err)
 }
 
@@ -112,6 +157,41 @@ func TestBucketCreateFailure(t *testing.T) {
 	_, err := c.Create(context.Background(), req)
 
 	assert.Error(t, err)
+}
+
+func TestBucketDeleteSuccessRegionMissingPureFB(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	time.Sleep(1 * time.Second)
+
+	id := "test_bucket_id"
+	req := &api.BucketDeleteRequest{
+		BucketId:    id,
+		ClearBucket: true,
+	}
+
+	// Return PureFBDriver drive string
+	s.MockBucketDriver().
+		EXPECT().
+		String().
+		Return("PureFBDriver").
+		Times(1)
+
+	// Create DeleteBucket response
+	s.MockBucketDriver().
+		EXPECT().
+		DeleteBucket(id, "default", "", true).
+		Return(nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageBucketClient(s.Conn())
+
+	// Get info
+	_, err := c.Delete(context.Background(), req)
+
+	assert.NoError(t, err)
 }
 
 func TestBucketDeleteSuccess(t *testing.T) {
@@ -184,6 +264,12 @@ func TestBucketDeleteFailureRegionMissing(t *testing.T) {
 		BucketId: id,
 	}
 
+	// Return Non PureFBDriver name as String() response
+	s.MockBucketDriver().
+		EXPECT().
+		String().
+		Return("S3Driver").
+		Times(1)
 	// Setup client
 	c := api.NewOpenStorageBucketClient(s.Conn())
 
