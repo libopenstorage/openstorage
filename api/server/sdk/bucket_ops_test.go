@@ -84,7 +84,7 @@ func TestBucketCreateSuccessRegionMissingPureFB(t *testing.T) {
 	s.MockBucketDriver().
 		EXPECT().
 		String().
-		Return("PureFBDriver").
+		Return(PureFBDriver).
 		Times(1)
 
 	// Create CreateBucket response
