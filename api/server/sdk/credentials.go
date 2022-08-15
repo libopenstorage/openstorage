@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"strconv"
 
 	"github.com/golang/protobuf/jsonpb"
 
@@ -55,6 +56,8 @@ func (s *CredentialServer) Create(
 		return s.azureCreate(ctx, req, azure)
 	} else if google := req.GetGoogleCredential(); google != nil {
 		return s.googleCreate(ctx, req, google)
+	} else if nfsCreds := req.GetNfsCredential(); nfsCreds != nil {
+		return s.nfsCreate(ctx, req, nfsCreds)
 	}
 	return nil, status.Error(codes.InvalidArgument, "Unknown credential type")
 
@@ -187,6 +190,48 @@ func (s *CredentialServer) googleCreate(
 		return nil, status.Errorf(
 			codes.Internal,
 			"failed to create Google credentials: %v",
+			err.Error())
+	}
+
+	err = validateAndDeleteIfInvalid(ctx, s, uuid)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.SdkCredentialCreateResponse{CredentialId: uuid}, nil
+}
+
+func (s *CredentialServer) nfsCreate(
+	ctx context.Context,
+	req *api.SdkCredentialCreateRequest,
+	nfsCreds *api.SdkNfsCredentialRequest,
+) (*api.SdkCredentialCreateResponse, error) {
+
+	if len(nfsCreds.GetServer()) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "Must supply NFS server address")
+	}
+	if req.GetUseProxy() {
+		return nil, status.Error(codes.InvalidArgument, "Proxy not supported for NFS credentials")
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "nfs"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredNFSServer] = nfsCreds.GetServer()
+	params[api.OptCredNFSSubPath] = nfsCreds.GetSubPath()
+	params[api.OptCredNFSMountOpts] = nfsCreds.GetMountOpts()
+	params[api.OptCredNFSTimeoutSeconds] = fmt.Sprintf("%v", nfsCreds.GetTimeoutSeconds())
+
+	uuid, err := s.create(ctx, req, params)
+
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"failed to create nfs credentials: %v",
 			err.Error())
 	}
 
@@ -482,6 +527,30 @@ func (s *CredentialServer) Inspect(
 		resp.CredentialType = &api.SdkCredentialInspectResponse_GoogleCredential{
 			GoogleCredential: &api.SdkGoogleCredentialResponse{
 				ProjectId: projectId,
+			},
+		}
+	case "nfs":
+		servAddr, ok := info[api.OptCredNFSServer].(string)
+		if !ok {
+			return nil, status.Error(codes.Internal, "Unable to parse NFS server address")
+		}
+		subPath, _ := info[api.OptCredNFSSubPath].(string)
+		mountOpts, _ := info[api.OptCredNFSMountOpts].(string)
+		var timeout uint64
+		timeoutStr, ok := info[api.OptCredNFSTimeoutSeconds].(string)
+		if ok {
+			timeout, err = strconv.ParseUint(timeoutStr, 10, 32)
+			if err != nil {
+				return nil, status.Error(codes.Internal, "unable to parse timeout, err"+err.Error())
+			}
+		}
+
+		resp.CredentialType = &api.SdkCredentialInspectResponse_NfsCredential{
+			NfsCredential: &api.SdkNfsCredentialResponse{
+				Server:         servAddr,
+				SubPath:        subPath,
+				MountOpts:      mountOpts,
+				TimeoutSeconds: uint32(timeout),
 			},
 		}
 	default:

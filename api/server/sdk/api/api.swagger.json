@@ -2814,6 +2814,9 @@
             "title": "Name of the credential",
             "type": "string"
           },
+          "nfs_credential": {
+            "$ref": "#/components/schemas/apiSdkNfsCredentialRequest"
+          },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
           },
@@ -2887,6 +2890,9 @@
           "name": {
             "title": "Name of the credential",
             "type": "string"
+          },
+          "nfs_credential": {
+            "$ref": "#/components/schemas/apiSdkNfsCredentialResponse"
           },
           "ownership": {
             "$ref": "#/components/schemas/apiOwnership"
@@ -3190,6 +3196,52 @@
           }
         },
         "title": "Defines a response for an SDK request that spins up a new job\nto perform the request",
+        "type": "object"
+      },
+      "apiSdkNfsCredentialRequest": {
+        "properties": {
+          "mount_opts": {
+            "title": "mount options for nfs mount",
+            "type": "string"
+          },
+          "server": {
+            "title": "NFS Server address",
+            "type": "string"
+          },
+          "sub_path": {
+            "title": "NFS export path",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "format": "int64",
+            "title": "timeout for nfs IO in seconds",
+            "type": "integer"
+          }
+        },
+        "title": "Defines credentials for NFS",
+        "type": "object"
+      },
+      "apiSdkNfsCredentialResponse": {
+        "properties": {
+          "mount_opts": {
+            "title": "mount options ( \",\" separated)",
+            "type": "string"
+          },
+          "server": {
+            "title": "NFS Server Address",
+            "type": "string"
+          },
+          "sub_path": {
+            "title": "NFS export path",
+            "type": "string"
+          },
+          "timeout_seconds": {
+            "format": "int64",
+            "title": "timeout in seconds",
+            "type": "integer"
+          }
+        },
+        "title": "Defines the response for NFS credential",
         "type": "object"
       },
       "apiSdkNodeCordonAttachmentsRequest": {
@@ -5838,7 +5890,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.148.0"
+    "version": "0.149.0"
   },
   "openapi": "3.0.0",
   "paths": {
