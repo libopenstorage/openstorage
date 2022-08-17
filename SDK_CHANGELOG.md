@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.150.0 - (8/17/2022)
+
+* PWX-26324: Extend fastpath config to disable auto fallback
+
 ### v0.149.0 - (8/4/2022)
 
 * Add NFS Credential support 
