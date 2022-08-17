@@ -955,6 +955,10 @@
             "title": "Dirty flag on volume - was attached in userspace",
             "type": "boolean"
           },
+          "force_failover": {
+            "title": "fastpath force failover, disable auto promote to fastpath",
+            "type": "boolean"
+          },
           "promote": {
             "title": "Fastpath temporary promotion during attach",
             "type": "boolean"
@@ -5890,7 +5894,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.149.0"
+    "version": "0.150.0"
   },
   "openapi": "3.0.0",
   "paths": {
