@@ -548,6 +548,8 @@ message FastpathConfig {
   bool dirty = 5;
   // fastpath coordinator node uuid to enhance reporting
   string coord_uuid = 6;
+  // fastpath force failover, disable auto promote to fastpath
+  bool force_failover = 7;
 }
 
 // ScanPolicy defines when a filesystem check is triggered and what action to take
@@ -5148,7 +5150,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 27;
+    Patch = 28;
   }
 
   // The following cannot be set to use the enum Version because the REST
