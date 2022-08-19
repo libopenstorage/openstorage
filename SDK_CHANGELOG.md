@@ -5,6 +5,7 @@
 ### v0.101.28 - (8/18/2022)
 
 * PWX-26324: Extend fastpath config to disable auto fallback
+* PWX-24205: Revise for thin pool metadata device in storage resource
 
 ### v0.101.27 - (07/25/2022)
 
