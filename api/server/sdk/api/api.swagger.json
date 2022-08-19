@@ -4899,6 +4899,11 @@
             "description": "Path device path for this storage resource.",
             "type": "string"
           },
+          "pool_metadata_dev": {
+            "format": "boolean",
+            "title": "True if the resource is used as thin pool metadata disk",
+            "type": "boolean"
+          },
           "randRW": {
             "format": "double",
             "title": "RandRW",
