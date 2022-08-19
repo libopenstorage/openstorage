@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.28 - (8/18/2022)
+
+* PWX-26324: Extend fastpath config to disable auto fallback
+
 ### v0.101.27 - (07/25/2022)
 
 * Added Create and Delete api for SDK Bucket driver interface.
