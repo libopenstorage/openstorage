@@ -3,22 +3,95 @@ package sched
 import (
 	"container/list"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/sirupsen/logrus"
 )
 
 type TaskID uint64
 
 const (
-	TaskNone      = TaskID(0)
-	numGoRoutines = 10
+	TaskNone         = TaskID(0)
+	workerBatchSize  = 10
+	maxWorkers       = 100
+	idleTimeout      = 30 * time.Second
+	statsLogDuration = 10 * time.Minute
 )
 
 func ValidTaskID(t TaskID) bool { return t != TaskNone }
 
 type ScheduleTask func(Interval)
+
+type histogram interface {
+	record(time.Duration)
+	getHistogram() string
+}
+
+type histImpl struct {
+	lock       sync.Mutex
+	name       string
+	min        time.Duration
+	max        time.Duration
+	multiplier int
+	buckets    []uint64
+	limits     []time.Duration
+}
+
+func newHistogram(name string, min, max time.Duration) histogram {
+	hist := &histImpl{
+		name:       name,
+		min:        min,
+		max:        max,
+		multiplier: 2,
+	}
+	for i := min; i < max; i = i * time.Duration(hist.multiplier) {
+		hist.buckets = append(hist.buckets, 0)
+		hist.limits = append(hist.limits, i)
+	}
+	// last bucket is a catchall for values greater than the max (approx)
+	hist.buckets = append(hist.buckets, 0)
+	return hist
+}
+
+func (h *histImpl) record(val time.Duration) {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+	for i := range h.limits {
+		if val < h.limits[i] {
+			h.buckets[i]++
+			return
+		}
+	}
+	h.buckets[len(h.buckets)-1]++
+}
+
+func (h *histImpl) getHistogram() string {
+	h.lock.Lock()
+	defer h.lock.Unlock()
+
+	var total uint64
+	for i := range h.buckets {
+		total = total + h.buckets[i]
+	}
+	if total == 0 {
+		total = 1 // to avoid divide by zero error
+	}
+	var out strings.Builder
+	out.WriteString(fmt.Sprintf("%s: ", h.name))
+	sep := ""
+	for i := range h.limits {
+		out.WriteString(fmt.Sprintf("%s%v < %v (%v%%)", sep, h.buckets[i], h.limits[i], h.buckets[i]*100/total))
+		sep = ", "
+	}
+	lastBucket := len(h.buckets) - 1
+	out.WriteString(fmt.Sprintf(
+		"%s%v > %v (%v%%)", sep, h.buckets[lastBucket], h.limits[lastBucket-1], h.buckets[lastBucket]*100/total))
+	return out.String()
+}
 
 type Scheduler interface {
 	// Schedule given task at given interval.
@@ -76,6 +149,20 @@ type manager struct {
 	cv *sync.Cond
 	// enqueuedTasks is list of tasks that must be run now
 	enqueuedTasks *list.List
+	// total number of worker goroutines that were started
+	workersStarted uint64
+	// total number of worker goroutines that exited
+	workersExited uint64
+	// histogram for interval between the ticks
+	tickIntervalHist histogram
+	// histogram for tick processing time
+	tickProcessHist histogram
+	// histogram for how late we were in enqueuing a ready task for handoff to the worker
+	taskScheduleHist histogram
+	// histogram for how late the worker was when starting the task
+	taskStartHist histogram
+	// histogram for how long a task was running
+	taskDurationHist histogram
 }
 
 func (s *manager) Schedule(
@@ -88,11 +175,11 @@ func (s *manager) Schedule(
 	defer s.Unlock()
 
 	if task == nil {
-		return TaskNone, fmt.Errorf("Invalid task specified")
+		return TaskNone, fmt.Errorf("invalid task specified")
 	}
 	now := time.Now()
 	if interval.nextAfter(now).Sub(now) < time.Second {
-		return TaskNone, fmt.Errorf("Minimum interval is a second")
+		return TaskNone, fmt.Errorf("minimum interval is a second")
 	}
 
 	s.currTaskID++
@@ -123,7 +210,7 @@ func (s *manager) Cancel(
 			return nil
 		}
 	}
-	return fmt.Errorf("Invalid task ID: %v", taskID)
+	return fmt.Errorf("invalid task ID: %v", taskID)
 }
 
 func (s *manager) Stop() {
@@ -149,38 +236,90 @@ func (s *manager) Start() {
 }
 
 func (s *manager) scheduleTasks() {
-	for {
-		select {
-		case <-s.ticker.C:
-			now := time.Now()
-			s.Lock()
-			tasksReady := make([]*taskInfo, 0)
-			for e := s.tasks.Front(); e != nil; e = e.Next() {
-				t := e.Value.(*taskInfo)
-				t.lock.Lock()
-				if !t.enqueued &&
-					(now.Equal(t.runAt) || now.After(t.runAt)) {
-					tasksReady = append(tasksReady, t)
-					t.enqueued = true
-					if t.onlyOnce {
-						s.tasks.Remove(e)
-					}
+	histLastPrinted := time.Now()
+	prevTick := time.Now()
+	for range s.ticker.C {
+		now := time.Now()
+		s.tickIntervalHist.record(now.Sub(prevTick))
+		s.Lock()
+		tasksReady := make([]*taskInfo, 0)
+		elementsToRemove := make([]*list.Element, 0)
+		for e := s.tasks.Front(); e != nil; e = e.Next() {
+			t := e.Value.(*taskInfo)
+			t.lock.Lock()
+			if !t.enqueued && (now.Equal(t.runAt) || now.After(t.runAt)) {
+				tasksReady = append(tasksReady, t)
+				t.enqueued = true
+				if t.onlyOnce {
+					elementsToRemove = append(elementsToRemove, e)
 				}
-				t.lock.Unlock()
 			}
-			s.Unlock()
-			s.enqueuedTasksLock.Lock()
-			for _, t := range tasksReady {
-				s.enqueuedTasks.PushBack(t)
-			}
-			s.cv.Broadcast()
-			s.enqueuedTasksLock.Unlock()
+			t.lock.Unlock()
 		}
+		for _, e := range elementsToRemove {
+			s.tasks.Remove(e)
+		}
+		s.Unlock()
+
+		var numEnqueued int
+		s.enqueuedTasksLock.Lock()
+		for _, t := range tasksReady {
+			s.taskScheduleHist.record(time.Since(t.runAt))
+			s.enqueuedTasks.PushBack(t)
+		}
+		s.cv.Broadcast()
+		numEnqueued = s.enqueuedTasks.Len()
+		s.enqueuedTasksLock.Unlock()
+		workersStarted, workersExited := s.addWorkersIfNeeded(numEnqueued)
+
+		// print stats
+		if time.Since(histLastPrinted) > statsLogDuration {
+			logrus.Infof("sched stats: workers: current=%v, started=%v, exited=%v",
+				workersStarted-workersExited, workersStarted, workersExited)
+			for _, hist := range []histogram{
+				s.taskDurationHist, s.taskStartHist, s.taskScheduleHist, s.tickIntervalHist, s.tickProcessHist} {
+
+				logrus.Infof("sched stats: %s", hist.getHistogram())
+			}
+			histLastPrinted = time.Now()
+		}
+		s.tickProcessHist.record(time.Since(now))
+		prevTick = time.Now()
 	}
 }
 
-func (s *manager) runTasks() {
+// for testing
+func (s *manager) getWorkerCount() int {
+	var ret int
+	s.Lock()
+	ret = int(s.workersStarted - s.workersExited)
+	s.Unlock()
+	return ret
+}
+
+// Checks if the worker must exit because it has been idle for too long. The worker
+// must exit if the returned value is true.
+func (s *manager) workerMustExit(lastTaskRunAt time.Time) bool {
+	exit := false
+	if time.Since(lastTaskRunAt) > idleTimeout {
+		s.Lock()
+		if (s.workersStarted - s.workersExited) > workerBatchSize {
+			s.workersExited++
+			exit = true
+		}
+		s.Unlock()
+	}
+	return exit
+}
+
+func (s *manager) runTasks(workerID uuid.UUID) {
+	logrus.Debugf("sched worker %s starting", workerID)
+	lastTaskRunAt := time.Now()
 	for {
+		if s.workerMustExit(lastTaskRunAt) {
+			logrus.Debugf("sched worker %s exiting", workerID)
+			return
+		}
 		s.cv.L.Lock()
 		if s.enqueuedTasks.Len() == 0 {
 			s.cv.Wait()
@@ -192,13 +331,34 @@ func (s *manager) runTasks() {
 		}
 		s.cv.L.Unlock()
 		if t != nil && t.valid {
+			s.taskStartHist.record(time.Since(t.runAt))
+			// run the task
+			startTime := time.Now()
 			t.task(t.interval)
+			s.taskDurationHist.record(time.Since(startTime))
+
 			t.lock.Lock()
 			t.runAt = t.interval.nextAfter(time.Now())
 			t.enqueued = false
 			t.lock.Unlock()
+			lastTaskRunAt = time.Now()
 		}
 	}
+}
+
+// Starts a new batch of worker goroutines if needed
+func (s *manager) addWorkersIfNeeded(enqueuedTasks int) (uint64, uint64) {
+	s.Lock()
+	defer s.Unlock()
+	numWorkers := s.workersStarted - s.workersExited
+	if numWorkers < workerBatchSize || uint64(enqueuedTasks) > numWorkers+workerBatchSize {
+		for i := 0; i < workerBatchSize && numWorkers < maxWorkers; i++ {
+			go s.runTasks(uuid.New())
+			numWorkers++
+			s.workersStarted++
+		}
+	}
+	return s.workersStarted, s.workersExited
 }
 
 func New(minimumInterval time.Duration) Scheduler {
@@ -208,11 +368,15 @@ func New(minimumInterval time.Duration) Scheduler {
 		minimumInterval:   minimumInterval,
 		ticker:            time.NewTicker(minimumInterval),
 		enqueuedTasksLock: sync.Mutex{},
-		enqueuedTasks:     list.New()}
-	m.cv = sync.NewCond(&m.enqueuedTasksLock)
-	for i := 0; i < numGoRoutines; i++ {
-		go m.runTasks()
+		enqueuedTasks:     list.New(),
+		tickIntervalHist:  newHistogram("tick interval", 1200*time.Millisecond, 10*time.Minute),
+		tickProcessHist:   newHistogram("tick process durations", 500*time.Millisecond, 20*time.Minute),
+		taskScheduleHist:  newHistogram("task scheduling delay", 1*time.Second, 30*time.Minute),
+		taskStartHist:     newHistogram("task start delay", 1*time.Second, 30*time.Minute),
+		taskDurationHist:  newHistogram("task runtime", 500*time.Millisecond, 20*time.Minute),
 	}
+	m.cv = sync.NewCond(&m.enqueuedTasksLock)
+	m.addWorkersIfNeeded(0)
 	m.Start()
 	go m.scheduleTasks()
 	return m
