@@ -1,12 +1,13 @@
 package sched
 
 import (
-	"github.com/stretchr/testify/require"
-	"gopkg.in/yaml.v2"
 	"strings"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
+	"gopkg.in/yaml.v2"
 )
 
 type testCounter struct {
@@ -98,7 +99,13 @@ func TestMulti(t *testing.T) {
 		require.Equal(t, err, nil, "schedule multi")
 		taskIDs = append(taskIDs, taskID)
 	}
-	time.Sleep(20 * time.Second)
+	time.Sleep(3 * time.Second)
+
+	// all tasks should have been run once already
+	for i, tc := range tcs {
+		require.True(t, tc.count == 1, "count was %d for task %d", tc.count, i)
+	}
+	time.Sleep(17 * time.Second)
 
 	// Check counters for runOnce and periodic, cancel the runOnce tasks.
 	for i, tc := range tcs {
@@ -143,6 +150,58 @@ func TestMulti(t *testing.T) {
 		err := s.Cancel(taskID)
 		require.NotEqual(t, err, nil, "cancelling invalid multi-task")
 	}
+
+	s.Stop()
+}
+
+func TestWorkersAddRemove(t *testing.T) {
+	s := New(time.Second)
+
+	// Create a bunch of task counters and tasks.
+	tcs := make([]*testCounter, 0)
+	tasks := make([]func(Interval), 0)
+
+	for i := 0; i < 10*maxWorkers; i++ {
+		tc := &testCounter{count: 0}
+		task := func(Interval) {
+			tc.incr()
+			time.Sleep(2 * time.Second) // each task runs for 2 seconds
+		}
+		tcs = append(tcs, tc)
+		tasks = append(tasks, task)
+	}
+
+	// Schedule 3*workerBatchSize number of tasks so that the scheduler creates one new batch of workers.
+	for i := 0; i < 3*workerBatchSize; i++ {
+		_, err := s.Schedule(tasks[i], Periodic(2*time.Second), time.Now(), true)
+		require.Equal(t, nil, err, "failed to schedule a task")
+	}
+	time.Sleep(3500 * time.Millisecond)
+
+	// 2*workerBatchSize number of tasks should have been run once already due to the addition of new workers
+	for i, tc := range tcs {
+		if i < 2*workerBatchSize {
+			require.True(t, tc.count == 1, "count was %d for task %d, expected 1", tc.count, i)
+		} else {
+			require.True(t, tc.count == 0, "count was %d for task %d, expected 0", tc.count, i)
+		}
+	}
+	m := s.(*manager)
+	require.Equal(t, 2*workerBatchSize, m.getWorkerCount(), "new workers were not started")
+
+	// after the idle timeout, half of the workers should exit
+	time.Sleep(idleTimeout + 3*time.Second)
+	require.Equal(t, workerBatchSize, m.getWorkerCount(), "workers did not time out after being idle")
+
+	// schedule a large number of tasks to make the workers max out
+	for i := 0; i < 10*maxWorkers; i++ {
+		_, err := s.Schedule(tasks[i], Periodic(2*time.Second), time.Now(), true)
+		require.Equal(t, nil, err, "failed to schedule a task")
+	}
+	time.Sleep(15 * time.Second)
+
+	// number of workers should have maxed out
+	require.Equal(t, maxWorkers, m.getWorkerCount(), "workers did not max out")
 
 	s.Stop()
 }
