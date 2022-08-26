@@ -233,7 +233,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	// Get volume information
-	vols, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	vols, err := s.driver.Enumerate(&api.VolumeLocator{VolumeIds: []string{req.GetVolumeId()}}, nil)
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
 			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
