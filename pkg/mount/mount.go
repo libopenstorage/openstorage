@@ -703,6 +703,11 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 			symlinkName := hex.EncodeToString(hasher.Sum(nil))
 			symlinkPath := path.Join(m.trashLocation, symlinkName)
 
+			if p, err := filepath.EvalSymlinks(symlinkPath); err == nil && p == mountPath {
+				// we already scheduled the removal for this mountPath
+				return nil
+			}
+
 			if err = os.Symlink(mountPath, symlinkPath); err != nil {
 				if !os.IsExist(err) {
 					logrus.Errorf("Error creating sym link %s => %s. Err: %v", symlinkPath, mountPath, err)
