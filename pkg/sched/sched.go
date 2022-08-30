@@ -18,6 +18,9 @@ const (
 	TaskNone         = TaskID(0)
 	workerBatchSize  = 10
 	maxWorkers       = 100
+	// Need to see how this value of idleTimeout works out. We may need to increase it if
+	// we see too much churn in the workers. But on the other hand, increasing the value by a lot could
+	// cause the excess workers to never exit since they might pick up tasks in round-robin fashion.
 	idleTimeout      = 30 * time.Second
 	statsLogDuration = 10 * time.Minute
 )
@@ -32,13 +35,21 @@ type histogram interface {
 }
 
 type histImpl struct {
-	lock       sync.Mutex
+	// lock for this struct
+	sync.Mutex
+	// name of the histogram
 	name       string
-	min        time.Duration
-	max        time.Duration
-	multiplier int
+	// each bucket holds the count of values that fall between the limits of the previous bucket and this bucket
 	buckets    []uint64
+	// limits for each bucket (except for the last one which is a catchall bucket);
+	// these are calcuated using min, max and multiplier
 	limits     []time.Duration
+	// limit for the first bucket; values less than min are counted in the first bucket
+	min        time.Duration
+	// limit for the second-to-last bucket; values greater than max are counted in the last bucket
+	max        time.Duration
+	// each bucket's limit is calculated by multiplying the previous bucket's limit by this value
+	multiplier int
 }
 
 func newHistogram(name string, min, max time.Duration) histogram {
@@ -58,8 +69,8 @@ func newHistogram(name string, min, max time.Duration) histogram {
 }
 
 func (h *histImpl) record(val time.Duration) {
-	h.lock.Lock()
-	defer h.lock.Unlock()
+	h.Lock()
+	defer h.Unlock()
 	for i := range h.limits {
 		if val < h.limits[i] {
 			h.buckets[i]++
@@ -70,8 +81,8 @@ func (h *histImpl) record(val time.Duration) {
 }
 
 func (h *histImpl) getHistogram() string {
-	h.lock.Lock()
-	defer h.lock.Unlock()
+	h.Lock()
+	defer h.Unlock()
 
 	var total uint64
 	for i := range h.buckets {
@@ -290,11 +301,9 @@ func (s *manager) scheduleTasks() {
 
 // for testing
 func (s *manager) getWorkerCount() int {
-	var ret int
 	s.Lock()
-	ret = int(s.workersStarted - s.workersExited)
-	s.Unlock()
-	return ret
+	defer s.Unlock()
+	return int(s.workersStarted - s.workersExited)
 }
 
 // Checks if the worker must exit because it has been idle for too long. The worker
