@@ -1373,6 +1373,22 @@ func (s *ProxySpec) IsPureImport() bool {
 	return (s.PureBlockSpec != nil && s.PureBlockSpec.FullVolName != "") || (s.PureFileSpec != nil && s.PureFileSpec.FullVolName != "")
 }
 
+func (s *ProxySpec) GetPureFullVolumeName() string {
+	if !s.IsPureImport() {
+		return ""
+	}
+
+	if s.PureBlockSpec != nil {
+		return s.PureBlockSpec.FullVolName
+	}
+
+	if s.PureFileSpec != nil {
+		return s.PureFileSpec.FullVolName
+	}
+
+	return ""
+}
+
 // GetAllEnumInfo returns an EnumInfo for every proto enum
 func GetAllEnumInfo() []protoimpl.EnumInfo {
 	return file_api_api_proto_enumTypes
