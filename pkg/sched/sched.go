@@ -15,9 +15,9 @@ import (
 type TaskID uint64
 
 const (
-	TaskNone         = TaskID(0)
-	workerBatchSize  = 10
-	maxWorkers       = 100
+	TaskNone        = TaskID(0)
+	workerBatchSize = 10
+	maxWorkers      = 100
 	// Need to see how this value of idleTimeout works out. We may need to increase it if
 	// we see too much churn in the workers. But on the other hand, increasing the value by a lot could
 	// cause the excess workers to never exit since they might pick up tasks in round-robin fashion.
@@ -38,16 +38,16 @@ type histImpl struct {
 	// lock for this struct
 	sync.Mutex
 	// name of the histogram
-	name       string
+	name string
 	// each bucket holds the count of values that fall between the limits of the previous bucket and this bucket
-	buckets    []uint64
+	buckets []uint64
 	// limits for each bucket (except for the last one which is a catchall bucket);
 	// these are calcuated using min, max and multiplier
-	limits     []time.Duration
+	limits []time.Duration
 	// limit for the first bucket; values less than min are counted in the first bucket
-	min        time.Duration
+	min time.Duration
 	// limit for the second-to-last bucket; values greater than max are counted in the last bucket
-	max        time.Duration
+	max time.Duration
 	// each bucket's limit is calculated by multiplying the previous bucket's limit by this value
 	multiplier int
 }
@@ -89,18 +89,22 @@ func (h *histImpl) getHistogram() string {
 		total = total + h.buckets[i]
 	}
 	if total == 0 {
-		total = 1 // to avoid divide by zero error
+		return ""
 	}
 	var out strings.Builder
 	out.WriteString(fmt.Sprintf("%s: ", h.name))
 	sep := ""
 	for i := range h.limits {
-		out.WriteString(fmt.Sprintf("%s%v < %v (%v%%)", sep, h.buckets[i], h.limits[i], h.buckets[i]*100/total))
-		sep = ", "
+		if h.buckets[i] > 0 {
+			out.WriteString(fmt.Sprintf("%s%v < %v (%v%%)", sep, h.buckets[i], h.limits[i], h.buckets[i]*100/total))
+			sep = ", "
+		}
 	}
 	lastBucket := len(h.buckets) - 1
-	out.WriteString(fmt.Sprintf(
-		"%s%v > %v (%v%%)", sep, h.buckets[lastBucket], h.limits[lastBucket-1], h.buckets[lastBucket]*100/total))
+	if h.buckets[lastBucket] > 0 {
+		out.WriteString(fmt.Sprintf(
+			"%s%v > %v (%v%%)", sep, h.buckets[lastBucket], h.limits[lastBucket-1], h.buckets[lastBucket]*100/total))
+	}
 	return out.String()
 }
 
@@ -288,9 +292,12 @@ func (s *manager) scheduleTasks() {
 			logrus.Infof("sched stats: workers: current=%v, started=%v, exited=%v",
 				workersStarted-workersExited, workersStarted, workersExited)
 			for _, hist := range []histogram{
-				s.taskDurationHist, s.taskStartHist, s.taskScheduleHist, s.tickIntervalHist, s.tickProcessHist} {
+				s.tickIntervalHist, s.tickProcessHist, s.taskScheduleHist, s.taskStartHist, s.taskDurationHist} {
 
-				logrus.Infof("sched stats: %s", hist.getHistogram())
+				histStr := hist.getHistogram()
+				if histStr != "" {
+					logrus.Infof("sched stats: %s", hist.getHistogram())
+				}
 			}
 			histLastPrinted = time.Now()
 		}
