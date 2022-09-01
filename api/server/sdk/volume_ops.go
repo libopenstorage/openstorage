@@ -26,6 +26,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
@@ -33,6 +34,8 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+var globalCreateTimeout = 5 * time.Minute
 
 // When create is called for an existing volume, this function is called to make sure
 // the SDK only returns that the volume is ready when the status is UP
@@ -118,7 +121,20 @@ func (s *VolumeServer) create(
 		// Wait until ready
 		v, err = s.waitForVolumeReady(ctx, volName)
 		if err != nil {
-			return "", status.Errorf(codes.Internal, "Timed out waiting for volume %s to be in ready state: %v", volName, err)
+			createExpire := prototime.TimestampToTime(v.Ctime).Add(globalCreateTimeout)
+
+			// Expired if after 5mins, create time == attach time == detach time.
+			// This indicates that the volume has never been created.
+			if time.Now().After(createExpire) && v.AttachTime == v.Ctime && v.DetachTime == v.Ctime {
+				logrus.Errorf("Volume creation global timeout reached: %v. Deleting volume %v...", err, volName)
+				err := s.driver(ctx).Delete(ctx, volName)
+				if err != nil {
+					return "", status.Errorf(codes.Internal, "Failed to cleanup volume %s stuck in creating state: %v", volName, err)
+				}
+
+				return "", status.Errorf(codes.Aborted, "Failed to create volume %v after %v: %v", volName, globalCreateTimeout, err)
+			}
+			return "", status.Errorf(codes.Canceled, "Timed out waiting for volume %s to be in ready state: %v", volName, err)
 		}
 
 		// Check the requested arguments match that of the existing volume

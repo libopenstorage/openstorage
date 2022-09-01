@@ -20,9 +20,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 
 	"github.com/libopenstorage/openstorage/api"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -1610,6 +1612,8 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 }
 
 func TestControllerCreateVolumeFailedRemoteConn(t *testing.T) {
+	grpcserver.DefaultConnectionTimeout = 10 * time.Second
+
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
