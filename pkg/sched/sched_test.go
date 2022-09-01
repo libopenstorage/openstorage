@@ -99,13 +99,13 @@ func TestMulti(t *testing.T) {
 		require.Equal(t, err, nil, "schedule multi")
 		taskIDs = append(taskIDs, taskID)
 	}
-	time.Sleep(3 * time.Second)
+	time.Sleep(3500 * time.Millisecond)
 
 	// all tasks should have been run once already
 	for i, tc := range tcs {
 		require.True(t, tc.count == 1, "count was %d for task %d", tc.count, i)
 	}
-	time.Sleep(17 * time.Second)
+	time.Sleep(16500 * time.Millisecond)
 
 	// Check counters for runOnce and periodic, cancel the runOnce tasks.
 	for i, tc := range tcs {
