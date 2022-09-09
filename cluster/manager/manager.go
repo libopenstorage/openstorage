@@ -1683,6 +1683,14 @@ func (c *ClusterManager) SetSize(size int) error {
 	return updateDB("update-scheduler-name", c.selfNode.Id, updateCallbackFn)
 }
 
+type errNodeNotFound struct {
+	NodeID string
+}
+
+func (e *errNodeNotFound) Error() string {
+	return fmt.Sprintf("Node entry does not exist, Node ID %s", e.NodeID)
+}
+
 func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 	node := api.Node{Id: id}
 	kvdb := kvdb.Instance()
@@ -1701,8 +1709,7 @@ func (c *ClusterManager) getNodeInfoFromClusterDb(id string) (api.Node, error) {
 
 	nodeEntry, ok := db.NodeEntries[id]
 	if !ok {
-		msg := fmt.Sprintf("Node entry does not exist, Node ID %s", id)
-		return node, errors.New(msg)
+		return node, &errNodeNotFound{id}
 	}
 	node.Status = nodeEntry.Status
 	return node, nil
@@ -1740,10 +1747,11 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 	logrus.Infof("ClusterManager Remove node.")
 
 	var resultErr error
+	var err error
 
 	inQuorum := !(c.selfNode.Status == api.Status_STATUS_NOT_IN_QUORUM)
 
-	for i, _ := range nodes {
+	for i := range nodes {
 
 		if id, cerr := c.GetNodeIdFromIp(nodes[i].Id); cerr == nil {
 			if nodes[i].Id != id {
@@ -1755,6 +1763,10 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 		if !exist {
 			nodeToRemove, resultErr = c.getNodeInfoFromClusterDb(nodes[i].Id)
 			if resultErr != nil {
+				if err, isa := resultErr.(*errNodeNotFound); isa && forceRemove && err.NodeID == nodes[i].Id {
+					logrus.Warnf("Node ID %s no longer in the cluster -- attempting forced removal", nodes[i].Id)
+					goto labForceRemoveNode
+				}
 				logrus.Errorf("Error getting node info for id %s : %v", nodes[i].Id,
 					resultErr)
 				return fmt.Errorf("Node %s does not exist", nodes[i].Id)
@@ -1815,7 +1827,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			e.Value.(cluster.ClusterListener).MarkNodeForRemoval(&nodeToRemove)
 		}
 
-		err := c.markNodeDecommission(nodes[i])
+		err = c.markNodeDecommission(nodes[i])
 		if err != nil {
 			msg := fmt.Sprintf("Failed to mark node as "+
 				"decommision, error %s",
@@ -1824,6 +1836,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			return errors.New(msg)
 		}
 
+	labForceRemoveNode:
 		if !inQuorum {
 			// If we are not in quorum, we only mark the node as decommissioned
 			// since this node is not functional yet.
