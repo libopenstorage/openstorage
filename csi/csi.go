@@ -335,7 +335,7 @@ func (s *OsdCsiServer) cleanupConnections() {
 			func() {
 				s.mu.Lock()
 				defer s.mu.Unlock()
-				clogger.Infof("Cleaning up open gRPC connections for CSI distributed provisioning")
+				clogger.Tracef("Cleaning up open gRPC connections for CSI distributed provisioning")
 
 				// Clean all expired connections
 				numConnsClosed := 0
@@ -366,7 +366,9 @@ func (s *OsdCsiServer) cleanupConnections() {
 				}
 				s.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
 
-				clogger.Infof("Cleaned up %v connections for CSI distributed provisioning. %v connections remaining", numConnsClosed, len(s.connMap))
+				if numConnsClosed > 0 {
+					clogger.Infof("Cleaned up %v connections for CSI distributed provisioning. %v connections remaining", numConnsClosed, len(s.connMap))
+				}
 			}()
 		}
 	}
@@ -386,4 +388,22 @@ func (s *OsdCsiServer) cleanupMissingNodeConnections(ctx context.Context, nodes 
 			delete(s.connMap, ip)
 		}
 	}
+}
+
+// adjustFinalErrors adjusts certain gRPC status to make CSI callers
+// (csi-provisioner, kubelet, etc) retry instead of being marked as a failure.
+// See https://github.com/kubernetes/kubernetes/blob/64ed9145452d2d1d324d2437566f1ea1ce76f226/pkg/volume/csi/csi_client.go#L718-L724
+func adjustFinalErrors(err error) error {
+	grpcStatus, ok := status.FromError(err)
+	if !ok {
+		return err
+	}
+	switch grpcStatus.Code() {
+	case codes.Internal:
+		// gRPC: For cases where the CSI Driver cannot talk to the SDK, return unavailable.
+		// this can occur when the SDK server is starting or offline intermittently.
+		return status.New(codes.Unavailable, grpcStatus.Message()).Err()
+	}
+
+	return err
 }

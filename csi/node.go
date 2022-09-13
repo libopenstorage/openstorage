@@ -112,7 +112,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -189,7 +189,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 				clogger.WithContext(ctx).Errorf("Failed to attach ephemeral volume %s: %v", volumeId, err.Error())
 				s.cleanupEphemeral(ctx, conn, volumeId, false)
 			}
-			return nil, err
+			return nil, adjustFinalErrors(err)
 		}
 	}
 
@@ -204,7 +204,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 			clogger.WithContext(ctx).Errorf("Failed to mount ephemeral volume %s: %v", volumeId, err.Error())
 			s.cleanupEphemeral(ctx, conn, volumeId, true)
 		}
-		return nil, err
+		return nil, adjustFinalErrors(err)
 	}
 
 	clogger.WithContext(ctx).Infof("CSI Volume %s mounted on %s",
@@ -259,7 +259,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	if s.driver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 		if err = s.driver.Detach(ctx, volumeId, nil); err != nil {
 			return nil, status.Errorf(
-				codes.Internal,
+				codes.Canceled,
 				"Unable to detach volume: %s",
 				err.Error())
 		}
@@ -274,7 +274,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	// Return error to Kubelet if mount path still exists to force a retry
 	if _, err := os.Stat(targetPath); !os.IsNotExist(err) {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Canceled,
 			"Mount path still exists: %s",
 			targetPath)
 	}
