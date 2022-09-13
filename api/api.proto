@@ -456,6 +456,8 @@ message Sharedv4ServiceSpec {
       // Applicable when running in cloud. In this mode the sharedv4 volume
       // can be accessed from outside the cluster.
       LOADBALANCER = 3;
+      // Do not use sharedv4 service feature. Use legacy sharedv4 volumes instead.
+      NONE = 4;
     }
 }
 
@@ -5152,7 +5154,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 28;
+    Patch = 29;
   }
 
   // The following cannot be set to use the enum Version because the REST

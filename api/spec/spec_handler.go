@@ -454,7 +454,10 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			if spec.Sharedv4ServiceSpec == nil {
 				spec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
 			}
-			if v == "NodePort" || v == "nodePort" {
+			if v == "" {
+				// force sharedv4 non-service
+				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_NONE
+			} else if v == "NodePort" || v == "nodePort" {
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_NODEPORT
 			} else if v == "ClusterIP" || v == "clusterIP" {
 				spec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
