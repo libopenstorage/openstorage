@@ -3,6 +3,7 @@ package mount
 import (
 	"fmt"
 	"os"
+	"sync"
 	"syscall"
 	"testing"
 
@@ -38,6 +39,7 @@ func TestRawMounter(t *testing.T) {
 func allTests(t *testing.T, source, dest string) {
 	load(t, source, dest)
 	mountTest(t, source, dest)
+	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
 	hasMounts(t, source, dest)
@@ -91,6 +93,42 @@ func mountTest(t *testing.T, source, dest string) {
 	require.NoError(t, err, "Failed in mount")
 	err = m.Unmount(source, dest, 0, 0, nil)
 	require.NoError(t, err, "Failed in unmount")
+}
+
+// mountTestParallel runs mount and unmount in parallel with serveral dirs
+// in addition, we trigger failed unmount to test race condition in the case
+// source directory is not found in the cache
+func mountTestParallel(t *testing.T, source, dest string) {
+	mountFunc := func(s, d string) {
+		err := m.Mount(0, s, d, "", syscall.MS_BIND, "", 0, nil)
+		require.NoError(t, err, "Failed in mount")
+	}
+	unmountFunc := func(s, d string) {
+		err := m.Unmount(s, d, 0, 0, nil)
+		require.NoError(t, err, "Failed in unmount")
+	}
+	unmountFailedFunc := func(s, d string) {
+		err := m.Unmount(s, d, 0, 0, nil)
+		require.Error(t, err, "Failed in unmount; expected an error")
+	}
+	numRuns := 200
+	var wg sync.WaitGroup
+	for i := 1; i < numRuns; i++ {
+		wg.Add(1)
+		s := fmt.Sprintf("%s_%d", source, i)
+		d := fmt.Sprintf("%s_%d", dest, i)
+		random_s := fmt.Sprintf("%s__%d", source, i)
+		cleandir(s)
+		cleandir(d)
+		go func() {
+			mountFunc(s, d)
+			unmountFunc(s, d)
+			unmountFailedFunc(random_s, d)
+			defer wg.Done()
+		}()
+	}
+	wg.Wait()
+
 }
 
 func inspect(t *testing.T, source, dest string) {
