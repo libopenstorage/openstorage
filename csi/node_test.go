@@ -377,7 +377,7 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, codes.Unavailable, serverError.Code())
 	assert.Contains(t, serverError.Message(), "Unable to attach volume")
 }
 
@@ -440,7 +440,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, codes.Unavailable, serverError.Code())
 	assert.Contains(t, serverError.Message(), "Unable to mount volume")
 }
 
@@ -971,7 +971,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Code(), codes.Canceled)
 	assert.Contains(t, serverError.Message(), "Unable to detach volume")
 	assert.Contains(t, serverError.Message(), "DETACH ERROR")
 }
