@@ -38,15 +38,15 @@ func TestRawMounter(t *testing.T) {
 }
 
 func allTests(t *testing.T, source, dest string) {
-	// load(t, source, dest)
-	// mountTest(t, source, dest)
+	load(t, source, dest)
+	mountTest(t, source, dest)
 	mountTestParallel(t, source, dest)
-	// inspect(t, source, dest)
-	// reload(t, source, dest)
-	// hasMounts(t, source, dest)
-	// refcounts(t, source, dest)
-	// exists(t, source, dest)
-	// shutdown(t, source, dest)
+	inspect(t, source, dest)
+	reload(t, source, dest)
+	hasMounts(t, source, dest)
+	refcounts(t, source, dest)
+	exists(t, source, dest)
+	shutdown(t, source, dest)
 }
 
 func setupNFS(t *testing.T) {
