@@ -188,7 +188,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -530,7 +530,7 @@ func (s *OsdCsiServer) CreateVolume(
 		conn, err = s.getConn()
 		if err != nil {
 			return nil, status.Errorf(
-				codes.Internal,
+				codes.Unavailable,
 				"Unable to connect to SDK server: %v", err)
 		}
 	}
@@ -623,7 +623,7 @@ func (s *OsdCsiServer) DeleteVolume(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -643,7 +643,7 @@ func (s *OsdCsiServer) DeleteVolume(
 			req.GetVolumeId(),
 			err.Error())
 		clogger.WithContext(ctx).Errorln(e)
-		return nil, status.Error(codes.Internal, e)
+		return nil, status.Error(codes.Aborted, e)
 	}
 
 	return &csi.DeleteVolumeResponse{}, nil
@@ -676,7 +676,7 @@ func (s *OsdCsiServer) ControllerExpandVolume(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -846,7 +846,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -927,7 +927,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -979,7 +979,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
@@ -1046,7 +1046,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	conn, err := s.getConn()
 	if err != nil {
 		return nil, status.Errorf(
-			codes.Internal,
+			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
 	}
 
