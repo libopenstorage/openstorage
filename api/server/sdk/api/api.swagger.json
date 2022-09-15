@@ -201,12 +201,13 @@
       },
       "Sharedv4ServiceSpecServiceType": {
         "default": "UNSPECIFIED",
-        "description": "Type of sharedv4 service. Values are governed by the different types\nof services supported by container orchestrators such as Kubernetes.\n\n - UNSPECIFIED: Unspecified\n - NODEPORT: Export the sharedv4 service on each Node's IP.\nIn this mode the sharedv4 volume can be accessed from outside the\ncluster using one of the node's IPs.\n - CLUSTERIP: Export the shared4 service on an internal cluster IP.\nIn this mode the sharedv4 volume will only be accessible\nwithin the cluster via this service.\n - LOADBALANCER: Expose the sharedv4 service on cloud provider's load balancer.\nApplicable when running in cloud. In this mode the sharedv4 volume\ncan be accessed from outside the cluster.",
+        "description": "Type of sharedv4 service. Values are governed by the different types\nof services supported by container orchestrators such as Kubernetes.\n\n - UNSPECIFIED: Unspecified\n - NODEPORT: Export the sharedv4 service on each Node's IP.\nIn this mode the sharedv4 volume can be accessed from outside the\ncluster using one of the node's IPs.\n - CLUSTERIP: Export the shared4 service on an internal cluster IP.\nIn this mode the sharedv4 volume will only be accessible\nwithin the cluster via this service.\n - LOADBALANCER: Expose the sharedv4 service on cloud provider's load balancer.\nApplicable when running in cloud. In this mode the sharedv4 volume\ncan be accessed from outside the cluster.\n - NONE: Do not use sharedv4 service feature. Use legacy sharedv4 volumes instead.",
         "enum": [
           "UNSPECIFIED",
           "NODEPORT",
           "CLUSTERIP",
-          "LOADBALANCER"
+          "LOADBALANCER",
+          "NONE"
         ],
         "type": "string"
       },
@@ -5894,7 +5895,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.150.0"
+    "version": "0.151.0"
   },
   "openapi": "3.0.0",
   "paths": {
