@@ -1765,7 +1765,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			if resultErr != nil {
 				if err, isa := resultErr.(*errNodeNotFound); isa && forceRemove && err.NodeID == nodes[i].Id {
 					logrus.Warnf("Node ID %s no longer in the cluster -- attempting forced removal", nodes[i].Id)
-					goto labForceRemoveNode
+					goto labelForceRemoveNode
 				}
 				logrus.Errorf("Error getting node info for id %s : %v", nodes[i].Id,
 					resultErr)
@@ -1836,7 +1836,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			return errors.New(msg)
 		}
 
-	labForceRemoveNode:
+	labelForceRemoveNode:
 		if !inQuorum {
 			// If we are not in quorum, we only mark the node as decommissioned
 			// since this node is not functional yet.
