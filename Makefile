@@ -106,18 +106,6 @@ $(GOPATH)/bin/errcheck:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/kisielk/errcheck
 
-$(GOPATH)/bin/protoc-gen-go:
-	@echo "Installing missing $@ ..."
-	GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go
-
-$(GOPATH)/bin/protoc-gen-grpc-gateway:
-	@echo "Installing missing $@ ..."
-	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
-
-$(GOPATH)/bin/protoc-gen-swagger:
-	@echo "Installing missing $@ ..."
-	go install github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger@v1.16.0
-
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
@@ -143,9 +131,6 @@ $(GOPATH)/bin/gomock:
 
 $(GOPATH)/bin/mockgen:
 	GO111MODULE=off go get github.com/golang/mock/mockgen
-
-$(GOPATH)/bin/swagger:
-	go install github.com/go-swagger/go-swagger/cmd/swagger@latest
 
 # DEPS build rules
 #
@@ -190,7 +175,7 @@ $(OSDSANITY)-clean:
 docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto --network=host -f Dockerfile.proto .
 
-docker-proto:  $(GOPATH)/bin/protoc-gen-go
+docker-proto:
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
