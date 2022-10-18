@@ -98,10 +98,15 @@ func (s *GossipStoreImpl) UpdateSelf(key types.StoreKey, val interface{}) {
 	s.Lock()
 	defer s.Unlock()
 
-	nodeInfo, _ := s.nodeMap[s.id]
-	nodeInfo.Value[key] = val
-	nodeInfo.LastUpdateTs = time.Now()
-	s.nodeMap[s.id] = nodeInfo
+	nodeInfo, ok := s.nodeMap[s.id]
+	if ok {
+		if nodeInfo.Value == nil {
+			nodeInfo.Value = make(types.StoreMap)
+		}
+		nodeInfo.Value[key] = val
+		nodeInfo.LastUpdateTs = time.Now()
+		s.nodeMap[s.id] = nodeInfo
+	}
 }
 
 func (s *GossipStoreImpl) updateSelfClusterDomain(selfClusterDomain string) bool {

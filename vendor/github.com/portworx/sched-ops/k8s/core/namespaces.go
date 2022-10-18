@@ -12,7 +12,9 @@ type NamespaceOps interface {
 	// GetNamespace returns a namespace object for given name
 	GetNamespace(name string) (*corev1.Namespace, error)
 	// CreateNamespace creates a namespace with given name and metadata
-	CreateNamespace(name string, metadata map[string]string) (*corev1.Namespace, error)
+	CreateNamespace(*corev1.Namespace) (*corev1.Namespace, error)
+	// UpdateNamespace update a namespace with given metadata
+	UpdateNamespace(*corev1.Namespace) (*corev1.Namespace, error)
 	// DeleteNamespace deletes a namespace with given name
 	DeleteNamespace(name string) error
 }
@@ -38,17 +40,12 @@ func (c *Client) GetNamespace(name string) (*corev1.Namespace, error) {
 }
 
 // CreateNamespace creates a namespace with given name and metadata
-func (c *Client) CreateNamespace(name string, metadata map[string]string) (*corev1.Namespace, error) {
+func (c *Client) CreateNamespace(namespace *corev1.Namespace) (*corev1.Namespace, error) {
 	if err := c.initClient(); err != nil {
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().Namespaces().Create(&corev1.Namespace{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:   name,
-			Labels: metadata,
-		},
-	})
+	return c.kubernetes.CoreV1().Namespaces().Create(namespace)
 }
 
 // DeleteNamespace deletes a namespace with given name
@@ -58,4 +55,13 @@ func (c *Client) DeleteNamespace(name string) error {
 	}
 
 	return c.kubernetes.CoreV1().Namespaces().Delete(name, &metav1.DeleteOptions{})
+}
+
+// UpdateNamespace updates a namespace with given metadata
+func (c *Client) UpdateNamespace(namespace *corev1.Namespace) (*corev1.Namespace, error) {
+	if err := c.initClient(); err != nil {
+		return nil, err
+	}
+
+	return c.kubernetes.CoreV1().Namespaces().Update(namespace)
 }

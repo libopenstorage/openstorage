@@ -16,6 +16,8 @@ type EndpointsOps interface {
 	PatchEndpoints(name, namespace string, pt types.PatchType, jsonPatch []byte) (*corev1.Endpoints, error)
 	// DeleteEndpoints removes endpoints for a given namespace/name.
 	DeleteEndpoints(name, namespace string) error
+	// UpdateEndpoints updates the given endpoint
+	UpdateEndpoints(endpoints *corev1.Endpoints) (*corev1.Endpoints, error)
 }
 
 // CreateEndpoints creates a given endpoints.
@@ -48,4 +50,12 @@ func (c *Client) DeleteEndpoints(name, ns string) error {
 		return err
 	}
 	return c.kubernetes.CoreV1().Endpoints(ns).Delete(name, nil)
+}
+
+// UpdateEndpoints updates the given endpoint.
+func (c *Client) UpdateEndpoints(endpoints *corev1.Endpoints) (*corev1.Endpoints, error) {
+	if err := c.initClient(); err != nil {
+		return nil, err
+	}
+	return c.kubernetes.CoreV1().Endpoints(endpoints.Namespace).Update(endpoints)
 }

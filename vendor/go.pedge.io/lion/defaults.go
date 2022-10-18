@@ -13,8 +13,16 @@ var (
 	// we just need ids to be unique across logging processes
 	// so we use a base ID and then add an atomic int
 	// it's not great but it's better than blocking on the mutex
-	instanceID = uuid.NewV4().String()
+	instanceID string
 )
+
+func init() {
+	id, err := uuid.NewV4()
+	if err != nil {
+		panic(err.Error())
+	}
+	instanceID = id.String()
+}
 
 type idAllocator struct {
 	id    string

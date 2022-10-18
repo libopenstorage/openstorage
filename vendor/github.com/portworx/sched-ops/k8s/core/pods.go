@@ -151,6 +151,9 @@ func (c *Client) GetPodsByNodeAndLabels(nodeName, namespace string, labels map[s
 
 // GetPodsByOwner returns pods for the given owner and namespace
 func (c *Client) GetPodsByOwner(ownerUID types.UID, namespace string) ([]corev1.Pod, error) {
+	if err := c.initClient(); err != nil {
+		return nil, err
+	}
 	return common.GetPodsByOwner(c.kubernetes.CoreV1(), ownerUID, namespace)
 }
 
@@ -202,9 +205,11 @@ func (c *Client) getPodsUsingPVWithListOptions(pvName string, opts metav1.ListOp
 		return nil, err
 	}
 
-	if pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Kind == "PersistentVolumeClaim" {
-		return c.getPodsUsingPVCWithListOptions(pv.Spec.ClaimRef.Name, pv.Spec.ClaimRef.Namespace, opts)
-	}
+	if pv.Status.Phase == corev1.VolumeBound {
+		if pv.Spec.ClaimRef != nil && pv.Spec.ClaimRef.Kind == "PersistentVolumeClaim" {
+			return c.getPodsUsingPVCWithListOptions(pv.Spec.ClaimRef.Name, pv.Spec.ClaimRef.Namespace, opts)
+		}
+	} // else the volume is not bound so cannot rely on stale claim ref objects
 
 	return nil, nil
 }
@@ -303,12 +308,8 @@ func (c *Client) IsPodReady(pod corev1.Pod) bool {
 
 // IsPodBeingManaged returns true if the pod is being managed by a controller
 func (c *Client) IsPodBeingManaged(pod corev1.Pod) bool {
-	if len(pod.OwnerReferences) == 0 {
-		return false
-	}
-
 	for _, owner := range pod.OwnerReferences {
-		if *owner.Controller {
+		if owner.Controller != nil && *owner.Controller {
 			// We are assuming that if a pod has a owner who has set itself as
 			// a controller, the pod is managed. We are not checking for specific
 			// contollers like ReplicaSet, StatefulSet as that is
@@ -318,7 +319,6 @@ func (c *Client) IsPodBeingManaged(pod corev1.Pod) bool {
 			return true
 		}
 	}
-
 	return false
 }
 

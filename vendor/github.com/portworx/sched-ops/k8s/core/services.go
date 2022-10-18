@@ -27,6 +27,8 @@ type ServiceOps interface {
 	DescribeService(string, string) (*corev1.ServiceStatus, error)
 	// PatchService patches the current service with the given json path
 	PatchService(name, namespace string, jsonPatch []byte) (*corev1.Service, error)
+	// UpdateService updates the given service
+	UpdateService(*corev1.Service) (*corev1.Service, error)
 }
 
 // CreateService creates the given service
@@ -137,4 +139,18 @@ func (c *Client) PatchService(name, namespace string, jsonPatch []byte) (*corev1
 	}
 
 	return c.kubernetes.CoreV1().Services(current.Namespace).Patch(current.Name, types.StrategicMergePatchType, jsonPatch)
+}
+
+// UpdateService updates the given service
+func (c *Client) UpdateService(service *corev1.Service) (*corev1.Service, error) {
+	if err := c.initClient(); err != nil {
+		return nil, err
+	}
+
+	ns := service.Namespace
+	if len(ns) == 0 {
+		ns = corev1.NamespaceDefault
+	}
+
+	return c.kubernetes.CoreV1().Services(ns).Update(service)
 }

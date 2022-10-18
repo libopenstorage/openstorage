@@ -5,7 +5,6 @@ import (
 	"github.com/spf13/cobra"
 	"go.pedge.io/env"
 	"go.pedge.io/lion/env"
-	"go.pedge.io/pkg/cobra"
 	"google.golang.org/grpc"
 )
 
