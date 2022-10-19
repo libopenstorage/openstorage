@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package mount
@@ -29,15 +30,17 @@ type nfsMounter struct {
 func NewNFSMounter(servers []string,
 	mountImpl MountImpl,
 	allowedDirs []string,
+	trashLocation string,
 ) (Manager, error) {
 	m := &nfsMounter{
 		servers: servers,
 		Mounter: Mounter{
-			mountImpl:   mountImpl,
-			mounts:      make(DeviceMap),
-			paths:       make(PathMap),
-			allowedDirs: allowedDirs,
-			kl:          keylock.New(),
+			mountImpl:     mountImpl,
+			mounts:        make(DeviceMap),
+			paths:         make(PathMap),
+			allowedDirs:   allowedDirs,
+			kl:            keylock.New(),
+			trashLocation: trashLocation,
 		},
 	}
 	err := m.Load([]string{""})
@@ -52,6 +55,7 @@ func (m *nfsMounter) Reload(source string) error {
 	newNFSm, err := NewNFSMounter([]string{NFSAllServers},
 		m.mountImpl,
 		m.Mounter.allowedDirs,
+		m.trashLocation,
 	)
 	if err != nil {
 		return err
