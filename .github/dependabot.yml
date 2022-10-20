@@ -9,3 +9,5 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
+    reviewers:
+      - "ggriffiths" # Temporarily until done evaluating Dependabot
