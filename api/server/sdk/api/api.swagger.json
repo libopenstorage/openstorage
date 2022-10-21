@@ -5321,6 +5321,10 @@
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
+          "createoptions": {
+            "title": "CreateOptions",
+            "type": "string"
+          },
           "dedupe": {
             "description": "Dedupe specifies if the volume data is to be de-duplicated.",
             "type": "boolean"

@@ -696,6 +696,8 @@ message VolumeSpec {
   TopologyRequirement topology_requirement = 48;
   // winshare is true if this volume can be accessed from windows pods.
   bool winshare = 49;
+  // CreateOptions
+  string createoptions = 50;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
