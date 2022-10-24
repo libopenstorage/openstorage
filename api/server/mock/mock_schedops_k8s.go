@@ -5,6 +5,9 @@
 package mock
 
 import (
+	reflect "reflect"
+	time "time"
+
 	gomock "github.com/golang/mock/gomock"
 	core "github.com/portworx/sched-ops/k8s/core"
 	v1 "k8s.io/api/core/v1"
@@ -15,34 +18,32 @@ import (
 	types "k8s.io/apimachinery/pkg/types"
 	version "k8s.io/apimachinery/pkg/version"
 	rest "k8s.io/client-go/rest"
-	reflect "reflect"
-	time "time"
 )
 
-// MockOps is a mock of Ops interface
+// MockOps is a mock of Ops interface.
 type MockOps struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpsMockRecorder
 }
 
-// MockOpsMockRecorder is the mock recorder for MockOps
+// MockOpsMockRecorder is the mock recorder for MockOps.
 type MockOpsMockRecorder struct {
 	mock *MockOps
 }
 
-// NewMockOps creates a new mock instance
+// NewMockOps creates a new mock instance.
 func NewMockOps(ctrl *gomock.Controller) *MockOps {
 	mock := &MockOps{ctrl: ctrl}
 	mock.recorder = &MockOpsMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use
+// EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOps) EXPECT() *MockOpsMockRecorder {
 	return m.recorder
 }
 
-// AddLabelOnNode mocks base method
+// AddLabelOnNode mocks base method.
 func (m *MockOps) AddLabelOnNode(arg0, arg1, arg2 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddLabelOnNode", arg0, arg1, arg2)
@@ -50,13 +51,13 @@ func (m *MockOps) AddLabelOnNode(arg0, arg1, arg2 string) error {
 	return ret0
 }
 
-// AddLabelOnNode indicates an expected call of AddLabelOnNode
+// AddLabelOnNode indicates an expected call of AddLabelOnNode.
 func (mr *MockOpsMockRecorder) AddLabelOnNode(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddLabelOnNode", reflect.TypeOf((*MockOps)(nil).AddLabelOnNode), arg0, arg1, arg2)
 }
 
-// CordonNode mocks base method
+// CordonNode mocks base method.
 func (m *MockOps) CordonNode(arg0 string, arg1, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CordonNode", arg0, arg1, arg2)
@@ -64,13 +65,13 @@ func (m *MockOps) CordonNode(arg0 string, arg1, arg2 time.Duration) error {
 	return ret0
 }
 
-// CordonNode indicates an expected call of CordonNode
+// CordonNode indicates an expected call of CordonNode.
 func (mr *MockOpsMockRecorder) CordonNode(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CordonNode", reflect.TypeOf((*MockOps)(nil).CordonNode), arg0, arg1, arg2)
 }
 
-// CreateConfigMap mocks base method
+// CreateConfigMap mocks base method.
 func (m *MockOps) CreateConfigMap(arg0 *v1.ConfigMap) (*v1.ConfigMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateConfigMap", arg0)
@@ -79,13 +80,13 @@ func (m *MockOps) CreateConfigMap(arg0 *v1.ConfigMap) (*v1.ConfigMap, error) {
 	return ret0, ret1
 }
 
-// CreateConfigMap indicates an expected call of CreateConfigMap
+// CreateConfigMap indicates an expected call of CreateConfigMap.
 func (mr *MockOpsMockRecorder) CreateConfigMap(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateConfigMap", reflect.TypeOf((*MockOps)(nil).CreateConfigMap), arg0)
 }
 
-// CreateEndpoints mocks base method
+// CreateEndpoints mocks base method.
 func (m *MockOps) CreateEndpoints(arg0 *v1.Endpoints) (*v1.Endpoints, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEndpoints", arg0)
@@ -94,13 +95,13 @@ func (m *MockOps) CreateEndpoints(arg0 *v1.Endpoints) (*v1.Endpoints, error) {
 	return ret0, ret1
 }
 
-// CreateEndpoints indicates an expected call of CreateEndpoints
+// CreateEndpoints indicates an expected call of CreateEndpoints.
 func (mr *MockOpsMockRecorder) CreateEndpoints(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEndpoints", reflect.TypeOf((*MockOps)(nil).CreateEndpoints), arg0)
 }
 
-// CreateEvent mocks base method
+// CreateEvent mocks base method.
 func (m *MockOps) CreateEvent(arg0 *v1.Event) (*v1.Event, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateEvent", arg0)
@@ -109,28 +110,43 @@ func (m *MockOps) CreateEvent(arg0 *v1.Event) (*v1.Event, error) {
 	return ret0, ret1
 }
 
-// CreateEvent indicates an expected call of CreateEvent
+// CreateEvent indicates an expected call of CreateEvent.
 func (mr *MockOpsMockRecorder) CreateEvent(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateEvent", reflect.TypeOf((*MockOps)(nil).CreateEvent), arg0)
 }
 
-// CreateNamespace mocks base method
-func (m *MockOps) CreateNamespace(arg0 string, arg1 map[string]string) (*v1.Namespace, error) {
+// CreateLimitRange mocks base method.
+func (m *MockOps) CreateLimitRange(arg0 *v1.LimitRange) (*v1.LimitRange, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CreateNamespace", arg0, arg1)
+	ret := m.ctrl.Call(m, "CreateLimitRange", arg0)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateLimitRange indicates an expected call of CreateLimitRange.
+func (mr *MockOpsMockRecorder) CreateLimitRange(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateLimitRange", reflect.TypeOf((*MockOps)(nil).CreateLimitRange), arg0)
+}
+
+// CreateNamespace mocks base method.
+func (m *MockOps) CreateNamespace(arg0 *v1.Namespace) (*v1.Namespace, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateNamespace", arg0)
 	ret0, _ := ret[0].(*v1.Namespace)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// CreateNamespace indicates an expected call of CreateNamespace
-func (mr *MockOpsMockRecorder) CreateNamespace(arg0, arg1 interface{}) *gomock.Call {
+// CreateNamespace indicates an expected call of CreateNamespace.
+func (mr *MockOpsMockRecorder) CreateNamespace(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNamespace", reflect.TypeOf((*MockOps)(nil).CreateNamespace), arg0, arg1)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNamespace", reflect.TypeOf((*MockOps)(nil).CreateNamespace), arg0)
 }
 
-// CreateNode mocks base method
+// CreateNode mocks base method.
 func (m *MockOps) CreateNode(arg0 *v1.Node) (*v1.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateNode", arg0)
@@ -139,13 +155,13 @@ func (m *MockOps) CreateNode(arg0 *v1.Node) (*v1.Node, error) {
 	return ret0, ret1
 }
 
-// CreateNode indicates an expected call of CreateNode
+// CreateNode indicates an expected call of CreateNode.
 func (mr *MockOpsMockRecorder) CreateNode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateNode", reflect.TypeOf((*MockOps)(nil).CreateNode), arg0)
 }
 
-// CreatePersistentVolume mocks base method
+// CreatePersistentVolume mocks base method.
 func (m *MockOps) CreatePersistentVolume(arg0 *v1.PersistentVolume) (*v1.PersistentVolume, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePersistentVolume", arg0)
@@ -154,13 +170,13 @@ func (m *MockOps) CreatePersistentVolume(arg0 *v1.PersistentVolume) (*v1.Persist
 	return ret0, ret1
 }
 
-// CreatePersistentVolume indicates an expected call of CreatePersistentVolume
+// CreatePersistentVolume indicates an expected call of CreatePersistentVolume.
 func (mr *MockOpsMockRecorder) CreatePersistentVolume(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePersistentVolume", reflect.TypeOf((*MockOps)(nil).CreatePersistentVolume), arg0)
 }
 
-// CreatePersistentVolumeClaim mocks base method
+// CreatePersistentVolumeClaim mocks base method.
 func (m *MockOps) CreatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePersistentVolumeClaim", arg0)
@@ -169,13 +185,13 @@ func (m *MockOps) CreatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim) (*
 	return ret0, ret1
 }
 
-// CreatePersistentVolumeClaim indicates an expected call of CreatePersistentVolumeClaim
+// CreatePersistentVolumeClaim indicates an expected call of CreatePersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) CreatePersistentVolumeClaim(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).CreatePersistentVolumeClaim), arg0)
 }
 
-// CreatePod mocks base method
+// CreatePod mocks base method.
 func (m *MockOps) CreatePod(arg0 *v1.Pod) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePod", arg0)
@@ -184,13 +200,13 @@ func (m *MockOps) CreatePod(arg0 *v1.Pod) (*v1.Pod, error) {
 	return ret0, ret1
 }
 
-// CreatePod indicates an expected call of CreatePod
+// CreatePod indicates an expected call of CreatePod.
 func (mr *MockOpsMockRecorder) CreatePod(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePod", reflect.TypeOf((*MockOps)(nil).CreatePod), arg0)
 }
 
-// CreateSecret mocks base method
+// CreateSecret mocks base method.
 func (m *MockOps) CreateSecret(arg0 *v1.Secret) (*v1.Secret, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSecret", arg0)
@@ -199,13 +215,13 @@ func (m *MockOps) CreateSecret(arg0 *v1.Secret) (*v1.Secret, error) {
 	return ret0, ret1
 }
 
-// CreateSecret indicates an expected call of CreateSecret
+// CreateSecret indicates an expected call of CreateSecret.
 func (mr *MockOpsMockRecorder) CreateSecret(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSecret", reflect.TypeOf((*MockOps)(nil).CreateSecret), arg0)
 }
 
-// CreateService mocks base method
+// CreateService mocks base method.
 func (m *MockOps) CreateService(arg0 *v1.Service) (*v1.Service, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateService", arg0)
@@ -214,13 +230,13 @@ func (m *MockOps) CreateService(arg0 *v1.Service) (*v1.Service, error) {
 	return ret0, ret1
 }
 
-// CreateService indicates an expected call of CreateService
+// CreateService indicates an expected call of CreateService.
 func (mr *MockOpsMockRecorder) CreateService(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateService", reflect.TypeOf((*MockOps)(nil).CreateService), arg0)
 }
 
-// CreateServiceAccount mocks base method
+// CreateServiceAccount mocks base method.
 func (m *MockOps) CreateServiceAccount(arg0 *v1.ServiceAccount) (*v1.ServiceAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateServiceAccount", arg0)
@@ -229,13 +245,13 @@ func (m *MockOps) CreateServiceAccount(arg0 *v1.ServiceAccount) (*v1.ServiceAcco
 	return ret0, ret1
 }
 
-// CreateServiceAccount indicates an expected call of CreateServiceAccount
+// CreateServiceAccount indicates an expected call of CreateServiceAccount.
 func (mr *MockOpsMockRecorder) CreateServiceAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateServiceAccount", reflect.TypeOf((*MockOps)(nil).CreateServiceAccount), arg0)
 }
 
-// DeleteConfigMap mocks base method
+// DeleteConfigMap mocks base method.
 func (m *MockOps) DeleteConfigMap(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteConfigMap", arg0, arg1)
@@ -243,13 +259,13 @@ func (m *MockOps) DeleteConfigMap(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeleteConfigMap indicates an expected call of DeleteConfigMap
+// DeleteConfigMap indicates an expected call of DeleteConfigMap.
 func (mr *MockOpsMockRecorder) DeleteConfigMap(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteConfigMap", reflect.TypeOf((*MockOps)(nil).DeleteConfigMap), arg0, arg1)
 }
 
-// DeleteEndpoints mocks base method
+// DeleteEndpoints mocks base method.
 func (m *MockOps) DeleteEndpoints(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteEndpoints", arg0, arg1)
@@ -257,13 +273,27 @@ func (m *MockOps) DeleteEndpoints(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeleteEndpoints indicates an expected call of DeleteEndpoints
+// DeleteEndpoints indicates an expected call of DeleteEndpoints.
 func (mr *MockOpsMockRecorder) DeleteEndpoints(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteEndpoints", reflect.TypeOf((*MockOps)(nil).DeleteEndpoints), arg0, arg1)
 }
 
-// DeleteNamespace mocks base method
+// DeleteLimitRange mocks base method.
+func (m *MockOps) DeleteLimitRange(arg0, arg1 string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// DeleteLimitRange indicates an expected call of DeleteLimitRange.
+func (mr *MockOpsMockRecorder) DeleteLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteLimitRange", reflect.TypeOf((*MockOps)(nil).DeleteLimitRange), arg0, arg1)
+}
+
+// DeleteNamespace mocks base method.
 func (m *MockOps) DeleteNamespace(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteNamespace", arg0)
@@ -271,13 +301,13 @@ func (m *MockOps) DeleteNamespace(arg0 string) error {
 	return ret0
 }
 
-// DeleteNamespace indicates an expected call of DeleteNamespace
+// DeleteNamespace indicates an expected call of DeleteNamespace.
 func (mr *MockOpsMockRecorder) DeleteNamespace(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNamespace", reflect.TypeOf((*MockOps)(nil).DeleteNamespace), arg0)
 }
 
-// DeletePersistentVolume mocks base method
+// DeletePersistentVolume mocks base method.
 func (m *MockOps) DeletePersistentVolume(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePersistentVolume", arg0)
@@ -285,13 +315,13 @@ func (m *MockOps) DeletePersistentVolume(arg0 string) error {
 	return ret0
 }
 
-// DeletePersistentVolume indicates an expected call of DeletePersistentVolume
+// DeletePersistentVolume indicates an expected call of DeletePersistentVolume.
 func (mr *MockOpsMockRecorder) DeletePersistentVolume(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePersistentVolume", reflect.TypeOf((*MockOps)(nil).DeletePersistentVolume), arg0)
 }
 
-// DeletePersistentVolumeClaim mocks base method
+// DeletePersistentVolumeClaim mocks base method.
 func (m *MockOps) DeletePersistentVolumeClaim(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePersistentVolumeClaim", arg0, arg1)
@@ -299,13 +329,13 @@ func (m *MockOps) DeletePersistentVolumeClaim(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeletePersistentVolumeClaim indicates an expected call of DeletePersistentVolumeClaim
+// DeletePersistentVolumeClaim indicates an expected call of DeletePersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) DeletePersistentVolumeClaim(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).DeletePersistentVolumeClaim), arg0, arg1)
 }
 
-// DeletePod mocks base method
+// DeletePod mocks base method.
 func (m *MockOps) DeletePod(arg0, arg1 string, arg2 bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePod", arg0, arg1, arg2)
@@ -313,13 +343,13 @@ func (m *MockOps) DeletePod(arg0, arg1 string, arg2 bool) error {
 	return ret0
 }
 
-// DeletePod indicates an expected call of DeletePod
+// DeletePod indicates an expected call of DeletePod.
 func (mr *MockOpsMockRecorder) DeletePod(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePod", reflect.TypeOf((*MockOps)(nil).DeletePod), arg0, arg1, arg2)
 }
 
-// DeletePods mocks base method
+// DeletePods mocks base method.
 func (m *MockOps) DeletePods(arg0 []v1.Pod, arg1 bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeletePods", arg0, arg1)
@@ -327,13 +357,13 @@ func (m *MockOps) DeletePods(arg0 []v1.Pod, arg1 bool) error {
 	return ret0
 }
 
-// DeletePods indicates an expected call of DeletePods
+// DeletePods indicates an expected call of DeletePods.
 func (mr *MockOpsMockRecorder) DeletePods(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePods", reflect.TypeOf((*MockOps)(nil).DeletePods), arg0, arg1)
 }
 
-// DeleteSecret mocks base method
+// DeleteSecret mocks base method.
 func (m *MockOps) DeleteSecret(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteSecret", arg0, arg1)
@@ -341,13 +371,13 @@ func (m *MockOps) DeleteSecret(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeleteSecret indicates an expected call of DeleteSecret
+// DeleteSecret indicates an expected call of DeleteSecret.
 func (mr *MockOpsMockRecorder) DeleteSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSecret", reflect.TypeOf((*MockOps)(nil).DeleteSecret), arg0, arg1)
 }
 
-// DeleteService mocks base method
+// DeleteService mocks base method.
 func (m *MockOps) DeleteService(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteService", arg0, arg1)
@@ -355,13 +385,13 @@ func (m *MockOps) DeleteService(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeleteService indicates an expected call of DeleteService
+// DeleteService indicates an expected call of DeleteService.
 func (mr *MockOpsMockRecorder) DeleteService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteService", reflect.TypeOf((*MockOps)(nil).DeleteService), arg0, arg1)
 }
 
-// DeleteServiceAccount mocks base method
+// DeleteServiceAccount mocks base method.
 func (m *MockOps) DeleteServiceAccount(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DeleteServiceAccount", arg0, arg1)
@@ -369,13 +399,13 @@ func (m *MockOps) DeleteServiceAccount(arg0, arg1 string) error {
 	return ret0
 }
 
-// DeleteServiceAccount indicates an expected call of DeleteServiceAccount
+// DeleteServiceAccount indicates an expected call of DeleteServiceAccount.
 func (mr *MockOpsMockRecorder) DeleteServiceAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteServiceAccount", reflect.TypeOf((*MockOps)(nil).DeleteServiceAccount), arg0, arg1)
 }
 
-// DescribeService mocks base method
+// DescribeService mocks base method.
 func (m *MockOps) DescribeService(arg0, arg1 string) (*v1.ServiceStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DescribeService", arg0, arg1)
@@ -384,13 +414,13 @@ func (m *MockOps) DescribeService(arg0, arg1 string) (*v1.ServiceStatus, error) 
 	return ret0, ret1
 }
 
-// DescribeService indicates an expected call of DescribeService
+// DescribeService indicates an expected call of DescribeService.
 func (mr *MockOpsMockRecorder) DescribeService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DescribeService", reflect.TypeOf((*MockOps)(nil).DescribeService), arg0, arg1)
 }
 
-// DrainPodsFromNode mocks base method
+// DrainPodsFromNode mocks base method.
 func (m *MockOps) DrainPodsFromNode(arg0 string, arg1 []v1.Pod, arg2, arg3 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DrainPodsFromNode", arg0, arg1, arg2, arg3)
@@ -398,13 +428,13 @@ func (m *MockOps) DrainPodsFromNode(arg0 string, arg1 []v1.Pod, arg2, arg3 time.
 	return ret0
 }
 
-// DrainPodsFromNode indicates an expected call of DrainPodsFromNode
+// DrainPodsFromNode indicates an expected call of DrainPodsFromNode.
 func (mr *MockOpsMockRecorder) DrainPodsFromNode(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DrainPodsFromNode", reflect.TypeOf((*MockOps)(nil).DrainPodsFromNode), arg0, arg1, arg2, arg3)
 }
 
-// FindMyNode mocks base method
+// FindMyNode mocks base method.
 func (m *MockOps) FindMyNode() (*v1.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "FindMyNode")
@@ -413,13 +443,13 @@ func (m *MockOps) FindMyNode() (*v1.Node, error) {
 	return ret0, ret1
 }
 
-// FindMyNode indicates an expected call of FindMyNode
+// FindMyNode indicates an expected call of FindMyNode.
 func (mr *MockOpsMockRecorder) FindMyNode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FindMyNode", reflect.TypeOf((*MockOps)(nil).FindMyNode))
 }
 
-// GetConfigMap mocks base method
+// GetConfigMap mocks base method.
 func (m *MockOps) GetConfigMap(arg0, arg1 string) (*v1.ConfigMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetConfigMap", arg0, arg1)
@@ -428,13 +458,13 @@ func (m *MockOps) GetConfigMap(arg0, arg1 string) (*v1.ConfigMap, error) {
 	return ret0, ret1
 }
 
-// GetConfigMap indicates an expected call of GetConfigMap
+// GetConfigMap indicates an expected call of GetConfigMap.
 func (mr *MockOpsMockRecorder) GetConfigMap(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetConfigMap", reflect.TypeOf((*MockOps)(nil).GetConfigMap), arg0, arg1)
 }
 
-// GetEndpoints mocks base method
+// GetEndpoints mocks base method.
 func (m *MockOps) GetEndpoints(arg0, arg1 string) (*v1.Endpoints, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetEndpoints", arg0, arg1)
@@ -443,13 +473,13 @@ func (m *MockOps) GetEndpoints(arg0, arg1 string) (*v1.Endpoints, error) {
 	return ret0, ret1
 }
 
-// GetEndpoints indicates an expected call of GetEndpoints
+// GetEndpoints indicates an expected call of GetEndpoints.
 func (mr *MockOpsMockRecorder) GetEndpoints(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetEndpoints", reflect.TypeOf((*MockOps)(nil).GetEndpoints), arg0, arg1)
 }
 
-// GetLabelsOnNode mocks base method
+// GetLabelsOnNode mocks base method.
 func (m *MockOps) GetLabelsOnNode(arg0 string) (map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetLabelsOnNode", arg0)
@@ -458,13 +488,28 @@ func (m *MockOps) GetLabelsOnNode(arg0 string) (map[string]string, error) {
 	return ret0, ret1
 }
 
-// GetLabelsOnNode indicates an expected call of GetLabelsOnNode
+// GetLabelsOnNode indicates an expected call of GetLabelsOnNode.
 func (mr *MockOpsMockRecorder) GetLabelsOnNode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLabelsOnNode", reflect.TypeOf((*MockOps)(nil).GetLabelsOnNode), arg0)
 }
 
-// GetNamespace mocks base method
+// GetLimitRange mocks base method.
+func (m *MockOps) GetLimitRange(arg0, arg1 string) (*v1.LimitRange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetLimitRange indicates an expected call of GetLimitRange.
+func (mr *MockOpsMockRecorder) GetLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetLimitRange", reflect.TypeOf((*MockOps)(nil).GetLimitRange), arg0, arg1)
+}
+
+// GetNamespace mocks base method.
 func (m *MockOps) GetNamespace(arg0 string) (*v1.Namespace, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNamespace", arg0)
@@ -473,13 +518,13 @@ func (m *MockOps) GetNamespace(arg0 string) (*v1.Namespace, error) {
 	return ret0, ret1
 }
 
-// GetNamespace indicates an expected call of GetNamespace
+// GetNamespace indicates an expected call of GetNamespace.
 func (mr *MockOpsMockRecorder) GetNamespace(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNamespace", reflect.TypeOf((*MockOps)(nil).GetNamespace), arg0)
 }
 
-// GetNodeByName mocks base method
+// GetNodeByName mocks base method.
 func (m *MockOps) GetNodeByName(arg0 string) (*v1.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNodeByName", arg0)
@@ -488,13 +533,13 @@ func (m *MockOps) GetNodeByName(arg0 string) (*v1.Node, error) {
 	return ret0, ret1
 }
 
-// GetNodeByName indicates an expected call of GetNodeByName
+// GetNodeByName indicates an expected call of GetNodeByName.
 func (mr *MockOpsMockRecorder) GetNodeByName(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeByName", reflect.TypeOf((*MockOps)(nil).GetNodeByName), arg0)
 }
 
-// GetNodes mocks base method
+// GetNodes mocks base method.
 func (m *MockOps) GetNodes() (*v1.NodeList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNodes")
@@ -503,13 +548,13 @@ func (m *MockOps) GetNodes() (*v1.NodeList, error) {
 	return ret0, ret1
 }
 
-// GetNodes indicates an expected call of GetNodes
+// GetNodes indicates an expected call of GetNodes.
 func (mr *MockOpsMockRecorder) GetNodes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodes", reflect.TypeOf((*MockOps)(nil).GetNodes))
 }
 
-// GetPVCsUsingStorageClass mocks base method
+// GetPVCsUsingStorageClass mocks base method.
 func (m *MockOps) GetPVCsUsingStorageClass(arg0 string) ([]v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPVCsUsingStorageClass", arg0)
@@ -518,13 +563,13 @@ func (m *MockOps) GetPVCsUsingStorageClass(arg0 string) ([]v1.PersistentVolumeCl
 	return ret0, ret1
 }
 
-// GetPVCsUsingStorageClass indicates an expected call of GetPVCsUsingStorageClass
+// GetPVCsUsingStorageClass indicates an expected call of GetPVCsUsingStorageClass.
 func (mr *MockOpsMockRecorder) GetPVCsUsingStorageClass(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPVCsUsingStorageClass", reflect.TypeOf((*MockOps)(nil).GetPVCsUsingStorageClass), arg0)
 }
 
-// GetPersistentVolume mocks base method
+// GetPersistentVolume mocks base method.
 func (m *MockOps) GetPersistentVolume(arg0 string) (*v1.PersistentVolume, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolume", arg0)
@@ -533,13 +578,13 @@ func (m *MockOps) GetPersistentVolume(arg0 string) (*v1.PersistentVolume, error)
 	return ret0, ret1
 }
 
-// GetPersistentVolume indicates an expected call of GetPersistentVolume
+// GetPersistentVolume indicates an expected call of GetPersistentVolume.
 func (mr *MockOpsMockRecorder) GetPersistentVolume(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolume", reflect.TypeOf((*MockOps)(nil).GetPersistentVolume), arg0)
 }
 
-// GetPersistentVolumeClaim mocks base method
+// GetPersistentVolumeClaim mocks base method.
 func (m *MockOps) GetPersistentVolumeClaim(arg0, arg1 string) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolumeClaim", arg0, arg1)
@@ -548,13 +593,13 @@ func (m *MockOps) GetPersistentVolumeClaim(arg0, arg1 string) (*v1.PersistentVol
 	return ret0, ret1
 }
 
-// GetPersistentVolumeClaim indicates an expected call of GetPersistentVolumeClaim
+// GetPersistentVolumeClaim indicates an expected call of GetPersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) GetPersistentVolumeClaim(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).GetPersistentVolumeClaim), arg0, arg1)
 }
 
-// GetPersistentVolumeClaimParams mocks base method
+// GetPersistentVolumeClaimParams mocks base method.
 func (m *MockOps) GetPersistentVolumeClaimParams(arg0 *v1.PersistentVolumeClaim) (map[string]string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolumeClaimParams", arg0)
@@ -563,13 +608,13 @@ func (m *MockOps) GetPersistentVolumeClaimParams(arg0 *v1.PersistentVolumeClaim)
 	return ret0, ret1
 }
 
-// GetPersistentVolumeClaimParams indicates an expected call of GetPersistentVolumeClaimParams
+// GetPersistentVolumeClaimParams indicates an expected call of GetPersistentVolumeClaimParams.
 func (mr *MockOpsMockRecorder) GetPersistentVolumeClaimParams(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolumeClaimParams", reflect.TypeOf((*MockOps)(nil).GetPersistentVolumeClaimParams), arg0)
 }
 
-// GetPersistentVolumeClaimStatus mocks base method
+// GetPersistentVolumeClaimStatus mocks base method.
 func (m *MockOps) GetPersistentVolumeClaimStatus(arg0 *v1.PersistentVolumeClaim) (*v1.PersistentVolumeClaimStatus, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolumeClaimStatus", arg0)
@@ -578,13 +623,13 @@ func (m *MockOps) GetPersistentVolumeClaimStatus(arg0 *v1.PersistentVolumeClaim)
 	return ret0, ret1
 }
 
-// GetPersistentVolumeClaimStatus indicates an expected call of GetPersistentVolumeClaimStatus
+// GetPersistentVolumeClaimStatus indicates an expected call of GetPersistentVolumeClaimStatus.
 func (mr *MockOpsMockRecorder) GetPersistentVolumeClaimStatus(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolumeClaimStatus", reflect.TypeOf((*MockOps)(nil).GetPersistentVolumeClaimStatus), arg0)
 }
 
-// GetPersistentVolumeClaims mocks base method
+// GetPersistentVolumeClaims mocks base method.
 func (m *MockOps) GetPersistentVolumeClaims(arg0 string, arg1 map[string]string) (*v1.PersistentVolumeClaimList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolumeClaims", arg0, arg1)
@@ -593,13 +638,13 @@ func (m *MockOps) GetPersistentVolumeClaims(arg0 string, arg1 map[string]string)
 	return ret0, ret1
 }
 
-// GetPersistentVolumeClaims indicates an expected call of GetPersistentVolumeClaims
+// GetPersistentVolumeClaims indicates an expected call of GetPersistentVolumeClaims.
 func (mr *MockOpsMockRecorder) GetPersistentVolumeClaims(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolumeClaims", reflect.TypeOf((*MockOps)(nil).GetPersistentVolumeClaims), arg0, arg1)
 }
 
-// GetPersistentVolumes mocks base method
+// GetPersistentVolumes mocks base method.
 func (m *MockOps) GetPersistentVolumes() (*v1.PersistentVolumeList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPersistentVolumes")
@@ -608,13 +653,13 @@ func (m *MockOps) GetPersistentVolumes() (*v1.PersistentVolumeList, error) {
 	return ret0, ret1
 }
 
-// GetPersistentVolumes indicates an expected call of GetPersistentVolumes
+// GetPersistentVolumes indicates an expected call of GetPersistentVolumes.
 func (mr *MockOpsMockRecorder) GetPersistentVolumes() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPersistentVolumes", reflect.TypeOf((*MockOps)(nil).GetPersistentVolumes))
 }
 
-// GetPodByName mocks base method
+// GetPodByName mocks base method.
 func (m *MockOps) GetPodByName(arg0, arg1 string) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodByName", arg0, arg1)
@@ -623,13 +668,13 @@ func (m *MockOps) GetPodByName(arg0, arg1 string) (*v1.Pod, error) {
 	return ret0, ret1
 }
 
-// GetPodByName indicates an expected call of GetPodByName
+// GetPodByName indicates an expected call of GetPodByName.
 func (mr *MockOpsMockRecorder) GetPodByName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodByName", reflect.TypeOf((*MockOps)(nil).GetPodByName), arg0, arg1)
 }
 
-// GetPodByUID mocks base method
+// GetPodByUID mocks base method.
 func (m *MockOps) GetPodByUID(arg0 types.UID, arg1 string) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodByUID", arg0, arg1)
@@ -638,13 +683,13 @@ func (m *MockOps) GetPodByUID(arg0 types.UID, arg1 string) (*v1.Pod, error) {
 	return ret0, ret1
 }
 
-// GetPodByUID indicates an expected call of GetPodByUID
+// GetPodByUID indicates an expected call of GetPodByUID.
 func (mr *MockOpsMockRecorder) GetPodByUID(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodByUID", reflect.TypeOf((*MockOps)(nil).GetPodByUID), arg0, arg1)
 }
 
-// GetPods mocks base method
+// GetPods mocks base method.
 func (m *MockOps) GetPods(arg0 string, arg1 map[string]string) (*v1.PodList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPods", arg0, arg1)
@@ -653,13 +698,13 @@ func (m *MockOps) GetPods(arg0 string, arg1 map[string]string) (*v1.PodList, err
 	return ret0, ret1
 }
 
-// GetPods indicates an expected call of GetPods
+// GetPods indicates an expected call of GetPods.
 func (mr *MockOpsMockRecorder) GetPods(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPods", reflect.TypeOf((*MockOps)(nil).GetPods), arg0, arg1)
 }
 
-// GetPodsByNode mocks base method
+// GetPodsByNode mocks base method.
 func (m *MockOps) GetPodsByNode(arg0, arg1 string) (*v1.PodList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsByNode", arg0, arg1)
@@ -668,13 +713,13 @@ func (m *MockOps) GetPodsByNode(arg0, arg1 string) (*v1.PodList, error) {
 	return ret0, ret1
 }
 
-// GetPodsByNode indicates an expected call of GetPodsByNode
+// GetPodsByNode indicates an expected call of GetPodsByNode.
 func (mr *MockOpsMockRecorder) GetPodsByNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsByNode", reflect.TypeOf((*MockOps)(nil).GetPodsByNode), arg0, arg1)
 }
 
-// GetPodsByNodeAndLabels mocks base method
+// GetPodsByNodeAndLabels mocks base method.
 func (m *MockOps) GetPodsByNodeAndLabels(arg0, arg1 string, arg2 map[string]string) (*v1.PodList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsByNodeAndLabels", arg0, arg1, arg2)
@@ -683,13 +728,13 @@ func (m *MockOps) GetPodsByNodeAndLabels(arg0, arg1 string, arg2 map[string]stri
 	return ret0, ret1
 }
 
-// GetPodsByNodeAndLabels indicates an expected call of GetPodsByNodeAndLabels
+// GetPodsByNodeAndLabels indicates an expected call of GetPodsByNodeAndLabels.
 func (mr *MockOpsMockRecorder) GetPodsByNodeAndLabels(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsByNodeAndLabels", reflect.TypeOf((*MockOps)(nil).GetPodsByNodeAndLabels), arg0, arg1, arg2)
 }
 
-// GetPodsByOwner mocks base method
+// GetPodsByOwner mocks base method.
 func (m *MockOps) GetPodsByOwner(arg0 types.UID, arg1 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsByOwner", arg0, arg1)
@@ -698,13 +743,13 @@ func (m *MockOps) GetPodsByOwner(arg0 types.UID, arg1 string) ([]v1.Pod, error) 
 	return ret0, ret1
 }
 
-// GetPodsByOwner indicates an expected call of GetPodsByOwner
+// GetPodsByOwner indicates an expected call of GetPodsByOwner.
 func (mr *MockOpsMockRecorder) GetPodsByOwner(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsByOwner", reflect.TypeOf((*MockOps)(nil).GetPodsByOwner), arg0, arg1)
 }
 
-// GetPodsUsingPV mocks base method
+// GetPodsUsingPV mocks base method.
 func (m *MockOps) GetPodsUsingPV(arg0 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingPV", arg0)
@@ -713,13 +758,13 @@ func (m *MockOps) GetPodsUsingPV(arg0 string) ([]v1.Pod, error) {
 	return ret0, ret1
 }
 
-// GetPodsUsingPV indicates an expected call of GetPodsUsingPV
+// GetPodsUsingPV indicates an expected call of GetPodsUsingPV.
 func (mr *MockOpsMockRecorder) GetPodsUsingPV(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingPV", reflect.TypeOf((*MockOps)(nil).GetPodsUsingPV), arg0)
 }
 
-// GetPodsUsingPVByNodeName mocks base method
+// GetPodsUsingPVByNodeName mocks base method.
 func (m *MockOps) GetPodsUsingPVByNodeName(arg0, arg1 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingPVByNodeName", arg0, arg1)
@@ -728,13 +773,13 @@ func (m *MockOps) GetPodsUsingPVByNodeName(arg0, arg1 string) ([]v1.Pod, error) 
 	return ret0, ret1
 }
 
-// GetPodsUsingPVByNodeName indicates an expected call of GetPodsUsingPVByNodeName
+// GetPodsUsingPVByNodeName indicates an expected call of GetPodsUsingPVByNodeName.
 func (mr *MockOpsMockRecorder) GetPodsUsingPVByNodeName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingPVByNodeName", reflect.TypeOf((*MockOps)(nil).GetPodsUsingPVByNodeName), arg0, arg1)
 }
 
-// GetPodsUsingPVC mocks base method
+// GetPodsUsingPVC mocks base method.
 func (m *MockOps) GetPodsUsingPVC(arg0, arg1 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingPVC", arg0, arg1)
@@ -743,13 +788,13 @@ func (m *MockOps) GetPodsUsingPVC(arg0, arg1 string) ([]v1.Pod, error) {
 	return ret0, ret1
 }
 
-// GetPodsUsingPVC indicates an expected call of GetPodsUsingPVC
+// GetPodsUsingPVC indicates an expected call of GetPodsUsingPVC.
 func (mr *MockOpsMockRecorder) GetPodsUsingPVC(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingPVC", reflect.TypeOf((*MockOps)(nil).GetPodsUsingPVC), arg0, arg1)
 }
 
-// GetPodsUsingPVCByNodeName mocks base method
+// GetPodsUsingPVCByNodeName mocks base method.
 func (m *MockOps) GetPodsUsingPVCByNodeName(arg0, arg1, arg2 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingPVCByNodeName", arg0, arg1, arg2)
@@ -758,13 +803,13 @@ func (m *MockOps) GetPodsUsingPVCByNodeName(arg0, arg1, arg2 string) ([]v1.Pod, 
 	return ret0, ret1
 }
 
-// GetPodsUsingPVCByNodeName indicates an expected call of GetPodsUsingPVCByNodeName
+// GetPodsUsingPVCByNodeName indicates an expected call of GetPodsUsingPVCByNodeName.
 func (mr *MockOpsMockRecorder) GetPodsUsingPVCByNodeName(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingPVCByNodeName", reflect.TypeOf((*MockOps)(nil).GetPodsUsingPVCByNodeName), arg0, arg1, arg2)
 }
 
-// GetPodsUsingVolumePlugin mocks base method
+// GetPodsUsingVolumePlugin mocks base method.
 func (m *MockOps) GetPodsUsingVolumePlugin(arg0 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingVolumePlugin", arg0)
@@ -773,13 +818,13 @@ func (m *MockOps) GetPodsUsingVolumePlugin(arg0 string) ([]v1.Pod, error) {
 	return ret0, ret1
 }
 
-// GetPodsUsingVolumePlugin indicates an expected call of GetPodsUsingVolumePlugin
+// GetPodsUsingVolumePlugin indicates an expected call of GetPodsUsingVolumePlugin.
 func (mr *MockOpsMockRecorder) GetPodsUsingVolumePlugin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingVolumePlugin", reflect.TypeOf((*MockOps)(nil).GetPodsUsingVolumePlugin), arg0)
 }
 
-// GetPodsUsingVolumePluginByNodeName mocks base method
+// GetPodsUsingVolumePluginByNodeName mocks base method.
 func (m *MockOps) GetPodsUsingVolumePluginByNodeName(arg0, arg1 string) ([]v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPodsUsingVolumePluginByNodeName", arg0, arg1)
@@ -788,13 +833,13 @@ func (m *MockOps) GetPodsUsingVolumePluginByNodeName(arg0, arg1 string) ([]v1.Po
 	return ret0, ret1
 }
 
-// GetPodsUsingVolumePluginByNodeName indicates an expected call of GetPodsUsingVolumePluginByNodeName
+// GetPodsUsingVolumePluginByNodeName indicates an expected call of GetPodsUsingVolumePluginByNodeName.
 func (mr *MockOpsMockRecorder) GetPodsUsingVolumePluginByNodeName(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPodsUsingVolumePluginByNodeName", reflect.TypeOf((*MockOps)(nil).GetPodsUsingVolumePluginByNodeName), arg0, arg1)
 }
 
-// GetSecret mocks base method
+// GetSecret mocks base method.
 func (m *MockOps) GetSecret(arg0, arg1 string) (*v1.Secret, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetSecret", arg0, arg1)
@@ -803,13 +848,13 @@ func (m *MockOps) GetSecret(arg0, arg1 string) (*v1.Secret, error) {
 	return ret0, ret1
 }
 
-// GetSecret indicates an expected call of GetSecret
+// GetSecret indicates an expected call of GetSecret.
 func (mr *MockOpsMockRecorder) GetSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSecret", reflect.TypeOf((*MockOps)(nil).GetSecret), arg0, arg1)
 }
 
-// GetService mocks base method
+// GetService mocks base method.
 func (m *MockOps) GetService(arg0, arg1 string) (*v1.Service, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetService", arg0, arg1)
@@ -818,13 +863,13 @@ func (m *MockOps) GetService(arg0, arg1 string) (*v1.Service, error) {
 	return ret0, ret1
 }
 
-// GetService indicates an expected call of GetService
+// GetService indicates an expected call of GetService.
 func (mr *MockOpsMockRecorder) GetService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetService", reflect.TypeOf((*MockOps)(nil).GetService), arg0, arg1)
 }
 
-// GetServiceAccount mocks base method
+// GetServiceAccount mocks base method.
 func (m *MockOps) GetServiceAccount(arg0, arg1 string) (*v1.ServiceAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetServiceAccount", arg0, arg1)
@@ -833,13 +878,13 @@ func (m *MockOps) GetServiceAccount(arg0, arg1 string) (*v1.ServiceAccount, erro
 	return ret0, ret1
 }
 
-// GetServiceAccount indicates an expected call of GetServiceAccount
+// GetServiceAccount indicates an expected call of GetServiceAccount.
 func (mr *MockOpsMockRecorder) GetServiceAccount(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServiceAccount", reflect.TypeOf((*MockOps)(nil).GetServiceAccount), arg0, arg1)
 }
 
-// GetServiceEndpoint mocks base method
+// GetServiceEndpoint mocks base method.
 func (m *MockOps) GetServiceEndpoint(arg0, arg1 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetServiceEndpoint", arg0, arg1)
@@ -848,13 +893,13 @@ func (m *MockOps) GetServiceEndpoint(arg0, arg1 string) (string, error) {
 	return ret0, ret1
 }
 
-// GetServiceEndpoint indicates an expected call of GetServiceEndpoint
+// GetServiceEndpoint indicates an expected call of GetServiceEndpoint.
 func (mr *MockOpsMockRecorder) GetServiceEndpoint(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetServiceEndpoint", reflect.TypeOf((*MockOps)(nil).GetServiceEndpoint), arg0, arg1)
 }
 
-// GetStorageClassForPVC mocks base method
+// GetStorageClassForPVC mocks base method.
 func (m *MockOps) GetStorageClassForPVC(arg0 *v1.PersistentVolumeClaim) (*v10.StorageClass, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStorageClassForPVC", arg0)
@@ -863,13 +908,13 @@ func (m *MockOps) GetStorageClassForPVC(arg0 *v1.PersistentVolumeClaim) (*v10.St
 	return ret0, ret1
 }
 
-// GetStorageClassForPVC indicates an expected call of GetStorageClassForPVC
+// GetStorageClassForPVC indicates an expected call of GetStorageClassForPVC.
 func (mr *MockOpsMockRecorder) GetStorageClassForPVC(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStorageClassForPVC", reflect.TypeOf((*MockOps)(nil).GetStorageClassForPVC), arg0)
 }
 
-// GetStorageProvisionerForPVC mocks base method
+// GetStorageProvisionerForPVC mocks base method.
 func (m *MockOps) GetStorageProvisionerForPVC(arg0 *v1.PersistentVolumeClaim) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetStorageProvisionerForPVC", arg0)
@@ -878,13 +923,13 @@ func (m *MockOps) GetStorageProvisionerForPVC(arg0 *v1.PersistentVolumeClaim) (s
 	return ret0, ret1
 }
 
-// GetStorageProvisionerForPVC indicates an expected call of GetStorageProvisionerForPVC
+// GetStorageProvisionerForPVC indicates an expected call of GetStorageProvisionerForPVC.
 func (mr *MockOpsMockRecorder) GetStorageProvisionerForPVC(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStorageProvisionerForPVC", reflect.TypeOf((*MockOps)(nil).GetStorageProvisionerForPVC), arg0)
 }
 
-// GetVersion mocks base method
+// GetVersion mocks base method.
 func (m *MockOps) GetVersion() (*version.Info, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVersion")
@@ -893,13 +938,13 @@ func (m *MockOps) GetVersion() (*version.Info, error) {
 	return ret0, ret1
 }
 
-// GetVersion indicates an expected call of GetVersion
+// GetVersion indicates an expected call of GetVersion.
 func (mr *MockOpsMockRecorder) GetVersion() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockOps)(nil).GetVersion))
 }
 
-// GetVolumeForPersistentVolumeClaim mocks base method
+// GetVolumeForPersistentVolumeClaim mocks base method.
 func (m *MockOps) GetVolumeForPersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetVolumeForPersistentVolumeClaim", arg0)
@@ -908,13 +953,13 @@ func (m *MockOps) GetVolumeForPersistentVolumeClaim(arg0 *v1.PersistentVolumeCla
 	return ret0, ret1
 }
 
-// GetVolumeForPersistentVolumeClaim indicates an expected call of GetVolumeForPersistentVolumeClaim
+// GetVolumeForPersistentVolumeClaim indicates an expected call of GetVolumeForPersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) GetVolumeForPersistentVolumeClaim(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolumeForPersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).GetVolumeForPersistentVolumeClaim), arg0)
 }
 
-// IsNodeMaster mocks base method
+// IsNodeMaster mocks base method.
 func (m *MockOps) IsNodeMaster(arg0 v1.Node) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsNodeMaster", arg0)
@@ -922,13 +967,13 @@ func (m *MockOps) IsNodeMaster(arg0 v1.Node) bool {
 	return ret0
 }
 
-// IsNodeMaster indicates an expected call of IsNodeMaster
+// IsNodeMaster indicates an expected call of IsNodeMaster.
 func (mr *MockOpsMockRecorder) IsNodeMaster(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNodeMaster", reflect.TypeOf((*MockOps)(nil).IsNodeMaster), arg0)
 }
 
-// IsNodeReady mocks base method
+// IsNodeReady mocks base method.
 func (m *MockOps) IsNodeReady(arg0 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsNodeReady", arg0)
@@ -936,13 +981,13 @@ func (m *MockOps) IsNodeReady(arg0 string) error {
 	return ret0
 }
 
-// IsNodeReady indicates an expected call of IsNodeReady
+// IsNodeReady indicates an expected call of IsNodeReady.
 func (mr *MockOpsMockRecorder) IsNodeReady(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsNodeReady", reflect.TypeOf((*MockOps)(nil).IsNodeReady), arg0)
 }
 
-// IsPodBeingManaged mocks base method
+// IsPodBeingManaged mocks base method.
 func (m *MockOps) IsPodBeingManaged(arg0 v1.Pod) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPodBeingManaged", arg0)
@@ -950,13 +995,13 @@ func (m *MockOps) IsPodBeingManaged(arg0 v1.Pod) bool {
 	return ret0
 }
 
-// IsPodBeingManaged indicates an expected call of IsPodBeingManaged
+// IsPodBeingManaged indicates an expected call of IsPodBeingManaged.
 func (mr *MockOpsMockRecorder) IsPodBeingManaged(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPodBeingManaged", reflect.TypeOf((*MockOps)(nil).IsPodBeingManaged), arg0)
 }
 
-// IsPodReady mocks base method
+// IsPodReady mocks base method.
 func (m *MockOps) IsPodReady(arg0 v1.Pod) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPodReady", arg0)
@@ -964,13 +1009,13 @@ func (m *MockOps) IsPodReady(arg0 v1.Pod) bool {
 	return ret0
 }
 
-// IsPodReady indicates an expected call of IsPodReady
+// IsPodReady indicates an expected call of IsPodReady.
 func (mr *MockOpsMockRecorder) IsPodReady(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPodReady", reflect.TypeOf((*MockOps)(nil).IsPodReady), arg0)
 }
 
-// IsPodRunning mocks base method
+// IsPodRunning mocks base method.
 func (m *MockOps) IsPodRunning(arg0 v1.Pod) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "IsPodRunning", arg0)
@@ -978,13 +1023,13 @@ func (m *MockOps) IsPodRunning(arg0 v1.Pod) bool {
 	return ret0
 }
 
-// IsPodRunning indicates an expected call of IsPodRunning
+// IsPodRunning indicates an expected call of IsPodRunning.
 func (mr *MockOpsMockRecorder) IsPodRunning(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsPodRunning", reflect.TypeOf((*MockOps)(nil).IsPodRunning), arg0)
 }
 
-// ListEvents mocks base method
+// ListEvents mocks base method.
 func (m *MockOps) ListEvents(arg0 string, arg1 v11.ListOptions) (*v1.EventList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListEvents", arg0, arg1)
@@ -993,13 +1038,28 @@ func (m *MockOps) ListEvents(arg0 string, arg1 v11.ListOptions) (*v1.EventList, 
 	return ret0, ret1
 }
 
-// ListEvents indicates an expected call of ListEvents
+// ListEvents indicates an expected call of ListEvents.
 func (mr *MockOpsMockRecorder) ListEvents(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListEvents", reflect.TypeOf((*MockOps)(nil).ListEvents), arg0, arg1)
 }
 
-// ListNamespaces mocks base method
+// ListLimitRange mocks base method.
+func (m *MockOps) ListLimitRange(arg0 string, arg1 v11.ListOptions) (*v1.LimitRangeList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(*v1.LimitRangeList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListLimitRange indicates an expected call of ListLimitRange.
+func (mr *MockOpsMockRecorder) ListLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLimitRange", reflect.TypeOf((*MockOps)(nil).ListLimitRange), arg0, arg1)
+}
+
+// ListNamespaces mocks base method.
 func (m *MockOps) ListNamespaces(arg0 map[string]string) (*v1.NamespaceList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListNamespaces", arg0)
@@ -1008,13 +1068,13 @@ func (m *MockOps) ListNamespaces(arg0 map[string]string) (*v1.NamespaceList, err
 	return ret0, ret1
 }
 
-// ListNamespaces indicates an expected call of ListNamespaces
+// ListNamespaces indicates an expected call of ListNamespaces.
 func (mr *MockOpsMockRecorder) ListNamespaces(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNamespaces", reflect.TypeOf((*MockOps)(nil).ListNamespaces), arg0)
 }
 
-// ListServices mocks base method
+// ListServices mocks base method.
 func (m *MockOps) ListServices(arg0 string, arg1 v11.ListOptions) (*v1.ServiceList, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListServices", arg0, arg1)
@@ -1023,13 +1083,13 @@ func (m *MockOps) ListServices(arg0 string, arg1 v11.ListOptions) (*v1.ServiceLi
 	return ret0, ret1
 }
 
-// ListServices indicates an expected call of ListServices
+// ListServices indicates an expected call of ListServices.
 func (mr *MockOpsMockRecorder) ListServices(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListServices", reflect.TypeOf((*MockOps)(nil).ListServices), arg0, arg1)
 }
 
-// PatchEndpoints mocks base method
+// PatchEndpoints mocks base method.
 func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 []byte) (*v1.Endpoints, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PatchEndpoints", arg0, arg1, arg2, arg3)
@@ -1038,13 +1098,13 @@ func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 [
 	return ret0, ret1
 }
 
-// PatchEndpoints indicates an expected call of PatchEndpoints
+// PatchEndpoints indicates an expected call of PatchEndpoints.
 func (mr *MockOpsMockRecorder) PatchEndpoints(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchEndpoints", reflect.TypeOf((*MockOps)(nil).PatchEndpoints), arg0, arg1, arg2, arg3)
 }
 
-// PatchService mocks base method
+// PatchService mocks base method.
 func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte) (*v1.Service, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PatchService", arg0, arg1, arg2)
@@ -1053,25 +1113,25 @@ func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte) (*v1.Service, err
 	return ret0, ret1
 }
 
-// PatchService indicates an expected call of PatchService
+// PatchService indicates an expected call of PatchService.
 func (mr *MockOpsMockRecorder) PatchService(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchService", reflect.TypeOf((*MockOps)(nil).PatchService), arg0, arg1, arg2)
 }
 
-// RecordEvent mocks base method
+// RecordEvent mocks base method.
 func (m *MockOps) RecordEvent(arg0 v1.EventSource, arg1 runtime.Object, arg2, arg3, arg4 string) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "RecordEvent", arg0, arg1, arg2, arg3, arg4)
 }
 
-// RecordEvent indicates an expected call of RecordEvent
+// RecordEvent indicates an expected call of RecordEvent.
 func (mr *MockOpsMockRecorder) RecordEvent(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RecordEvent", reflect.TypeOf((*MockOps)(nil).RecordEvent), arg0, arg1, arg2, arg3, arg4)
 }
 
-// RemoveLabelOnNode mocks base method
+// RemoveLabelOnNode mocks base method.
 func (m *MockOps) RemoveLabelOnNode(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveLabelOnNode", arg0, arg1)
@@ -1079,13 +1139,13 @@ func (m *MockOps) RemoveLabelOnNode(arg0, arg1 string) error {
 	return ret0
 }
 
-// RemoveLabelOnNode indicates an expected call of RemoveLabelOnNode
+// RemoveLabelOnNode indicates an expected call of RemoveLabelOnNode.
 func (mr *MockOpsMockRecorder) RemoveLabelOnNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveLabelOnNode", reflect.TypeOf((*MockOps)(nil).RemoveLabelOnNode), arg0, arg1)
 }
 
-// ResourceExists mocks base method
+// ResourceExists mocks base method.
 func (m *MockOps) ResourceExists(arg0 schema.GroupVersionKind) (bool, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ResourceExists", arg0)
@@ -1094,13 +1154,13 @@ func (m *MockOps) ResourceExists(arg0 schema.GroupVersionKind) (bool, error) {
 	return ret0, ret1
 }
 
-// ResourceExists indicates an expected call of ResourceExists
+// ResourceExists indicates an expected call of ResourceExists.
 func (mr *MockOpsMockRecorder) ResourceExists(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ResourceExists", reflect.TypeOf((*MockOps)(nil).ResourceExists), arg0)
 }
 
-// RunCommandInPod mocks base method
+// RunCommandInPod mocks base method.
 func (m *MockOps) RunCommandInPod(arg0 []string, arg1, arg2, arg3 string) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RunCommandInPod", arg0, arg1, arg2, arg3)
@@ -1109,13 +1169,13 @@ func (m *MockOps) RunCommandInPod(arg0 []string, arg1, arg2, arg3 string) (strin
 	return ret0, ret1
 }
 
-// RunCommandInPod indicates an expected call of RunCommandInPod
+// RunCommandInPod indicates an expected call of RunCommandInPod.
 func (mr *MockOpsMockRecorder) RunCommandInPod(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RunCommandInPod", reflect.TypeOf((*MockOps)(nil).RunCommandInPod), arg0, arg1, arg2, arg3)
 }
 
-// SearchNodeByAddresses mocks base method
+// SearchNodeByAddresses mocks base method.
 func (m *MockOps) SearchNodeByAddresses(arg0 []string) (*v1.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "SearchNodeByAddresses", arg0)
@@ -1124,25 +1184,25 @@ func (m *MockOps) SearchNodeByAddresses(arg0 []string) (*v1.Node, error) {
 	return ret0, ret1
 }
 
-// SearchNodeByAddresses indicates an expected call of SearchNodeByAddresses
+// SearchNodeByAddresses indicates an expected call of SearchNodeByAddresses.
 func (mr *MockOpsMockRecorder) SearchNodeByAddresses(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SearchNodeByAddresses", reflect.TypeOf((*MockOps)(nil).SearchNodeByAddresses), arg0)
 }
 
-// SetConfig mocks base method
+// SetConfig mocks base method.
 func (m *MockOps) SetConfig(arg0 *rest.Config) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "SetConfig", arg0)
 }
 
-// SetConfig indicates an expected call of SetConfig
+// SetConfig indicates an expected call of SetConfig.
 func (mr *MockOpsMockRecorder) SetConfig(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetConfig", reflect.TypeOf((*MockOps)(nil).SetConfig), arg0)
 }
 
-// UnCordonNode mocks base method
+// UnCordonNode mocks base method.
 func (m *MockOps) UnCordonNode(arg0 string, arg1, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UnCordonNode", arg0, arg1, arg2)
@@ -1150,13 +1210,13 @@ func (m *MockOps) UnCordonNode(arg0 string, arg1, arg2 time.Duration) error {
 	return ret0
 }
 
-// UnCordonNode indicates an expected call of UnCordonNode
+// UnCordonNode indicates an expected call of UnCordonNode.
 func (mr *MockOpsMockRecorder) UnCordonNode(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UnCordonNode", reflect.TypeOf((*MockOps)(nil).UnCordonNode), arg0, arg1, arg2)
 }
 
-// UpdateConfigMap mocks base method
+// UpdateConfigMap mocks base method.
 func (m *MockOps) UpdateConfigMap(arg0 *v1.ConfigMap) (*v1.ConfigMap, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateConfigMap", arg0)
@@ -1165,13 +1225,58 @@ func (m *MockOps) UpdateConfigMap(arg0 *v1.ConfigMap) (*v1.ConfigMap, error) {
 	return ret0, ret1
 }
 
-// UpdateConfigMap indicates an expected call of UpdateConfigMap
+// UpdateConfigMap indicates an expected call of UpdateConfigMap.
 func (mr *MockOpsMockRecorder) UpdateConfigMap(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateConfigMap", reflect.TypeOf((*MockOps)(nil).UpdateConfigMap), arg0)
 }
 
-// UpdateNode mocks base method
+// UpdateEndpoints mocks base method.
+func (m *MockOps) UpdateEndpoints(arg0 *v1.Endpoints) (*v1.Endpoints, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateEndpoints", arg0)
+	ret0, _ := ret[0].(*v1.Endpoints)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateEndpoints indicates an expected call of UpdateEndpoints.
+func (mr *MockOpsMockRecorder) UpdateEndpoints(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateEndpoints", reflect.TypeOf((*MockOps)(nil).UpdateEndpoints), arg0)
+}
+
+// UpdateLimitRange mocks base method.
+func (m *MockOps) UpdateLimitRange(arg0 *v1.LimitRange) (*v1.LimitRange, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateLimitRange", arg0)
+	ret0, _ := ret[0].(*v1.LimitRange)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateLimitRange indicates an expected call of UpdateLimitRange.
+func (mr *MockOpsMockRecorder) UpdateLimitRange(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateLimitRange", reflect.TypeOf((*MockOps)(nil).UpdateLimitRange), arg0)
+}
+
+// UpdateNamespace mocks base method.
+func (m *MockOps) UpdateNamespace(arg0 *v1.Namespace) (*v1.Namespace, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateNamespace", arg0)
+	ret0, _ := ret[0].(*v1.Namespace)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateNamespace indicates an expected call of UpdateNamespace.
+func (mr *MockOpsMockRecorder) UpdateNamespace(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNamespace", reflect.TypeOf((*MockOps)(nil).UpdateNamespace), arg0)
+}
+
+// UpdateNode mocks base method.
 func (m *MockOps) UpdateNode(arg0 *v1.Node) (*v1.Node, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateNode", arg0)
@@ -1180,13 +1285,13 @@ func (m *MockOps) UpdateNode(arg0 *v1.Node) (*v1.Node, error) {
 	return ret0, ret1
 }
 
-// UpdateNode indicates an expected call of UpdateNode
+// UpdateNode indicates an expected call of UpdateNode.
 func (mr *MockOpsMockRecorder) UpdateNode(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateNode", reflect.TypeOf((*MockOps)(nil).UpdateNode), arg0)
 }
 
-// UpdatePersistentVolumeClaim mocks base method
+// UpdatePersistentVolumeClaim mocks base method.
 func (m *MockOps) UpdatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim) (*v1.PersistentVolumeClaim, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePersistentVolumeClaim", arg0)
@@ -1195,13 +1300,13 @@ func (m *MockOps) UpdatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim) (*
 	return ret0, ret1
 }
 
-// UpdatePersistentVolumeClaim indicates an expected call of UpdatePersistentVolumeClaim
+// UpdatePersistentVolumeClaim indicates an expected call of UpdatePersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) UpdatePersistentVolumeClaim(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).UpdatePersistentVolumeClaim), arg0)
 }
 
-// UpdatePod mocks base method
+// UpdatePod mocks base method.
 func (m *MockOps) UpdatePod(arg0 *v1.Pod) (*v1.Pod, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdatePod", arg0)
@@ -1210,13 +1315,13 @@ func (m *MockOps) UpdatePod(arg0 *v1.Pod) (*v1.Pod, error) {
 	return ret0, ret1
 }
 
-// UpdatePod indicates an expected call of UpdatePod
+// UpdatePod indicates an expected call of UpdatePod.
 func (mr *MockOpsMockRecorder) UpdatePod(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdatePod", reflect.TypeOf((*MockOps)(nil).UpdatePod), arg0)
 }
 
-// UpdateSecret mocks base method
+// UpdateSecret mocks base method.
 func (m *MockOps) UpdateSecret(arg0 *v1.Secret) (*v1.Secret, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSecret", arg0)
@@ -1225,13 +1330,13 @@ func (m *MockOps) UpdateSecret(arg0 *v1.Secret) (*v1.Secret, error) {
 	return ret0, ret1
 }
 
-// UpdateSecret indicates an expected call of UpdateSecret
+// UpdateSecret indicates an expected call of UpdateSecret.
 func (mr *MockOpsMockRecorder) UpdateSecret(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSecret", reflect.TypeOf((*MockOps)(nil).UpdateSecret), arg0)
 }
 
-// UpdateSecretData mocks base method
+// UpdateSecretData mocks base method.
 func (m *MockOps) UpdateSecretData(arg0, arg1 string, arg2 map[string][]byte) (*v1.Secret, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateSecretData", arg0, arg1, arg2)
@@ -1240,13 +1345,28 @@ func (m *MockOps) UpdateSecretData(arg0, arg1 string, arg2 map[string][]byte) (*
 	return ret0, ret1
 }
 
-// UpdateSecretData indicates an expected call of UpdateSecretData
+// UpdateSecretData indicates an expected call of UpdateSecretData.
 func (mr *MockOpsMockRecorder) UpdateSecretData(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateSecretData", reflect.TypeOf((*MockOps)(nil).UpdateSecretData), arg0, arg1, arg2)
 }
 
-// UpdateServiceAccount mocks base method
+// UpdateService mocks base method.
+func (m *MockOps) UpdateService(arg0 *v1.Service) (*v1.Service, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "UpdateService", arg0)
+	ret0, _ := ret[0].(*v1.Service)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// UpdateService indicates an expected call of UpdateService.
+func (mr *MockOpsMockRecorder) UpdateService(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateService", reflect.TypeOf((*MockOps)(nil).UpdateService), arg0)
+}
+
+// UpdateServiceAccount mocks base method.
 func (m *MockOps) UpdateServiceAccount(arg0 *v1.ServiceAccount) (*v1.ServiceAccount, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateServiceAccount", arg0)
@@ -1255,13 +1375,13 @@ func (m *MockOps) UpdateServiceAccount(arg0 *v1.ServiceAccount) (*v1.ServiceAcco
 	return ret0, ret1
 }
 
-// UpdateServiceAccount indicates an expected call of UpdateServiceAccount
+// UpdateServiceAccount indicates an expected call of UpdateServiceAccount.
 func (mr *MockOpsMockRecorder) UpdateServiceAccount(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateServiceAccount", reflect.TypeOf((*MockOps)(nil).UpdateServiceAccount), arg0)
 }
 
-// ValidateDeletedService mocks base method
+// ValidateDeletedService mocks base method.
 func (m *MockOps) ValidateDeletedService(arg0, arg1 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidateDeletedService", arg0, arg1)
@@ -1269,13 +1389,13 @@ func (m *MockOps) ValidateDeletedService(arg0, arg1 string) error {
 	return ret0
 }
 
-// ValidateDeletedService indicates an expected call of ValidateDeletedService
+// ValidateDeletedService indicates an expected call of ValidateDeletedService.
 func (mr *MockOpsMockRecorder) ValidateDeletedService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidateDeletedService", reflect.TypeOf((*MockOps)(nil).ValidateDeletedService), arg0, arg1)
 }
 
-// ValidatePersistentVolumeClaim mocks base method
+// ValidatePersistentVolumeClaim mocks base method.
 func (m *MockOps) ValidatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim, arg1, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePersistentVolumeClaim", arg0, arg1, arg2)
@@ -1283,13 +1403,13 @@ func (m *MockOps) ValidatePersistentVolumeClaim(arg0 *v1.PersistentVolumeClaim, 
 	return ret0
 }
 
-// ValidatePersistentVolumeClaim indicates an expected call of ValidatePersistentVolumeClaim
+// ValidatePersistentVolumeClaim indicates an expected call of ValidatePersistentVolumeClaim.
 func (mr *MockOpsMockRecorder) ValidatePersistentVolumeClaim(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePersistentVolumeClaim", reflect.TypeOf((*MockOps)(nil).ValidatePersistentVolumeClaim), arg0, arg1, arg2)
 }
 
-// ValidatePersistentVolumeClaimSize mocks base method
+// ValidatePersistentVolumeClaimSize mocks base method.
 func (m *MockOps) ValidatePersistentVolumeClaimSize(arg0 *v1.PersistentVolumeClaim, arg1 int64, arg2, arg3 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePersistentVolumeClaimSize", arg0, arg1, arg2, arg3)
@@ -1297,13 +1417,13 @@ func (m *MockOps) ValidatePersistentVolumeClaimSize(arg0 *v1.PersistentVolumeCla
 	return ret0
 }
 
-// ValidatePersistentVolumeClaimSize indicates an expected call of ValidatePersistentVolumeClaimSize
+// ValidatePersistentVolumeClaimSize indicates an expected call of ValidatePersistentVolumeClaimSize.
 func (mr *MockOpsMockRecorder) ValidatePersistentVolumeClaimSize(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePersistentVolumeClaimSize", reflect.TypeOf((*MockOps)(nil).ValidatePersistentVolumeClaimSize), arg0, arg1, arg2, arg3)
 }
 
-// ValidatePod mocks base method
+// ValidatePod mocks base method.
 func (m *MockOps) ValidatePod(arg0 *v1.Pod, arg1, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePod", arg0, arg1, arg2)
@@ -1311,13 +1431,13 @@ func (m *MockOps) ValidatePod(arg0 *v1.Pod, arg1, arg2 time.Duration) error {
 	return ret0
 }
 
-// ValidatePod indicates an expected call of ValidatePod
+// ValidatePod indicates an expected call of ValidatePod.
 func (mr *MockOpsMockRecorder) ValidatePod(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePod", reflect.TypeOf((*MockOps)(nil).ValidatePod), arg0, arg1, arg2)
 }
 
-// WaitForPodDeletion mocks base method
+// WaitForPodDeletion mocks base method.
 func (m *MockOps) WaitForPodDeletion(arg0 types.UID, arg1 string, arg2 time.Duration) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WaitForPodDeletion", arg0, arg1, arg2)
@@ -1325,13 +1445,13 @@ func (m *MockOps) WaitForPodDeletion(arg0 types.UID, arg1 string, arg2 time.Dura
 	return ret0
 }
 
-// WaitForPodDeletion indicates an expected call of WaitForPodDeletion
+// WaitForPodDeletion indicates an expected call of WaitForPodDeletion.
 func (mr *MockOpsMockRecorder) WaitForPodDeletion(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WaitForPodDeletion", reflect.TypeOf((*MockOps)(nil).WaitForPodDeletion), arg0, arg1, arg2)
 }
 
-// WatchConfigMap mocks base method
+// WatchConfigMap mocks base method.
 func (m *MockOps) WatchConfigMap(arg0 *v1.ConfigMap, arg1 core.WatchFunc) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WatchConfigMap", arg0, arg1)
@@ -1339,13 +1459,27 @@ func (m *MockOps) WatchConfigMap(arg0 *v1.ConfigMap, arg1 core.WatchFunc) error 
 	return ret0
 }
 
-// WatchConfigMap indicates an expected call of WatchConfigMap
+// WatchConfigMap indicates an expected call of WatchConfigMap.
 func (mr *MockOpsMockRecorder) WatchConfigMap(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchConfigMap", reflect.TypeOf((*MockOps)(nil).WatchConfigMap), arg0, arg1)
 }
 
-// WatchNode mocks base method
+// WatchLimitRange mocks base method.
+func (m *MockOps) WatchLimitRange(arg0 *v1.LimitRange, arg1 core.WatchFunc) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "WatchLimitRange", arg0, arg1)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// WatchLimitRange indicates an expected call of WatchLimitRange.
+func (mr *MockOpsMockRecorder) WatchLimitRange(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchLimitRange", reflect.TypeOf((*MockOps)(nil).WatchLimitRange), arg0, arg1)
+}
+
+// WatchNode mocks base method.
 func (m *MockOps) WatchNode(arg0 *v1.Node, arg1 core.WatchFunc) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WatchNode", arg0, arg1)
@@ -1353,13 +1487,13 @@ func (m *MockOps) WatchNode(arg0 *v1.Node, arg1 core.WatchFunc) error {
 	return ret0
 }
 
-// WatchNode indicates an expected call of WatchNode
+// WatchNode indicates an expected call of WatchNode.
 func (mr *MockOpsMockRecorder) WatchNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchNode", reflect.TypeOf((*MockOps)(nil).WatchNode), arg0, arg1)
 }
 
-// WatchPods mocks base method
+// WatchPods mocks base method.
 func (m *MockOps) WatchPods(arg0 string, arg1 core.WatchFunc, arg2 v11.ListOptions) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WatchPods", arg0, arg1, arg2)
@@ -1367,13 +1501,13 @@ func (m *MockOps) WatchPods(arg0 string, arg1 core.WatchFunc, arg2 v11.ListOptio
 	return ret0
 }
 
-// WatchPods indicates an expected call of WatchPods
+// WatchPods indicates an expected call of WatchPods.
 func (mr *MockOpsMockRecorder) WatchPods(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchPods", reflect.TypeOf((*MockOps)(nil).WatchPods), arg0, arg1, arg2)
 }
 
-// WatchSecret mocks base method
+// WatchSecret mocks base method.
 func (m *MockOps) WatchSecret(arg0 *v1.Secret, arg1 core.WatchFunc) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "WatchSecret", arg0, arg1)
@@ -1381,7 +1515,7 @@ func (m *MockOps) WatchSecret(arg0 *v1.Secret, arg1 core.WatchFunc) error {
 	return ret0
 }
 
-// WatchSecret indicates an expected call of WatchSecret
+// WatchSecret indicates an expected call of WatchSecret.
 func (mr *MockOpsMockRecorder) WatchSecret(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "WatchSecret", reflect.TypeOf((*MockOps)(nil).WatchSecret), arg0, arg1)

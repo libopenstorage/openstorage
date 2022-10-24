@@ -181,14 +181,14 @@ docker-build-proto:
 	docker build -t quay.io/openstorage/osd-proto -f Dockerfile.proto .
 
 docker-proto: $(GOPATH)/bin/protoc-gen-go
-	docker pull quay.io/openstorage/osd-proto:pre-gomodules
+	docker pull quay.io/openstorage/osd-proto
 	docker run \
 		--privileged --rm \
 		-v $(shell pwd):/go/src/github.com/libopenstorage/openstorage \
 		-e "GOPATH=/go" \
 		-e "DOCKER_PROTO=yes" \
 		-e "PATH=/bin:/usr/bin:/usr/local/bin:/go/bin:/usr/local/go/bin" \
-		quay.io/openstorage/osd-proto:pre-gomodules \
+		quay.io/openstorage/osd-proto \
 			make proto mockgen
 
 proto: $(GOPATH)/bin/protoc-gen-go $(GOPATH)/bin/protoc-gen-grpc-gateway $(GOPATH)/bin/protoc-gen-swagger
@@ -424,9 +424,8 @@ sdk-check-version:
 	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=101
 
 mockgen:
-	go get github.com/golang/mock/gomock
-	go get github.com/golang/mock/mockgen || echo "ignoring go get build error"
-	cd ${GOPATH}/src/github.com/golang/mock/mockgen && git checkout v1.2.0 && go install github.com/golang/mock/mockgen
+	GO111MODULE=off go get github.com/golang/mock/gomock
+	GO111MODULE=off go get github.com/golang/mock/mockgen
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_cluster.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageClusterServer,OpenStorageClusterClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient

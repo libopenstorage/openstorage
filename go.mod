@@ -13,13 +13,13 @@ require (
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/dustin/go-humanize v1.0.0
 	github.com/gobuffalo/packr v1.11.0
-	github.com/golang/mock v1.3.2-0.20190713102442-dd8d2a22370e
+	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.7.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.0.1-0.20181112102510-3304cc886352
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
-	github.com/grpc-ecosystem/grpc-gateway v1.11.3
+	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/johannesboyne/gofakes3 v0.0.0-20210819161434-5c8dfcfe5310
 	github.com/kubernetes-csi/csi-test v2.0.0+incompatible
 	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
@@ -46,6 +46,7 @@ require (
 	golang.org/x/sys v0.0.0-20220405210540-1e041c57c461
 	google.golang.org/genproto v0.0.0-20200526211855-cb27e3aa2013
 	google.golang.org/grpc v1.35.0
+	google.golang.org/protobuf v1.28.1
 	gopkg.in/freddierice/go-losetup.v1 v1.0.0-20170407175016-fc9adea44124
 	gopkg.in/yaml.v2 v2.2.8
 	k8s.io/api v0.17.0
@@ -118,13 +119,12 @@ require (
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
 	go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c // indirect
-	golang.org/x/crypto v0.0.0-20191010185427-af544f31c8ac // indirect
-	golang.org/x/oauth2 v0.0.0-20190604053449-0f29369cfe45 // indirect
+	golang.org/x/crypto v0.0.0-20200622213623-75b288015ac9 // indirect
+	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20190921001708-c4c64cad1fd0 // indirect
-	golang.org/x/tools v0.0.0-20190621195816-6e04913cbbac // indirect
+	golang.org/x/tools v0.1.1 // indirect
 	google.golang.org/appengine v1.6.5 // indirect
-	google.golang.org/protobuf v1.28.1-0.20220722155247-2a74a0e82391 // indirect
 	gopkg.in/fsnotify.v1 v1.4.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/square/go-jose.v2 v2.3.1 // indirect

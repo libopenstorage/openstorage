@@ -4,6 +4,8 @@ import "google/protobuf/timestamp.proto";
 
 package testing;
 
+option go_package = "./pkg/jsonpb/testing;testing"; // first part is where the proto will generate, the second part is the package name
+
 enum Status {
   STATUS_NONE = 0;
   STATUS_INIT = 1;

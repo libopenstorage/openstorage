@@ -5,6 +5,8 @@ import "google/protobuf/empty.proto";
 
 package flexvolume;
 
+option go_package = "./pkg/flexvolume;flexvolume"; // first part is where the proto will generate, the second part is the package name
+
 message AttachRequest {
   map<string, string> json_options = 1;
 }
