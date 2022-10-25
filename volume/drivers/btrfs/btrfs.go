@@ -1,3 +1,4 @@
+//go:build linux && have_btrfs
 // +build linux,have_btrfs
 
 package btrfs
@@ -8,7 +9,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	prototime "go.pedge.io/proto/time"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/btrfs"

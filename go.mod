@@ -21,7 +21,7 @@ require (
 	github.com/gobuffalo/packr v1.11.0
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
-	github.com/google/uuid v1.3.0 // indirect
+	github.com/google/uuid v1.3.0
 	github.com/googleapis/gnostic v0.5.1 // indirect
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.1.0
@@ -61,8 +61,6 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
-	go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c // indirect
-	go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
