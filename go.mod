@@ -12,7 +12,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.1-0.20180719211823-0b96aaa70776+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.7.0
 	github.com/gobuffalo/packr v1.30.1
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
@@ -26,7 +25,6 @@ require (
 	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 	github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
-	github.com/mattn/go-isatty v0.0.6
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
 	github.com/onsi/ginkgo v1.10.2
 	github.com/onsi/gomega v1.5.0
@@ -36,9 +34,7 @@ require (
 	github.com/portworx/sched-ops v0.0.0-20220525225947-28b8d876887b
 	github.com/prometheus/client_golang v1.7.1
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
-	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.8.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
@@ -67,6 +63,7 @@ require (
 	github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24 // indirect
 	github.com/json-iterator/go v1.1.11 // indirect
 	github.com/mitchellh/mapstructure v1.4.1 // indirect
+	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
 	go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c // indirect
 	go.uber.org/zap v1.17.0 // indirect

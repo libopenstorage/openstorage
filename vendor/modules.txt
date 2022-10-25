@@ -165,9 +165,6 @@ github.com/docker/spdystream/spdy
 # github.com/dustin/go-humanize v1.0.0
 ## explicit
 github.com/dustin/go-humanize
-# github.com/fatih/color v1.7.0
-## explicit
-github.com/fatih/color
 # github.com/fsnotify/fsnotify v1.4.9
 ## explicit
 # github.com/gobuffalo/envy v1.10.2
@@ -261,8 +258,6 @@ github.com/hpcloud/tail/watch
 github.com/hpcloud/tail/winfile
 # github.com/imdario/mergo v0.3.8
 github.com/imdario/mergo
-# github.com/inconshreveable/mousetrap v1.0.1
-github.com/inconshreveable/mousetrap
 # github.com/jmespath/go-jmespath v0.4.1-0.20220621161143-b0104c826a24
 ## explicit
 github.com/jmespath/go-jmespath
@@ -296,11 +291,6 @@ github.com/libopenstorage/secrets/mock
 # github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
 ## explicit
 github.com/libopenstorage/systemutils
-# github.com/mattn/go-colorable v0.0.9
-github.com/mattn/go-colorable
-# github.com/mattn/go-isatty v0.0.6
-## explicit
-github.com/mattn/go-isatty
 # github.com/matttproud/golang_protobuf_extensions v1.0.1
 github.com/matttproud/golang_protobuf_extensions/pbutil
 # github.com/miekg/dns v1.1.8
@@ -415,9 +405,6 @@ github.com/rogpeppe/go-internal/semver
 github.com/rs/cors
 # github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 github.com/ryszard/goskiplist/skiplist
-# github.com/satori/go.uuid v1.2.0
-## explicit
-github.com/satori/go.uuid
 # github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529
 github.com/sean-/seed
 # github.com/shabbyrobe/gocovmerge v0.0.0-20180507124511-f6ea450bfb63
@@ -425,10 +412,8 @@ github.com/shabbyrobe/gocovmerge
 # github.com/sirupsen/logrus v1.9.0
 ## explicit
 github.com/sirupsen/logrus
-# github.com/spf13/cobra v1.6.1
-## explicit
-github.com/spf13/cobra
 # github.com/spf13/pflag v1.0.5
+## explicit
 github.com/spf13/pflag
 # github.com/stretchr/testify v1.8.0
 ## explicit
