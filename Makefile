@@ -99,54 +99,54 @@ all: build $(OSDSANITY)
 #
 $(GOPATH)/bin/golint:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/lint/golint
+	GO111MODULE=off go get -u github.com/golang/lint/golint
 
 $(GOPATH)/bin/errcheck:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/kisielk/errcheck
+	GO111MODULE=off go get -u github.com/kisielk/errcheck
 
 $(GOPATH)/bin/protoc-gen-go:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/golang/protobuf/protoc-gen-go
+	GO111MODULE=off go get -u github.com/golang/protobuf/protoc-gen-go
 
 $(GOPATH)/bin/protoc-gen-grpc-gateway:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway
 
 $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
+	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
 $(GOPATH)/bin/govendor:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/kardianos/govendor
+	GO111MODULE=off go get -u github.com/kardianos/govendor
 
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/gobuffalo/packr/...
+	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
 
 $(GOPATH)/bin/cover:
 	@echo "Installing missing $@ ..."
-	go get -u golang.org/x/tools/cmd/cover
+	GO111MODULE=off go get -u golang.org/x/tools/cmd/cover
 
 $(GOPATH)/bin/gotestcover:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/pierrre/gotestcover
+	GO111MODULE=off go get -u github.com/pierrre/gotestcover
 
 # DEPS build rules
 #
 
 deps:
-	go get -d -v $(PKGS)
+	GO111MODULE=off go get -d -v $(PKGS)
 
 update-deps:
-	go get -d -v -u -f $(PKGS)
+	GO111MODULE=off go get -d -v -u -f $(PKGS)
 
 test-deps:
-	go get -d -v -t $(PKGS)
+	GO111MODULE=off go get -d -v -t $(PKGS)
 
 update-test-deps:
-	go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
+	GO111MODULE=off go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
 vendor-update:
 	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
@@ -244,7 +244,7 @@ pretest: lint vet errcheck
 install-sdk-test:
 ifndef HAS_SDKTEST
 	@echo "Installing sdk-test"
-	@-go get -d -u github.com/libopenstorage/sdk-test 1>/dev/null 2>&1
+	@-GO111MODULE=off go get -d -u github.com/libopenstorage/sdk-test 1>/dev/null 2>&1
 	@(cd $(GOPATH)/src/github.com/libopenstorage/sdk-test/cmd/sdk-test && make install )
 endif
 
