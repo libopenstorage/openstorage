@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/satori/go.uuid"
+	uuid "github.com/satori/go.uuid"
 )
 
 var (
@@ -17,10 +17,7 @@ var (
 )
 
 func init() {
-	id, err := uuid.NewV4()
-	if err != nil {
-		panic(err.Error())
-	}
+	id := uuid.NewV4()
 	instanceID = id.String()
 }
 

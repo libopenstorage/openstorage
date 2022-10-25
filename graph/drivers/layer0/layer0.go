@@ -3,6 +3,7 @@ package layer0
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"strings"
@@ -13,7 +14,7 @@ import (
 
 	"github.com/docker/docker/daemon/graphdriver"
 	"github.com/docker/docker/daemon/graphdriver/overlay"
-	"github.com/docker/docker/pkg/archive"
+	"github.com/docker/docker/pkg/containerfs"
 	"github.com/docker/docker/pkg/idtools"
 	"github.com/docker/docker/pkg/parsers"
 	"github.com/libopenstorage/openstorage/api"
@@ -212,12 +213,12 @@ func (l *Layer0) create(id, parent string) (string, *Layer0Vol, error) {
 }
 
 // Create creates a new and empty filesystem layer
-func (l *Layer0) Create(id string, parent string, mountLabel string, storageOpts map[string]string) error {
+func (l *Layer0) Create(id string, parent string, opts *graphdriver.CreateOpts) error {
 	id, vol, err := l.create(id, parent)
 	if err != nil {
 		return err
 	}
-	err = l.Driver.Create(id, parent, mountLabel, storageOpts)
+	err = l.Driver.Create(id, parent, opts)
 	if err != nil || vol == nil {
 		return err
 	}
@@ -271,7 +272,7 @@ func (l *Layer0) Remove(id string) error {
 }
 
 // Get returns the mountpoint for the layered filesystem
-func (l *Layer0) Get(id string, mountLabel string) (string, error) {
+func (l *Layer0) Get(id string, mountLabel string) (containerfs.ContainerFS, error) {
 	id = l.realID(id)
 	return l.Driver.Get(id, mountLabel)
 }
@@ -283,7 +284,7 @@ func (l *Layer0) Put(id string) error {
 }
 
 // ApplyDiff extracts the changeset between the specified layer and its parent
-func (l *Layer0) ApplyDiff(id string, parent string, diff archive.Reader) (size int64, err error) {
+func (l *Layer0) ApplyDiff(id string, parent string, diff io.Reader) (size int64, err error) {
 	id = l.realID(id)
 	return l.Driver.ApplyDiff(id, parent, diff)
 }

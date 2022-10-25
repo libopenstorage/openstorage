@@ -495,16 +495,6 @@ github.com/urfave/negroni
 # github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f
 ## explicit
 github.com/vbatts/tar-split/tar/storage
-# go.pedge.io/env v0.0.0-20171203202719-5f5a7ded0de0
-## explicit
-go.pedge.io/env
-# go.pedge.io/lion v0.0.0-20190619200210-304b2f426641
-## explicit
-go.pedge.io/lion
-go.pedge.io/lion/current
-go.pedge.io/lion/env
-go.pedge.io/lion/grpc
-go.pedge.io/lion/syslog
 # go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c
 ## explicit
 go.pedge.io/pb/go/google/protobuf

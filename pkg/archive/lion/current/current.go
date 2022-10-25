@@ -3,13 +3,13 @@ Package currentlion implements basic integration with Current using plaintext sy
 
 https://current.sh
 */
-package currentlion // import "go.pedge.io/lion/current"
+package currentlion // import "github.com/libopenstorage/openstorage/pkg/archive/lion/current"
 
 import (
 	"log/syslog"
 
-	"go.pedge.io/lion"
-	"go.pedge.io/lion/syslog"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
+	sysloglion "github.com/libopenstorage/openstorage/pkg/archive/lion/syslog"
 )
 
 const (

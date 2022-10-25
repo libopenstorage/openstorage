@@ -1,7 +1,7 @@
 /*
 Package lion provides structured logging, configurable to use serialization protocols such as Protocol Buffers.
 */
-package lion // import "go.pedge.io/lion"
+package lion // import "github.com/libopenstorage/openstorage/pkg/archive/lion"
 
 import (
 	"encoding/json"

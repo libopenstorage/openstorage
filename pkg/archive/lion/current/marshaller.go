@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"time"
 
-	"go.pedge.io/lion"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
 )
 
 type marshaller struct {

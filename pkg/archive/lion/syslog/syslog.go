@@ -1,12 +1,12 @@
 /*
 Package sysloglion defines functionality for integration with syslog.
 */
-package sysloglion // import "go.pedge.io/lion/syslog"
+package sysloglion // import "github.com/libopenstorage/openstorage/pkg/archive/lion/syslog"
 
 import (
 	"log/syslog"
 
-	"go.pedge.io/lion"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
 )
 
 var (

@@ -1,10 +1,10 @@
 /*
 Package grpclion provides a logger for grpclog.
 */
-package grpclion // import "go.pedge.io/lion/grpc"
+package grpclion // import "github.com/libopenstorage/openstorage/pkg/archive/lion/grpc"
 
 import (
-	"go.pedge.io/lion"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
 	"google.golang.org/grpc/grpclog"
 )
 

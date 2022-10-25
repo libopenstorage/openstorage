@@ -3,7 +3,7 @@ package sysloglion
 import (
 	"log/syslog"
 
-	"go.pedge.io/lion"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
 )
 
 var (

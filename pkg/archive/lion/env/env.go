@@ -1,18 +1,19 @@
 /*
 Package envlion provides simple utilities to setup lion from the environment.
 */
-package envlion // import "go.pedge.io/lion/env"
+package envlion // import "github.com/libopenstorage/openstorage/pkg/archive/lion/env"
 
 import (
 	"log/syslog"
 	"os"
 	"strings"
 
-	"go.pedge.io/env"
-	"go.pedge.io/lion"
-	"go.pedge.io/lion/current"
-	"go.pedge.io/lion/grpc"
-	"go.pedge.io/lion/syslog"
+	"github.com/libopenstorage/openstorage/pkg/archive/env"
+	"github.com/libopenstorage/openstorage/pkg/archive/lion"
+	currentlion "github.com/libopenstorage/openstorage/pkg/archive/lion/current"
+	grpclion "github.com/libopenstorage/openstorage/pkg/archive/lion/grpc"
+
+	sysloglion "github.com/libopenstorage/openstorage/pkg/archive/lion/syslog"
 )
 
 // Env defines a struct for environment variables that can be parsed with go.pedge.io/env.

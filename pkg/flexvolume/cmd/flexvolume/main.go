@@ -1,10 +1,11 @@
 package main
 
 import (
+	"github.com/libopenstorage/openstorage/pkg/archive/env"
+	envlion "github.com/libopenstorage/openstorage/pkg/archive/lion/env"
 	"github.com/libopenstorage/openstorage/pkg/flexvolume"
 	"github.com/spf13/cobra"
-	"go.pedge.io/env"
-	"go.pedge.io/lion/env"
+
 	"google.golang.org/grpc"
 )
 
@@ -24,7 +25,7 @@ func do(appEnvObj interface{}) error {
 
 	initCmd := &cobra.Command{
 		Use: "init",
-		Run: pkgcobra.RunFixedArgs(0, func(args []string) error {
+		Run: RunFixedArgs(0, func(args []string) error {
 			client, err := getClient(appEnv)
 			if err != nil {
 				return err
@@ -35,7 +36,7 @@ func do(appEnvObj interface{}) error {
 
 	attachCmd := &cobra.Command{
 		Use: "attach jsonOptions",
-		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+		Run: RunFixedArgs(1, func(args []string) error {
 			jsonOptions, err := flexvolume.BytesToJSONOptions([]byte(args[0]))
 			if err != nil {
 				return err
@@ -50,7 +51,7 @@ func do(appEnvObj interface{}) error {
 
 	detachCmd := &cobra.Command{
 		Use: "detach mountDevice",
-		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+		Run: RunFixedArgs(1, func(args []string) error {
 			client, err := getClient(appEnv)
 			if err != nil {
 				return err
@@ -61,7 +62,7 @@ func do(appEnvObj interface{}) error {
 
 	mountCmd := &cobra.Command{
 		Use: "mount targetMountDir mountDevice jsonOptions",
-		Run: pkgcobra.RunFixedArgs(3, func(args []string) error {
+		Run: RunFixedArgs(3, func(args []string) error {
 			jsonOptions, err := flexvolume.BytesToJSONOptions([]byte(args[2]))
 			if err != nil {
 				return err
@@ -76,7 +77,7 @@ func do(appEnvObj interface{}) error {
 
 	unmountCmd := &cobra.Command{
 		Use: "unmount mountDir",
-		Run: pkgcobra.RunFixedArgs(1, func(args []string) error {
+		Run: RunFixedArgs(1, func(args []string) error {
 			client, err := getClient(appEnv)
 			if err != nil {
 				return err
