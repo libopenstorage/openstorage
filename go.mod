@@ -81,6 +81,8 @@ replace (
 
 	github.com/kubernetes-incubator/external-storage => github.com/libopenstorage/external-storage v5.1.1-0.20190919185747-9394ee8dd536+incompatible
 	github.com/kubernetes-incubator/external-storage v0.0.0-00010101000000-000000000000 => github.com/libopenstorage/external-storage v5.1.1-0.20190919185747-9394ee8dd536+incompatible
+	golang.org/x/net => golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
+	golang.org/x/sync => golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/sys => golang.org/x/sys v0.0.0-20220110181412-a018aaa089fe
 	google.golang.org/grpc => google.golang.org/grpc v1.29.1
 	k8s.io/api => k8s.io/api v0.15.11
