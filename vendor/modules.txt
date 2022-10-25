@@ -488,12 +488,6 @@ go.opencensus.io/internal
 go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
-# go.pedge.io/pb v0.0.0-20171203174523-dbc791b8a69c
-## explicit
-go.pedge.io/pb/go/google/protobuf
-# go.pedge.io/proto v0.0.0-20170422232847-c5da4db108f6
-## explicit
-go.pedge.io/proto/time
 # go.uber.org/atomic v1.7.0
 ## explicit
 # go.uber.org/zap v1.15.0
