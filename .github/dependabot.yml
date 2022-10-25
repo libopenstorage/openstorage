@@ -8,6 +8,6 @@ updates:
   - package-ecosystem: "gomod" 
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "daily"
     reviewers:
       - "ggriffiths" # Temporarily until done evaluating Dependabot
