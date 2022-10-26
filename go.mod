@@ -57,7 +57,7 @@ require (
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 	github.com/satori/go.uuid v1.2.0
 	github.com/sirupsen/logrus v1.8.1
-	github.com/spf13/cobra v1.1.1
+	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
