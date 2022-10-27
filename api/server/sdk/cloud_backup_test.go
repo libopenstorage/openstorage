@@ -22,6 +22,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/libopenstorage/openstorage/api"
 	api_err "github.com/libopenstorage/openstorage/api/errors"
@@ -1154,7 +1155,7 @@ func TestSdkCloudBackupSize(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		CloudBackupSize(&api.SdkCloudBackupSizeRequest{BackupId: id, CredentialId: creds}).
+		CloudBackupSize(gomock.Any()).
 		Return(resp, nil).
 		Times(1)
 

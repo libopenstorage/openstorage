@@ -4,6 +4,7 @@ import (
 	"context"
 	"testing"
 
+	"github.com/golang/mock/gomock"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 )
@@ -31,10 +32,7 @@ func TestSdkFilesystemTrimStartSuccess(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemTrimStart(&api.SdkFilesystemTrimStartRequest{
-			VolumeId:  testVolumeId,
-			MountPath: testMountPath,
-		}).
+		FilesystemTrimStart(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -71,10 +69,7 @@ func TestSdkFilesystemTrimGetStatus(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemTrimStatus(&api.SdkFilesystemTrimStatusRequest{
-			VolumeId:  testVolumeId,
-			MountPath: testMountPath,
-		}).
+		FilesystemTrimStatus(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 
@@ -106,10 +101,7 @@ func TestSdkFilesystemTrimStop(t *testing.T) {
 	// Create response
 	s.MockDriver().
 		EXPECT().
-		FilesystemTrimStop(&api.SdkFilesystemTrimStopRequest{
-			VolumeId:  testVolumeId,
-			MountPath: testMountPath,
-		}).
+		FilesystemTrimStop(gomock.Any()).
 		Return(testMockResp, nil).
 		Times(1)
 

@@ -28,11 +28,11 @@ var (
 	ErrAttachedHostSpecNotFound = errors.New("Spec of the attached host is not found")
 	// ErrVolAttached returned when volume is in attached state
 	ErrVolAttached = errors.New("Volume is attached")
-        // ErrVolAttachedOnRemoteNode returned when volume is attached on different node
-        ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
-        // ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
-        ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
-                " Non-shared volumes can only be attached on one node at a time.")
+	// ErrVolAttachedOnRemoteNode returned when volume is attached on different node
+	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
+	// ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
+	ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
+		" Non-shared volumes can only be attached on one node at a time.")
 	// ErrVolAttachedScale returned when volume is attached and can be scaled
 	ErrVolAttachedScale = errors.New("Volume is attached on another node." +
 		" Increase scale factor to create more instances")
