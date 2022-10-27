@@ -199,7 +199,12 @@ github.com/fsnotify/fsnotify
 # github.com/go-logr/logr v1.1.0
 ## explicit
 github.com/go-logr/logr
-# github.com/gobuffalo/packr v1.11.0
+# github.com/gobuffalo/envy v1.7.0
+github.com/gobuffalo/envy
+# github.com/gobuffalo/packd v0.3.0
+github.com/gobuffalo/packd
+github.com/gobuffalo/packd/internal/takeon/github.com/markbates/errx
+# github.com/gobuffalo/packr v1.30.1
 ## explicit
 github.com/gobuffalo/packr
 # github.com/godbus/dbus/v5 v5.0.3
@@ -299,6 +304,8 @@ github.com/johannesboyne/gofakes3
 github.com/johannesboyne/gofakes3/backend/s3mem
 github.com/johannesboyne/gofakes3/internal/goskipiter
 github.com/johannesboyne/gofakes3/internal/s3io
+# github.com/joho/godotenv v1.3.0
+github.com/joho/godotenv
 # github.com/json-iterator/go v1.1.10
 github.com/json-iterator/go
 # github.com/kubernetes-csi/csi-test v2.2.0+incompatible
@@ -448,6 +455,10 @@ github.com/prometheus/common/model
 github.com/prometheus/procfs
 github.com/prometheus/procfs/internal/fs
 github.com/prometheus/procfs/internal/util
+# github.com/rogpeppe/go-internal v1.3.0
+github.com/rogpeppe/go-internal/modfile
+github.com/rogpeppe/go-internal/module
+github.com/rogpeppe/go-internal/semver
 # github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 ## explicit
 github.com/rs/cors

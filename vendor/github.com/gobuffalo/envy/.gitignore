@@ -1,5 +1,4 @@
 *.log
-./packr2
 .DS_Store
 doc
 tmp
@@ -27,10 +26,5 @@ generated/
 .vendor/
 bin/*
 gin-bin
-/packr_darwin_amd64
-/packr_linux_amd64
-.vscode/
-debug.test
-.grifter/
-*-packr.go
-
+.idea/
+.env
