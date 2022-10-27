@@ -56,7 +56,7 @@ require (
 	github.com/prometheus/client_golang v1.7.1
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 	github.com/satori/go.uuid v1.2.0
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
@@ -66,7 +66,7 @@ require (
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220110181412-a018aaa089fe
+	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/genproto v0.0.0-20210921142501-181ce0d877f6
 	google.golang.org/grpc v1.40.0
