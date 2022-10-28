@@ -4,7 +4,7 @@
 
 ### v0.152.0 - (10/26/2022)
 
-* PWX-23422: FA DirectAccess CreateOptions is not honoroed by PX
+* FA DirectAccess CreateOptions is not honoroed by PX
 
 ### v0.151.0 - (9/13/2022)
 
