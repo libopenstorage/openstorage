@@ -39,7 +39,7 @@ require (
 	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 	github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
-	github.com/mattn/go-isatty v0.0.14
+	github.com/mattn/go-isatty v0.0.16
 	github.com/miekg/dns v1.1.35 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/moby/locker v1.0.1 // indirect
@@ -65,7 +65,7 @@ require (
 	golang.org/x/lint v0.0.0-20210508222113-6edffad5e616 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
-	golang.org/x/sys v0.0.0-20220715151400-c0bba94af5f8
+	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	golang.org/x/tools v0.1.5 // indirect
 	google.golang.org/genproto v0.0.0-20210921142501-181ce0d877f6
 	google.golang.org/grpc v1.40.0
