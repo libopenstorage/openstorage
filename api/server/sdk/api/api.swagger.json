@@ -5337,7 +5337,7 @@
             "$ref": "#/components/schemas/apiExportSpec"
           },
           "fa_create_options": {
-            "title": "CreateOptions",
+            "description": "Filesystem create options to be honored.",
             "type": "string"
           },
           "force_unsupported_fs_type": {

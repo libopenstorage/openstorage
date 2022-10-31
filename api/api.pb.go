@@ -5331,7 +5331,7 @@ type VolumeSpec struct {
 	TopologyRequirement *TopologyRequirement `protobuf:"bytes,48,opt,name=topology_requirement,json=topologyRequirement,proto3" json:"topology_requirement,omitempty"`
 	// winshare is true if this volume can be accessed from windows pods.
 	Winshare bool `protobuf:"varint,49,opt,name=winshare,proto3" json:"winshare,omitempty"`
-	// CreateOptions
+	// Filesystem create options to be honored.
 	FaCreateOptions string `protobuf:"bytes,50,opt,name=fa_create_options,json=faCreateOptions,proto3" json:"fa_create_options,omitempty"`
 }
 
