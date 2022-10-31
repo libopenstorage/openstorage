@@ -5294,6 +5294,10 @@
           "export_spec": {
             "$ref": "#/components/schemas/apiExportSpec"
           },
+          "fa_create_options": {
+            "description": "Filesystem create options to be honored.",
+            "type": "string"
+          },
           "force_unsupported_fs_type": {
             "description": "Use to force a file system type which is not recommended.\nThe driver may still refuse to use the file system type.",
             "format": "boolean",
@@ -5427,6 +5431,11 @@
             },
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
+          },
+          "winshare": {
+            "description": "winshare is true if this volume can be accessed from windows pods.",
+            "format": "boolean",
+            "type": "boolean"
           },
           "xattr": {
             "$ref": "#/components/schemas/apiXattrValue"
@@ -5799,7 +5808,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.29"
+    "version": "0.101.30"
   },
   "openapi": "3.0.0",
   "paths": {

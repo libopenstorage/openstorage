@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.30 - (11/08/2022)
+
+* FA DirectAccess CreateOptions is not honoroed by PX
+
 ### v0.101.29 - (11/07/2022)
 
 * Add NONE value to sharedv4 service type enum
