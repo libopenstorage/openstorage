@@ -5336,6 +5336,10 @@
           "export_spec": {
             "$ref": "#/components/schemas/apiExportSpec"
           },
+          "fa_create_options": {
+            "description": "Filesystem create options to be honored.",
+            "type": "string"
+          },
           "force_unsupported_fs_type": {
             "description": "Use to force a file system type which is not recommended.\nThe driver may still refuse to use the file system type.",
             "type": "boolean"
@@ -5895,7 +5899,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.151.0"
+    "version": "0.152.0"
   },
   "openapi": "3.0.0",
   "paths": {

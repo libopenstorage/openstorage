@@ -696,6 +696,8 @@ message VolumeSpec {
   TopologyRequirement topology_requirement = 48;
   // winshare is true if this volume can be accessed from windows pods.
   bool winshare = 49;
+  // Filesystem create options to be honored.
+  string fa_create_options = 50;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -5226,7 +5228,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 151;
+    Minor = 152;
     // SDK version patch value of this specification
     Patch = 0;
   }
