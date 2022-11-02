@@ -15,7 +15,6 @@ require (
 	github.com/dgrijalva/jwt-go v3.2.1-0.20180719211823-0b96aaa70776+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
 	github.com/dustin/go-humanize v1.0.0
-	github.com/fatih/color v1.13.0
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.1.0 // indirect
 	github.com/gobuffalo/packr v1.30.1
@@ -39,7 +38,6 @@ require (
 	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 	github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
-	github.com/mattn/go-isatty v0.0.16
 	github.com/miekg/dns v1.1.35 // indirect
 	github.com/mitchellh/mapstructure v1.3.3 // indirect
 	github.com/moby/locker v1.0.1 // indirect
@@ -54,9 +52,7 @@ require (
 	github.com/portworx/sched-ops v1.20.4-rc1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
-	github.com/satori/go.uuid v1.2.0
-	github.com/sirupsen/logrus v1.9.0
-	github.com/spf13/cobra v1.6.1
+	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
