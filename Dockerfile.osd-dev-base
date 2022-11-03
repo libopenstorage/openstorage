@@ -1,4 +1,4 @@
-FROM golang:1.14
+FROM golang:1.17
 MAINTAINER gou@portworx.com
 
 EXPOSE 9005
@@ -13,7 +13,7 @@ RUN \
   curl -sSL https://get.docker.com/builds/Linux/x86_64/docker-1.10.3 -o /bin/docker && \
   chmod +x /bin/docker
 
-RUN go get -u	\
+RUN GO111MODULE=off go get -u	\
     golang.org/x/lint/golint \
 	github.com/kisielk/errcheck					\
 	github.com/golang/protobuf/protoc-gen-go			\
