@@ -56,8 +56,6 @@ OSDSANITY:=cmd/osd-sanity/osd-sanity
 	update-deps \
 	test-deps \
 	update-test-deps \
-	vendor-update \
-	vendor-without-update \
 	vendor \
 	build \
 	install \
@@ -117,10 +115,6 @@ $(GOPATH)/bin/protoc-gen-swagger:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger
 
-$(GOPATH)/bin/govendor:
-	@echo "Installing missing $@ ..."
-	GO111MODULE=off go get -u github.com/kardianos/govendor
-
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
 	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
@@ -148,18 +142,9 @@ test-deps:
 update-test-deps:
 	GO111MODULE=off go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
 
-vendor-update:
-	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
-
-vendor-without-update: $(GOPATH)/bin/govendor
-	rm -rf vendor
-	govendor init
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-	GOOS=linux GOARCH=amd64 govendor add +external
-	GOOS=linux GOARCH=amd64 govendor update +vendor
-
-vendor: vendor-update vendor-without-update
+vendor:
+	GOOS=linux GOARCH=amd64 go mod tidy
+	GOOS=linux GOARCH=amd64 go mod vendor
 
 build: packr
 	go build -tags "$(TAGS)" $(BUILDFLAGS) $(PKGS)
