@@ -145,9 +145,13 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 			restPortSecured = int(svcPort.Port)
 		}
 	}
-	// if secured REST port (9023) is available, use it instead of legacy 9001
-	if restPortSecured != 0 {
+
+	scheme := "http"
+	// legacy port:9001 is never TLS secured, irrespective of the value of PX_ENABLE_TLS
+	// if TLS is enabled, use secured REST port:9023 instead of port:9001
+	if restPortSecured != 0 && isTLSEnabled(cpb.Config.EnableTLSEnv) {
 		finalRestPort = restPortSecured
+		scheme = "https"
 	} else {
 		finalRestPort = restPort
 	}
@@ -159,11 +163,6 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 		return "", "", err
 	}
 
-	scheme := "http"
-	var isTLSEnabled = isTLSEnabled(cpb.Config.EnableTLSEnv)
-	if isTLSEnabled && finalRestPort == restPortSecured {
-		scheme = "https" // legacy 9001 port is never TLS secured, irrespective of the value of PX_ENABLE_TLS
-	}
 	pxMgmtEndpoint = fmt.Sprintf("%s://%s", scheme, net.JoinHostPort(endpoint, strconv.Itoa(finalRestPort)))
 	sdkEndpoint = net.JoinHostPort(endpoint, strconv.Itoa(sdkPort))
 
