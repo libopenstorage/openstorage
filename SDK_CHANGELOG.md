@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.29 - (11/07/2022)
+
+* Add NONE value to sharedv4 service type enum
+
 ### v0.101.28 - (8/18/2022)
 
 * PWX-26324: Extend fastpath config to disable auto fallback
