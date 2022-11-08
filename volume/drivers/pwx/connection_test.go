@@ -22,7 +22,8 @@ const (
 	pxCaCertSecretEnv    = "PX_CA_CERT_SECRET"
 	pxCaCertSecretKeyEnv = "PX_CA_CERT_SECRET_KEY"
 	pxEnableTLSEnv       = "PX_ENABLE_TLS"
-	pxRestPort           = "px-api-tls"
+	pxRestPort           = "px-api"
+	pxRestPortSecured    = "px-api-tls"
 	pxSdkPort            = "px-sdk"
 	pxEndpointEnv        = "PX_ENDPOINT"
 	StaticSDKPortEnv     = "PX_SDK_PORT"
@@ -45,6 +46,10 @@ func getSvc() *v1.Service {
 					Name: pxRestPort,
 					Port: 9901,
 				},
+				{
+					Name: pxRestPortSecured,
+					Port: 9902,
+				},
 			},
 		},
 	}
@@ -65,6 +70,10 @@ func getNonDefaultNSSvc() *v1.Service {
 				{
 					Name: pxRestPort,
 					Port: 9901,
+				},
+				{
+					Name: pxRestPortSecured,
+					Port: 9902,
 				},
 			},
 		},
@@ -102,6 +111,10 @@ func TestMain(m *testing.M) {
 					Name: pxRestPort,
 					Port: 9901,
 				},
+				{
+					Name: pxRestPortSecured,
+					Port: 9902,
+				},
 			},
 		},
 	}, nil)
@@ -122,6 +135,10 @@ func TestMain(m *testing.M) {
 				},
 				{
 					Name: pxRestPort,
+					Port: 0,
+				},
+				{
+					Name: pxRestPortSecured,
 					Port: 0,
 				},
 			},
@@ -206,8 +223,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_TLS(t *testin
 		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
 	}
 
-	if pxMgmtEndpoint != "https://portworx-service.kube-system:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9901")
+	if pxMgmtEndpoint != "https://portworx-service.kube-system:9902" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9902")
 	}
 
 	if sdkEndpoint != "portworx-service.kube-system:9999" {
@@ -272,8 +289,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *tes
 		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 	}
 
-	if pxMgmtEndpoint != "https://portworx-service.non-default-ns:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.non-default-ns:9901")
+	if pxMgmtEndpoint != "https://portworx-service.non-default-ns:9902" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.non-default-ns:9902")
 	}
 
 	if sdkEndpoint != "portworx-service.non-default-ns:9999" {
@@ -426,8 +443,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 	}
 
-	if pxMgmtEndpoint != "https://portworx-service.kube-system:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9901")
+	if pxMgmtEndpoint != "https://portworx-service.kube-system:9902" {
+		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9902")
 	}
 
 	if sdkEndpoint != "portworx-service.kube-system:9999" {
