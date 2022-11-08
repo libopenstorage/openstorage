@@ -1257,6 +1257,25 @@ func (c *ClusterManager) initListeners(
 
 	var kvClusterInfo *cluster.ClusterInfo
 	updateCallbackFn := func(db *cluster.ClusterInfo) (bool, error) {
+		// Check if node existed in the cluster database when we started the join
+		// The below checks are done to ensure this node does not add itself
+		// when a peer node could have decommissioned it while this node is trying to
+		// come up.
+		if *nodeExists {
+			// Before overwriting this node's entry in the DB
+			// check if we are marked as decommissioned by another node
+			dbNodeEntry, ok := db.NodeEntries[selfNodeEntry.Id]
+			if !ok {
+				logrus.Errorf("Failed to find node %v entry in cluster database", selfNodeEntry.Id)
+				return false, fmt.Errorf("failed to find node %v entry in cluster database", selfNodeEntry.Id)
+			}
+			if dbNodeEntry.Status == api.Status_STATUS_DECOMMISSION {
+				// Node is decommissioned by someone else
+				// Don't join the cluster
+				return false, cluster.ErrNodeDecommissioned
+			}
+		} // else node is not yet added to the cluster database
+
 		db.NodeEntries[selfNodeEntry.Id] = selfNodeEntry
 		// Irrespective of whether the node is doing an Init or is
 		// already in cluster, check with listeners if it is OK to join
