@@ -403,6 +403,35 @@ func (mr *MockVolumeDriverMockRecorder) CloudMigrateStatus(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CloudMigrateStatus", reflect.TypeOf((*MockVolumeDriver)(nil).CloudMigrateStatus), arg0)
 }
 
+// ControllerPublish mocks base method.
+func (m *MockVolumeDriver) ControllerPublish(arg0 context.Context, arg1, arg2 string, arg3 map[string]string) (map[string]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ControllerPublish", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(map[string]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ControllerPublish indicates an expected call of ControllerPublish.
+func (mr *MockVolumeDriverMockRecorder) ControllerPublish(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerPublish", reflect.TypeOf((*MockVolumeDriver)(nil).ControllerPublish), arg0, arg1, arg2, arg3)
+}
+
+// ControllerUnpublish mocks base method.
+func (m *MockVolumeDriver) ControllerUnpublish(arg0 context.Context, arg1, arg2 string, arg3 map[string]string) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ControllerUnpublish", arg0, arg1, arg2, arg3)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// ControllerUnpublish indicates an expected call of ControllerUnpublish.
+func (mr *MockVolumeDriverMockRecorder) ControllerUnpublish(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerUnpublish", reflect.TypeOf((*MockVolumeDriver)(nil).ControllerUnpublish), arg0, arg1, arg2, arg3)
+}
+
 // Create mocks base method.
 func (m *MockVolumeDriver) Create(arg0 context.Context, arg1 *api.VolumeLocator, arg2 *api.Source, arg3 *api.VolumeSpec) (string, error) {
 	m.ctrl.T.Helper()

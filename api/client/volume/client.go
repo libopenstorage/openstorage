@@ -395,6 +395,36 @@ func (v *volumeClient) Detach(ctx context.Context, volumeID string, options map[
 	)
 }
 
+// ControllerPublish prepare device to the passed Node.
+func (v *volumeClient) ControllerPublish(ctx context.Context, volumeID string, nodeID string, attachOptions map[string]string) (map[string]string, error) {
+	response := &api.VolumePublishResponse{}
+	request := &api.VolumePublishRequest{
+		volumeID: volumeID,
+		nodeID:   nodeID,
+		options:  attachOptions,
+	}
+	if err := v.c.Post().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
+		return nil, err
+	}
+
+	return response.Context, nil
+}
+
+// ControllerUnpublish device cleanup after node unpublish.
+func (v *volumeClient) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
+	response := &api.VolumeUnpublishResponse{}
+	request := &api.VolumeUnpublishRequest{
+		volumeID: volumeID,
+		nodeID:   nodeID,
+		options:  options,
+	}
+	if err := v.c.Post().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (v *volumeClient) MountedAt(ctx context.Context, mountPath string) string {
 	return ""
 }

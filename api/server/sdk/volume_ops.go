@@ -1260,3 +1260,53 @@ func validateMinMaxParams(policy uint64, specified uint64, op api.VolumeSpecPoli
 	}
 	return true
 }
+
+func (s *VolumeServer) ControllerPublish(
+	ctx context.Context,
+	req *api.SdkVolumeControllerPublishRequest,
+) (*api.SdkVolumeControllerPublishResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	opts := make(map[string]string)
+	context, err := s.driver(ctx).ControllerPublish(req.GetVolumeId(), req.GetNodeId(), opts)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to publish the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
+
+	return &api.SdkVolumeControllerPublishResponse{
+		Context: context,
+	}, nil
+}
+
+func (s *VolumeServer) ControllerUnpublish(
+	ctx context.Context,
+	req *api.SdkVolumeControllerUnpublishRequest,
+) (*api.SdkVolumeControllerUnpublishResponse, error) {
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	opts := make(map[string]string)
+	err := s.driver(ctx).ControllerUnpublish(req.GetVolumeId(), req.GetNodeId(), opts)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to unpublish the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
+
+	return &api.SdkVolumeControllerUnublishResponse{}, nil
+}

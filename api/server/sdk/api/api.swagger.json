@@ -4040,13 +4040,6 @@
             "title": "Node Id where the volume needs to be published",
             "type": "string"
           },
-          "options": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
-            "type": "object"
-          },
           "volume_id": {
             "description": "Unique name of the volume. This will be used for idempotency.",
             "type": "string"

@@ -28,11 +28,11 @@ var (
 	ErrAttachedHostSpecNotFound = errors.New("Spec of the attached host is not found")
 	// ErrVolAttached returned when volume is in attached state
 	ErrVolAttached = errors.New("Volume is attached")
-        // ErrVolAttachedOnRemoteNode returned when volume is attached on different node
-        ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
-        // ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
-        ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
-                " Non-shared volumes can only be attached on one node at a time.")
+	// ErrVolAttachedOnRemoteNode returned when volume is attached on different node
+	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
+	// ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
+	ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
+		" Non-shared volumes can only be attached on one node at a time.")
 	// ErrVolAttachedScale returned when volume is attached and can be scaled
 	ErrVolAttachedScale = errors.New("Volume is attached on another node." +
 		" Increase scale factor to create more instances")
@@ -287,6 +287,10 @@ type ProtoDriver interface {
 	Catalog(volumeid, subfolder string, depth string) (api.CatalogResponse, error)
 	// Does a Filesystem Trim operation to free unused space to block device(block discard)
 	VolService(volumeID string, vsreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error)
+	// ControllerPublish setups a volume to be exported from a node.
+	ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error)
+	// ControllerUnpublish clears up a previously published volume
+	ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.
