@@ -72,6 +72,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		// Creating and deleting volumes supported
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 
+		// Publish and Unpublish Volume
+		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
+
 		// Cloning: creation of volumes from snapshots, supported
 		csi.ControllerServiceCapability_RPC_CLONE_VOLUME,
 
@@ -114,19 +117,55 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 // ControllerPublishVolume is a CSI API implements the attachment of a volume
 // on to a node.
 func (s *OsdCsiServer) ControllerPublishVolume(
-	context.Context,
-	*csi.ControllerPublishVolumeRequest,
+	ctx context.Context,
+	req *csi.ControllerPublishVolumeRequest,
 ) (*csi.ControllerPublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "This request is not supported")
+    clogger.WithContext(ctx).Infof("ControllerPublishVolume request received. VolumeID: %s", req.GetVolumeId())
+
+    vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+    if err != nil {
+        if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+            return nil, status.Error(codes.NotFound, "Volume not found")
+        }
+        return nil, err
+    }
+
+    if !vol.Spec.Winshare {
+        return &csi.ControllerPublishVolumeResponse{
+                }, nil
+    }
+
+    /// have the volume, now submit a new grpc request to the px driver, to
+    /// prepare volume to be published only if the volume property is for windows.
+    /// TODO:
+    return &csi.ControllerPublishVolumeResponse{}, nil
 }
 
 // ControllerUnpublishVolume is a CSI API which implements the detaching of a volume
 // onto a node.
 func (s *OsdCsiServer) ControllerUnpublishVolume(
-	context.Context,
-	*csi.ControllerUnpublishVolumeRequest,
+	ctx context.Context,
+	req *csi.ControllerUnpublishVolumeRequest,
 ) (*csi.ControllerUnpublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "This request is not supported")
+    clogger.WithContext(ctx).Infof("ControllerUnpublishVolume request received. VolumeID: %s", req.GetVolumeId())
+
+    vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+    if err != nil {
+        if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+            return nil, status.Error(codes.NotFound, "Volume not found")
+        }
+        return nil, err
+    }
+
+    if !vol.Spec.Winshare {
+        return &csi.ControllerUnpublishVolumeResponse{
+                }, nil
+    }
+
+    /// have the volume, now submit a new grpc request to the px driver, to
+    /// cleanup volume that was published earlier.
+    /// TODO:
+    return &csi.ControllerUnpblishVolumeResponse{}, nil
 }
 
 // ControllerGetVolume is a CSI API which implements getting a single volume.

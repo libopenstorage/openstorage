@@ -332,12 +332,12 @@ message IoStrategy {
 
 // Xattr defines implementation specific volume attribute
 message Xattr {
-	enum Value {
-		// Value is uninitialized or unknown
-		UNSPECIFIED = 0;
-		// Enable on-demand copy-on-write on the volume
-		COW_ON_DEMAND = 1;
-	}
+    enum Value {
+        // Value is uninitialized or unknown
+        UNSPECIFIED = 0;
+        // Enable on-demand copy-on-write on the volume
+        COW_ON_DEMAND = 1;
+    }
 }
 
 // ExportProtocol defines how the device is exported..
@@ -498,18 +498,18 @@ message MountOptions {
 
 // fastpath extensions
 enum FastpathStatus {
-	// backward compatible state
-	FASTPATH_UNKNOWN = 0;
-	// fastpath activated and enabled
-	FASTPATH_ACTIVE = 1;
-	// fastpath inactive
-	FASTPATH_INACTIVE = 2;
-	// fastpath unsupported, disabled
-	FASTPATH_UNSUPPORTED = 3;
-	// fastpath operation setup in progress
-	FASTPATH_PENDING = 4;
-	// fastpath error'd, possible stuck failure
-	FASTPATH_ERRORED = 5;
+    // backward compatible state
+    FASTPATH_UNKNOWN = 0;
+    // fastpath activated and enabled
+    FASTPATH_ACTIVE = 1;
+    // fastpath inactive
+    FASTPATH_INACTIVE = 2;
+    // fastpath unsupported, disabled
+    FASTPATH_UNSUPPORTED = 3;
+    // fastpath operation setup in progress
+    FASTPATH_PENDING = 4;
+    // fastpath error'd, possible stuck failure
+    FASTPATH_ERRORED = 5;
 }
 
 enum FastpathProtocol {
@@ -2453,6 +2453,24 @@ service OpenStorageVolume {
           body: "*"
         };
     }
+
+    // Controller Publish Volume
+    rpc ControllerPublish(SdkControllerVolumePublishRequest)
+    returns (SdkControllerVolumePublishResponse) {
+        option(google.api.http) = {
+          post: "/v1/volumes/publish/{volume_id}"
+          body: "*"
+        };
+    }
+
+    // Controller Unpublish Volume
+    rpc ControllerUnpublish(SdkControllerVolumeUnpublishRequest)
+    returns (SdkControllerVolumeUnpublishResponse) {
+        option(google.api.http) = {
+          post: "/v1/volumes/unpublish/{volume_id}"
+          body: "*"
+        };
+    }
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -3788,6 +3806,41 @@ message SdkNodeInspectRequest {
   string node_id = 1;
 }
 
+// SdkVolumeControllerPublishRequest request to publish volume
+message SdkVolumeControllerPublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be published
+  string node_id = 2;
+  // Options to attach device
+  SdkVolumeAttachOptions options = 3;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> options = 4;
+}
+
+// SdkVolumeControllerPublishResponse response from driver with a context
+message SdkVolumeControllerPublishResponse {
+  // opaque context returned by the driver
+  map<string, string> context = 1;
+}
+
+// SdkVolumeControllerUnpublishRequest request to unpublish volume
+message SdkVolumeControllerUnpublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be unpublished
+  string node_id = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> options = 3;
+}
+
+// Empty response
+message SdkVolumeControllerUnpublishResponse {
+}
 
 // Job is a generic job object that can encapsulate other
 // messages which follow the job framework of APIs
@@ -5738,16 +5791,16 @@ enum EnforcementType {
 }
 
 enum RestoreParamBoolType {
-	PARAM_BKUPSRC = 0; // Default: whateever was cloudbakup's option for the parameter
-	PARAM_FALSE = 1;
-	PARAM_TRUE = 2;
+    PARAM_BKUPSRC = 0; // Default: whateever was cloudbakup's option for the parameter
+    PARAM_FALSE = 1;
+    PARAM_TRUE = 2;
 }
 
 message RestoreVolSnashotSchedule {
-	string schedule= 1;
+    string schedule= 1;
 }
 message RestoreVolStoragePolicy {
-	string policy = 1;
+    string policy = 1;
 }
 
 // RestoreSpec allows some of the restore volume properties of to be modified
