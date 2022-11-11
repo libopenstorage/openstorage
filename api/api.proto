@@ -2455,8 +2455,8 @@ service OpenStorageVolume {
     }
 
     // Controller Publish Volume
-    rpc ControllerPublish(SdkControllerVolumePublishRequest)
-    returns (SdkControllerVolumePublishResponse) {
+    rpc ControllerPublish(SdkVolumeControllerPublishRequest)
+    returns (SdkVolumeControllerPublishResponse) {
         option(google.api.http) = {
           post: "/v1/volumes/publish/{volume_id}"
           body: "*"
@@ -2464,8 +2464,8 @@ service OpenStorageVolume {
     }
 
     // Controller Unpublish Volume
-    rpc ControllerUnpublish(SdkControllerVolumeUnpublishRequest)
-    returns (SdkControllerVolumeUnpublishResponse) {
+    rpc ControllerUnpublish(SdkVolumeControllerUnpublishRequest)
+    returns (SdkVolumeControllerUnpublishResponse) {
         option(google.api.http) = {
           post: "/v1/volumes/unpublish/{volume_id}"
           body: "*"
@@ -3813,7 +3813,7 @@ message SdkVolumeControllerPublishRequest {
   // Node Id where the volume needs to be published
   string node_id = 2;
   // Options to attach device
-  SdkVolumeAttachOptions options = 3;
+  SdkVolumeAttachOptions attach_options = 3;
   // The following options are private to the driver plugin running the
   // OpenStorage SDK. Contact your driver developer for any special
   // values that need to be provided here.
