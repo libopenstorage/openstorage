@@ -122,6 +122,21 @@ func (s *VolumeServer) Detach(
 	return &api.SdkVolumeDetachResponse{}, nil
 }
 
+func (s *VolumeServer) ControllerPublish(
+	ctx context.Context,
+	req *api.SdkVolumeControllerPublishRequest,
+) (*api.SdkVolumeControllerPublishResponse, error) {
+	return &api.SdkVolumeControllerPublishResponse{}, nil
+}
+
+func (s *VolumeServer) ControllerUnpublish(
+	ctx context.Context,
+	req *api.SdkVolumeControllerUnpublishRequest,
+) (*api.SdkVolumeControllerUnpublishResponse, error) {
+	return &api.SdkVolumeControllerUnpublishResponse{}, nil
+}
+
+
 // Mount function for volume node detach
 func (s *VolumeServer) Mount(
 	ctx context.Context,

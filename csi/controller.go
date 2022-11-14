@@ -165,7 +165,7 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
     /// have the volume, now submit a new grpc request to the px driver, to
     /// cleanup volume that was published earlier.
     /// TODO:
-    return &csi.ControllerUnpblishVolumeResponse{}, nil
+    return &csi.ControllerUnpublishVolumeResponse{}, nil
 }
 
 // ControllerGetVolume is a CSI API which implements getting a single volume.
