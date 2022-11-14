@@ -399,8 +399,8 @@ func (v *volumeClient) Detach(ctx context.Context, volumeID string, options map[
 func (v *volumeClient) ControllerPublish(ctx context.Context, volumeID string, nodeID string, attachOptions map[string]string) (map[string]string, error) {
 	response := &api.VolumeControllerPublishResponse{}
 	request := &api.VolumeControllerPublishRequest{
-		volumeID: volumeID,
-		nodeID:   nodeID,
+		volumeId: volumeID,
+		nodeId:   nodeID,
 		options:  attachOptions,
 	}
 	if err := v.c.Post().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {
@@ -414,8 +414,8 @@ func (v *volumeClient) ControllerPublish(ctx context.Context, volumeID string, n
 func (v *volumeClient) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
 	response := &api.VolumeControllerUnpublishResponse{}
 	request := &api.VolumeControllerUnpublishRequest{
-		volumeID: volumeID,
-		nodeID:   nodeID,
+		volumeId: volumeID,
+		nodeId:   nodeID,
 		options:  options,
 	}
 	if err := v.c.Post().Resource(volumePath).Instance(volumeID).Body(request).Do().Unmarshal(response); err != nil {

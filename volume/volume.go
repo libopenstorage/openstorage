@@ -321,6 +321,10 @@ type BlockDriver interface {
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(ctx context.Context, volumeID string, options map[string]string) error
+	// ControllerPublish csi extension
+	ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error)
+	// ControllerUnpublish csi extension
+	ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error
 }
 
 // CredsDriver provides methods to handle credentials
