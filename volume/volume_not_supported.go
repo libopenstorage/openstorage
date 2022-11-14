@@ -48,6 +48,14 @@ func (b *blockNotSupported) Detach(ctx context.Context, volumeID string, options
 	return ErrNotSupported
 }
 
+func (b *blockNotSupported) ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+func (b *blockNotSupported) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
+	return nil
+}
+
 type snapshotNotSupported struct{}
 
 func (s *snapshotNotSupported) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
