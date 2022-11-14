@@ -34,7 +34,7 @@ require (
 	github.com/portworx/sched-ops v1.20.4-rc1
 	github.com/prometheus/client_golang v1.7.1
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
-	github.com/sirupsen/logrus v1.8.1
+	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
