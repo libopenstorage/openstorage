@@ -397,8 +397,8 @@ func (v *volumeClient) Detach(ctx context.Context, volumeID string, options map[
 
 // ControllerPublish prepare device to the passed Node.
 func (v *volumeClient) ControllerPublish(ctx context.Context, volumeID string, nodeID string, attachOptions map[string]string) (map[string]string, error) {
-	response := &api.VolumePublishResponse{}
-	request := &api.VolumePublishRequest{
+	response := &api.VolumeControllerPublishResponse{}
+	request := &api.VolumeControllerPublishRequest{
 		volumeID: volumeID,
 		nodeID:   nodeID,
 		options:  attachOptions,
@@ -412,8 +412,8 @@ func (v *volumeClient) ControllerPublish(ctx context.Context, volumeID string, n
 
 // ControllerUnpublish device cleanup after node unpublish.
 func (v *volumeClient) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
-	response := &api.VolumeUnpublishResponse{}
-	request := &api.VolumeUnpublishRequest{
+	response := &api.VolumeControllerUnpublishResponse{}
+	request := &api.VolumeControllerUnpublishRequest{
 		volumeID: volumeID,
 		nodeID:   nodeID,
 		options:  options,
