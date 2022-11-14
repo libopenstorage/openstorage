@@ -376,7 +376,7 @@ func (d *driver) ControllerPublish(ctx context.Context, volumeID string, nodeID 
        return map[string]string{}, nil
 }
 
-func (b *blockNotSupported) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
+func (b *driver) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error {
        return nil
 }
 
