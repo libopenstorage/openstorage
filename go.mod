@@ -7,7 +7,7 @@ require (
 	github.com/aws/aws-sdk-go v1.35.24
 	github.com/cenkalti/backoff v2.2.1+incompatible
 	github.com/codegangsta/cli v1.13.1-0.20160326223947-bc465becccd1
-	github.com/container-storage-interface/spec v1.6.0
+	github.com/container-storage-interface/spec v1.7.0
 	github.com/coreos/go-oidc v2.2.1+incompatible
 	github.com/dgrijalva/jwt-go v3.2.1-0.20180719211823-0b96aaa70776+incompatible
 	github.com/docker/docker v17.12.0-ce-rc1.0.20200916142827-bd33bbf0497b+incompatible
