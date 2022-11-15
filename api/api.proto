@@ -688,8 +688,6 @@ message VolumeSpec {
   IoThrottle io_throttle = 45;
   // TopologyRequirement topology requirement for this volume
   TopologyRequirement topology_requirement = 48;
-  // winshare is true if this volume can be accessed from windows pods.
-  bool winshare = 49;
   // Filesystem create options to be honored.
   string fa_create_options = 50;
 }

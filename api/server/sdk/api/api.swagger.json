@@ -5432,11 +5432,6 @@
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
           },
-          "winshare": {
-            "description": "winshare is true if this volume can be accessed from windows pods.",
-            "format": "boolean",
-            "type": "boolean"
-          },
           "xattr": {
             "$ref": "#/components/schemas/apiXattrValue"
           }
