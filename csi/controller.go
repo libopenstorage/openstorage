@@ -137,8 +137,6 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 
     /// have the volume, now submit a new grpc request to the px driver, to
     /// prepare volume to be published only if the volume property is for windows.
-    /// TODO:
-	// Get grpc connection
 	conn, err := s.getRemoteConn(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
@@ -150,6 +148,10 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 		}
 	}
 
+	/// TODO VolumeCapability and Readonly checks missing.
+
+	ctx = s.setupContext(ctx, req.GetSecrets())
+	/// pwx does not setup any volume context - ignored
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
@@ -158,10 +160,15 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest{
 		VolumeId: req.GetVolumeId(),
 		NodeId: req.GetNodeId(),
-		AttachOptions: req.GetOptions(),
+		AttachOptions: req.GetPublishContext(),
 	})
 
-    return &csi.ControllerPublishVolumeResponse{PublishContext: resp}, err
+	result := &csi.ControllerPublishVolumeResponse{}
+	if resp != nil {
+		result.PublishContext = resp.Context
+	}
+
+    return result, err
 }
 
 // ControllerUnpublishVolume is a CSI API which implements the detaching of a volume

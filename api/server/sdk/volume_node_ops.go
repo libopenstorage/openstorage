@@ -169,7 +169,7 @@ func (s *VolumeServer) ControllerUnpublish(
 			err.Error())
 	}
 
-	return &api.SdkVolumeControllerUnublishResponse{}, nil
+	return &api.SdkVolumeControllerUnpublishResponse{}, nil
 }
 
 // Mount function for volume node detach
