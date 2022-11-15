@@ -138,7 +138,30 @@ func (s *OsdCsiServer) ControllerPublishVolume(
     /// have the volume, now submit a new grpc request to the px driver, to
     /// prepare volume to be published only if the volume property is for windows.
     /// TODO:
-    return &csi.ControllerPublishVolumeResponse{}, nil
+	// Get grpc connection
+	conn, err := s.getRemoteConn(ctx)
+	if err != nil {
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
+	}
+
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest{
+		VolumeId: req.GetVolumeId(),
+		NodeId: req.GetNodeId(),
+		Options: req.GetOptions(),
+	})
+
+    return &csi.ControllerPublishVolumeResponse{Context: resp}, err
 }
 
 // ControllerUnpublishVolume is a CSI API which implements the detaching of a volume
@@ -165,7 +188,29 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
     /// have the volume, now submit a new grpc request to the px driver, to
     /// cleanup volume that was published earlier.
     /// TODO:
-    return &csi.ControllerUnpublishVolumeResponse{}, nil
+	conn, err := s.getRemoteConn(ctx)
+	if err != nil {
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
+	}
+
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	err = volumes.ControllerUnpublish(ctx, &api.SdkVolumeControllerUnpublishRequest{
+		VolumeId: req.GetVolumeId(),
+		NodeId: req.GetNodeId(),
+		Options: req.GetOptions(),
+	})
+
+    return &csi.ControllerUnpublishVolumeResponse{}, err
 }
 
 // ControllerGetVolume is a CSI API which implements getting a single volume.
