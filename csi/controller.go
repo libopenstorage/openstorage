@@ -149,6 +149,7 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	}
 
 	/// TODO VolumeCapability and Readonly checks missing.
+	// req.GetVolumeContext() not passed/used
 
 	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
@@ -159,7 +160,7 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest{
 		VolumeId: req.GetVolumeId(),
 		NodeId: req.GetNodeId(),
-		AttachOptions: req.GetVolumeContext(),
+		// AttachOptions: req.GetVolumeContext(),
 	})
 
 	result := &csi.ControllerPublishVolumeResponse{}
