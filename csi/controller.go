@@ -158,10 +158,10 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest{
 		VolumeId: req.GetVolumeId(),
 		NodeId: req.GetNodeId(),
-		Options: req.GetOptions(),
+		AttachOptions: req.GetOptions(),
 	})
 
-    return &csi.ControllerPublishVolumeResponse{Context: resp}, err
+    return &csi.ControllerPublishVolumeResponse{PublishContext: resp}, err
 }
 
 // ControllerUnpublishVolume is a CSI API which implements the detaching of a volume
@@ -204,10 +204,10 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
-	err = volumes.ControllerUnpublish(ctx, &api.SdkVolumeControllerUnpublishRequest{
+	_, err = volumes.ControllerUnpublish(ctx, &api.SdkVolumeControllerUnpublishRequest{
 		VolumeId: req.GetVolumeId(),
 		NodeId: req.GetNodeId(),
-		Options: req.GetOptions(),
+		Options: req.GetSecrets(),
 	})
 
     return &csi.ControllerUnpublishVolumeResponse{}, err
