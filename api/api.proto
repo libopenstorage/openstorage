@@ -688,6 +688,8 @@ message VolumeSpec {
   IoThrottle io_throttle = 45;
   // TopologyRequirement topology requirement for this volume
   TopologyRequirement topology_requirement = 48;
+  // Filesystem create options to be honored.
+  string fa_create_options = 50;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -5154,7 +5156,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 29;
+    Patch = 30;
   }
 
   // The following cannot be set to use the enum Version because the REST
