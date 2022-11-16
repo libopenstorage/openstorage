@@ -32,13 +32,13 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194
 	github.com/portworx/sched-ops v1.20.4-rc1
-	github.com/prometheus/client_golang v1.7.1
+	github.com/prometheus/client_golang v1.14.0
 	github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
 	github.com/sirupsen/logrus v1.9.0
 	github.com/stretchr/testify v1.8.1
 	github.com/urfave/negroni v1.0.1-0.20181201104632-7183f09c600e
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
-	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f
+	golang.org/x/sync v0.0.0-20220601150217-0de741cfad7f
 	golang.org/x/sys v0.0.0-20220811171246-fbc7d0a398ab
 	google.golang.org/genproto v0.0.0-20210921142501-181ce0d877f6
 	google.golang.org/grpc v1.40.0
@@ -56,7 +56,7 @@ require (
 	github.com/Microsoft/hcsshim v0.8.10-0.20200715222032-5eafd1556990 // indirect
 	github.com/armon/go-metrics v0.3.3 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/cespare/xxhash/v2 v2.1.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cloudfoundry/gosigar v1.3.3 // indirect
 	github.com/containerd/cgroups v0.0.0-20200531161412-0dbf7f05ba59 // indirect
 	github.com/containerd/containerd v1.4.1 // indirect
@@ -95,7 +95,7 @@ require (
 	github.com/imdario/mergo v0.3.10 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/joho/godotenv v1.3.0 // indirect
-	github.com/json-iterator/go v1.1.10 // indirect
+	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/miekg/dns v1.1.35 // indirect
@@ -106,7 +106,7 @@ require (
 	github.com/moby/sys/mountinfo v0.4.0 // indirect
 	github.com/moby/sys/symlink v0.1.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
-	github.com/modern-go/reflect2 v1.0.1 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/nxadm/tail v1.4.8 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.0.1 // indirect
@@ -115,9 +115,9 @@ require (
 	github.com/opencontainers/selinux v1.6.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/pquerna/cachecontrol v0.0.0-20180517163645-1555304b9b35 // indirect
-	github.com/prometheus/client_model v0.2.0 // indirect
-	github.com/prometheus/common v0.10.0 // indirect
-	github.com/prometheus/procfs v0.2.0 // indirect
+	github.com/prometheus/client_model v0.3.0 // indirect
+	github.com/prometheus/common v0.37.0 // indirect
+	github.com/prometheus/procfs v0.8.0 // indirect
 	github.com/rogpeppe/go-internal v1.3.0 // indirect
 	github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46 // indirect
 	github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529 // indirect
@@ -130,7 +130,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9 // indirect
-	golang.org/x/oauth2 v0.0.0-20201208152858-08078c50e5b5 // indirect
+	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/time v0.0.0-20201208040808-7e3f01d25324 // indirect
