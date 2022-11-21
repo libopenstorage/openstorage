@@ -1713,63 +1713,84 @@ service OpenStorageFilesystemTrim {
 
   // Usage of a filesystem Trim background operation on all locally mounted
   // volume
-  rpc AutoFSTrimUsage(SdkAutoFSTrimUsageRequest)
-  returns (SdkAutoFSTrimUsageResponse){
-    option(google.api.http) = {
-      get: "/v1/filesystem-trim/auto-fstrim-usage"
-    };
-  }
+    rpc AutoFSTrimUsage(SdkAutoFSTrimUsageRequest)
+        returns (SdkAutoFSTrimUsageResponse) {
+      option (google.api.http) = {
+        get : "/v1/filesystem-trim/auto-fstrim-usage"
+      };
+    }
 
-  // Stop a filesystem Trim background operation on a mounted volume, if any
-  rpc Stop(SdkFilesystemTrimStopRequest)
-    returns (SdkFilesystemTrimStopResponse){
+    // Stop a filesystem Trim background operation on a mounted volume, if any
+    rpc Stop(SdkFilesystemTrimStopRequest)
+        returns (SdkFilesystemTrimStopResponse) {
       option(google.api.http) = {
         post: "/v1/filesystem-trim/stop"
         body: "*"
       };
     }
-  }
 
-// ## OpenStorageFilesystemCheckService
-// This service provides methods to manage filesystem check operation on a
-// volume.
-//
-// This operation is run in the background on an **unmounted volume**.
-// If the volume is mounted, then these APIs return error.
-//
-// Once the filesystem check operation is started, in one of the available
-// modes(check_health, fix_safe, fix_all),
-// the clients have to poll for the status of the background operation
-// using the `OpenStorageFilesystemcheck.Status()` rpc request.
-//
-// **Note:
-// 1. Different modes of filesystem check can execute in parallel for
-// the same volume.
-// 2. Filesystem Check and volume Mount are mutually exclusive, meaning both
-// cannot be run on a volume at the same time.
-//
-// A typical workflow involving filesystem check would be as follows
-// 1. Attach the volume
-//    `OpenStorageMountAttachClient.Attach()`
-// 2. Check the health of the filesystem by issuing a grpc call to
-//    `OpenStorageFilesystemCheckClient.Start(Mode='check_health')`
-// 3. Status of the Filesystem Check operation in check_health mode, can be
-//    retrieved by polling for the status using
-//    `OpenStorageFilesystemCheck.Status()`
-// 4. If the Filesystem Check Operation status reports filesystem is in unhealthy
-//    state, then to fix all the problems issue a grpc call to
-//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_all')`
-// 5. Status of the Filesystem Check operation in fix_all mode, can be retrieved
-//    by polling for the status using
-//    `OpenStorageFilesystemCheck.Status()`
-// 6. Filesystem Check operation runs in the background, to stop the operation,
-//    issue a call to
-//    `OpenStorageFilesystemCheckClient.Stop()`
-// 7. To Check and Fix errors in the filesystem that are safe to fix, issue a
-//    grpc call to
-//    `OpenStorageFilesystemCheckClient.Start(Mode='fix_safe')`
-//    Status of this operation can be polled in the way mentioned in step 3
-//    This operation can be stopped a Stop request as mentioned in step 6
+    // Push a auto filesystem Trim job into the queue
+    rpc AutoFSTrimPush(SdkAutoFSTrimPushRequest)
+        returns (SdkAutoFSTrimPushResponse) {
+      option (google.api.http) = {
+        post : "/v1/filesystem-trim/auto-fstrim-push"
+        body : "*"
+      };
+    }
+
+    // Pop a auto filesystem Trim job from the queue
+    rpc AutoFSTrimPop(SdkAutoFSTrimPopRequest)
+        returns (SdkAutoFSTrimPopResponse) {
+      option (google.api.http) = {
+        post : "/v1/filesystem-trim/auto-fstrim-pop"
+        body : "*"
+      };
+    }
+}
+
+  // ## OpenStorageFilesystemCheckService
+  // This service provides methods to manage filesystem check operation on a
+  // volume.
+  //
+  // This operation is run in the background on an **unmounted volume**.
+  // If the volume is mounted, then these APIs return error.
+  //
+  // Once the filesystem check operation is started, in one of the available
+  // modes(check_health, fix_safe, fix_all),
+  // the clients have to poll for the status of the background operation
+  // using the `OpenStorageFilesystemcheck.Status()` rpc request.
+  //
+  // **Note:
+  // 1. Different modes of filesystem check can execute in parallel for
+  // the same volume.
+  // 2. Filesystem Check and volume Mount are mutually exclusive, meaning both
+  // cannot be run on a volume at the same time.
+  //
+  // A typical workflow involving filesystem check would be as follows
+  // 1. Attach the volume
+  //    `OpenStorageMountAttachClient.Attach()`
+  // 2. Check the health of the filesystem by issuing a grpc call to
+  //    `OpenStorageFilesystemCheckClient.Start(Mode='check_health')`
+  // 3. Status of the Filesystem Check operation in check_health mode, can be
+  //    retrieved by polling for the status using
+  //    `OpenStorageFilesystemCheck.Status()`
+  // 4. If the Filesystem Check Operation status reports filesystem is in
+  // unhealthy
+  //    state, then to fix all the problems issue a grpc call to
+  //    `OpenStorageFilesystemCheckClient.Start(Mode='fix_all')`
+  // 5. Status of the Filesystem Check operation in fix_all mode, can be
+  // retrieved
+  //    by polling for the status using
+  //    `OpenStorageFilesystemCheck.Status()`
+  // 6. Filesystem Check operation runs in the background, to stop the
+  // operation,
+  //    issue a call to
+  //    `OpenStorageFilesystemCheckClient.Stop()`
+  // 7. To Check and Fix errors in the filesystem that are safe to fix, issue a
+  //    grpc call to
+  //    `OpenStorageFilesystemCheckClient.Start(Mode='fix_safe')`
+  //    Status of this operation can be polled in the way mentioned in step 3
+  //    This operation can be stopped a Stop request as mentioned in step 6
 
 service OpenStorageFilesystemCheck {
 
@@ -5071,6 +5092,34 @@ message SdkFilesystemTrimStopRequest {
 message SdkFilesystemTrimStopResponse{
 }
 
+// SdkAutoFSTrimPushRequest defines the request to push a volume to autofstrim
+// queue
+message SdkAutoFSTrimPushRequest {
+  // Id of the volume
+  string volume_id = 1;
+}
+
+// SdkAutoFSTrimPushResponse defines the response to push a volume to autofstrim
+// queue
+message SdkAutoFSTrimPushResponse {
+  // Text blob containing ASCII text providing details of the operation
+  string message = 1;
+}
+
+// SdkAutoFSTrimPopRequest defines the request to pop a volume to autofstrim
+// queue
+message SdkAutoFSTrimPopRequest {
+  // Id of the volume
+  string volume_id = 1;
+}
+
+// SdkAutoFSTrimPopResponse defines the response to pop a volume to autofstrim
+// queue
+message SdkAutoFSTrimPopResponse {
+  // Text blob containing ASCII text providing details of the operation
+  string message = 1;
+}
+
 message FilesystemCheck {
   // FilesystemChecktatus represents the status codes returned from
   // OpenStorageFilesystemCheck service APIs()
@@ -5228,7 +5277,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 152;
+    Minor = 153;
     // SDK version patch value of this specification
     Patch = 0;
   }

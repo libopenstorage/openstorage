@@ -1908,6 +1908,46 @@
         },
         "type": "object"
       },
+      "apiSdkAutoFSTrimPopRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkAutoFSTrimPopRequest defines the request to pop a volume to autofstrim\nqueue",
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimPopResponse": {
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          }
+        },
+        "title": "SdkAutoFSTrimPopResponse defines the response to pop a volume to autofstrim\nqueue",
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimPushRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkAutoFSTrimPushRequest defines the request to push a volume to autofstrim\nqueue",
+        "type": "object"
+      },
+      "apiSdkAutoFSTrimPushResponse": {
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          }
+        },
+        "title": "SdkAutoFSTrimPushResponse defines the response to push a volume to autofstrim\nqueue",
+        "type": "object"
+      },
       "apiSdkAutoFSTrimStatusResponse": {
         "description": "SdkAutoFSTrimStatusResponse defines the response for a\nSdkAutoFSTrimStatusRequest.",
         "properties": {
@@ -5899,7 +5939,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.152.0"
+    "version": "0.153.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7712,6 +7752,88 @@
         "summary": "Stop a filesystem check background operation on an unmounted volume, if any",
         "tags": [
           "OpenStorageFilesystemCheck"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-pop": {
+      "post": {
+        "operationId": "OpenStorageFilesystemTrim_AutoFSTrimPop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkAutoFSTrimPopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimPopResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Pop a auto filesystem Trim job from the queue",
+        "tags": [
+          "OpenStorageFilesystemTrim"
+        ]
+      }
+    },
+    "/v1/filesystem-trim/auto-fstrim-push": {
+      "post": {
+        "operationId": "OpenStorageFilesystemTrim_AutoFSTrimPush",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkAutoFSTrimPushRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkAutoFSTrimPushResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Push a auto filesystem Trim job into the queue",
+        "tags": [
+          "OpenStorageFilesystemTrim"
         ]
       }
     },

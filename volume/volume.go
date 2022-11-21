@@ -228,6 +228,10 @@ type FilesystemTrimDriver interface {
 	// FilesystemTrimStop stops a filesystem trim background operation on
 	// a specified volume, if any
 	FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error)
+	// AutoFilesystemTrimPush pushes an autofstrim job to queue
+	AutoFilesystemTrimPush(request *api.SdkAutoFSTrimPushRequest) (*api.SdkAutoFSTrimPushResponse, error)
+	// AutoFilesystemTrimPop pops an autofstrim job from queue
+	AutoFilesystemTrimPop(request *api.SdkAutoFSTrimPopRequest) (*api.SdkAutoFSTrimPopResponse, error)
 }
 
 // FilesystemCheckDriver interface exposes APIs to manage filesystem check

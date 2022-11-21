@@ -50,6 +50,36 @@ func (mr *MockVolumeDriverMockRecorder) Attach(arg0, arg1, arg2 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Attach", reflect.TypeOf((*MockVolumeDriver)(nil).Attach), arg0, arg1, arg2)
 }
 
+// AutoFilesystemTrimPop mocks base method.
+func (m *MockVolumeDriver) AutoFilesystemTrimPop(arg0 *api.SdkAutoFSTrimPopRequest) (*api.SdkAutoFSTrimPopResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoFilesystemTrimPop", arg0)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPopResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFilesystemTrimPop indicates an expected call of AutoFilesystemTrimPop.
+func (mr *MockVolumeDriverMockRecorder) AutoFilesystemTrimPop(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFilesystemTrimPop", reflect.TypeOf((*MockVolumeDriver)(nil).AutoFilesystemTrimPop), arg0)
+}
+
+// AutoFilesystemTrimPush mocks base method.
+func (m *MockVolumeDriver) AutoFilesystemTrimPush(arg0 *api.SdkAutoFSTrimPushRequest) (*api.SdkAutoFSTrimPushResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoFilesystemTrimPush", arg0)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPushResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFilesystemTrimPush indicates an expected call of AutoFilesystemTrimPush.
+func (mr *MockVolumeDriverMockRecorder) AutoFilesystemTrimPush(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFilesystemTrimPush", reflect.TypeOf((*MockVolumeDriver)(nil).AutoFilesystemTrimPush), arg0)
+}
+
 // AutoFilesystemTrimStatus mocks base method.
 func (m *MockVolumeDriver) AutoFilesystemTrimStatus(arg0 *api.SdkAutoFSTrimStatusRequest) (*api.SdkAutoFSTrimStatusResponse, error) {
 	m.ctrl.T.Helper()
