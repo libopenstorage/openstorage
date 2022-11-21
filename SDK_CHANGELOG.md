@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.153.0 - (11/09/2022)
+
+* Add api for autofstrim push and pop 
+
 ### v0.152.0 - (10/26/2022)
 
 * FA DirectAccess CreateOptions is not honoroed by PX

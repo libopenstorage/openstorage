@@ -302,6 +302,12 @@ func (cl *filesystemTrimNotSupported) AutoFilesystemTrimUsage(request *api.SdkAu
 func (cl *filesystemTrimNotSupported) FilesystemTrimStop(request *api.SdkFilesystemTrimStopRequest) (*api.SdkFilesystemTrimStopResponse, error) {
 	return nil, ErrNotSupported
 }
+func (cl *filesystemTrimNotSupported) AutoFilesystemTrimPush(request *api.SdkAutoFSTrimPushRequest) (*api.SdkAutoFSTrimPushResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *filesystemTrimNotSupported) AutoFilesystemTrimPop(request *api.SdkAutoFSTrimPopRequest) (*api.SdkAutoFSTrimPopResponse, error) {
+	return nil, ErrNotSupported
+}
 
 type filesystemCheckNotSupported struct{}
 
