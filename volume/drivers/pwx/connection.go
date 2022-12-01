@@ -9,11 +9,10 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/portworx/sched-ops/k8s/core"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-
-	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 )
 
 // ConnectionParamsBuilder contains dependencies needed for building Dial options and endpoints
@@ -125,7 +124,7 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 		return "", "", fmt.Errorf("failed to get k8s service specification: %v", err)
 	}
 
-	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
+	endpoint = fmt.Sprintf("%s.%s.svc.cluster.local", svc.Name, svc.Namespace)
 
 	var restPort int
 	var restPortSecured int
@@ -223,6 +222,17 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 	rootCA, err := cpb.getCaCertBytes()
 	if err != nil {
 		return nil, err
+	}
+
+	// add Kubernetes CA, if available
+	if k8sCA, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"); err == nil && len(k8sCA) > 0 {
+		logrus.Infof("Found Kubernetes CA, adding into gRPC dial options")
+		if len(rootCA) <= 0 {
+			rootCA = k8sCA
+		} else {
+			rootCA = append(rootCA, '\n')
+			rootCA = append(rootCA, k8sCA...)
+		}
 	}
 
 	tlsDialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
