@@ -1,6 +1,7 @@
 package pwx
 
 import (
+	"bytes"
 	"crypto/tls"
 	"crypto/x509"
 	"fmt"
@@ -230,6 +231,7 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 		if len(rootCA) <= 0 {
 			rootCA = k8sCA
 		} else {
+			rootCA = bytes.Trim(rootCA, "\r\n")
 			rootCA = append(rootCA, '\n')
 			rootCA = append(rootCA, k8sCA...)
 		}
