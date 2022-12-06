@@ -5,15 +5,14 @@ import (
 	"os"
 	"testing"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
-	"github.com/portworx/sched-ops/k8s/core"
-	v1 "k8s.io/api/core/v1"
-
 	"github.com/libopenstorage/openstorage/api/server/mock"
 	"github.com/libopenstorage/openstorage/volume/drivers/pwx"
+	"github.com/portworx/sched-ops/k8s/core"
+	"github.com/stretchr/testify/require"
+	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 const (
@@ -169,14 +168,10 @@ func TestPortworx_buildClientsEndpoints_Error_WhenServiceDoesNotExist(t *testing
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	_, _, err = paramsBuilder.BuildClientsEndpoints()
-	if err == nil {
-		t.Fatal("should return error when service does not exist")
-	}
+	require.Error(t, err, "should return error when service does not exist")
 }
 
 func TestPortworx_buildClientsEndpoints_Error_WhenServiceDoesNotHavePxRestPort(t *testing.T) {
@@ -184,14 +179,10 @@ func TestPortworx_buildClientsEndpoints_Error_WhenServiceDoesNotHavePxRestPort(t
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	_, _, err = paramsBuilder.BuildClientsEndpoints()
-	if err == nil {
-		t.Fatal("should return error when service does not have ports")
-	}
+	require.Error(t, err, "should return error when service does not have ports")
 }
 
 func TestPortworx_buildClientsEndpoints_Error_WhenServiceHasPxRestPortZeroed(t *testing.T) {
@@ -199,14 +190,10 @@ func TestPortworx_buildClientsEndpoints_Error_WhenServiceHasPxRestPortZeroed(t *
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	_, _, err = paramsBuilder.BuildClientsEndpoints()
-	if err == nil {
-		t.Fatal("should return error when service has ports equal to 0")
-	}
+	require.Error(t, err, "should return error when service has ports equal to 0")
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_TLS(t *testing.T) {
@@ -214,42 +201,24 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_TLS(t *testin
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	if pxMgmtEndpoint != "https://portworx-service.kube-system:9902" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9902")
-	}
-
-	if sdkEndpoint != "portworx-service.kube-system:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.kube-system:9999")
-	}
+	require.Equal(t, "https://portworx-service.kube-system.svc.cluster.local:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_NO_TLS(t *testing.T) {
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err)
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
-	}
+	require.NoError(t, err)
 
-	if pxMgmtEndpoint != "http://portworx-service.kube-system:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.kube-system:9901")
-	}
-
-	if sdkEndpoint != "portworx-service.kube-system:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.kube-system:9999")
-	}
+	require.Equal(t, "http://portworx-service.kube-system.svc.cluster.local:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_NO_TLS(t *testing.T) {
@@ -262,17 +231,10 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_NO_TLS(t *
 	}
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	if pxMgmtEndpoint != "http://portworx-service.non-default-ns:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.non-default-ns:9901")
-	}
-
-	if sdkEndpoint != "portworx-service.non-default-ns:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.non-default-ns:9999")
-	}
+	require.Equal(t, "http://portworx-service.non-default-ns.svc.cluster.local:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.non-default-ns.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *testing.T) {
@@ -285,17 +247,10 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *tes
 	}
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 
-	if pxMgmtEndpoint != "https://portworx-service.non-default-ns:9902" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.non-default-ns:9902")
-	}
-
-	if sdkEndpoint != "portworx-service.non-default-ns:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.non-default-ns:9999")
-	}
+	require.Equal(t, "https://portworx-service.non-default-ns.svc.cluster.local:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.non-default-ns.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts_NO_TLS(t *testing.T) {
@@ -303,22 +258,13 @@ func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts_NO_TLS(t *
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 
-	if pxMgmtEndpoint != "http://k8s-node-0:9039" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://k8s-node-0:9039")
-	}
-
-	if sdkEndpoint != "k8s-node-0:9020" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "k8s-node-0:9020")
-	}
+	require.Equal(t, "http://k8s-node-0:9039", pxMgmtEndpoint)
+	require.Equal(t, "k8s-node-0:9020", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts_TLS(t *testing.T) {
@@ -409,23 +355,14 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	// without TLS enabled
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env variables: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	if pxMgmtEndpoint != "http://portworx-service.kube-system:9901" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "http://portworx-service.kube-system:9901")
-	}
-
-	if sdkEndpoint != "portworx-service.kube-system:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.kube-system:9999")
-	}
+	require.Equal(t, "http://portworx-service.kube-system.svc.cluster.local:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStaticRestPort_TLS(t *testing.T) {
@@ -433,23 +370,14 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	// with TLS enabled
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	if err != nil {
-		t.Fatalf("should build endpoints when service and ns is not defined in env varaibles: %+v", err)
-	}
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 
-	if pxMgmtEndpoint != "https://portworx-service.kube-system:9902" {
-		t.Fatalf("should build pxMgmtEndpoint actual: %q, required: %q", pxMgmtEndpoint, "https://portworx-service.kube-system:9902")
-	}
-
-	if sdkEndpoint != "portworx-service.kube-system:9999" {
-		t.Fatalf("should build sdkEndpoint actual: %q, required: %q", sdkEndpoint, "portworx-service.kube-system:9999")
-	}
+	require.Equal(t, "https://portworx-service.kube-system.svc.cluster.local:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
 }
 
 func TestPortworx_dialOptions_Error_WhenSecretDoesNotExist(t *testing.T) {
@@ -462,13 +390,9 @@ func TestPortworx_dialOptions_Error_WhenSecretDoesNotExist(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err == nil {
-		t.Fatal("should return error when secret cannot be found")
-	}
+	require.Error(t, err, "should return error when secret cannot be found")
 }
 
 func TestPortworx_dialOptions_OK_WhenTLSDisabledAndInvalidNs(t *testing.T) {
@@ -481,13 +405,9 @@ func TestPortworx_dialOptions_OK_WhenTLSDisabledAndInvalidNs(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err != nil {
-		t.Fatalf("should not get error: %+v", err)
-	}
+	require.NoError(t, err, "should not get error: %+v", err)
 }
 
 func TestPortworx_dialOptions_OK_WhenTLSEnabled(t *testing.T) {
@@ -499,13 +419,9 @@ func TestPortworx_dialOptions_OK_WhenTLSEnabled(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err != nil {
-		t.Fatalf("should not get error: %+v", err)
-	}
+	require.NoError(t, err, "should not get error: %+v", err)
 }
 
 func TestPortworx_dialOptions_OK_WhenTLSEnabledAndWrongSecretKey(t *testing.T) {
@@ -513,13 +429,9 @@ func TestPortworx_dialOptions_OK_WhenTLSEnabledAndWrongSecretKey(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err == nil {
-		t.Fatalf("should not get error when secret key is wrong")
-	}
+	require.Error(t, err, "should get error when secret key is wrong")
 }
 
 func TestPortworx_dialOptions_OK_WhenTLSEnabledWithoutCa(t *testing.T) {
@@ -527,13 +439,9 @@ func TestPortworx_dialOptions_OK_WhenTLSEnabledWithoutCa(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(nil, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err != nil {
-		t.Fatalf("should not get error: %+v", err)
-	}
+	require.NoError(t, err, "should not get error: %+v", err)
 }
 
 func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertIsEmpty(t *testing.T) {
@@ -541,13 +449,9 @@ func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertIsEmpty(t *testing.T) {
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err == nil {
-		t.Fatalf("should get error when certificate is empty")
-	}
+	require.Error(t, err, "should get error when certificate is empty")
 }
 
 func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertIsBroken(t *testing.T) {
@@ -555,13 +459,9 @@ func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertIsBroken(t *testing.T) 
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err == nil {
-		t.Fatalf("should not get error")
-	}
+	require.Error(t, err, "should get error")
 }
 
 func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertSecretKeyIsEmpty(t *testing.T) {
@@ -569,20 +469,14 @@ func TestPortworx_dialOptions_Error_WhenTLSEnabledAndCertSecretKeyIsEmpty(t *tes
 	defer cleaner()
 
 	paramsBuilder, err := pwx.NewConnectionParamsBuilder(ops, pwx.NewConnectionParamsBuilderDefaultConfig())
-	if err != nil {
-		t.Fatal("ConnectionParamsBuilder creation error")
-	}
+	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 	_, err = paramsBuilder.BuildDialOps()
-	if err == nil {
-		t.Fatalf("should not get error: %+v", err)
-	}
+	require.Error(t, err, "should get error: %+v", err)
 }
 
 func TestPortworx_dialOptions_Error_WhenConfigIsNil(t *testing.T) {
 	_, err := pwx.NewConnectionParamsBuilder(ops, nil)
-	if err == nil {
-		t.Fatal("ConnectionParamsBuilder creation should return error when config is nil")
-	}
+	require.Error(t, err, "ConnectionParamsBuilder creation should return error when config is nil")
 }
 
 func setEnvs(t *testing.T, vars ...string) func() {
