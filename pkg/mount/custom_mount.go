@@ -1,9 +1,13 @@
 package mount
 
-import "github.com/libopenstorage/openstorage/pkg/keylock"
+import (
+	"regexp"
+
+	"github.com/libopenstorage/openstorage/pkg/keylock"
+)
 
 // CustomLoad defines the mounter.Load callback function for customer mounters
-type CustomLoad func([]string, DeviceMap, PathMap) error
+type CustomLoad func([]*regexp.Regexp, DeviceMap, PathMap) error
 
 // CustomReload defines the mounter.Reload callback function for customer mounters
 type CustomReload func(string, DeviceMap, PathMap) error
@@ -20,7 +24,7 @@ type CustomMounterHandler struct {
 
 // NewCustomMounter returns a new CustomMounter
 func NewCustomMounter(
-	devPrefixes []string,
+	devRegexes []*regexp.Regexp,
 	mountImpl MountImpl,
 	customMounter CustomMounter,
 	allowedDirs []string,
@@ -38,7 +42,7 @@ func NewCustomMounter(
 	cl, cr := customMounter()
 	m.cl = cl
 	m.cr = cr
-	err := m.Load(devPrefixes)
+	err := m.Load(devRegexes)
 	if err != nil {
 		return nil, err
 	}
@@ -46,8 +50,8 @@ func NewCustomMounter(
 }
 
 // Load mount table
-func (c *CustomMounterHandler) Load(devPrefixes []string) error {
-	return c.cl(devPrefixes, c.mounts, c.paths)
+func (c *CustomMounterHandler) Load(devRegexes []*regexp.Regexp) error {
+	return c.cl(devRegexes, c.mounts, c.paths)
 }
 
 // Reload mount table for a device

@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
 	"strconv"
 	"syscall"
 	"time"
@@ -70,9 +71,13 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	//support more than one server using CSV
 	//TB-FIXME: modify driver params flow to support map[string]struct/array
 	servers := strings.Split(server, ",")
+	serverRegexes := make([]*regexp.Regexp, len(servers))
+	for i := range servers {
+		serverRegexes[i] = regexp.MustCompile(regexp.QuoteMeta(servers[i]))
+	}
 
 	// Create a mount manager for this NFS server. Blank sever is OK.
-	mounter, err := mount.New(mount.NFSMount, nil, servers, nil, []string{}, "")
+	mounter, err := mount.New(mount.NFSMount, nil, serverRegexes, nil, []string{}, "")
 	if err != nil {
 		logrus.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err

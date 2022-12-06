@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"math"
 	"net"
+	"regexp"
 
 	"google.golang.org/grpc"
 
@@ -95,7 +96,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 		return err
 	}
 	// Update the deviceDriverMap
-	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{}, "")
+	mountManager, err := mount.New(mount.DeviceMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
 	if err != nil {
 		logrus.Infof("Could not read mountpoints from /proc/self/mountinfo. Device - Driver mapping not saved!")
 		return nil
@@ -110,7 +111,7 @@ func (c *flexVolumeClient) Mount(targetMountDir string, mountDevice string,
 
 func (c *flexVolumeClient) Unmount(mountDir string, options map[string]string) error {
 	// Get the mountDevice from mount manager
-	mountManager, err := mount.New(mount.DeviceMount, nil, []string{""}, nil, []string{}, "")
+	mountManager, err := mount.New(mount.DeviceMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
 	if err != nil {
 		return ErrNoMountInfo
 	}

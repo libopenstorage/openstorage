@@ -20,14 +20,14 @@ const (
 
 // nfsMounter implements Manager and keeps track of active mounts for volume drivers.
 type nfsMounter struct {
-	servers []string
+	servers []*regexp.Regexp
 	Mounter
 }
 
 // NewnfsMounter returns a Mounter specific to parse NFS mounts. This can work
 // VFS also if 'servers' is nil. Use NFSAllServers if the destination server
 // is unknown.
-func NewNFSMounter(servers []string,
+func NewNFSMounter(servers []*regexp.Regexp,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
@@ -43,7 +43,7 @@ func NewNFSMounter(servers []string,
 			trashLocation: trashLocation,
 		},
 	}
-	err := m.Load([]string{""})
+	err := m.Load([]*regexp.Regexp{}) // Input value is not used, can be anything
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func NewNFSMounter(servers []string,
 
 // Reload reloads the mount table for the specified source/
 func (m *nfsMounter) Reload(source string) error {
-	newNFSm, err := NewNFSMounter([]string{NFSAllServers},
+	newNFSm, err := NewNFSMounter([]*regexp.Regexp{regexp.MustCompile(NFSAllServers)},
 		m.mountImpl,
 		m.Mounter.allowedDirs,
 		m.trashLocation,
@@ -73,7 +73,8 @@ func (m *nfsMounter) Reload(source string) error {
 //serverExists utility function to test if a server is part of driver config
 func (m *nfsMounter) serverExists(server string) bool {
 	for _, v := range m.servers {
-		if v == server || v == NFSAllServers {
+		vStr := v.String()
+		if vStr == server || vStr == NFSAllServers {
 			return true
 		}
 	}
@@ -99,7 +100,7 @@ func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
 }
 
 // Load mount table
-func (m *nfsMounter) Load(source []string) error {
+func (m *nfsMounter) Load(source []*regexp.Regexp) error {
 	info, err := GetMounts()
 	if err != nil {
 		return err
