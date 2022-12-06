@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -1337,4 +1338,164 @@ func TestSdkAWSCredentialUpdateFailed(t *testing.T) {
 	// Update Credentials
 	_, err = c.Update(context.Background(), updateReq)
 	assert.Error(t, err)
+}
+
+func TestSdkNfsCredentialCreateSuccess(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		CredentialType: &api.SdkCredentialCreateRequest_NfsCredential{
+			NfsCredential: &api.SdkNfsCredentialRequest{
+				Server:         "dummy-server",
+				SubPath:        "dummy-sub-path",
+				MountOpts:      "rw",
+				TimeoutSeconds: 2,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "nfs"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredNFSServer] = req.GetNfsCredential().GetServer()
+	params[api.OptCredNFSSubPath] = req.GetNfsCredential().GetSubPath()
+	params[api.OptCredNFSMountOpts] = req.GetNfsCredential().GetMountOpts()
+	params[api.OptCredNFSTimeoutSeconds] = strconv.FormatUint(uint64(req.GetNfsCredential().GetTimeoutSeconds()), 10)
+
+	uuid := "good-uuid"
+	s.MockDriver().
+		EXPECT().
+		CredsCreate(params).
+		Return(uuid, nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Create AWS Credentials
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkNFSCredentialCreateFailed(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	req := &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		CredentialType: &api.SdkCredentialCreateRequest_NfsCredential{
+			NfsCredential: &api.SdkNfsCredentialRequest{
+				Server:         "dummy-server",
+				SubPath:        "dummy-sub-path",
+				MountOpts:      "rw",
+				TimeoutSeconds: 2,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "nfs"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredNFSServer] = req.GetNfsCredential().GetServer()
+	params[api.OptCredNFSSubPath] = req.GetNfsCredential().GetSubPath()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredNFSMountOpts] = req.GetNfsCredential().GetMountOpts()
+	params[api.OptCredNFSTimeoutSeconds] = strconv.FormatUint(uint64(req.GetNfsCredential().GetTimeoutSeconds()), 10)
+
+	uuid := "bad-uuid"
+	s.MockDriver().
+		EXPECT().
+		CredsCreate(params).
+		Return(uuid, nil)
+
+	s.MockDriver().
+		EXPECT().
+		CredsValidate(uuid).
+		Return(fmt.Errorf("Invalid credentials"))
+
+	s.MockDriver().
+		EXPECT().
+		CredsDelete(uuid).
+		Return(nil)
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	// Create Credentials
+	_, err := c.Create(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.PermissionDenied)
+	assert.Contains(t, serverError.Message(), "Invalid credentials")
+}
+
+func TestSdkNFSCredentialCreateBadArgument(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup client
+	c := api.NewOpenStorageCredentialsClient(s.Conn())
+
+	req := &api.SdkCredentialCreateRequest{}
+	// Create Credentials
+	_, err := c.Create(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "name")
+
+	// Setup Nfs missing server
+	req = &api.SdkCredentialCreateRequest{
+		Name:          "test",
+		Bucket:        "mybucket",
+		EncryptionKey: "key",
+		CredentialType: &api.SdkCredentialCreateRequest_NfsCredential{
+			NfsCredential: &api.SdkNfsCredentialRequest{
+				SubPath:        "dummy-sub-path",
+				MountOpts:      "rw",
+				TimeoutSeconds: 2,
+			},
+		},
+	}
+
+	params := make(map[string]string)
+
+	params[api.OptCredType] = "nfs"
+	params[api.OptCredName] = req.GetName()
+	params[api.OptCredEncrKey] = req.GetEncryptionKey()
+	params[api.OptCredBucket] = req.GetBucket()
+	params[api.OptCredNFSMountOpts] = req.GetNfsCredential().GetMountOpts()
+	// Create Credentials
+	_, err = c.Create(context.Background(), req)
+	assert.Error(t, err)
+
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Must supply NFS server")
 }

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.31 - (12/04/2022)
+
+* Add NFS Credential support 
+
 ### v0.101.30 - (11/08/2022)
 
 * FA DirectAccess CreateOptions is not honoroed by PX
