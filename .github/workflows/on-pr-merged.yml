@@ -5,6 +5,81 @@ on:
     types: ["closed"]
 
 jobs:
+  cherry_pick_release_10_0:
+    runs-on: ubuntu-latest
+    name: Cherry pick into release-10.0
+    if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-10.0') && (github.event.pull_request.merged == true)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Cherry pick into release-10.0
+        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
+        with:
+          branch: release-10.0
+          labels: |
+            cherry-pick
+      - name: Failure message
+        if: ${{ failure() }}
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            This pull request cannot be automatically cherry-picked to the target release branch.
+            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false
+  cherry_pick_release_9_7:
+    runs-on: ubuntu-latest
+    name: Cherry pick into release-9.7
+    if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-9.7') && (github.event.pull_request.merged == true)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Cherry pick into release-9.7
+        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
+        with:
+          branch: release-9.7
+          labels: |
+            cherry-pick
+      - name: Failure message
+        if: ${{ failure() }}
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            This pull request cannot be automatically cherry-picked to the target release branch.
+            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false
+  cherry_pick_release_9_6:
+    runs-on: ubuntu-latest
+    name: Cherry pick into release-9.6
+    if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-9.6') && (github.event.pull_request.merged == true)
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Cherry pick into release-9.6
+        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
+        with:
+          branch: release-9.6
+          labels: |
+            cherry-pick
+      - name: Failure message
+        if: ${{ failure() }}
+        uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            This pull request cannot be automatically cherry-picked to the target release branch.
+            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false
   cherry_pick_release_9_5:
     runs-on: ubuntu-latest
     name: Cherry pick into release-9.5
@@ -43,31 +118,6 @@ jobs:
         uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
         with:
           branch: release-9.4
-          labels: |
-            cherry-pick
-      - name: Failure message
-        if: ${{ failure() }}
-        uses: mshick/add-pr-comment@v1
-        with:
-          message: |
-            This pull request cannot be automatically cherry-picked to the target release branch.
-            This is likely due to a merge conflict. Please cherry-pick this change yourself and handle the merge conflict.
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
-          allow-repeats: false
-  cherry_pick_release_9_3:
-    runs-on: ubuntu-latest
-    name: Cherry pick into release-9.3
-    if: contains(github.event.pull_request.labels.*.name, 'cherry-pick/release-9.3')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Cherry pick into release-9.3
-        uses: ggriffiths/github-cherry-pick-action@v1.0.2-gg
-        with:
-          branch: release-9.3
           labels: |
             cherry-pick
       - name: Failure message
