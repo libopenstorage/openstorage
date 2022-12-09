@@ -2608,6 +2608,7 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
+	s.mockClusterEnumerateNode(t, "node-1")
 
 	// No version
 	myid := "myid"
@@ -2650,6 +2651,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
+	s.mockClusterEnumerateNode(t, "node-1")
 
 	// No version
 	myid := "myid"
