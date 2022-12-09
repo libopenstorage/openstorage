@@ -620,11 +620,15 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// Get grpc connection
-	conn, err := s.getConn()
+	conn, err := s.getRemoteConn(ctx)
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Unavailable,
-			"Unable to connect to SDK server: %v", err)
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
 	}
 
 	// Get secret if any was passed
