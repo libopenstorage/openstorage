@@ -51,6 +51,7 @@ const (
 	intreePvcNamespaceKey = "namespace"
 
 	// CSI keys for PVC metadata
+	csiPVNameKey       = "csi.storage.k8s.io/pv/name"
 	csiPVCNameKey      = "csi.storage.k8s.io/pvc/name"
 	csiPVCNamespaceKey = "csi.storage.k8s.io/pvc/namespace"
 
@@ -362,6 +363,9 @@ func cleanupVolumeLabels(labels map[string]string) map[string]string {
 	delete(labels, osdPvcNamespaceKey)
 	delete(labels, osdPvcAnnotationsKey)
 	delete(labels, osdPvcLabelsKey)
+	delete(labels, csiPVNameKey)
+	delete(labels, csiPVCNameKey)
+	delete(labels, csiPVCNamespaceKey)
 
 	return labels
 }
