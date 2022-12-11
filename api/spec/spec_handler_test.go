@@ -495,6 +495,16 @@ func TestOptFastpath(t *testing.T) {
 	require.False(t, spec.FpPreference, "Failed to parse faspath option into spec")
 }
 
+func TestOptWinshare(t *testing.T) {
+	testSpecOptString(t, api.SpecWinshare, "true")
+
+	spec := testSpecFromString(t, api.SpecWinshare, "true")
+	require.True(t, spec.Winshare, "Failed to parse winshare option into spec")
+
+	spec = testSpecFromString(t, api.SpecWinshare, "false")
+	require.False(t, spec.Winshare, "Failed to parse winshare option into spec")
+}
+
 func TestOptAutoFstrim(t *testing.T) {
 	testSpecOptString(t, api.SpecAutoFstrim, "true")
 

@@ -152,6 +152,7 @@ var (
 	sharedv4ExternalAccessRegex   = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
 	Sharedv4FailoverStrategyRegex = regexp.MustCompile(api.SpecSharedv4FailoverStrategy + "=([A-Za-z]+),?")
 	fastpathRegex                 = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
+	winshareRegex                 = regexp.MustCompile(api.SpecWinshare + "=([A-Za-z]+),?")
 	AutoFstrimRegex               = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 	SpecIoThrottleRdIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
@@ -586,6 +587,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.FpPreference = fastpath
 			}
+		case api.SpecWinshare:
+			if windows, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Winshare = windows
+			}
 		case api.SpecAutoFstrim:
 			if autoFstrim, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -876,6 +883,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
+	}
+	if ok, windows := d.getVal(winshareRegex, str); ok {
+		opts[api.SpecWinshare] = windows
 	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
