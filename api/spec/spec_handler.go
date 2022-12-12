@@ -526,6 +526,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
 			}
 			spec.MountOptions.Options = options
+		case api.SpecFaCreateOptions:
+			spec.FaCreateOptions = v
 		case api.SpecSharedv4MountOptions:
 			if spec.Sharedv4MountOptions == nil {
 				spec.Sharedv4MountOptions = &api.MountOptions{
