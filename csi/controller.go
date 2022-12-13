@@ -51,6 +51,7 @@ const (
 	intreePvcNamespaceKey = "namespace"
 
 	// CSI keys for PVC metadata
+	csiPVNameKey       = "csi.storage.k8s.io/pv/name"
 	csiPVCNameKey      = "csi.storage.k8s.io/pvc/name"
 	csiPVCNamespaceKey = "csi.storage.k8s.io/pvc/namespace"
 
@@ -461,6 +462,9 @@ func cleanupVolumeLabels(labels map[string]string) map[string]string {
 	delete(labels, osdPvcNamespaceKey)
 	delete(labels, osdPvcAnnotationsKey)
 	delete(labels, osdPvcLabelsKey)
+	delete(labels, csiPVNameKey)
+	delete(labels, csiPVCNameKey)
+	delete(labels, csiPVCNamespaceKey)
 
 	return labels
 }
@@ -729,11 +733,15 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// Get grpc connection
-	conn, err := s.getConn()
+	conn, err := s.getRemoteConn(ctx)
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Unavailable,
-			"Unable to connect to SDK server: %v", err)
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
 	}
 
 	// Get secret if any was passed

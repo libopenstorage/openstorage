@@ -25,6 +25,7 @@ import (
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/csi/sched/k8s"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/portworx/kvdb"
@@ -60,12 +61,13 @@ func init() {
 // OsdCsiServerConfig provides the configuration to the
 // the gRPC CSI server created by NewOsdCsiServer()
 type OsdCsiServerConfig struct {
-	Net        string
-	Address    string
-	DriverName string
-	Cluster    cluster.Cluster
-	SdkUds     string
-	SdkPort    string
+	Net           string
+	Address       string
+	DriverName    string
+	Cluster       cluster.Cluster
+	SdkUds        string
+	SdkPort       string
+	SchedulerName string
 
 	// Name to be reported back to the CO. If not provided,
 	// the name will be in the format of <driver>.openstorage.org
@@ -125,19 +127,31 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
 
-	// Add correlation interceptor
+	// create correlation interceptor
+	var unaryInterceptors []grpc.UnaryServerInterceptor
 	correlationInterceptor := correlation.ContextInterceptor{
 		Origin: correlation.ComponentCSIDriver,
 	}
 	opts := make([]grpc.ServerOption, 0)
-	opts = append(opts, grpc.UnaryInterceptor(
-		grpc_middleware.ChainUnaryServer(
-			correlationInterceptor.ContextUnaryServerInterceptor,
-		)))
+	unaryInterceptors = append(unaryInterceptors, correlationInterceptor.ContextUnaryServerInterceptor)
+
+	// create scheduler interceptor
+	switch config.SchedulerName {
+	case "kubernetes":
+		logrus.Infof("CSI K8s filter being added for %s scheduler", config.SchedulerName)
+		ki := k8s.NewInterceptor()
+		unaryInterceptors = append(unaryInterceptors, ki.SchedUnaryInterceptor)
+
+	default:
+		logrus.Infof("No CSI filter being added for %s scheduler", config.SchedulerName)
+	}
+
+	// Add interceptors
+	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)))
 
 	// Create server
 	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "CSI 1.6",
+		Name:    "CSI 1.7",
 		Net:     config.Net,
 		Address: config.Address,
 		Opts:    opts,

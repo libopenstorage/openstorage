@@ -129,3 +129,33 @@ func (s *FilesystemTrimServer) Stop(
 
 	return r, err
 }
+
+// Push a job to of auto fstrim queue
+func (s *FilesystemTrimServer) AutoFSTrimPush(
+	ctx context.Context,
+	req *api.SdkAutoFSTrimPushRequest,
+) (*api.SdkAutoFSTrimPushResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	r, err := s.driver(ctx).AutoFilesystemTrimPush(req)
+
+	return r, err
+}
+
+// Pop a job to of auto fstrim queue
+func (s *FilesystemTrimServer) AutoFSTrimPop(
+	ctx context.Context,
+	req *api.SdkAutoFSTrimPopRequest,
+) (*api.SdkAutoFSTrimPopResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	r, err := s.driver(ctx).AutoFilesystemTrimPop(req)
+
+	return r, err
+}

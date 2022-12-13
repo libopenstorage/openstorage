@@ -36,6 +36,36 @@ func (m *MockOpenStorageFilesystemTrimServer) EXPECT() *MockOpenStorageFilesyste
 	return m.recorder
 }
 
+// AutoFSTrimPop mocks base method.
+func (m *MockOpenStorageFilesystemTrimServer) AutoFSTrimPop(arg0 context.Context, arg1 *api.SdkAutoFSTrimPopRequest) (*api.SdkAutoFSTrimPopResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoFSTrimPop", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPopResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimPop indicates an expected call of AutoFSTrimPop.
+func (mr *MockOpenStorageFilesystemTrimServerMockRecorder) AutoFSTrimPop(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimPop", reflect.TypeOf((*MockOpenStorageFilesystemTrimServer)(nil).AutoFSTrimPop), arg0, arg1)
+}
+
+// AutoFSTrimPush mocks base method.
+func (m *MockOpenStorageFilesystemTrimServer) AutoFSTrimPush(arg0 context.Context, arg1 *api.SdkAutoFSTrimPushRequest) (*api.SdkAutoFSTrimPushResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AutoFSTrimPush", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPushResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimPush indicates an expected call of AutoFSTrimPush.
+func (mr *MockOpenStorageFilesystemTrimServerMockRecorder) AutoFSTrimPush(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimPush", reflect.TypeOf((*MockOpenStorageFilesystemTrimServer)(nil).AutoFSTrimPush), arg0, arg1)
+}
+
 // AutoFSTrimStatus mocks base method.
 func (m *MockOpenStorageFilesystemTrimServer) AutoFSTrimStatus(arg0 context.Context, arg1 *api.SdkAutoFSTrimStatusRequest) (*api.SdkAutoFSTrimStatusResponse, error) {
 	m.ctrl.T.Helper()
@@ -132,6 +162,46 @@ func NewMockOpenStorageFilesystemTrimClient(ctrl *gomock.Controller) *MockOpenSt
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageFilesystemTrimClient) EXPECT() *MockOpenStorageFilesystemTrimClientMockRecorder {
 	return m.recorder
+}
+
+// AutoFSTrimPop mocks base method.
+func (m *MockOpenStorageFilesystemTrimClient) AutoFSTrimPop(arg0 context.Context, arg1 *api.SdkAutoFSTrimPopRequest, arg2 ...grpc.CallOption) (*api.SdkAutoFSTrimPopResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AutoFSTrimPop", varargs...)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPopResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimPop indicates an expected call of AutoFSTrimPop.
+func (mr *MockOpenStorageFilesystemTrimClientMockRecorder) AutoFSTrimPop(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimPop", reflect.TypeOf((*MockOpenStorageFilesystemTrimClient)(nil).AutoFSTrimPop), varargs...)
+}
+
+// AutoFSTrimPush mocks base method.
+func (m *MockOpenStorageFilesystemTrimClient) AutoFSTrimPush(arg0 context.Context, arg1 *api.SdkAutoFSTrimPushRequest, arg2 ...grpc.CallOption) (*api.SdkAutoFSTrimPushResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "AutoFSTrimPush", varargs...)
+	ret0, _ := ret[0].(*api.SdkAutoFSTrimPushResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// AutoFSTrimPush indicates an expected call of AutoFSTrimPush.
+func (mr *MockOpenStorageFilesystemTrimClientMockRecorder) AutoFSTrimPush(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AutoFSTrimPush", reflect.TypeOf((*MockOpenStorageFilesystemTrimClient)(nil).AutoFSTrimPush), varargs...)
 }
 
 // AutoFSTrimStatus mocks base method.
