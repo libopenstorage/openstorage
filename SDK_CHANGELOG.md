@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.33 - (12/13/2022)
+
+* Add api for autofstrim push and pop
+
 ### v0.101.32 - (12/09/2022)
 
 * Update SDK cloudBackup delete API 

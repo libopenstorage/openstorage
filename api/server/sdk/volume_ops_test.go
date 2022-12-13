@@ -188,7 +188,7 @@ func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 		EXPECT().
 		Inspect([]string{name}).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:     id,
 				Status: api.VolumeStatus_VOLUME_STATUS_UP,
 				Locator: &api.VolumeLocator{
@@ -352,7 +352,7 @@ func TestSdkVolumeDelete(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{},
+				{},
 			}, nil).
 			Times(1),
 
@@ -437,7 +437,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -457,7 +457,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 		EXPECT().
 		Inspect([]string{id}).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -563,7 +563,7 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 		EXPECT().
 		Enumerate(nil, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -599,7 +599,7 @@ func TestSdkVolumeEnumerateWithFilters(t *testing.T) {
 		EXPECT().
 		Enumerate(locator, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -642,7 +642,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{id},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
+		Return([]*api.Volume{{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockDriver().
 		EXPECT().
@@ -712,7 +712,7 @@ func TestSdkVolumeStats(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -779,7 +779,7 @@ func TestSdkVolumeCapacityUsage(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -822,7 +822,7 @@ func TestSdkVolumeCapacityUsageAbortedResult(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -867,7 +867,7 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -1794,7 +1794,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{id},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: volPolSpec}}, nil).
+		Return([]*api.Volume{{Spec: volPolSpec}}, nil).
 		AnyTimes()
 	mv.
 		EXPECT().
@@ -1828,7 +1828,7 @@ func TestSdkInspectWithFilters(t *testing.T) {
 		EXPECT().
 		Enumerate(locator, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Spec: &api.VolumeSpec{
 					Size: size,
 				},

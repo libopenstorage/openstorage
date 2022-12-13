@@ -393,7 +393,7 @@ func TestEnumerateAlertsSuccess(t *testing.T) {
 		EnumerateAlerts(gomock.Any(), gomock.Any(), gomock.Any()).
 		Return(&api.Alerts{
 			Alert: []*api.Alert{
-				&api.Alert{
+				{
 					AlertType: 1,
 					Id:        123,
 					Resource:  api.ResourceType_RESOURCE_TYPE_NODE,

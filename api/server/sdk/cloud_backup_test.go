@@ -605,7 +605,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 	}
 	statuses := &api.CloudBackupStatusResponse{
 		Statuses: map[string]api.CloudBackupStatus{
-			"hello": api.CloudBackupStatus{
+			"hello": {
 				ID:             "myid",
 				OpType:         api.CloudBackupOp,
 				Status:         api.CloudBackupStatusPaused,
@@ -618,7 +618,7 @@ func TestSdkCloudBackupStatus(t *testing.T) {
 				NodeID:         "mynode",
 				CredentialUUID: "uuid",
 			},
-			"world": api.CloudBackupStatus{
+			"world": {
 				ID:             "another",
 				OpType:         api.CloudRestoreOp,
 				Status:         api.CloudBackupStatusDone,
@@ -851,7 +851,7 @@ func TestSdkCloudBackupStateChange(t *testing.T) {
 	taskId := "myid"
 	statuses := &api.CloudBackupStatusResponse{
 		Statuses: map[string]api.CloudBackupStatus{
-			"hello": api.CloudBackupStatus{
+			"hello": {
 				ID:             taskId,
 				OpType:         api.CloudBackupOp,
 				Status:         api.CloudBackupStatusPaused,
@@ -950,7 +950,7 @@ func TestSdkCloudBackupSchedCreate(t *testing.T) {
 	defer s.Stop()
 	id := "test-id"
 	testSched := []*api.SdkSchedulePolicyInterval{
-		&api.SdkSchedulePolicyInterval{
+		{
 			Retain: 1,
 			PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 				Daily: &api.SdkSchedulePolicyIntervalDaily{
@@ -1030,7 +1030,7 @@ func TestSdkCloudBackupSchedUpdate(t *testing.T) {
 	defer s.Stop()
 	id := "test-id"
 	testSched := []*api.SdkSchedulePolicyInterval{
-		&api.SdkSchedulePolicyInterval{
+		{
 			Retain: 1,
 			PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 				Daily: &api.SdkSchedulePolicyIntervalDaily{
@@ -1058,7 +1058,7 @@ func TestSdkCloudBackupSchedUpdate(t *testing.T) {
 
 	schedList := &api.CloudBackupSchedEnumerateResponse{
 		Schedules: map[string]api.CloudBackupScheduleInfo{
-			"uuid-1": api.CloudBackupScheduleInfo{
+			"uuid-1": {
 				SrcVolumeID:    "test-id",
 				CredentialUUID: "uuid",
 				Schedule:       "- freq: daily\n  minute: 30\n  retain: 1\n",
@@ -1096,13 +1096,13 @@ func TestSdkCloudBackupSchedEnumerate(t *testing.T) {
 	req := &api.SdkCloudBackupSchedEnumerateRequest{}
 	schedList := &api.CloudBackupSchedEnumerateResponse{
 		Schedules: map[string]api.CloudBackupScheduleInfo{
-			"test-uuid-1": api.CloudBackupScheduleInfo{
+			"test-uuid-1": {
 				SrcVolumeID:    "myid",
 				CredentialUUID: "test-uuid-1",
 				Schedule:       "- freq: daily\n  minute: 30\n",
 				MaxBackups:     4,
 			},
-			"test-uuid-2": api.CloudBackupScheduleInfo{
+			"test-uuid-2": {
 				SrcVolumeID:    "myid2",
 				CredentialUUID: "test-uuid-1",
 				Schedule:       "- freq: daily\n  minute: 30\n",

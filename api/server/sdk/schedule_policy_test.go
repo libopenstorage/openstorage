@@ -42,7 +42,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
 			Schedules: []*api.SdkSchedulePolicyInterval{
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 10,
 					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 						Daily: &api.SdkSchedulePolicyIntervalDaily{
@@ -51,7 +51,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 						},
 					},
 				},
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 20,
 					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
 						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
@@ -61,7 +61,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 						},
 					},
 				},
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 30,
 					PeriodType: &api.SdkSchedulePolicyInterval_Periodic{
 						Periodic: &api.SdkSchedulePolicyIntervalPeriodic{
@@ -69,7 +69,7 @@ func TestSdkSchedulePolicyCreateSuccess(t *testing.T) {
 						},
 					},
 				},
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 40,
 					PeriodType: &api.SdkSchedulePolicyInterval_Weekly{
 						Weekly: &api.SdkSchedulePolicyIntervalWeekly{
@@ -150,7 +150,7 @@ func TestSdkSchedulePolicyCreateFailed(t *testing.T) {
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
 			Schedules: []*api.SdkSchedulePolicyInterval{
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 2,
 					PeriodType: &api.SdkSchedulePolicyInterval_Weekly{
 						Weekly: &api.SdkSchedulePolicyIntervalWeekly{
@@ -238,7 +238,7 @@ func TestSdkSchedulePolicyUpdateSuccess(t *testing.T) {
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
 			Schedules: []*api.SdkSchedulePolicyInterval{
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 1,
 					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
 						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
@@ -248,7 +248,7 @@ func TestSdkSchedulePolicyUpdateSuccess(t *testing.T) {
 						},
 					},
 				},
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 1,
 					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 						Daily: &api.SdkSchedulePolicyIntervalDaily{
@@ -289,7 +289,7 @@ func TestSdkSchedulePolicyUpdateFailed(t *testing.T) {
 		SchedulePolicy: &api.SdkSchedulePolicy{
 			Name: "dummy-schedule-name",
 			Schedules: []*api.SdkSchedulePolicyInterval{
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 1,
 					PeriodType: &api.SdkSchedulePolicyInterval_Monthly{
 						Monthly: &api.SdkSchedulePolicyIntervalMonthly{
@@ -299,7 +299,7 @@ func TestSdkSchedulePolicyUpdateFailed(t *testing.T) {
 						},
 					},
 				},
-				&api.SdkSchedulePolicyInterval{
+				{
 					Retain: 1,
 					PeriodType: &api.SdkSchedulePolicyInterval_Daily{
 						Daily: &api.SdkSchedulePolicyIntervalDaily{
@@ -457,15 +457,15 @@ func TestSdkSchedulePolicyEnumerateSuccess(t *testing.T) {
 
 	seconds := int64(123456)
 	enumerateData := []*schedpolicy.SchedPolicy{
-		&schedpolicy.SchedPolicy{
+		{
 			Name:     "sched-1",
 			Schedule: "- freq: daily\n  minute: 30\n",
 		},
-		&schedpolicy.SchedPolicy{
+		{
 			Name:     "sched-2",
 			Schedule: "- freq: weekly\n  weekday: 5\n  hour: 11\n  minute: 30\n",
 		},
-		&schedpolicy.SchedPolicy{
+		{
 			Name:     "sched-3",
 			Schedule: fmt.Sprintf("- freq: periodic\n  period: %d\n", int64(time.Duration(seconds)*time.Second)),
 		},

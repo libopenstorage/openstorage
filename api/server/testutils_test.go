@@ -116,7 +116,7 @@ func (s *testServer) DisableGuestAccess() error {
 		Role: &api.SdkRole{
 			Name: "system.guest",
 			Rules: []*api.SdkRule{
-				&api.SdkRule{
+				{
 					Services: []string{"!*"},
 					Apis:     []string{"!*"},
 				},

@@ -255,14 +255,14 @@ func (o *Ownership) IsMatch(check *Ownership) bool {
 	}
 
 	// Check groups
-	for group, _ := range check.GetAcls().GetGroups() {
+	for group := range check.GetAcls().GetGroups() {
 		if _, ok := o.GetAcls().GetGroups()[group]; ok {
 			return true
 		}
 	}
 
 	// Check collaborators
-	for collaborator, _ := range check.GetAcls().GetCollaborators() {
+	for collaborator := range check.GetAcls().GetCollaborators() {
 		if _, ok := o.GetAcls().GetCollaborators()[collaborator]; ok {
 			return true
 		}

@@ -898,7 +898,7 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 			vd.sendError(vd.name, method, w, e.Error(), http.StatusBadRequest)
 		}
 		// Add config labels to locator object.
-		for l, _ := range configLabels {
+		for l := range configLabels {
 			locator.VolumeLabels[l] = configLabels[l]
 		}
 	}

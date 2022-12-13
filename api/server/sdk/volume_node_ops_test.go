@@ -59,7 +59,7 @@ func TestSdkVolumeAttachSuccess(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 				},
 			}, nil).
@@ -108,7 +108,7 @@ func TestSdkVolumeAttachFailed(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 				},
 			}, nil).
@@ -183,7 +183,7 @@ func TestSdkVolumeDetachSuccess(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 				},
 			}, nil).
@@ -230,7 +230,7 @@ func TestSdkVolumeDetachFailed(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 				},
 			}, nil).
@@ -295,7 +295,7 @@ func TestSdkVolumeMountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -344,7 +344,7 @@ func TestSdkVolumeMountWithDriverOptionsSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -390,7 +390,7 @@ func TestSdkVolumeMountFailed(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -475,7 +475,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -517,7 +517,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -556,7 +556,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -593,7 +593,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -629,7 +629,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -662,7 +662,7 @@ func TestSdkVolumeUnmountSuccess(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
@@ -703,7 +703,7 @@ func TestSdkVolumeUnmountFailed(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:    id,
 				State: api.VolumeState_VOLUME_STATE_DETACHED,
 				Locator: &api.VolumeLocator{
