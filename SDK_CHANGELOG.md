@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.154.0 - (12/12/2022)
+
+* Extend for windows support
+
 ### v0.153.0 - (11/09/2022)
 
 * Add api for autofstrim push and pop 
