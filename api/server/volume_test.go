@@ -2986,7 +2986,7 @@ func TestRequestOnAuthWithMiddlewareForGuestWithoutGuestMode(t *testing.T) {
 		Role: &api.SdkRole{
 			Name: "system.guest",
 			Rules: []*api.SdkRule{
-				&api.SdkRule{
+				{
 					Services: []string{""},
 					Apis:     []string{""},
 				},

@@ -222,13 +222,13 @@ func TestSdkNodeInspect(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "disk1",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
 				Online: true,
 			},
-			"disk2": api.StorageResource{
+			"disk2": {
 				Id:     "disk2",
 				Path:   "anothermount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -336,7 +336,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "12345",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -417,7 +417,7 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 		Avgload:           834,
 		Status:            api.Status_STATUS_MAX,
 		Disks: map[string]api.StorageResource{
-			"disk1": api.StorageResource{
+			"disk1": {
 				Id:     "12345",
 				Path:   "mymount",
 				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
@@ -435,7 +435,7 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 	}
 	// Create response
 	volumeUsageInfo := api.VolumeUsageByNode{
-		VolumeUsage: []*api.VolumeUsage{&api.VolumeUsage{
+		VolumeUsage: []*api.VolumeUsage{{
 			VolumeId:           "123456",
 			VolumeName:         "testvol",
 			PoolUuid:           "5868-8769-4567-9876",

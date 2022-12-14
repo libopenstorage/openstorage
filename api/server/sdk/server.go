@@ -360,7 +360,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 
 	// Setup authentication
-	for issuer, _ := range config.Security.Authenticators {
+	for issuer := range config.Security.Authenticators {
 		log.Infof("Authentication enabled for issuer: %s", issuer)
 
 		// Check the necessary security config options are set

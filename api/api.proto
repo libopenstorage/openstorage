@@ -1704,7 +1704,25 @@ service OpenStorageFilesystemTrim {
         body: "*"
       };
     }
-  }
+
+    // Push a auto filesystem Trim job into the queue
+    rpc AutoFSTrimPush(SdkAutoFSTrimPushRequest)
+        returns (SdkAutoFSTrimPushResponse) {
+      option (google.api.http) = {
+        post : "/v1/filesystem-trim/auto-fstrim-push"
+        body : "*"
+      };
+    }
+
+    // Pop a auto filesystem Trim job from the queue
+    rpc AutoFSTrimPop(SdkAutoFSTrimPopRequest)
+        returns (SdkAutoFSTrimPopResponse) {
+      option (google.api.http) = {
+        post : "/v1/filesystem-trim/auto-fstrim-pop"
+        body : "*"
+      };
+    }
+}
 
 // ## OpenStorageFilesystemCheckService
 // This service provides methods to manage filesystem check operation on a
@@ -5027,6 +5045,34 @@ message SdkFilesystemTrimStopRequest {
 message SdkFilesystemTrimStopResponse{
 }
 
+// SdkAutoFSTrimPushRequest defines the request to push a volume to autofstrim
+// queue
+message SdkAutoFSTrimPushRequest {
+  // Id of the volume
+  string volume_id = 1;
+}
+
+// SdkAutoFSTrimPushResponse defines the response to push a volume to autofstrim
+// queue
+message SdkAutoFSTrimPushResponse {
+  // Text blob containing ASCII text providing details of the operation
+  string message = 1;
+}
+
+// SdkAutoFSTrimPopRequest defines the request to pop a volume to autofstrim
+// queue
+message SdkAutoFSTrimPopRequest {
+  // Id of the volume
+  string volume_id = 1;
+}
+
+// SdkAutoFSTrimPopResponse defines the response to pop a volume to autofstrim
+// queue
+message SdkAutoFSTrimPopResponse {
+  // Text blob containing ASCII text providing details of the operation
+  string message = 1;
+}
+
 message FilesystemCheck {
   // FilesystemChecktatus represents the status codes returned from
   // OpenStorageFilesystemCheck service APIs()
@@ -5186,7 +5232,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 32;
+    Patch = 33;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -212,6 +212,32 @@ func request_OpenStorageFilesystemTrim_Stop_0(ctx context.Context, marshaler run
 
 }
 
+func request_OpenStorageFilesystemTrim_AutoFSTrimPush_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemTrimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkAutoFSTrimPushRequest
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoFSTrimPush(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageFilesystemTrim_AutoFSTrimPop_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemTrimClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkAutoFSTrimPopRequest
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.AutoFSTrimPop(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_OpenStorageFilesystemCheck_Start_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemCheckClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkFilesystemCheckStartRequest
 	var metadata runtime.ServerMetadata
@@ -2641,6 +2667,64 @@ func RegisterOpenStorageFilesystemTrimHandlerClient(ctx context.Context, mux *ru
 
 	})
 
+	mux.Handle("POST", pattern_OpenStorageFilesystemTrim_AutoFSTrimPush_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageFilesystemTrim_AutoFSTrimPush_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageFilesystemTrim_AutoFSTrimPush_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
+	mux.Handle("POST", pattern_OpenStorageFilesystemTrim_AutoFSTrimPop_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(req.Context())
+		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
+		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
+		rctx, err := runtime.AnnotateContext(ctx, mux, req)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+		resp, md, err := request_OpenStorageFilesystemTrim_AutoFSTrimPop_0(rctx, inboundMarshaler, client, req, pathParams)
+		ctx = runtime.NewServerMetadataContext(ctx, md)
+		if err != nil {
+			runtime.HTTPError(ctx, mux, outboundMarshaler, w, req, err)
+			return
+		}
+
+		forward_OpenStorageFilesystemTrim_AutoFSTrimPop_0(ctx, mux, outboundMarshaler, w, req, resp, mux.GetForwardResponseOptions()...)
+
+	})
+
 	return nil
 }
 
@@ -2654,6 +2738,10 @@ var (
 	pattern_OpenStorageFilesystemTrim_AutoFSTrimUsage_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-trim", "auto-fstrim-usage"}, ""))
 
 	pattern_OpenStorageFilesystemTrim_Stop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-trim", "stop"}, ""))
+
+	pattern_OpenStorageFilesystemTrim_AutoFSTrimPush_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-trim", "auto-fstrim-push"}, ""))
+
+	pattern_OpenStorageFilesystemTrim_AutoFSTrimPop_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-trim", "auto-fstrim-pop"}, ""))
 )
 
 var (
@@ -2666,6 +2754,10 @@ var (
 	forward_OpenStorageFilesystemTrim_AutoFSTrimUsage_0 = runtime.ForwardResponseMessage
 
 	forward_OpenStorageFilesystemTrim_Stop_0 = runtime.ForwardResponseMessage
+
+	forward_OpenStorageFilesystemTrim_AutoFSTrimPush_0 = runtime.ForwardResponseMessage
+
+	forward_OpenStorageFilesystemTrim_AutoFSTrimPop_0 = runtime.ForwardResponseMessage
 )
 
 // RegisterOpenStorageFilesystemCheckHandlerFromEndpoint is same as RegisterOpenStorageFilesystemCheckHandler but

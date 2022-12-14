@@ -85,15 +85,15 @@ func TestAuthorizationServerInterceptorCreateVolume(t *testing.T) {
 			Role: &api.SdkRole{
 				Name: "system.guest",
 				Rules: []*api.SdkRule{
-					&api.SdkRule{
+					{
 						Services: []string{"volume"},
 						Apis:     []string{volumeAPIs},
 					},
-					&api.SdkRule{
+					{
 						Services: []string{"mountattach", "cloudbackup", "migrate"},
 						Apis:     []string{"*"},
 					},
-					&api.SdkRule{
+					{
 						Services: []string{"identity"},
 						Apis:     []string{"version"},
 					},

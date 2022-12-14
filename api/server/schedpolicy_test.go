@@ -205,7 +205,7 @@ func TestSchedPolicyEnumerateSuccess(t *testing.T) {
 		EXPECT().
 		SchedPolicyEnumerate().
 		Return([]*sched.SchedPolicy{
-			&sched.SchedPolicy{
+			{
 				Name:     name,
 				Schedule: "testsche:test",
 			},
