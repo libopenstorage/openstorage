@@ -181,6 +181,14 @@ func (cpb *ConnectionParamsBuilder) BuildTlsConfig() (*tls.Config, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	if upd, err := cpb.appendK8sCaCertBytes(rootCA); err == nil {
+		logrus.Debugf("Found Kubernetes CA, adding into TLS config")
+		rootCA = upd
+	} else if !os.IsNotExist(err) {
+		logrus.WithError(err).Warnf("Could not append Kubernetes CA")
+	}
+
 	tlsCfg := &tls.Config{}
 	setRootCA(tlsCfg, rootCA)
 
@@ -225,16 +233,11 @@ func (cpb *ConnectionParamsBuilder) BuildDialOps() ([]grpc.DialOption, error) {
 		return nil, err
 	}
 
-	// add Kubernetes CA, if available
-	if k8sCA, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt"); err == nil && len(k8sCA) > 0 {
-		logrus.Infof("Found Kubernetes CA, adding into gRPC dial options")
-		if len(rootCA) <= 0 {
-			rootCA = k8sCA
-		} else {
-			rootCA = bytes.Trim(rootCA, "\r\n")
-			rootCA = append(rootCA, '\n')
-			rootCA = append(rootCA, k8sCA...)
-		}
+	if upd, err := cpb.appendK8sCaCertBytes(rootCA); err == nil {
+		logrus.Debugf("Found Kubernetes CA, adding into gRPC dial options")
+		rootCA = upd
+	} else if !os.IsNotExist(err) {
+		logrus.WithError(err).Warnf("Could not append Kubernetes CA")
 	}
 
 	tlsDialOptions, err := grpcserver.GetTlsDialOptions(rootCA)
@@ -254,7 +257,7 @@ func (cpb *ConnectionParamsBuilder) getCaCertBytes() ([]byte, error) {
 	var pxNamespace = getPxNamespace(cpb.Config.NamespaceNameEnv, cpb.Config.DefaultServiceNamespaceName)
 
 	if caCertSecretName == "" {
-		logrus.Infof("CA cert secret name was not provided using env %s", cpb.Config.CaCertSecretEnv)
+		logrus.Debugf("CA cert secret name was not provided using env %s", cpb.Config.CaCertSecretEnv)
 		return rootCA, nil
 	} else if caCertSecretKey == "" {
 		return nil, fmt.Errorf("failed to load CA cert from secret: %s, secret key should be defined using env %s",
@@ -272,9 +275,26 @@ func (cpb *ConnectionParamsBuilder) getCaCertBytes() ([]byte, error) {
 		return nil, fmt.Errorf("failed to load CA cert from secret: %s using key: %s", caCertSecretName, caCertSecretKey)
 	}
 	if len(rootCA) == 0 {
-		return nil, fmt.Errorf("CA cert fetchecd from secret: %s using key: %s is empty", caCertSecretName, caCertSecretKey)
+		return nil, fmt.Errorf("CA cert fetched from secret: %s using key: %s is empty", caCertSecretName, caCertSecretKey)
 	}
 	return rootCA, nil
+}
+
+func (cpb *ConnectionParamsBuilder) appendK8sCaCertBytes(rootCA []byte) ([]byte, error) {
+	k8sCA, err := os.ReadFile("/var/run/secrets/kubernetes.io/serviceaccount/ca.crt")
+	if err != nil {
+		return nil, err
+	} else if len(k8sCA) <= 0 {
+		return rootCA, nil
+	}
+
+	ca := make([]byte, 0, len(rootCA)+len(k8sCA)+1)
+	ca = append(ca, rootCA...)
+	ca = bytes.Trim(ca, "\r\n")
+	ca = append(ca, '\n')
+	ca = append(ca, k8sCA...)
+
+	return ca, nil
 }
 
 func (cpb *ConnectionParamsBuilder) checkStaticEndpoints() (string, string, error) {
