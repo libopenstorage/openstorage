@@ -4059,6 +4059,13 @@
       },
       "apiSdkVolumeCloneRequest": {
         "properties": {
+          "additional_labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "Additional labels to be appended after cloning the volume. Note that clone will\nissue a snapshot, which copies most labels except pvc and namespace. This map\nallows you to pass additional labels that are not part of the parent volume.",
+            "type": "object"
+          },
           "name": {
             "description": "Unique name of the volume. This will be used for idempotency.",
             "type": "string"
@@ -5895,7 +5902,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.33"
+    "version": "0.101.34"
   },
   "openapi": "3.0.0",
   "paths": {
