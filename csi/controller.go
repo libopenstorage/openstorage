@@ -581,10 +581,26 @@ func (s *OsdCsiServer) CreateVolume(
 		newVolumeId = createResp.VolumeId
 	} else {
 		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
-			Name:     req.GetName(),
-			ParentId: source.Parent,
+			Name:             req.GetName(),
+			ParentId:         source.Parent,
+			AdditionalLabels: getClonedPVCMetadata(locator),
 		})
 		if err != nil {
+			return nil, err
+		}
+
+		_, err = volumes.Update(ctx, &api.SdkVolumeUpdateRequest{
+			VolumeId: cloneResp.GetVolumeId(),
+			Labels:   getClonedPVCMetadata(locator),
+		})
+		if err != nil {
+			_, cleanupErr := volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+				VolumeId: cloneResp.GetVolumeId(),
+			})
+			if cleanupErr != nil {
+				clogger.Errorf("failed to cleanup volume %v after csi.CreateVolume update failure: %v", cloneResp.GetVolumeId(), cleanupErr)
+			}
+
 			return nil, err
 		}
 		newVolumeId = cloneResp.VolumeId
@@ -604,6 +620,20 @@ func (s *OsdCsiServer) CreateVolume(
 	return &csi.CreateVolumeResponse{
 		Volume: volume,
 	}, nil
+}
+
+func getClonedPVCMetadata(locator *api.VolumeLocator) map[string]string {
+	metadataLabels := map[string]string{}
+	pvcName, ok := locator.VolumeLabels[intreePvcNameKey]
+	if ok {
+		metadataLabels[intreePvcNameKey] = pvcName
+	}
+	pvcNamespace, ok := locator.VolumeLabels[intreePvcNamespaceKey]
+	if ok {
+		metadataLabels[intreePvcNamespaceKey] = pvcNamespace
+	}
+
+	return metadataLabels
 }
 
 // DeleteVolume is a CSI API which deletes a volume

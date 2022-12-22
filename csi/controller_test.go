@@ -1957,6 +1957,32 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 			}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+					Source: &api.Source{
+						Parent: mockParentID,
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{snapID},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
 					Id:     id,
 					Source: &api.Source{Parent: mockParentID},
 				},
@@ -2066,6 +2092,32 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 			}, nil).
 			Times(1),
 
+		// update - inspect and set
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				&api.Volume{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name: name,
+					},
+					Spec: &api.VolumeSpec{
+						Size: uint64(size),
+					},
+					Source: &api.Source{
+						Parent: mockParentID,
+					},
+				},
+			}, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
+			Times(1),
 		// update - inspect and set
 		s.MockDriver().
 			EXPECT().

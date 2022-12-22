@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.31 - (12/21/2022)
+
+* Adds additionalLabels field in SDK Clone request to pass additional labels to be added post-clone
+
 ### v0.101.30 - (11/08/2022)
 
 * FA DirectAccess CreateOptions is not honoroed by PX

@@ -97,6 +97,7 @@ func (s *VolumeServer) create(
 	locator *api.VolumeLocator,
 	source *api.Source,
 	spec *api.VolumeSpec,
+	additionalCloneLabels map[string]string,
 ) (string, error) {
 
 	// Check if the volume has already been created or is in process of creation
@@ -181,18 +182,39 @@ func (s *VolumeServer) create(
 			return "", err
 		}
 
-		newOwnership, updateNeeded := clone.Volume.Spec.GetCloneCreatorOwnership(ctx)
-		if updateNeeded {
-			// Set no authentication so that we can override the ownership
-			ctxNoAuth := context.Background()
+		// Generate update request based on input to create w/ parentID
+		updateReq := &api.SdkVolumeUpdateRequest{
+			VolumeId: id,
+		}
+		newOwnership, ownershipUpdateNeeded := clone.Volume.Spec.GetCloneCreatorOwnership(ctx)
+		if ownershipUpdateNeeded {
+			// Set no authentication so that we can override the ownership.
+			// TODO: this should be fixed to only remove auth metadata
+			ctx = context.Background()
+			updateReq.Spec = &api.VolumeSpecUpdate{
+				Ownership: newOwnership,
+			}
+		}
 
-			// New owner for the snapshot, let's make the change
-			_, err := s.Update(ctxNoAuth, &api.SdkVolumeUpdateRequest{
-				VolumeId: id,
-				Spec: &api.VolumeSpecUpdate{
-					Ownership: newOwnership,
-				},
-			})
+		additionalLabelsNeeded := len(additionalCloneLabels) > 0
+		if additionalLabelsNeeded {
+			mergedLabels := make(map[string]string)
+			clonedLabels := clone.GetVolume().GetLocator().GetVolumeLabels()
+
+			// add existing labels first from our earlier inspect
+			for k, v := range clonedLabels {
+				mergedLabels[k] = v
+			}
+			// override existing labels if there's a conflict
+			for k, v := range additionalCloneLabels {
+				mergedLabels[k] = v
+			}
+			updateReq.Labels = mergedLabels
+		}
+
+		// Only update if required.
+		if ownershipUpdateNeeded || additionalLabelsNeeded {
+			_, err = s.Update(ctx, updateReq)
 			if err != nil {
 				return "", err
 			}
@@ -262,7 +284,7 @@ func (s *VolumeServer) Create(
 	}
 
 	// Create volume
-	id, err := s.create(ctx, locator, source, spec)
+	id, err := s.create(ctx, locator, source, spec, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -309,7 +331,7 @@ func (s *VolumeServer) Clone(
 	}
 
 	// Create the clone
-	id, err := s.create(ctx, locator, source, parentVol.GetVolume().GetSpec())
+	id, err := s.create(ctx, locator, source, parentVol.GetVolume().GetSpec(), req.GetAdditionalLabels())
 	if err != nil {
 		return nil, err
 	}
