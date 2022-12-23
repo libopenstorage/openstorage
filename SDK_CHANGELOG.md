@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.154.0 - (12/21/2022)
+
+* Adds additionalLabels field in SDK Clone request to pass additional labels to be added post-clone
+
 ### v0.153.0 - (11/09/2022)
 
 * Add api for autofstrim push and pop 
