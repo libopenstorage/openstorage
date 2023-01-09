@@ -3483,6 +3483,10 @@ message SdkVolumeCloneRequest {
   string name = 1;
   // Parent volume id or snapshot id will create a new volume as a clone of the parent.
   string parent_id = 2;
+  // Additional labels to be appended after cloning the volume. Note that clone will
+  // issue a snapshot, which copies most labels except pvc and namespace. This map
+  // allows you to pass additional labels that are not part of the parent volume.
+  map<string, string> additional_labels = 3;
 }
 
 // Defines the response when creating a clone from a volume or a snapshot
@@ -5232,7 +5236,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 33;
+    Patch = 34;
   }
 
   // The following cannot be set to use the enum Version because the REST
