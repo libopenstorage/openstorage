@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.33 - (01/11/2023)
+
+* Add NearSyncReplicationStrategy field in VolumeUpdateSpec 
+
 ### v0.101.32 - (12/09/2022)
 
 * Update SDK cloudBackup delete API 

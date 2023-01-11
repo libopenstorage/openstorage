@@ -5708,6 +5708,9 @@
           "mount_opt_spec": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
+          "near_sync_replication_strategy": {
+            "$ref": "#/components/schemas/apiNearSyncReplicationStrategy"
+          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -5896,7 +5899,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.32"
+    "version": "0.101.33"
   },
   "openapi": "3.0.0",
   "paths": {
