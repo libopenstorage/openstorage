@@ -202,8 +202,8 @@ github.com/docker/go-units
 ## explicit
 github.com/docker/spdystream
 github.com/docker/spdystream/spdy
-# github.com/dustin/go-humanize v1.0.0
-## explicit
+# github.com/dustin/go-humanize v1.0.1
+## explicit; go 1.16
 github.com/dustin/go-humanize
 # github.com/fsnotify/fsnotify v1.5.1
 ## explicit; go 1.13
