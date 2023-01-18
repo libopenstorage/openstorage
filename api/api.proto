@@ -769,6 +769,9 @@ message VolumeSpecUpdate {
   oneof auto_fstrim_opt { bool auto_fstrim = 39; }
   // io_throttle_opt defines the io throttle limits for the volume
   oneof io_throttle_opt { IoThrottle io_throttle = 40;}
+  // NearSyncReplicationStrategy is replication startegy for near sync volumes
+  oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 41;}
+
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -5230,7 +5233,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 32;
+    Patch = 33;
   }
 
   // The following cannot be set to use the enum Version because the REST
