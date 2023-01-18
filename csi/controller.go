@@ -933,8 +933,12 @@ func (s *OsdCsiServer) CreateSnapshot(
 		Labels:   locator.GetVolumeLabels(),
 	})
 	if err != nil {
-		if err == kvdb.ErrNotFound {
-			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetSourceVolumeId())
+		errStatus, ok := status.FromError(err)
+		if ok && errStatus.Code() == codes.NotFound {
+			// Return a non-final Aborted error, as the PVC may not have been created yet. Otherwise
+			// the CSI Snapshotter will not issue retries:
+			// https://github.com/kubernetes-csi/external-snapshotter/blob/v6.0.1/pkg/sidecar-controller/snapshot_controller.go#L656-L678
+			return nil, status.Errorf(codes.Aborted, "Volume id %s not found: %v", req.GetSourceVolumeId(), err)
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
 	}
@@ -986,7 +990,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		VolumeId: req.GetSnapshotId(),
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to delete snapshot %s: %v",
+		return nil, status.Errorf(codes.Aborted, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),
 			err)
 	}
