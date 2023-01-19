@@ -698,6 +698,8 @@ message VolumeSpec {
   bool winshare = 49;
   // Filesystem create options to be honored.
   string fa_create_options = 50;
+  // csi_mount_options user defined mount flags to be honored.
+  string csi_mount_options = 51;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
