@@ -1333,7 +1333,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Code(), codes.Aborted)
 	assert.Contains(t, serverError.Message(), "snapshoterr")
 }
 
