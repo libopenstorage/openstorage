@@ -168,8 +168,16 @@ func (s *VolumeServer) create(
 			Name: volName,
 		}, false)
 		if err != nil {
+			if err == kvdb.ErrNotFound {
+				return "", status.Errorf(
+					codes.Aborted,
+					"unable to create snapshot with parent ID %s: %v",
+					parent.GetId(),
+					err.Error())
+			}
+
 			return "", status.Errorf(
-				codes.Internal,
+				codes.Aborted,
 				"unable to create snapshot: %s",
 				err.Error())
 		}
