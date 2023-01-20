@@ -268,7 +268,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	// Attempt to remove volume path
 	// Kubernetes handles this after NodeUnpublishVolume finishes, but this allows for cross-CO compatibility
 	if err := os.Remove(req.GetTargetPath()); err != nil && !os.IsNotExist(err) {
-		clogger.WithContext(ctx).Warnf("Failed to delete mount path %s: %s", targetPath, err.Error())
+		clogger.WithContext(ctx).Tracef("Failed to delete mount path %s: %s", targetPath, err.Error())
 	}
 
 	// Return error to Kubelet if mount path still exists to force a retry
