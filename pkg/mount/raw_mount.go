@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package mount
@@ -74,7 +75,7 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 	}
 
 	// try to find all bind mounts of raw volumes
-	if len(rawVolumeDevicesPaths) == 0 {
+	if len(rawVolumeDevicesPaths) == 0 || rawVolumeDevicesPaths[0].String() == "" {
 		mountPointsByMajMin := make(map[string]*[]mount.Info)
 		mountPointsByTarget := make(map[string]*mount.Info)
 
@@ -137,7 +138,7 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 	for _, rawVolumeDevicePath := range rawVolumeDevicesPaths {
 		var mountPointForRoot *mount.Info
 		for _, mp := range mountPoints {
-			if rawVolumeDevicePath.MatchString(mp.Root) {
+			if strings.HasSuffix(rawVolumeDevicePath.String(), mp.Root) || rawVolumeDevicePath.MatchString(mp.Root) {
 				mountPointForRoot = mp
 				break
 			}
