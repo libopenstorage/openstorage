@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	oidc "github.com/coreos/go-oidc"
+	oidc "github.com/coreos/go-oidc/v3/oidc"
 )
 
 // OIDCAuthConfig configures an OIDC connection
