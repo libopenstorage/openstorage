@@ -69,13 +69,14 @@ func (s *CloudBackupServer) Create(
 	}
 
 	r, err := s.driver(ctx).CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:            req.GetVolumeId(),
-		CredentialUUID:      credId,
-		Full:                req.GetFull(),
-		Name:                req.GetTaskId(),
-		Labels:              req.GetLabels(),
-		FullBackupFrequency: req.GetFullBackupFrequency(),
-		DeleteLocal:         req.GetDeleteLocal(),
+		VolumeID:              req.GetVolumeId(),
+		CredentialUUID:        credId,
+		Full:                  req.GetFull(),
+		Name:                  req.GetTaskId(),
+		Labels:                req.GetLabels(),
+		FullBackupFrequency:   req.GetFullBackupFrequency(),
+		DeleteLocal:           req.GetDeleteLocal(),
+		NearSyncBackupRestore: req.NearSyncBackupRestore,
 	})
 	if err != nil {
 		if err == volume.ErrExist {
@@ -84,7 +85,13 @@ func (s *CloudBackupServer) Create(
 		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
 			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
-		return nil, status.Errorf(codes.Internal, "Failed to create backup: %v", err)
+
+		requestType := "backup"
+
+		if req.NearSyncBackupRestore {
+			requestType = "nearsync migrate"
+		}
+		return nil, status.Errorf(codes.Internal, "Failed to create %v: %v", requestType, err)
 	}
 
 	return &api.SdkCloudBackupCreateResponse{
@@ -393,9 +400,10 @@ func (s *CloudBackupServer) Status(
 	}
 
 	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID: req.GetVolumeId(),
-		Local:       req.GetLocal(),
-		ID:          req.GetTaskId(),
+		SrcVolumeID:           req.GetVolumeId(),
+		Local:                 req.GetLocal(),
+		ID:                    req.GetTaskId(),
+		NearSyncBackupRestore: req.GetNearSyncBackupRestore(),
 	})
 	if err != nil {
 		if err == volume.ErrInvalidName {
@@ -506,6 +514,7 @@ func (s *CloudBackupServer) StateChange(
 	}
 
 	var rs string
+	nearSync := false
 	switch req.GetRequestedState() {
 	// Not supported yet
 	/*
@@ -516,13 +525,17 @@ func (s *CloudBackupServer) StateChange(
 	*/
 	case api.SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop:
 		rs = api.CloudBackupRequestedStateStop
+	case api.SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop:
+		nearSync = true
+		rs = api.NearSyncRequestedStateStop
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid requested state: %v", req.GetRequestedState())
 	}
 
 	// Get Status to get the volId
 	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
-		ID: req.GetTaskId(),
+		ID:                    req.GetTaskId(),
+		NearSyncBackupRestore: nearSync,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
