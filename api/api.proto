@@ -597,6 +597,12 @@ message IoThrottle {
     uint32 write_bw_mbytes = 4;
 }
 
+enum NearSyncReplicationStrategy {
+    NEAR_SYNC_STRATEGY_NONE = 0;
+    NEAR_SYNC_STRATEGY_AGGRESSIVE = 1;
+    NEAR_SYNC_STRATEGY_OPTIMIZED = 2;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -698,6 +704,10 @@ message VolumeSpec {
   bool winshare = 49;
   // Filesystem create options to be honored.
   string fa_create_options = 50;
+  // NearSync specifies the volume has a near-sync replica
+  bool near_sync = 51;
+  // NearSyncReplicationStrategy is replication startegy for near sync volumes
+  NearSyncReplicationStrategy near_sync_replication_strategy = 52;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -771,6 +781,8 @@ message VolumeSpecUpdate {
   oneof readahead_opt { bool readahead  = 41; }
   // winshare is true if this volume can be accessed from windows pods.
   oneof winshare_opt { bool winshare = 42; }
+  // NearSyncReplicationStrategy is replication startegy for near sync volumes
+  oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 43;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -4464,6 +4476,8 @@ message SdkCloudBackupCreateRequest {
   // DeleteLocal indicates if local snap created for backup must be deleted after
   // the backup is complete
   bool delete_local = 7;
+  // Indicates if this is a backup restore for nearsync
+  bool near_sync_backup_restore = 8;
 }
 
 // Empty response
@@ -4650,6 +4664,10 @@ enum SdkCloudBackupOpType {
   SdkCloudBackupOpTypeBackupOp = 1;
   // Restore
   SdkCloudBackupOpTypeRestoreOp = 2;
+  // NearSync backup
+  SdkNearSyncOpTypeBackupOp = 3;
+  // NearSync restore
+  SdkNearSyncOpTypeRestoreOp = 4;
 }
 
 // CloudBackup status types
@@ -4674,7 +4692,27 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeQueued = 8;
   // Invalid, used by enumerate, includes failed,
   // stopped and aborted
- SdkCloudBackupStatusTypeInvalid = 9;
+  SdkCloudBackupStatusTypeInvalid = 9;
+  // Near sync
+  // Not started
+  SdkNearSyncStatusTypeNotStarted = 10;
+  // Done
+  SdkNearSyncStatusTypeDone = 11;
+  // Aborted
+  SdkNearSyncStatusTypeAborted = 12;
+  // Paused
+  SdkNearSyncStatusTypePaused = 13;
+  // Stopped
+  SdkNearSyncStatusTypeStopped = 14;
+  // Active
+  SdkNearSyncStatusTypeActive = 15;
+  // Failed
+  SdkNearSyncStatusTypeFailed = 16;
+  // Queued
+  SdkNearSyncStatusTypeQueued = 17;
+  // Invalid, used by enumerate, includes failed,
+  // stopped and aborted
+  SdkNearSyncStatusTypeInvalid = 18;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
@@ -4721,6 +4759,8 @@ message SdkCloudBackupStatusRequest {
   // TaskId of the backup/restore task, if this is specified,
   // volume_id is ignored.
   string task_id = 3;
+  // Indicates if this is for nearsync
+  bool near_sync_backup_restore = 4;
 }
 
 // Defines a response containing the status of the backups for a specified volume
@@ -4780,6 +4820,12 @@ enum SdkCloudBackupRequestedState {
   SdkCloudBackupRequestedStateResume = 2;
   // Stop a backup or restore
   SdkCloudBackupRequestedStateStop = 3;
+  // Pause the backup or restore
+  SdkNearSyncRequestedStatePause = 4;
+  // Resume the backup or restore
+  SdkNearSyncRequestedStateResume = 5;
+  // Stop a backup or restore
+  SdkNearSyncRequestedStateStop = 6;
 }
 
 // Defines a request to change the state of a backup or restore to or
@@ -5281,7 +5327,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 154;
+    Minor = 155;
     // SDK version patch value of this specification
     Patch = 0;
   }
