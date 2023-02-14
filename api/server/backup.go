@@ -39,13 +39,14 @@ func (vd *volAPI) cloudBackupCreate(w http.ResponseWriter, r *http.Request) {
 
 	volumes := api.NewOpenStorageCloudBackupClient(conn)
 	createResp, err := volumes.Create(ctx, &api.SdkCloudBackupCreateRequest{
-		VolumeId:            backupReq.VolumeID,
-		CredentialId:        backupReq.CredentialUUID,
-		Full:                backupReq.Full,
-		TaskId:              backupReq.Name,
-		Labels:              backupReq.Labels,
-		FullBackupFrequency: backupReq.FullBackupFrequency,
-		DeleteLocal:         backupReq.DeleteLocal,
+		VolumeId:              backupReq.VolumeID,
+		CredentialId:          backupReq.CredentialUUID,
+		Full:                  backupReq.Full,
+		TaskId:                backupReq.Name,
+		Labels:                backupReq.Labels,
+		FullBackupFrequency:   backupReq.FullBackupFrequency,
+		DeleteLocal:           backupReq.DeleteLocal,
+		NearSyncBackupRestore: backupReq.NearSyncBackupRestore,
 	})
 	if err != nil {
 		if serverError, ok := status.FromError(err); ok {
@@ -268,9 +269,10 @@ func (vd *volAPI) cloudBackupStatus(w http.ResponseWriter, r *http.Request) {
 
 	cloudBackups := api.NewOpenStorageCloudBackupClient(conn)
 	sts, err := cloudBackups.Status(ctx, &api.SdkCloudBackupStatusRequest{
-		VolumeId: backupStatus.CloudBackupStatusRequest.SrcVolumeID,
-		Local:    backupStatus.CloudBackupStatusRequest.Local,
-		TaskId:   backupStatus.CloudBackupStatusRequest.ID,
+		VolumeId:              backupStatus.CloudBackupStatusRequest.SrcVolumeID,
+		Local:                 backupStatus.CloudBackupStatusRequest.Local,
+		TaskId:                backupStatus.CloudBackupStatusRequest.ID,
+		NearSyncBackupRestore: backupStatus.CloudBackupStatusRequest.NearSyncBackupRestore,
 	})
 
 	if err != nil {
