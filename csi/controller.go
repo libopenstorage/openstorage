@@ -915,7 +915,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 				SnapshotId:     v.GetId(),
 				SourceVolumeId: v.GetSource().GetParent(),
 				CreationTime:   v.GetCtime(),
-				ReadyToUse:     true,
+				ReadyToUse:     v.GetError() == "",
 			},
 		}, nil
 	}
@@ -955,7 +955,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 			SnapshotId:     snapshotID,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			CreationTime:   snapInfo.GetCtime(),
-			ReadyToUse:     true,
+			ReadyToUse:     snapInfo.GetError() == "",
 		},
 	}, nil
 }
@@ -1058,7 +1058,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 		SnapshotId:     snapshotId,
 		SourceVolumeId: resp.Volume.GetSource().Parent,
 		CreationTime:   resp.Volume.Ctime,
-		ReadyToUse:     true,
+		ReadyToUse:     resp.Volume.GetError() == "",
 	}
 
 	return &csi.ListSnapshotsResponse{
@@ -1168,7 +1168,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 				SnapshotId:     vol.Id,
 				SourceVolumeId: vol.GetSource().Parent,
 				CreationTime:   vol.Ctime,
-				ReadyToUse:     true,
+				ReadyToUse:     vol.GetError() == "",
 			},
 		}
 
