@@ -36,7 +36,7 @@ func (fi *FilterInterceptor) SchedUnaryInterceptor(
 			// Return an aborted code to retry from the csi-provisioner.
 			// We cannot ignore this error or else a volume will be created w/
 			// incorrect locator.VolumeLabels.
-			return nil, status.Error(codes.Aborted, "pre-create filter failed: %v")
+			return nil, status.Errorf(codes.Aborted, "pre-create filter failed: %v", err)
 		} else {
 			logrus.WithContext(ctx).Tracef("K8s-CSI filter: Filter applied successfully for request %T", req)
 		}
