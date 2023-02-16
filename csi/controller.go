@@ -873,6 +873,10 @@ func resolveSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*ap
 	return spec, nil
 }
 
+func isSnapshotReady(v *api.Volume) bool {
+	return v.GetError() == "" && v.Status == api.VolumeStatus_VOLUME_STATUS_UP
+}
+
 // CreateSnapshot is a CSI implementation to create a snapshot from the volume
 func (s *OsdCsiServer) CreateSnapshot(
 	ctx context.Context,
@@ -915,7 +919,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 				SnapshotId:     v.GetId(),
 				SourceVolumeId: v.GetSource().GetParent(),
 				CreationTime:   v.GetCtime(),
-				ReadyToUse:     v.GetError() == "",
+				ReadyToUse:     isSnapshotReady(v),
 			},
 		}, nil
 	}
@@ -955,7 +959,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 			SnapshotId:     snapshotID,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			CreationTime:   snapInfo.GetCtime(),
-			ReadyToUse:     snapInfo.GetError() == "",
+			ReadyToUse:     isSnapshotReady(snapInfo),
 		},
 	}, nil
 }
@@ -1058,7 +1062,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 		SnapshotId:     snapshotId,
 		SourceVolumeId: resp.Volume.GetSource().Parent,
 		CreationTime:   resp.Volume.Ctime,
-		ReadyToUse:     resp.Volume.GetError() == "",
+		ReadyToUse:     isSnapshotReady(resp.Volume),
 	}
 
 	return &csi.ListSnapshotsResponse{
@@ -1168,7 +1172,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 				SnapshotId:     vol.Id,
 				SourceVolumeId: vol.GetSource().Parent,
 				CreationTime:   vol.Ctime,
-				ReadyToUse:     vol.GetError() == "",
+				ReadyToUse:     isSnapshotReady(vol),
 			},
 		}
 
