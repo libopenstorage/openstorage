@@ -2862,7 +2862,6 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 		Spec: &api.VolumeSpec{
 			Size: uint64(size),
 		},
-		Status: api.VolumeStatus_VOLUME_STATUS_UP,
 	}
 
 	// Snapshot already exists
