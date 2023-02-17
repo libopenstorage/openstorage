@@ -903,16 +903,18 @@ func (s *OsdCsiServer) CreateSnapshot(
 		if req.GetSourceVolumeId() != v.GetSource().GetParent() {
 			return nil, status.Error(codes.AlreadyExists, "Requested snapshot already exists for another source volume id")
 		}
-
-		return &csi.CreateSnapshotResponse{
-			Snapshot: &csi.Snapshot{
-				SizeBytes:      int64(v.GetSpec().GetSize()),
-				SnapshotId:     v.GetId(),
-				SourceVolumeId: v.GetSource().GetParent(),
-				CreationTime:   v.GetCtime(),
-				ReadyToUse:     isSnapshotReady(v),
-			},
-		}, nil
+		readyToUse := isSnapshotReady(v)
+		if readyToUse {
+			return &csi.CreateSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SizeBytes:      int64(v.GetSpec().GetSize()),
+					SnapshotId:     v.GetId(),
+					SourceVolumeId: v.GetSource().GetParent(),
+					CreationTime:   v.GetCtime(),
+					ReadyToUse:     readyToUse,
+				},
+			}, nil
+		}
 	}
 
 	// Get any labels passed in by the CO
@@ -935,13 +937,30 @@ func (s *OsdCsiServer) CreateSnapshot(
 			// https://github.com/kubernetes-csi/external-snapshotter/blob/v6.0.1/pkg/sidecar-controller/snapshot_controller.go#L656-L678
 			return nil, status.Errorf(codes.Aborted, "Volume id %s not found: %v", req.GetSourceVolumeId(), err)
 		}
-		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
+
+		// Check if snapshot has been created but is in error state
+		snapInfo, errFindFailed := util.VolumeFromIdSdk(ctx, volumes, req.GetName())
+		if errFindFailed == nil && !isSnapshotReady(snapInfo) {
+
+			// If snapshot was created but has errors, cleanup and re-create it on the next iteration.
+			_, errCleanupSnap := volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+				VolumeId: snapInfo.Id,
+			})
+			if errCleanupSnap != nil {
+				return nil, status.Errorf(codes.Aborted, "Snapshot create failed and unable to delete failed snapshot %s: %v",
+					snapInfo.Id,
+					errCleanupSnap)
+			}
+			logrus.Infof("cleaned up failed snapshot %v in order to retry snapshot create", snapInfo.Id)
+		}
+
+		return nil, status.Errorf(codes.Aborted, "Failed to create snapshot: %v", err)
 	}
 	snapshotID := snapResp.SnapshotId
 
 	snapInfo, err := util.VolumeFromIdSdk(ctx, volumes, snapshotID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
+		return nil, status.Errorf(codes.Aborted, "Failed to get information about the snapshot: %v", err)
 	}
 
 	return &csi.CreateSnapshotResponse{
