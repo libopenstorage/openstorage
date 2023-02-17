@@ -6,7 +6,7 @@
 
 OpenStorage is an API abstraction layer providing support for multiple public APIs, including the [OpenStorage SDK](https://libopenstorage.github.io), [CSI](https://github.com/container-storage-interface/spec), and the [Docker Volume API](https://docs.docker.com/engine/reference/api/docker_remote_api/). Developers using OpenStorage for their storage systems can expect it to work seamlessly with any of the supported public APIs. These implementations provide users with the ability to run stateful services in Linux containers on multiple hosts.
 
-OpenStoage makes it simple for developers to write a single implementation which supports many methods of control:
+OpenStorage makes it simple for developers to write a single implementation which supports many methods of control:
 
 ![openstorage](docs/images/openstorage.png)
 
