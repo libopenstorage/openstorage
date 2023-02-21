@@ -2139,8 +2139,8 @@
             "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
             "type": "object"
           },
-          "near_sync_backup_restore": {
-            "title": "Indicates if this is a backup restore for nearsync",
+          "near_sync_migrate": {
+            "title": "Indicates if this is a near sync migrate",
             "type": "boolean"
           },
           "task_id": {
@@ -2379,12 +2379,13 @@
       },
       "apiSdkCloudBackupOpType": {
         "default": "SdkCloudBackupOpTypeUnknown",
-        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore\n - SdkNearSyncOpTypeBackupOp: NearSync backup\n - SdkNearSyncOpTypeRestoreOp: NearSync restore",
+        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore\n - SdkNearSyncOpTypeCloneOp: NearSync clone\n - SdkNearSyncOpTypeReplAddOp: NearSync replication add\n - SdkNearSyncOpTypeRestoreOp: NearSync restore",
         "enum": [
           "SdkCloudBackupOpTypeUnknown",
           "SdkCloudBackupOpTypeBackupOp",
           "SdkCloudBackupOpTypeRestoreOp",
-          "SdkNearSyncOpTypeBackupOp",
+          "SdkNearSyncOpTypeCloneOp",
+          "SdkNearSyncOpTypeReplAddOp",
           "SdkNearSyncOpTypeRestoreOp"
         ],
         "title": "CloudBackup operations types",
@@ -2647,8 +2648,8 @@
             "title": "Local indicates if only those backups/restores that are\nactive on current node must be returned",
             "type": "boolean"
           },
-          "near_sync_backup_restore": {
-            "title": "Indicates if this is for nearsync",
+          "near_sync_migrate": {
+            "title": "Indicates if this is for nearsync migration",
             "type": "boolean"
           },
           "task_id": {
@@ -2678,7 +2679,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unknown\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted\n - SdkNearSyncStatusTypeNotStarted: Near sync\nNot started\n - SdkNearSyncStatusTypeDone: Done\n - SdkNearSyncStatusTypeAborted: Aborted\n - SdkNearSyncStatusTypePaused: Paused\n - SdkNearSyncStatusTypeStopped: Stopped\n - SdkNearSyncStatusTypeActive: Active\n - SdkNearSyncStatusTypeFailed: Failed\n - SdkNearSyncStatusTypeQueued: Queued\n - SdkNearSyncStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unknown\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted\n - SdkNearSyncStatusTypeNotStarted: Near sync\nNot started\n - SdkNearSyncStatusTypeDone: Done\n - SdkNearSyncStatusTypePaused: Paused\n - SdkNearSyncStatusTypeStopped: Stopped\n - SdkNearSyncStatusTypeActive: Active\n - SdkNearSyncStatusTypeFailed: Failed\n - SdkNearSyncStatusTypeInvalid: Invalid",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -2692,12 +2693,10 @@
           "SdkCloudBackupStatusTypeInvalid",
           "SdkNearSyncStatusTypeNotStarted",
           "SdkNearSyncStatusTypeDone",
-          "SdkNearSyncStatusTypeAborted",
           "SdkNearSyncStatusTypePaused",
           "SdkNearSyncStatusTypeStopped",
           "SdkNearSyncStatusTypeActive",
           "SdkNearSyncStatusTypeFailed",
-          "SdkNearSyncStatusTypeQueued",
           "SdkNearSyncStatusTypeInvalid"
         ],
         "title": "CloudBackup status types",
