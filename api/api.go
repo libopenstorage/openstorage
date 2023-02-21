@@ -360,8 +360,8 @@ type CloudBackupCreateRequest struct {
 	// DeleteLocal indicates if local snap must be deleted after the
 	// backup is complete
 	DeleteLocal bool
-	// Indicates if this is a backup restore for nearsync
-	NearSyncBackupRestore bool
+	// Indicates if this is a nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -509,8 +509,8 @@ type CloudBackupStatusRequest struct {
 	// ignored. This could be GroupCloudBackupId too, and in that case multiple
 	// statuses belonging to the groupCloudBackupID is returned.
 	ID string
-	// Indicates if this is for nearsync
-	NearSyncBackupRestore bool
+	// Indicates if this is for nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupStatusRequestOld struct {
@@ -526,7 +526,8 @@ const (
 	CloudBackupOp  = CloudBackupOpType("Backup")
 	CloudRestoreOp = CloudBackupOpType("Restore")
 
-	NearSyncBackupOp  = CloudBackupOpType("NsBackup")
+	NearSyncCloneOp   = CloudBackupOpType("NsClone")
+	NearSyncReplAddOp = CloudBackupOpType("NsReplAdd")
 	NearSyncRestoreOp = CloudBackupOpType("NsRestore")
 )
 
@@ -555,11 +556,9 @@ const (
 const (
 	NearSyncStatusNotStarted = CloudBackupStatusType("NsNotStarted")
 	NearSyncStatusDone       = CloudBackupStatusType("NsDone")
-	NearSyncStatusAborted    = CloudBackupStatusType("NsAborted")
 	NearSyncStatusPaused     = CloudBackupStatusType("NsPaused")
 	NearSyncStatusStopped    = CloudBackupStatusType("NsStopped")
 	NearSyncStatusActive     = CloudBackupStatusType("NsActive")
-	NearSyncStatusQueued     = CloudBackupStatusType("NsQueued")
 	NearSyncStatusFailed     = CloudBackupStatusType("NsFailed")
 	NearSyncStatusInvalid    = CloudBackupStatusType("NsInvalid")
 )
@@ -1078,16 +1077,12 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted
 	case NearSyncStatusDone:
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone
-	case NearSyncStatusAborted:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeAborted
 	case NearSyncStatusPaused:
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused
 	case NearSyncStatusStopped:
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped
 	case NearSyncStatusActive:
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive
-	case NearSyncStatusQueued:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeQueued
 	case NearSyncStatusFailed:
 		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed
 	case NearSyncStatusInvalid:
@@ -1123,8 +1118,6 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(NearSyncStatusNotStarted)
 	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone:
 		return string(NearSyncStatusDone)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeAborted:
-		return string(NearSyncStatusAborted)
 	case SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused:
 		return string(NearSyncStatusPaused)
 	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped:
@@ -1133,8 +1126,6 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(NearSyncStatusActive)
 	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed:
 		return string(NearSyncStatusFailed)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeQueued:
-		return string(NearSyncStatusQueued)
 	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid:
 		return string(NearSyncStatusInvalid)
 	default:
@@ -1180,8 +1171,10 @@ func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackup
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
 	case CloudRestoreOp:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
-	case NearSyncBackupOp:
-		return SdkCloudBackupOpType_SdkNearSyncOpTypeBackupOp
+	case NearSyncCloneOp:
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp
+	case NearSyncReplAddOp:
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp
 	case NearSyncRestoreOp:
 		return SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp
 	default:
@@ -1199,8 +1192,10 @@ func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackup
 		return CloudBackupOp
 	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
 		return CloudRestoreOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeBackupOp:
-		return NearSyncBackupOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp:
+		return NearSyncCloneOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp:
+		return NearSyncReplAddOp
 	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp:
 		return NearSyncRestoreOp
 	default:

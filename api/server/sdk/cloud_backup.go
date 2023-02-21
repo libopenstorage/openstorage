@@ -69,28 +69,30 @@ func (s *CloudBackupServer) Create(
 	}
 
 	r, err := s.driver(ctx).CloudBackupCreate(&api.CloudBackupCreateRequest{
-		VolumeID:              req.GetVolumeId(),
-		CredentialUUID:        credId,
-		Full:                  req.GetFull(),
-		Name:                  req.GetTaskId(),
-		Labels:                req.GetLabels(),
-		FullBackupFrequency:   req.GetFullBackupFrequency(),
-		DeleteLocal:           req.GetDeleteLocal(),
-		NearSyncBackupRestore: req.NearSyncBackupRestore,
+		VolumeID:            req.GetVolumeId(),
+		CredentialUUID:      credId,
+		Full:                req.GetFull(),
+		Name:                req.GetTaskId(),
+		Labels:              req.GetLabels(),
+		FullBackupFrequency: req.GetFullBackupFrequency(),
+		DeleteLocal:         req.GetDeleteLocal(),
+		NearSyncMigrate:     req.NearSyncMigrate,
 	})
 	if err != nil {
-		if err == volume.ErrExist {
-			return nil, status.Errorf(codes.AlreadyExists, "Backup with this name already exists: %v", err)
+		requestType := "backup"
+
+		if req.NearSyncMigrate {
+			requestType = "nearsync migrate"
 		}
+
+		if err == volume.ErrExist {
+			return nil, status.Errorf(codes.AlreadyExists, "%v with this name already exists: %v", requestType, err)
+		}
+
 		if _, ok := err.(*api_err.ErrCloudBackupServerBusy); ok {
 			return nil, status.Errorf(codes.Unavailable, err.Error())
 		}
 
-		requestType := "backup"
-
-		if req.NearSyncBackupRestore {
-			requestType = "nearsync migrate"
-		}
 		return nil, status.Errorf(codes.Internal, "Failed to create %v: %v", requestType, err)
 	}
 
@@ -400,10 +402,10 @@ func (s *CloudBackupServer) Status(
 	}
 
 	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
-		SrcVolumeID:           req.GetVolumeId(),
-		Local:                 req.GetLocal(),
-		ID:                    req.GetTaskId(),
-		NearSyncBackupRestore: req.GetNearSyncBackupRestore(),
+		SrcVolumeID:     req.GetVolumeId(),
+		Local:           req.GetLocal(),
+		ID:              req.GetTaskId(),
+		NearSyncMigrate: req.GetNearSyncMigrate(),
 	})
 	if err != nil {
 		if err == volume.ErrInvalidName {
@@ -534,8 +536,8 @@ func (s *CloudBackupServer) StateChange(
 
 	// Get Status to get the volId
 	r, err := s.driver(ctx).CloudBackupStatus(&api.CloudBackupStatusRequest{
-		ID:                    req.GetTaskId(),
-		NearSyncBackupRestore: nearSync,
+		ID:              req.GetTaskId(),
+		NearSyncMigrate: nearSync,
 	})
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
