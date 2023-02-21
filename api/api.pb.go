@@ -3156,7 +3156,7 @@ const (
 	// SDK version major value of this specification
 	SdkVersion_Major SdkVersion_Version = 0
 	// SDK version minor value of this specification
-	SdkVersion_Minor SdkVersion_Version = 155
+	SdkVersion_Minor SdkVersion_Version = 156
 	// SDK version patch value of this specification
 	SdkVersion_Patch SdkVersion_Version = 0
 )
@@ -3166,13 +3166,13 @@ var (
 	SdkVersion_Version_name = map[int32]string{
 		0: "MUST_HAVE_ZERO_VALUE",
 		// Duplicate value: 0: "Major",
-		155: "Minor",
+		156: "Minor",
 		// Duplicate value: 0: "Patch",
 	}
 	SdkVersion_Version_value = map[string]int32{
 		"MUST_HAVE_ZERO_VALUE": 0,
 		"Major":                0,
-		"Minor":                155,
+		"Minor":                156,
 		"Patch":                0,
 	}
 )
@@ -5437,7 +5437,7 @@ type VolumeSpec struct {
 	FaCreateOptions string `protobuf:"bytes,50,opt,name=fa_create_options,json=faCreateOptions,proto3" json:"fa_create_options,omitempty"`
 	// NearSync specifies the volume has a near-sync replica
 	NearSync bool `protobuf:"varint,51,opt,name=near_sync,json=nearSync,proto3" json:"near_sync,omitempty"`
-	// NearSyncReplicationStrategy is replication startegy for near sync volumes
+	// NearSyncReplicationStrategy is replication strategy for near sync volumes
 	NearSyncReplicationStrategy NearSyncReplicationStrategy `protobuf:"varint,52,opt,name=near_sync_replication_strategy,json=nearSyncReplicationStrategy,proto3,enum=openstorage.api.NearSyncReplicationStrategy" json:"near_sync_replication_strategy,omitempty"`
 }
 
@@ -5988,7 +5988,7 @@ type VolumeSpecUpdate struct {
 	// Types that are assignable to WinshareOpt:
 	//	*VolumeSpecUpdate_Winshare
 	WinshareOpt isVolumeSpecUpdate_WinshareOpt `protobuf_oneof:"winshare_opt"`
-	// NearSyncReplicationStrategy is replication startegy for near sync volumes
+	// NearSyncReplicationStrategy is replication strategy for near sync volumes
 	//
 	// Types that are assignable to NearSyncReplicationStrategyOpt:
 	//	*VolumeSpecUpdate_NearSyncReplicationStrategy
@@ -32741,7 +32741,7 @@ var file_api_api_proto_rawDesc = []byte{
 	0x49, 0x0a, 0x07, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x18, 0x0a, 0x14, 0x4d, 0x55,
 	0x53, 0x54, 0x5f, 0x48, 0x41, 0x56, 0x45, 0x5f, 0x5a, 0x45, 0x52, 0x4f, 0x5f, 0x56, 0x41, 0x4c,
 	0x55, 0x45, 0x10, 0x00, 0x12, 0x09, 0x0a, 0x05, 0x4d, 0x61, 0x6a, 0x6f, 0x72, 0x10, 0x00, 0x12,
-	0x0a, 0x0a, 0x05, 0x4d, 0x69, 0x6e, 0x6f, 0x72, 0x10, 0x9b, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x50,
+	0x0a, 0x0a, 0x05, 0x4d, 0x69, 0x6e, 0x6f, 0x72, 0x10, 0x9c, 0x01, 0x12, 0x09, 0x0a, 0x05, 0x50,
 	0x61, 0x74, 0x63, 0x68, 0x10, 0x00, 0x1a, 0x02, 0x10, 0x01, 0x22, 0xc6, 0x01, 0x0a, 0x0e, 0x53,
 	0x74, 0x6f, 0x72, 0x61, 0x67, 0x65, 0x56, 0x65, 0x72, 0x73, 0x69, 0x6f, 0x6e, 0x12, 0x16, 0x0a,
 	0x06, 0x64, 0x72, 0x69, 0x76, 0x65, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x06, 0x64,
