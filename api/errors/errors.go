@@ -88,3 +88,17 @@ func (e *ErrCloudBackupServerBusy) Error() string {
 	}
 	return fmt.Sprintf("cloud backup server busy")
 }
+
+// ErrNearSyncServerBusy indicates server being busy with too many
+// requests
+type ErrNearSyncServerBusy struct {
+	// object ID for which server is busy
+	ID string
+}
+
+func (e *ErrNearSyncServerBusy) Error() string {
+	if len(e.ID) > 0 {
+		return fmt.Sprintf("near sync server busy: concurrent near sync migrate limit for volume %v reached", e.ID)
+	}
+	return fmt.Sprintf("near sync server busy, please wait or stop current task")
+}
