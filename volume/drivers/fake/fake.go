@@ -20,6 +20,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -337,7 +338,9 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 		v.Spec.Shared = spec.Shared
 		v.Spec.Sharedv4 = spec.Sharedv4
 		v.Spec.Journal = spec.Journal
-		v.Spec.SnapshotInterval = spec.SnapshotInterval
+		if spec.SnapshotInterval != math.MaxUint32 {
+			v.Spec.SnapshotInterval = spec.SnapshotInterval
+		}
 		v.Spec.IoProfile = spec.IoProfile
 		v.Spec.SnapshotSchedule = spec.SnapshotSchedule
 		v.Spec.Ownership = spec.Ownership
