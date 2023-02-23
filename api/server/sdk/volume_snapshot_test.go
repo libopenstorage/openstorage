@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -312,6 +313,7 @@ func TestSdkVolumeSnapshotScheduleUpdate(t *testing.T) {
 		EXPECT().
 		Set(volid, nil, &api.VolumeSpec{
 			SnapshotSchedule: "policy=mypolicy",
+			SnapshotInterval: math.MaxUint32,
 		}).
 		Return(nil).
 		Times(1)
@@ -348,6 +350,7 @@ func TestSdkVolumeSnapshotScheduleUpdateDelete(t *testing.T) {
 		EXPECT().
 		Set(volid, nil, &api.VolumeSpec{
 			SnapshotSchedule: "",
+			SnapshotInterval: math.MaxUint32,
 		}).
 		Return(nil).
 		Times(1)
