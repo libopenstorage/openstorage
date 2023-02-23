@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 
@@ -646,7 +647,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		AnyTimes()
 	s.MockDriver().
 		EXPECT().
-		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{}).
+		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 
@@ -667,7 +668,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Set(id, nil, &api.VolumeSpec{Size: 1234}).
+		Set(id, nil, &api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 	_, err = c.Update(context.Background(), req)
@@ -689,7 +690,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		Set(
 			id,
 			&api.VolumeLocator{VolumeLabels: newlabels},
-			&api.VolumeSpec{Size: 1234},
+			&api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32},
 		).
 		Return(nil).
 		Times(1)
@@ -1160,6 +1161,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 				Ownership: &api.Ownership{
 					Owner: user2,
 				},
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
@@ -1286,6 +1288,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 				Ownership: &api.Ownership{
 					Owner: user2,
 				},
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
@@ -1735,8 +1738,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 	volReq := &api.SdkVolumeCreateRequest{
 		Name: name,
 		Spec: &api.VolumeSpec{
-			Size:    size,
-			HaLevel: 1,
+			Size:             size,
+			HaLevel:          1,
+			SnapshotInterval: math.MaxUint32,
 		},
 	}
 
@@ -1750,8 +1754,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 		Shared:  volSpec.GetShared(),
 		HaLevel: volSpec.GetHaLevel(),
 		// since volume is created as per default policy
-		StoragePolicy: "testpolicyA",
-		Ownership:     owner,
+		StoragePolicy:    "testpolicyA",
+		Ownership:        owner,
+		SnapshotInterval: math.MaxUint32,
 	}
 
 	// Create response
