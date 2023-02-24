@@ -2402,7 +2402,7 @@
       },
       "apiSdkCloudBackupRequestedState": {
         "default": "SdkCloudBackupRequestedStateUnknown",
-        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore\n - SdkNearSyncRequestedStatePause: Pause the backup or restore\n - SdkNearSyncRequestedStateResume: Resume the backup or restore\n - SdkNearSyncRequestedStateStop: Stop a backup or restore",
+        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore\n - SdkNearSyncRequestedStatePause: Pause the near sync migrate\n - SdkNearSyncRequestedStateResume: Resume the near sync migrate\n - SdkNearSyncRequestedStateStop: Stop a near sync migrate",
         "enum": [
           "SdkCloudBackupRequestedStateUnknown",
           "SdkCloudBackupRequestedStatePause",
