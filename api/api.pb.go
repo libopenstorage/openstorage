@@ -1761,11 +1761,11 @@ const (
 	SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume SdkCloudBackupRequestedState = 2
 	// Stop a backup or restore
 	SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateStop SdkCloudBackupRequestedState = 3
-	// Pause the backup or restore
+	// Pause the near sync migrate
 	SdkCloudBackupRequestedState_SdkNearSyncRequestedStatePause SdkCloudBackupRequestedState = 4
-	// Resume the backup or restore
+	// Resume the near sync migrate
 	SdkCloudBackupRequestedState_SdkNearSyncRequestedStateResume SdkCloudBackupRequestedState = 5
-	// Stop a backup or restore
+	// Stop a near sync migrate
 	SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop SdkCloudBackupRequestedState = 6
 )
 

@@ -4817,11 +4817,11 @@ enum SdkCloudBackupRequestedState {
   SdkCloudBackupRequestedStateResume = 2;
   // Stop a backup or restore
   SdkCloudBackupRequestedStateStop = 3;
-  // Pause the backup or restore
+  // Pause the near sync migrate
   SdkNearSyncRequestedStatePause = 4;
-  // Resume the backup or restore
+  // Resume the near sync migrate
   SdkNearSyncRequestedStateResume = 5;
-  // Stop a backup or restore
+  // Stop a near sync migrate
   SdkNearSyncRequestedStateStop = 6;
 }
 
