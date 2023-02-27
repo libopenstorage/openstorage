@@ -18,6 +18,7 @@ package sdk
 
 import (
 	"context"
+	"math"
 	"testing"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -69,7 +70,7 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 			VolumeIds: []string{volid},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: volid,
 			},
 		}, nil).
@@ -151,7 +152,7 @@ func TestSdkVolumeSnapshotRestore(t *testing.T) {
 			VolumeIds: []string{volid},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: volid,
 			},
 		}, nil).
@@ -184,7 +185,7 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 		EXPECT().
 		SnapEnumerate(nil, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: snapid,
 			},
 		}, nil).
@@ -212,7 +213,7 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 			VolumeIds: []string{volid},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: volid,
 			},
 		}, nil).
@@ -221,7 +222,7 @@ func TestSdkVolumeSnapshotEnumerate(t *testing.T) {
 		EXPECT().
 		SnapEnumerate([]string{volid}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: snapid,
 			},
 		}, nil).
@@ -258,7 +259,7 @@ func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
 			VolumeIds: []string{volid},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: volid,
 			},
 		}, nil).
@@ -267,7 +268,7 @@ func TestSdkVolumeSnapshotEnumerateWithFilters(t *testing.T) {
 		EXPECT().
 		SnapEnumerate([]string{volid}, labels).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: snapid,
 			},
 		}, nil).
@@ -301,7 +302,7 @@ func TestSdkVolumeSnapshotScheduleUpdate(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{volid},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
+		Return([]*api.Volume{{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockCluster().
 		EXPECT().
@@ -312,6 +313,7 @@ func TestSdkVolumeSnapshotScheduleUpdate(t *testing.T) {
 		EXPECT().
 		Set(volid, nil, &api.VolumeSpec{
 			SnapshotSchedule: "policy=mypolicy",
+			SnapshotInterval: math.MaxUint32,
 		}).
 		Return(nil).
 		Times(1)
@@ -340,7 +342,7 @@ func TestSdkVolumeSnapshotScheduleUpdateDelete(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{volid},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{
+		Return([]*api.Volume{{Spec: &api.VolumeSpec{
 			SnapshotSchedule: "policy=mypolicy",
 		}}}, nil).
 		AnyTimes()
@@ -348,6 +350,7 @@ func TestSdkVolumeSnapshotScheduleUpdateDelete(t *testing.T) {
 		EXPECT().
 		Set(volid, nil, &api.VolumeSpec{
 			SnapshotSchedule: "",
+			SnapshotInterval: math.MaxUint32,
 		}).
 		Return(nil).
 		Times(1)
