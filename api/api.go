@@ -1171,11 +1171,11 @@ func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackup
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
 	case CloudRestoreOp:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
-	case NearSyncCloneOp:
+	case NearSyncCloneOp: // for internal state transition
 		return SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp
-	case NearSyncReplAddOp:
+	case NearSyncReplAddOp: // for internal state transition
 		return SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp
-	case NearSyncRestoreOp:
+	case NearSyncRestoreOp: // for internal state transition
 		return SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp
 	default:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeUnknown
@@ -1192,11 +1192,11 @@ func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackup
 		return CloudBackupOp
 	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
 		return CloudRestoreOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp:
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp: // for internal state transition
 		return NearSyncCloneOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp:
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp: // for internal state transition
 		return NearSyncReplAddOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp:
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp: // for internal state transition
 		return NearSyncRestoreOp
 	default:
 		return CloudBackupOpType("Unknown")
