@@ -49,10 +49,4 @@ To test, run `make test`. This will run the unit tests
 
 ### Vendoring
 
-For vendoring, we use [dep](https://golang.github.io/dep/). Some useful dep commands are:
--  `dep ensure`: install the project's dependencies
--  `dep ensure -update`: update the locked versions of all dependencies
--  `dep ensure -add github.com/pkg/errors`: add a dependency to the project
-
-
-
+For vendoring, use `make vendor` and `make vendor-update`. This project uses Go Modules.

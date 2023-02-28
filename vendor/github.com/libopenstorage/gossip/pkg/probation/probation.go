@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/sched"
+	"github.com/libopenstorage/openstorage/v10/pkg/sched"
 )
 
 // Probation is an interface that defines a set of APIs to manage a probation
@@ -86,7 +86,7 @@ func (p *probation) Add(clientID string, clientData interface{}, updateIfExists 
 		},
 		sched.Periodic(time.Second),
 		time.Now().Add(p.probationTimeout), /* run probationTimeout after current time */
-		true) /* run only once */
+		true)                               /* run only once */
 	if err != nil {
 		return err
 	}

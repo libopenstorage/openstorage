@@ -22,7 +22,7 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/johannesboyne/gofakes3 v0.0.0-20210819161434-5c8dfcfe5310
 	github.com/kubernetes-csi/csi-test v2.2.0+incompatible
-	github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
+	github.com/libopenstorage/gossip v0.0.1-rc1
 	github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 	github.com/libopenstorage/systemutils v0.0.0-20160208220149-44ac83be3ce1
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826
@@ -63,7 +63,6 @@ require (
 	github.com/containerd/continuity v0.0.0-20190426062206-aaeac12a7ffc // indirect
 	github.com/coreos/etcd v3.3.13+incompatible // indirect
 	github.com/coreos/go-semver v0.3.0 // indirect
-	github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf // indirect
 	github.com/coreos/go-systemd/v22 v22.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.7.1+incompatible // indirect
@@ -97,6 +96,7 @@ require (
 	github.com/joho/godotenv v1.3.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/kr/pretty v0.2.1 // indirect
+	github.com/libopenstorage/openstorage/v10 v10.1.1 // indirect
 	github.com/matttproud/golang_protobuf_extensions v1.0.2-0.20181231171920-c182affec369 // indirect
 	github.com/miekg/dns v1.1.35 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -127,8 +127,6 @@ require (
 	github.com/vbatts/tar-split v0.9.14-0.20160330203851-226f7c74905f // indirect
 	github.com/willf/bitset v1.1.11-0.20200630133818-d5bec3311243 // indirect
 	go.opencensus.io v0.22.4 // indirect
-	go.uber.org/atomic v1.7.0 // indirect
-	go.uber.org/zap v1.15.0 // indirect
 	golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9 // indirect
 	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect

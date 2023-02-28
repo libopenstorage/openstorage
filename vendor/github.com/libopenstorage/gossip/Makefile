@@ -6,22 +6,14 @@ endif
 
 export GO15VENDOREXPERIMENT=1
 
-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v $(PKGS)
+vendor-update:
+	GOOS=linux GOARCH=amd64 go get -tags "daemon btrfs_noversion have_btrfs have_chainfs" -d -v -t -u -f $(PKGS)
 
-update-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v -u -f $(PKGS)
+vendor-gomod:
+	GOOS=linux GOARCH=amd64 go mod tidy
+	GOOS=linux GOARCH=amd64 go mod vendor
 
-test-deps:
-	GO15VENDOREXPERIMENT=0 go get -d -v -t $(PKGS)
-
-update-test-deps:
-	GO15VENDOREXPERIMENT=0 go get -tags "$(TAGS)" -d -v -t -u -f $(PKGS)
-
-dep:
-	curl -s -L https://github.com/golang/dep/releases/download/v0.4.1/dep-linux-amd64 -o $(GOPATH)/bin/dep
-	chmod +x $(GOPATH)/bin/dep
-	$(GOPATH)/bin/dep ensure
+vendor: vendor-gomod
 
 all: test
 

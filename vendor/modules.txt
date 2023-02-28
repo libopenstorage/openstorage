@@ -136,8 +136,6 @@ github.com/coreos/go-oidc
 # github.com/coreos/go-semver v0.3.0
 ## explicit
 github.com/coreos/go-semver/semver
-# github.com/coreos/go-systemd v0.0.0-20191104093116-d3cd4ed1dbcf
-## explicit
 # github.com/coreos/go-systemd/v22 v22.1.0
 ## explicit; go 1.12
 github.com/coreos/go-systemd/v22/dbus
@@ -340,13 +338,17 @@ github.com/json-iterator/go
 ## explicit
 github.com/kubernetes-csi/csi-test/pkg/sanity
 github.com/kubernetes-csi/csi-test/utils
-# github.com/libopenstorage/gossip v0.0.0-20220309192431-44c895e0923e
-## explicit
+# github.com/libopenstorage/gossip v0.0.1-rc1
+## explicit; go 1.16
 github.com/libopenstorage/gossip
 github.com/libopenstorage/gossip/pkg/probation
 github.com/libopenstorage/gossip/proto
 github.com/libopenstorage/gossip/proto/state
 github.com/libopenstorage/gossip/types
+# github.com/libopenstorage/openstorage/v10 v10.1.1
+## explicit; go 1.15
+github.com/libopenstorage/openstorage/v10/pkg/dbg
+github.com/libopenstorage/openstorage/v10/pkg/sched
 # github.com/libopenstorage/secrets v0.0.0-20200207034622-cdb443738c67
 ## explicit
 github.com/libopenstorage/secrets
@@ -539,10 +541,6 @@ go.opencensus.io/internal
 go.opencensus.io/trace
 go.opencensus.io/trace/internal
 go.opencensus.io/trace/tracestate
-# go.uber.org/atomic v1.7.0
-## explicit; go 1.13
-# go.uber.org/zap v1.15.0
-## explicit; go 1.13
 # golang.org/x/crypto v0.0.0-20201208171446-5f87f3452ae9
 ## explicit; go 1.11
 golang.org/x/crypto/ed25519

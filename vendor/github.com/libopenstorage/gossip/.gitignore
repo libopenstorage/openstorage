@@ -1,0 +1,15 @@
+.idea
+_tmp
+*-packr.go
+*.pyc
+*.o
+*.ko
+*.swp
+*.swo
+*.swk
+*.swl
+*.swm
+*.swn
+.vscode/
+coverage.txt
+profile.out
