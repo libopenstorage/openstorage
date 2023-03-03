@@ -498,8 +498,8 @@ github.com/prometheus/procfs/internal/util
 github.com/rogpeppe/go-internal/modfile
 github.com/rogpeppe/go-internal/module
 github.com/rogpeppe/go-internal/semver
-# github.com/rs/cors v1.6.1-0.20190116175910-76f58f330d76
-## explicit
+# github.com/rs/cors v1.8.3
+## explicit; go 1.13
 github.com/rs/cors
 # github.com/ryszard/goskiplist v0.0.0-20150312221310-2dfbae5fcf46
 ## explicit
