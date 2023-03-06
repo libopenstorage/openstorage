@@ -975,6 +975,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.IoThrottle = vol.GetIoThrottle()
 	}
 
+	// NearSyncReplicationStrategy
+	if req.GetNearSyncReplicationStrategyOpt() != nil {
+		spec.NearSyncReplicationStrategy = req.GetNearSyncReplicationStrategy()
+	} else {
+		spec.NearSyncReplicationStrategy = vol.GetNearSyncReplicationStrategy()
+	}
+
 	return spec
 }
 
