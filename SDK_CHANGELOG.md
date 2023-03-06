@@ -2,10 +2,6 @@
 
 ## Releases
 
-### v0.101.35 - (2/21/2023)
-
-* Add NearSync related fields 
-
 ### v0.101.34 - (1/9/2023)
 
 * Adds additionalLabels field in SDK Clone request to pass additional labels to be added post-clone
