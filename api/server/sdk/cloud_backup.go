@@ -530,6 +530,12 @@ func (s *CloudBackupServer) StateChange(
 	case api.SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop:
 		nearSync = true
 		rs = api.NearSyncRequestedStateStop
+	case api.SdkCloudBackupRequestedState_SdkNearSyncRequestedStatePause: // for internal testing
+		nearSync = true
+		rs = api.NearSyncRequestedStatePause
+	case api.SdkCloudBackupRequestedState_SdkNearSyncRequestedStateResume: // for internal testing
+		nearSync = true
+		rs = api.NearSyncRequestedStateResume
 	default:
 		return nil, status.Errorf(codes.InvalidArgument, "Invalid requested state: %v", req.GetRequestedState())
 	}
