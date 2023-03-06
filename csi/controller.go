@@ -188,9 +188,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 
 	// Log request
 	clogger.WithContext(ctx).Infof("csi.ValidateVolumeCapabilities of id %s "+
-		"capabilities %#v "+
-		id,
-		capabilities)
+		"capabilities %#v ", id, capabilities)
 
 	// Get grpc connection
 	conn, err := s.getConn()

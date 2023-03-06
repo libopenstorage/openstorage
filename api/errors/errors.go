@@ -98,7 +98,7 @@ type ErrNearSyncServerBusy struct {
 
 func (e *ErrNearSyncServerBusy) Error() string {
 	if len(e.ID) > 0 {
-		return fmt.Sprintf("near sync server busy: concurrent backup limit for volume %v reached", e.ID)
+		return fmt.Sprintf("near sync server busy: concurrent near sync migrate limit for volume %v reached", e.ID)
 	}
-	return fmt.Sprintf("near sync server busy")
+	return fmt.Sprintf("near sync server busy, please wait or stop current task")
 }

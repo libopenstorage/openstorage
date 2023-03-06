@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.156.0 - (02/21/2023)
+
+* Update NearSync clone state related fields
+
 ### v0.155.0 - (01/11/2023)
 
 * Add NearSync related fields
