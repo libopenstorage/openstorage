@@ -1319,15 +1319,6 @@
         },
         "type": "object"
       },
-      "apiNearSyncReplicationStrategy": {
-        "default": "NEAR_SYNC_STRATEGY_NONE",
-        "enum": [
-          "NEAR_SYNC_STRATEGY_NONE",
-          "NEAR_SYNC_STRATEGY_AGGRESSIVE",
-          "NEAR_SYNC_STRATEGY_OPTIMIZED"
-        ],
-        "type": "string"
-      },
       "apiNodeDrainAttachmentsJob": {
         "properties": {
           "Status": {
@@ -2143,11 +2134,6 @@
             "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
             "type": "object"
           },
-          "near_sync_migrate": {
-            "format": "boolean",
-            "title": "Indicates if this is a near sync migrate",
-            "type": "boolean"
-          },
           "task_id": {
             "description": "TaskId of the task performing this backup. This value can be used for\nidempotency.",
             "type": "string"
@@ -2388,29 +2374,23 @@
       },
       "apiSdkCloudBackupOpType": {
         "default": "SdkCloudBackupOpTypeUnknown",
-        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore\n - SdkNearSyncOpTypeCloneOp: NearSync clone\n - SdkNearSyncOpTypeReplAddOp: NearSync replication add\n - SdkNearSyncOpTypeRestoreOp: NearSync restore",
+        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore",
         "enum": [
           "SdkCloudBackupOpTypeUnknown",
           "SdkCloudBackupOpTypeBackupOp",
-          "SdkCloudBackupOpTypeRestoreOp",
-          "SdkNearSyncOpTypeCloneOp",
-          "SdkNearSyncOpTypeReplAddOp",
-          "SdkNearSyncOpTypeRestoreOp"
+          "SdkCloudBackupOpTypeRestoreOp"
         ],
         "title": "CloudBackup operations types",
         "type": "string"
       },
       "apiSdkCloudBackupRequestedState": {
         "default": "SdkCloudBackupRequestedStateUnknown",
-        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore\n - SdkNearSyncRequestedStatePause: Pause the near sync migrate\n - SdkNearSyncRequestedStateResume: Resume the near sync migrate\n - SdkNearSyncRequestedStateStop: Stop a near sync migrate",
+        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore",
         "enum": [
           "SdkCloudBackupRequestedStateUnknown",
           "SdkCloudBackupRequestedStatePause",
           "SdkCloudBackupRequestedStateResume",
-          "SdkCloudBackupRequestedStateStop",
-          "SdkNearSyncRequestedStatePause",
-          "SdkNearSyncRequestedStateResume",
-          "SdkNearSyncRequestedStateStop"
+          "SdkCloudBackupRequestedStateStop"
         ],
         "title": "SdkCloudBackupRequestedState defines states to set a specified backup or restore\nto or from a cloud provider",
         "type": "string"
@@ -2659,11 +2639,6 @@
             "title": "Local indicates if only those backups/restores that are\nactive on current node must be returned",
             "type": "boolean"
           },
-          "near_sync_migrate": {
-            "format": "boolean",
-            "title": "Indicates if this is for nearsync migration",
-            "type": "boolean"
-          },
           "task_id": {
             "description": "TaskId of the backup/restore task, if this is specified,\nvolume_id is ignored.",
             "type": "string"
@@ -2691,7 +2666,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted\n - SdkNearSyncStatusTypeNotStarted: Near sync\nNot started\n - SdkNearSyncStatusTypeDone: Done\n - SdkNearSyncStatusTypePaused: Paused\n - SdkNearSyncStatusTypeStopped: Stopped\n - SdkNearSyncStatusTypeActive: Active\n - SdkNearSyncStatusTypeFailed: Failed\n - SdkNearSyncStatusTypeInvalid: Invalid",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unkonwn\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -2702,14 +2677,7 @@
           "SdkCloudBackupStatusTypeActive",
           "SdkCloudBackupStatusTypeFailed",
           "SdkCloudBackupStatusTypeQueued",
-          "SdkCloudBackupStatusTypeInvalid",
-          "SdkNearSyncStatusTypeNotStarted",
-          "SdkNearSyncStatusTypeDone",
-          "SdkNearSyncStatusTypePaused",
-          "SdkNearSyncStatusTypeStopped",
-          "SdkNearSyncStatusTypeActive",
-          "SdkNearSyncStatusTypeFailed",
-          "SdkNearSyncStatusTypeInvalid"
+          "SdkCloudBackupStatusTypeInvalid"
         ],
         "title": "CloudBackup status types",
         "type": "string"
@@ -5472,14 +5440,6 @@
           "mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
-          "near_sync": {
-            "format": "boolean",
-            "title": "NearSync specifies the volume has a near-sync replica",
-            "type": "boolean"
-          },
-          "near_sync_replication_strategy": {
-            "$ref": "#/components/schemas/apiNearSyncReplicationStrategy"
-          },
           "nodiscard": {
             "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
             "format": "boolean",
@@ -5754,9 +5714,6 @@
           "mount_opt_spec": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
-          "near_sync_replication_strategy": {
-            "$ref": "#/components/schemas/apiNearSyncReplicationStrategy"
-          },
           "nodiscard": {
             "format": "boolean",
             "type": "boolean"
@@ -5945,7 +5902,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.35"
+    "version": "0.101.34"
   },
   "openapi": "3.0.0",
   "paths": {

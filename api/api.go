@@ -360,8 +360,6 @@ type CloudBackupCreateRequest struct {
 	// DeleteLocal indicates if local snap must be deleted after the
 	// backup is complete
 	DeleteLocal bool
-	// Indicates if this is a nearsync migration
-	NearSyncMigrate bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -509,8 +507,6 @@ type CloudBackupStatusRequest struct {
 	// ignored. This could be GroupCloudBackupId too, and in that case multiple
 	// statuses belonging to the groupCloudBackupID is returned.
 	ID string
-	// Indicates if this is for nearsync migration
-	NearSyncMigrate bool
 }
 
 type CloudBackupStatusRequestOld struct {
@@ -525,10 +521,6 @@ type CloudBackupOpType string
 const (
 	CloudBackupOp  = CloudBackupOpType("Backup")
 	CloudRestoreOp = CloudBackupOpType("Restore")
-
-	NearSyncCloneOp   = CloudBackupOpType("NsClone")
-	NearSyncReplAddOp = CloudBackupOpType("NsReplAdd")
-	NearSyncRestoreOp = CloudBackupOpType("NsRestore")
 )
 
 // Allowed storage classes s3
@@ -554,22 +546,9 @@ const (
 )
 
 const (
-	NearSyncStatusNotStarted = CloudBackupStatusType("NsNotStarted")
-	NearSyncStatusDone       = CloudBackupStatusType("NsDone")
-	NearSyncStatusPaused     = CloudBackupStatusType("NsPaused")
-	NearSyncStatusStopped    = CloudBackupStatusType("NsStopped")
-	NearSyncStatusActive     = CloudBackupStatusType("NsActive")
-	NearSyncStatusFailed     = CloudBackupStatusType("NsFailed")
-	NearSyncStatusInvalid    = CloudBackupStatusType("NsInvalid")
-)
-
-const (
 	CloudBackupRequestedStatePause  = "pause"
 	CloudBackupRequestedStateResume = "resume"
 	CloudBackupRequestedStateStop   = "stop"
-	NearSyncRequestedStatePause     = "ns_pause"
-	NearSyncRequestedStateResume    = "ns_resume"
-	NearSyncRequestedStateStop      = "ns_stop"
 )
 
 type CloudBackupStatus struct {
@@ -1073,20 +1052,6 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued
 	case CloudBackupStatusInvalid:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid
-	case NearSyncStatusNotStarted:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted
-	case NearSyncStatusDone:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone
-	case NearSyncStatusPaused:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused
-	case NearSyncStatusStopped:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped
-	case NearSyncStatusActive:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive
-	case NearSyncStatusFailed:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed
-	case NearSyncStatusInvalid:
-		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 	}
@@ -1114,20 +1079,6 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(CloudBackupStatusQueued)
 	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid:
 		return string(CloudBackupStatusInvalid)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted:
-		return string(NearSyncStatusNotStarted)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone:
-		return string(NearSyncStatusDone)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused:
-		return string(NearSyncStatusPaused)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped:
-		return string(NearSyncStatusStopped)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive:
-		return string(NearSyncStatusActive)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed:
-		return string(NearSyncStatusFailed)
-	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid:
-		return string(NearSyncStatusInvalid)
 	default:
 		return string(CloudBackupStatusFailed)
 	}
@@ -1171,12 +1122,6 @@ func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackup
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
 	case CloudRestoreOp:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
-	case NearSyncCloneOp: // for internal state transition
-		return SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp
-	case NearSyncReplAddOp: // for internal state transition
-		return SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp
-	case NearSyncRestoreOp: // for internal state transition
-		return SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp
 	default:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeUnknown
 	}
@@ -1192,12 +1137,6 @@ func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackup
 		return CloudBackupOp
 	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
 		return CloudRestoreOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp: // for internal state transition
-		return NearSyncCloneOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp: // for internal state transition
-		return NearSyncReplAddOp
-	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp: // for internal state transition
-		return NearSyncRestoreOp
 	default:
 		return CloudBackupOpType("Unknown")
 	}
@@ -1359,12 +1298,6 @@ func CloudBackupRequestedStateToSdkCloudBackupRequestedState(
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause
 	case CloudBackupRequestedStateResume:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume
-	case NearSyncRequestedStateStop:
-		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop
-	case NearSyncRequestedStatePause:
-		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStatePause
-	case NearSyncRequestedStateResume:
-		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateResume
 	default:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown
 	}
