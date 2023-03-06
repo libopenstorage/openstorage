@@ -670,6 +670,13 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume, isSchedulerReque
 		}
 	}
 
+	if spec.NearSyncReplicationStrategy != vol.Spec.NearSyncReplicationStrategy {
+		newSpec.NearSyncReplicationStrategyOpt = &api.VolumeSpecUpdate_NearSyncReplicationStrategy{
+			NearSyncReplicationStrategy: spec.NearSyncReplicationStrategy,
+		}
+
+	}
+
 	return newSpec
 }
 

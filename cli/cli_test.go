@@ -45,7 +45,9 @@ func TestCmdMarshalProto(t *testing.T) {
  "xattr": "UNSPECIFIED",
  "proxy_write": false,
  "auto_fstrim": false,
- "fa_create_options": ""
+ "fa_create_options": "",
+ "near_sync": false,
+ "near_sync_replication_strategy": "NEAR_SYNC_STRATEGY_NONE"
 }`,
 		data,
 	)
