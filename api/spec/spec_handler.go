@@ -119,6 +119,7 @@ var (
 	compressedRegex               = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex             = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
 	ioProfileRegex                = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	nearSyncRegex                 = regexp.MustCompile(api.SpecNearSync + "=([A-Za-z]+),?")
 	asyncIoRegex                  = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
 	earlyAckRegex                 = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
 	forceUnsupportedFsTypeRegex   = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
@@ -357,6 +358,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.IoProfile = ioProfile
+			}
+		case api.SpecNearSync:
+			if nearSync, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.NearSync = nearSync
 			}
 		case api.SpecEarlyAck:
 			if earlyAck, err := strconv.ParseBool(v); err != nil {
@@ -767,6 +774,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, ioProfile := d.getVal(ioProfileRegex, str); ok {
 		opts[api.SpecIoProfile] = ioProfile
+	}
+	if ok, nearSync := d.getVal(nearSyncRegex, str); ok {
+		opts[api.SpecNearSync] = nearSync
 	}
 	if ok, asyncIo := d.getVal(asyncIoRegex, str); ok {
 		opts[api.SpecAsyncIo] = asyncIo
