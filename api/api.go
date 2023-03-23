@@ -52,6 +52,7 @@ const (
 	SpecLabels               = "labels"
 	SpecPriorityAlias        = "priority_io"
 	SpecIoProfile            = "io_profile"
+	SpecNearSync             = "nearsync"
 	SpecAsyncIo              = "async_io"
 	SpecEarlyAck             = "early_ack"
 	SpecExportProtocol       = "export"
