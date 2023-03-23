@@ -358,6 +358,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.IoProfile = ioProfile
 			}
+		case api.SpecNearSync:
+			if nearsync, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.NearSync = nearsync
+			}
 		case api.SpecEarlyAck:
 			if earlyAck, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
