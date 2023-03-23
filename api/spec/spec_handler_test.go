@@ -94,6 +94,38 @@ func TestNodiscard(t *testing.T) {
 	require.False(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
 }
 
+func TestNearSync(t *testing.T) {
+	s := NewSpecHandler()
+
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "true",
+	})
+	require.NoError(t, err)
+	require.True(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "false",
+	})
+	require.NoError(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "foo",
+	})
+	require.Error(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec = testSpecFromString(t, api.SpecNearSync, "true")
+	require.True(t, spec.GetNearSync())
+
+	spec = testSpecFromString(t, api.SpecNearSync, "false")
+	require.False(t, spec.GetNearSync())
+}
+
 func TestEarlyAck(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
