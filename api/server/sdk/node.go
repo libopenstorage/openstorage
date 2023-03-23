@@ -214,6 +214,45 @@ func (s *NodeServer) proxyVolumeUsageByNode(
 	return proxyClient.VolumeUsageByNode(ctx, req)
 }
 
+func (s *NodeServer) VolumeBytesUsedByNode(
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
+) (*api.SdkVolumeBytesUsedResponse, error) {
+
+	useProxy, host, err := s.needsProxyRequest(ctx, req.GetNodeId())
+	if err != nil {
+		return nil, err
+	}
+	if useProxy {
+		return s.proxyVolumeBytesUsedByNode(ctx, req, host)
+	}
+	// Get the info locally
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	resp, err := s.server.driver(ctx).VolumeBytesUsedByNode(req.GetNodeId(), req.GetIds())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
+	}
+	sdkResp := &api.SdkVolumeBytesUsedResponse{
+		VolumeBytesUsedByNode: resp,
+	}
+	return sdkResp, nil
+}
+
+func (s *NodeServer) proxyVolumeBytesUsedByNode(
+	ctx context.Context,
+	req *api.SdkNodeVolumeUsageByNodeRequest,
+	host string,
+) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+
+	proxyClient, err := s.getProxyClient(host)
+	if err != nil {
+		return nil, err
+	}
+	return proxyClient.VolumeBytesUsedByNode(ctx, req)
+}
+
 func (s *NodeServer) needsProxyRequest(
 	ctx context.Context,
 	NodeID string,

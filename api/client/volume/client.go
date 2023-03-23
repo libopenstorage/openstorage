@@ -300,6 +300,13 @@ func (v *volumeClient) VolumeUsageByNode(
 
 }
 
+func (v *volumeClient) VolumeBytesUsedByNode(
+	nodeID string,
+	IDs []uint64,
+) (*api.VolumeBytesUsedByNode, error) {
+	return nil, volume.ErrNotSupported
+}
+
 func (v *volumeClient) RelaxedReclaimPurge(
 	nodeID string,
 ) (*api.RelaxedReclaimPurge, error) {

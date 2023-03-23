@@ -1095,6 +1095,22 @@ message VolumeUsageByNode {
   repeated VolumeUsage volume_usage= 1;
 }
 
+// VolumeBytesUsed defines volume utilization
+message VolumeBytesUsed {
+  // id for the volume/snapshot
+  string volume_id = 1;
+  //  size in bytes by the volume/snapshot
+  uint64 total_bytes = 2;
+}
+
+// VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node
+message VolumeBytesUsedByNode {
+  // machine uuid
+  string node_id = 1;
+  // VolumeBytesUsed for each requested volume on the given node
+  repeated VolumeBytesUsed vol_util_info = 2;
+}
+
 // FstrimVolUsageInfo
 message FstrimVolumeUsageInfo {
   // Volume name
@@ -2153,6 +2169,14 @@ service OpenStorageNode {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/enable/{node_id}"
         body: "*"
+      };
+    }
+
+  // Returns bytes used of multiple volumes for a give node
+  rpc VolumeBytesUsedByNode(SdkVolumeBytesUsedRequest)
+    returns (SdkVolumeBytesUsedResponse) {
+      option(google.api.http) = {
+        get: "/v1/nodes/util/{node_id}"
       };
     }
 }
@@ -5135,6 +5159,21 @@ message SdkFilesystemTrimStopRequest {
   string mount_path = 2;
 }
 
+// SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node
+message SdkVolumeBytesUsedResponse {
+  // Provides vol util of multiple requested volumes from a given node
+  VolumeBytesUsedByNode vol_util_info = 1;
+}
+
+// SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization
+// from multiple volume in a given node
+message SdkVolumeBytesUsedRequest {
+  // machine uuid of targeted node
+  string node_id = 1;
+  // volume ids to filter in usage response, can be empty
+  repeated uint64 ids = 2;
+}
+
 // Empty response
 message SdkFilesystemTrimStopResponse{
 }
@@ -5324,7 +5363,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 156;
+    Minor = 157;
     // SDK version patch value of this specification
     Patch = 0;
   }
