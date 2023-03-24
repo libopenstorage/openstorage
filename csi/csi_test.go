@@ -26,7 +26,7 @@ import (
 	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"

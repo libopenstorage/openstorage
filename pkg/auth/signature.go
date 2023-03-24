@@ -19,7 +19,7 @@ import (
 	"fmt"
 	"io/ioutil"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 )
 
 // Signature describes the signature type using definitions from
