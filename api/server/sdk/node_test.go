@@ -524,7 +524,7 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
-	s.MockDriver().EXPECT().VolumeBytesUsedByNode(nodeid).Return(&volumeBytesUsedInfo, nil).Times(1)
+	s.MockDriver().EXPECT().VolumeBytesUsedByNode(nodeid, nil).Return(&volumeBytesUsedInfo).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageNodeClient(s.Conn())
@@ -534,8 +534,8 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify
-	assert.Equal(t, resp.VolUtilInfo.NodeId(), volumeBytesUsedInfo.NodeId)
-	for i, volUsage := range resp.VolUtilInfo.VolumeBytesUsed {
+	assert.Equal(t, resp.NodeId, volumeBytesUsedInfo.NodeId)
+	for i, volUsage := range resp.VolUtilInfo {
 		assert.Equal(t, volUsage.GetVolumeId(), volumeBytesUsedInfo.VolumeBytesUsed[i].VolumeId)
 		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolumeBytesUsed[i].TotalBytes)
 	}
