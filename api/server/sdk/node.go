@@ -235,7 +235,7 @@ func (s *NodeServer) VolumeBytesUsedByNode(
 		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
 	}
 	sdkResp := &api.SdkVolumeBytesUsedResponse{
-		VolumeBytesUsedByNode: resp,
+		VolUtilInfo: resp,
 	}
 	return sdkResp, nil
 }
