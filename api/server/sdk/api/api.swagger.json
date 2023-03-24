@@ -5272,7 +5272,7 @@
             "title": "machine uuid",
             "type": "string"
           },
-          "vol_util_info": {
+          "vol_usage": {
             "items": {
               "$ref": "#/components/schemas/apiVolumeBytesUsed"
             },

@@ -508,9 +508,9 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 		DataIp: "127.0.0.1",
 	}
 	// Create response
-	volumeBytesUsedInfo := api.SdkVolumeBytesUsedResponse{
+	volumeBytesUsedInfo := api.VolumeBytesUsedByNode{
 		NodeId: nodeid,
-		VolumeBytesUsed: []*api.VolumeBytesUsed{{
+		VolUsage: []*api.VolumeBytesUsed{{
 			VolumeId:   "123456",
 			TotalBytes: 12345678,
 		}},
@@ -534,8 +534,8 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify
-	assert.Equal(t, resp.NodeId, volumeBytesUsedInfo.NodeId)
-	for i, volUsage := range resp.VolUtilInfo {
+	assert.Equal(t, resp.VolUtilInfo.NodeId, volumeBytesUsedInfo.NodeId)
+	for i, volUsage := range resp.VolUtilInfo.VolUsage {
 		assert.Equal(t, volUsage.GetVolumeId(), volumeBytesUsedInfo.VolumeBytesUsed[i].VolumeId)
 		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolumeBytesUsed[i].TotalBytes)
 	}

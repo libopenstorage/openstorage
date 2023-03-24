@@ -1108,7 +1108,7 @@ message VolumeBytesUsedByNode {
   // machine uuid
   string node_id = 1;
   // VolumeBytesUsed for each requested volume on the given node
-  repeated VolumeBytesUsed vol_util_info = 2;
+  repeated VolumeBytesUsed vol_usage = 2;
 }
 
 // FstrimVolUsageInfo
