@@ -515,6 +515,17 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 			TotalBytes: 12345678,
 		}},
 	}
+
+	/*
+		volumeBytesUsedInfo := api.SdkVolumeBytesUsedResponse{
+			VolUtilInfo: api.VolumeBytesUsedByNode{
+				NodeId: nodeid,
+				VolUsage: []*api.VolumeBytesUsed{{
+					VolumeId:   "123456",
+					TotalBytes: 12345678,
+				}}},
+		}
+	*/
 	cluster := api.Cluster{
 		Id:     "someclusterid",
 		NodeId: nodeid,
@@ -524,7 +535,7 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
-	s.MockDriver().EXPECT().VolumeBytesUsedByNode(nodeid, nil).Return(&volumeBytesUsedInfo).Times(1)
+	s.MockDriver().EXPECT().VolumeBytesUsedByNode(nodeid, nil).Return(&volumeBytesUsedInfo, nil).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageNodeClient(s.Conn())
