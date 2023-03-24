@@ -242,9 +242,9 @@ func (s *NodeServer) VolumeBytesUsedByNode(
 
 func (s *NodeServer) proxyVolumeBytesUsedByNode(
 	ctx context.Context,
-	req *api.SdkNodeVolumeUsageByNodeRequest,
+	req *api.SdkVolumeBytesUsedRequest,
 	host string,
-) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
+) (*api.SdkVolumeBytesUsedResponse, error) {
 
 	proxyClient, err := s.getProxyClient(host)
 	if err != nil {
