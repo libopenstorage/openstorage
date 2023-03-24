@@ -536,8 +536,8 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 	// Verify
 	assert.Equal(t, resp.VolUtilInfo.NodeId, volumeBytesUsedInfo.NodeId)
 	for i, volUsage := range resp.VolUtilInfo.VolUsage {
-		assert.Equal(t, volUsage.GetVolumeId(), volumeBytesUsedInfo.VolumeBytesUsed[i].VolumeId)
-		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolumeBytesUsed[i].TotalBytes)
+		assert.Equal(t, volUsage.GetVolumeId(), volumeBytesUsedInfo.VolUsage[i].VolumeId)
+		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolUsage[i].TotalBytes)
 	}
 }
 
