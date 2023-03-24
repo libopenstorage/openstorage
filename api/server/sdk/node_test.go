@@ -516,16 +516,6 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 		}},
 	}
 
-	/*
-		volumeBytesUsedInfo := api.SdkVolumeBytesUsedResponse{
-			VolUtilInfo: api.VolumeBytesUsedByNode{
-				NodeId: nodeid,
-				VolUsage: []*api.VolumeBytesUsed{{
-					VolumeId:   "123456",
-					TotalBytes: 12345678,
-				}}},
-		}
-	*/
 	cluster := api.Cluster{
 		Id:     "someclusterid",
 		NodeId: nodeid,
