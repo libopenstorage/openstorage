@@ -662,8 +662,8 @@ github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINE
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/portworx/kvdb v0.0.0-20190105022415-cccaa09abfc9/go.mod h1:Q8YyrNDvPp3DVF96BDcQuaC7fAYUCuUX+l58S7OnD2M=
-github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194 h1:lBVk1jEP5WGUk9uYTSwZaS9PZimj+uk61IYY8ewOmvA=
-github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194/go.mod h1:Q8YyrNDvPp3DVF96BDcQuaC7fAYUCuUX+l58S7OnD2M=
+github.com/portworx/kvdb v0.0.0-20230326003017-21a38cf82d4b h1:nP+m9tYQv2cWbN9wAwjlhJU9FZRs7GaYszhLJBLAg/I=
+github.com/portworx/kvdb v0.0.0-20230326003017-21a38cf82d4b/go.mod h1:Q8YyrNDvPp3DVF96BDcQuaC7fAYUCuUX+l58S7OnD2M=
 github.com/portworx/sched-ops v0.0.0-20210301232128-6cd5f08740bf/go.mod h1:nl2AP/W8sWmhmW7ScwNQrm5OCHiHjLYQ2NmO3TUjIhE=
 github.com/portworx/sched-ops v1.20.4-rc1 h1:offT/z5UA4KxCoJs6I8+jhZU4fsPoywi1YSXyTcGfzc=
 github.com/portworx/sched-ops v1.20.4-rc1/go.mod h1:orn0fDAHDqbKypAsSgbmJ8QmGMd3v1jTxdIRT9YIoEU=

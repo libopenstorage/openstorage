@@ -20,6 +20,8 @@ type kvdbUpdate struct {
 type updatesCollectorImpl struct {
 	// stopped is true if collection is stopped
 	stopped bool
+	// stoppedMutex protects stopped flag
+	stoppedMutex sync.RWMutex
 	// start index
 	startIndex uint64
 	// updatesMutex protects updates and start index
@@ -28,17 +30,29 @@ type updatesCollectorImpl struct {
 	updates []*kvdbUpdate
 }
 
+func (c *updatesCollectorImpl) setStopped() {
+	c.stoppedMutex.Lock()
+	c.stopped = true
+	c.stoppedMutex.Unlock()
+}
+
+func (c *updatesCollectorImpl) isStopped() bool {
+	c.stoppedMutex.RLock()
+	defer c.stoppedMutex.RUnlock()
+	return c.stopped
+}
+
 func (c *updatesCollectorImpl) watchCb(
 	prefix string,
 	opaque interface{},
 	kvp *KVPair,
 	err error,
 ) error {
-	if c.stopped {
+	if c.isStopped() {
 		return fmt.Errorf("Stopped watch")
 	}
 	if err != nil {
-		c.stopped = true
+		c.setStopped()
 		return err
 	}
 	update := &kvdbUpdate{prefix: prefix, kvp: kvp, err: err}
@@ -50,7 +64,7 @@ func (c *updatesCollectorImpl) watchCb(
 
 func (c *updatesCollectorImpl) Stop() {
 	logrus.Info("Stopping updates collector")
-	c.stopped = true
+	c.setStopped()
 }
 
 func (c *updatesCollectorImpl) ReplayUpdates(

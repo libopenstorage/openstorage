@@ -459,7 +459,7 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194
+# github.com/portworx/kvdb v0.0.0-20230326003017-21a38cf82d4b
 ## explicit
 github.com/portworx/kvdb
 github.com/portworx/kvdb/common

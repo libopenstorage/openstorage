@@ -4,11 +4,13 @@ services:
 - docker
 language: go
 go:
-- 1.10.7
+- 1.17.13
 install:
 - curl -s -L https://github.com/golang/dep/releases/download/v0.5.0/dep-linux-amd64 -o $GOPATH/bin/dep
 - chmod +x $GOPATH/bin/dep
+- go get -u github.com/vbatts/git-validation
 script:
+- git-validation -run DCO,short-subject
 - make deps docker-test
 notifications:
   email:
