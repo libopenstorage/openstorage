@@ -328,6 +328,8 @@ type Kvdb interface {
 	// The KVPair returned should be used to unlock if successful.
 	LockWithTimeout(key string, lockerID string, lockTryDuration time.Duration,
 		lockHoldDuration time.Duration) (*KVPair, error)
+	// IsKeyLocked returns a boolean if the lock is held or not. If held, returns the owner.
+	IsKeyLocked(key string) (bool, string, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
@@ -342,14 +344,18 @@ type Kvdb interface {
 	RevokeUsersAccess(username string, permType PermissionType, subtree string) error
 	// SetFatalCb sets the function to be called in case of fatal errors
 	SetFatalCb(f FatalErrorCB)
-	// SetLockTimeout sets maximum time a lock may be held
-	SetLockTimeout(timeout time.Duration)
-	// GetLockTimeout gets the currently set lock timeout
-	GetLockTimeout() time.Duration
+	// SetLockHoldDuration sets maximum time a lock may be held
+	SetLockHoldDuration(timeout time.Duration)
+	// GetLockTryDuration gets the maximum time to attempt to get a lock.
+	GetLockTryDuration() time.Duration
+	// GetLockHoldDuration gets the currently set lock hold timeout
+	GetLockHoldDuration() time.Duration
 	// Serialize serializes all the keys under the domain and returns a byte array
 	Serialize() ([]byte, error)
 	// Deserialize deserializes the given byte array into a list of kv pairs
 	Deserialize([]byte) (KVPairs, error)
+	// Compact removes the history before the specified index/revision to reduce the space and memory usage
+	Compact(index uint64) error
 	KvdbWrapper
 }
 
