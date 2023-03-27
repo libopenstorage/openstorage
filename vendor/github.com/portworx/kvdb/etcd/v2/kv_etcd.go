@@ -82,7 +82,7 @@ func New(
 		domain = domain + "/"
 	}
 	return &etcdKV{
-		common.BaseKvdb{FatalCb: fatalErrorCb},
+		common.BaseKvdb{FatalCb: fatalErrorCb, LockTryDuration: kvdb.DefaultLockTryDuration},
 		e.NewKeysAPI(c),
 		e.NewAuthUserAPI(c),
 		e.NewAuthRoleAPI(c),
@@ -355,6 +355,12 @@ func (kv *etcdKV) WatchTree(
 	return nil
 }
 
+func (kv *etcdKV) Compact(
+	index uint64,
+) error {
+	return kvdb.ErrNotSupported
+}
+
 func (kv *etcdKV) Lock(key string) (*kvdb.KVPair, error) {
 	return kv.LockWithID(key, "locked")
 }
@@ -363,7 +369,7 @@ func (kv *etcdKV) LockWithID(key string, lockerID string) (
 	*kvdb.KVPair,
 	error,
 ) {
-	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+	return kv.LockWithTimeout(key, lockerID, kv.LockTryDuration, kv.GetLockHoldDuration())
 }
 
 func (kv *etcdKV) LockWithTimeout(
@@ -402,6 +408,10 @@ func (kv *etcdKV) LockWithTimeout(
 	go kv.refreshLock(kvPair, lockerID, lockHoldDuration)
 
 	return kvPair, err
+}
+
+func (kv *etcdKV) IsKeyLocked(key string) (bool, string, error) {
+	return false, "", fmt.Errorf("Not implemented")
 }
 
 func (kv *etcdKV) Unlock(kvp *kvdb.KVPair) error {

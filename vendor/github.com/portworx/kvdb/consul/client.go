@@ -212,7 +212,7 @@ func newKvClient(machine string, p connectionParams) (*api.Config, *api.Client, 
 
 	client, err := api.NewClient(config)
 	if err != nil {
-		logrus.Info("consul: failed to get new api client: %v", err)
+		logrus.Warnf("consul: failed to get new api client: %v", err)
 		return nil, nil, err
 	}
 
