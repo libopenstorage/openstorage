@@ -384,7 +384,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.NearSync = nearSync
 			}
 		case api.SpecNearSyncReplicationStrategy:
-			if nearSyncReplicationStrategy, err := api.NearSyncReplStrategySimpleValueOf(v); err != nil {
+			if nearSyncReplicationStrategy, err := api.NearSyncReplicationStrategySimpleValueOf(v); err != nil {
 				return nil, nil, nil, err
 			} else {
 				spec.NearSyncReplicationStrategy = nearSyncReplicationStrategy
