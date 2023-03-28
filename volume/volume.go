@@ -150,6 +150,9 @@ type StatsDriver interface {
 	// RelaxedReclaimPurge triggers the purge of RelaxedReclaim queue for a
 	// given node
 	RelaxedReclaimPurge(nodeID string) (*api.RelaxedReclaimPurge, error)
+	// VolumeBytesUsedByNode returns currently used volume util of multiple volumes
+	// on a given node
+	VolumeBytesUsedByNode(nodeID string, ids []uint64) (*api.VolumeBytesUsedByNode, error)
 }
 
 type QuiesceDriver interface {

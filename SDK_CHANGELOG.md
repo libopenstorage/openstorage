@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.157.0 - (03/23/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
 ### v0.156.0 - (02/21/2023)
 
 * Update NearSync clone state related fields
