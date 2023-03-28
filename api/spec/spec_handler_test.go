@@ -126,6 +126,55 @@ func TestNearSync(t *testing.T) {
 	require.False(t, spec.GetNearSync())
 }
 
+func TestNearSyncReplicationStrategy(t *testing.T) {
+	var (
+		none       = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_NONE
+		aggressive = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_AGGRESSIVE
+		optimized  = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_OPTIMIZED
+	)
+
+	s := NewSpecHandler()
+
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "aggressive",
+	})
+	require.NoError(t, err)
+	require.Equal(t, aggressive, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "optimized",
+	})
+	require.NoError(t, err)
+	require.Equal(t, optimized, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "none",
+	})
+	require.NoError(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "foobar",
+	})
+	require.Error(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "aggressive")
+	require.Equal(t, aggressive, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "optimized")
+	require.Equal(t, optimized, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "none")
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	testSpecFromStringErr(t, api.SpecNearSyncReplicationStrategy, "foobar")
+}
+
 func TestEarlyAck(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
