@@ -826,8 +826,8 @@ func IoProfileSimpleValueOf(s string) (IoProfile, error) {
 	return IoProfile(obj), err
 }
 
-// NearSyncReplStrategySimpleValueOf returns the string format of NearSyncReplicationStrategy
-func NearSyncReplStrategySimpleValueOf(s string) (NearSyncReplicationStrategy, error) {
+// NearSyncReplicationStrategySimpleValueOf returns the string format of NearSyncReplicationStrategy
+func NearSyncReplicationStrategySimpleValueOf(s string) (NearSyncReplicationStrategy, error) {
 	obj, err := simpleValueOf("near_sync_strategy", NearSyncReplicationStrategy_value, s)
 	return NearSyncReplicationStrategy(obj), err
 }
