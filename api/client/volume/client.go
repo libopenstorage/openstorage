@@ -304,7 +304,19 @@ func (v *volumeClient) VolumeBytesUsedByNode(
 	nodeID string,
 	IDs []uint64,
 ) (*api.VolumeBytesUsedByNode, error) {
-	return nil, volume.ErrNotSupported
+	result := &api.SdkVolumeBytesUsedResponse{}
+	req := &api.SdkVolumeBytesUsedRequest{NodeId: nodeID, Ids: IDs}
+	resp := v.c.Get().Resource(volumePath + "/util").Instance(nodeID).Body(req).Do()
+
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
+
+	if err := resp.Unmarshal(result); err != nil {
+		return nil, err
+	}
+
+	return result.VolUtilInfo, nil
 }
 
 func (v *volumeClient) RelaxedReclaimPurge(

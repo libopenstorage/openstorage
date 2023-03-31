@@ -1471,6 +1471,43 @@ func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(capacityInfo)
 }
 
+func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	method := "volumeBytesUsedByNode"
+	nodeID, err := vd.parseID(r)
+	if err != nil {
+		e := fmt.Errorf("Failed to parse nodeID: %s", err.Error())
+		http.Error(w, e.Error(), http.StatusBadRequest)
+		return
+	}
+
+	var req api.SdkVolumeBytesUsedRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	volUtilInfo, err := d.VolumeBytesUsedByNode(nodeID, req.Ids)
+	if err != nil {
+		var e error
+		if err != nil {
+			e = fmt.Errorf("Failed to get volumeBytesUsedByNode: %s", err.Error())
+		}
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	var result api.SdkVolumeBytesUsedResponse
+	result.VolUtilInfo = volUtilInfo
+	json.NewEncoder(w).Encode(&result)
+}
+
+
 // swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
 //
 // Quiesce volume with specified id.
@@ -1847,6 +1884,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
+		{verb: "GET", path: volPath("/util/{id}", volume.APIVersion), fn: vd.volumeBytesUsedByNode},
 	}
 }
 
