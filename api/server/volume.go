@@ -1475,13 +1475,6 @@ func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) 
 	var err error
 
 	method := "volumeBytesUsedByNode"
-	nodeID, err := vd.parseID(r)
-	if err != nil {
-		e := fmt.Errorf("Failed to parse nodeID: %s", err.Error())
-		http.Error(w, e.Error(), http.StatusBadRequest)
-		return
-	}
-
 	var req api.SdkVolumeBytesUsedRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
@@ -1493,7 +1486,7 @@ func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	volUtilInfo, err := d.VolumeBytesUsedByNode(nodeID, req.Ids)
+	volUtilInfo, err := d.VolumeBytesUsedByNode(req.NodeId, req.Ids)
 	if err != nil {
 		var e error
 		if err != nil {
@@ -1884,7 +1877,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
-		{verb: "GET", path: volPath("/util/{id}", volume.APIVersion), fn: vd.volumeBytesUsedByNode},
+		{verb: "POST", path: volPath("/bytesused", volume.APIVersion), fn: vd.volumeBytesUsedByNode},
 	}
 }
 

@@ -306,7 +306,7 @@ func (v *volumeClient) VolumeBytesUsedByNode(
 ) (*api.VolumeBytesUsedByNode, error) {
 	result := &api.SdkVolumeBytesUsedResponse{}
 	req := &api.SdkVolumeBytesUsedRequest{NodeId: nodeID, Ids: IDs}
-	resp := v.c.Get().Resource(volumePath + "/util").Instance(nodeID).Body(req).Do()
+	resp := v.c.Post().Resource(volumePath + "/bytesused").Body(req).Do()
 
 	if resp.Error() != nil {
 		return nil, resp.FormatError()
