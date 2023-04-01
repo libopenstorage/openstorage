@@ -2176,7 +2176,8 @@ service OpenStorageNode {
   rpc VolumeBytesUsedByNode(SdkVolumeBytesUsedRequest)
     returns (SdkVolumeBytesUsedResponse) {
       option(google.api.http) = {
-        get: "/v1/nodes/util/{node_id}"
+        post: "/v1/nodes/bytesused"
+        body: "*"
       };
     }
 }
@@ -5170,7 +5171,7 @@ message SdkVolumeBytesUsedResponse {
 message SdkVolumeBytesUsedRequest {
   // machine uuid of targeted node
   string node_id = 1;
-  // volume ids to filter in usage response, can be empty
+  // volume ids to be found in usage response, can be empty
   repeated uint64 ids = 2;
 }
 
@@ -5363,7 +5364,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 157;
+    Minor = 158;
     // SDK version patch value of this specification
     Patch = 0;
   }

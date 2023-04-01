@@ -763,6 +763,17 @@ func (s *VolumeServer) Stats(
 	}, nil
 }
 
+func (s *VolumeServer) VolumeBytesUsedByNode(
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
+) (*api.SdkVolumeBytesUsedResponse, error) {
+	return nil, status.Errorf(
+                codes.Unimplemented,
+                "Failed to obtain volume utilization on node %s: %v",
+                req.GetNodeId(),
+                volume.ErrNotSupported.Error())
+}
+
 func (s *VolumeServer) CapacityUsage(
 	ctx context.Context,
 	req *api.SdkVolumeCapacityUsageRequest,

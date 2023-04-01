@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.158.0 - (03/31/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
 ### v0.157.0 - (03/23/2023)
 
 * Update stats for new VolumeBytesUsedByNode api
