@@ -2552,9 +2552,24 @@
       },
       "apiSdkCloudBackupSizeResponse": {
         "properties": {
+          "capacity_required_for_restore": {
+            "format": "uint64",
+            "title": "Used size of the volume to be restored (in bytes)",
+            "type": "string"
+          },
+          "compressed_object_bytes": {
+            "format": "uint64",
+            "title": "Size of the compressed individual backup in object-store or NFS",
+            "type": "string"
+          },
           "size": {
             "format": "uint64",
-            "title": "Size is the size of the volume in bytes",
+            "title": "Same value as total_download_bytes, will be deprecated",
+            "type": "string"
+          },
+          "total_download_bytes": {
+            "format": "uint64",
+            "title": "Total download size of all the backups (full \u0026 incremental) required for a restore",
             "type": "string"
           }
         },
