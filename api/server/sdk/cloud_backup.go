@@ -833,7 +833,5 @@ func (s *CloudBackupServer) Size(
 		return nil, status.Errorf(codes.Internal, "Failed to fetch backup size: %v", err)
 	}
 
-	return &api.SdkCloudBackupSizeResponse{
-		Size: r.GetSize(),
-	}, nil
+	return r, nil
 }
