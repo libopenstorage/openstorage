@@ -4,11 +4,11 @@ package alerts
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"path/filepath"
 	"strconv"
 	"sync"
 	"time"
-	"math"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
@@ -44,6 +44,7 @@ const (
 	Day      = 60 * 60 * 24
 	FiveDays = Day * 5
 )
+
 var (
 	AlertsBgCrawlTime time.Duration
 )
@@ -73,7 +74,7 @@ type FilterDeleter interface {
 }
 
 func newManager(options ...Option) (*manager, error) {
-	AlertsBgCrawlTime = 60 * 60; // one hour.
+	AlertsBgCrawlTime = 60 * 60 // one hour.
 	m := &manager{rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
@@ -91,13 +92,13 @@ func newManager(options ...Option) (*manager, error) {
 		func(sched.Interval) {
 			if kvdb.Instance() != nil {
 				kvps, err := enumerate(kvdb.Instance(), kvdbKey)
-				if err == nil  {
+				if err == nil {
 					for _, kvp := range kvps {
-						alert := new (api.Alert)
+						alert := new(api.Alert)
 						if err := json.Unmarshal(kvp.Value, alert); err != nil {
-							continue;
+							continue
 						}
-						curtime:= (int64)(time.Now().Unix())
+						curtime := (int64)(time.Now().Unix())
 						if (curtime - alert.Timestamp.GetSeconds()) > (int64)(alert.Ttl) {
 							//Alert has lived its ttl. Time to delete it.
 							kvdb.Instance().Delete(kvp.Key)
@@ -111,7 +112,7 @@ func newManager(options ...Option) (*manager, error) {
 		false,
 	)
 	if err != nil {
-		logrus.Errorf("Unable to schedule background alert cleanup");
+		logrus.Errorf("Unable to schedule background alert cleanup")
 	}
 	return m, nil
 }
@@ -163,7 +164,7 @@ func (m *manager) Raise(alert *api.Alert) error {
 	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
 		// if the alert is marked Cleared, it is pushed to kvdb with a ttlOption of half day
-		alert.Ttl = m.ttl;
+		alert.Ttl = m.ttl
 		_, err := kvdb.Instance().Put(key, alert, m.ttl)
 		return err
 	} else {
