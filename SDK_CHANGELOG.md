@@ -2,6 +2,13 @@
 
 ## Releases
 
+### v0.101.36 - (04/14/2023)
+
+* Add 3 new fields to the CloudBackupSize API:
+  * total_download_bytes
+  * compressed_object_bytes
+  * capacity_required_for_restore
+
 ### v0.101.35 - (01/11/2023)
 
 * Add NearSync related fields
