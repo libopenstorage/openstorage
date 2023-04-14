@@ -74,7 +74,7 @@ type FilterDeleter interface {
 }
 
 func newManager(options ...Option) (*manager, error) {
-	AlertsBgCrawlTime = 60 * 60 // one hour.
+	AlertsBgCrawlTime = 60 * 60 * time.Second // one hour.
 	m := &manager{rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
@@ -85,7 +85,7 @@ func newManager(options ...Option) (*manager, error) {
 			}
 			m.ttl = v
 			// make alertsbgcrawltime to half of ttl, so that we get two scans atleast.
-			AlertsBgCrawlTime = time.Duration(math.Min(float64(AlertsBgCrawlTime), float64(m.ttl/2)))
+			AlertsBgCrawlTime = time.Duration(math.Min(float64(AlertsBgCrawlTime), time.Second * float64(m.ttl/2)))
 		}
 	}
 	_, err := sched.Instance().Schedule(
