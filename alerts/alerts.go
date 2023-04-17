@@ -85,7 +85,7 @@ func newManager(options ...Option) (*manager, error) {
 			}
 			m.ttl = v
 			// make alertsbgcrawltime to half of ttl, so that we get two scans atleast.
-			AlertsBgCrawlTime = time.Duration(math.Min(float64(AlertsBgCrawlTime), time.Second * float64(m.ttl/2)))
+			AlertsBgCrawlTime = time.Duration(math.Min(float64(AlertsBgCrawlTime), float64((uint64)(time.Second) * (m.ttl/2))))
 		}
 	}
 	_, err := sched.Instance().Schedule(
