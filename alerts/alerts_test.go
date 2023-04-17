@@ -6,6 +6,7 @@ import (
 
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 )
@@ -93,6 +94,7 @@ func raiseAlerts(manager Manager) error {
 }
 
 func TestUniqueKeys(t *testing.T) {
+	sched.Init(100);
 	err := newInMemKvdb()
 	if err != nil {
 		t.Fatal(err)
