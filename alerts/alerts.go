@@ -53,8 +53,6 @@ type Manager interface {
 	SetRules(rules ...Rule)
 	// DeleteRules deletes rules
 	DeleteRules(rules ...Rule)
-	// Purge alerts.
-	Purge() error
 }
 
 // FilterDeleter defines a list and delete interface on alerts.
@@ -70,7 +68,7 @@ type FilterDeleter interface {
 }
 
 func newManager(options ...Option) (*manager, error) {
-	m := &manager{rules: make(map[string]Rule), ttl: HalfDay, useTtl: false}
+	m := &manager{rules: make(map[string]Rule), ttl: HalfDay}
 	for _, option := range options {
 		switch option.GetType() {
 		case ttlOption:
@@ -79,12 +77,6 @@ func newManager(options ...Option) (*manager, error) {
 				return nil, typeAssertionError
 			}
 			m.ttl = v
-		case useTtlOption:
-			v, ok := option.GetValue().(bool)
-			if !ok {
-				return nil, typeAssertionError
-			}
-			m.useTtl = v
 		}
 	}
 	return m, nil
@@ -94,7 +86,6 @@ func newManager(options ...Option) (*manager, error) {
 type manager struct {
 	rules map[string]Rule
 	ttl   uint64
-	useTtl bool
 	sync.Mutex
 }
 
@@ -138,15 +129,13 @@ func (m *manager) Raise(alert *api.Alert) error {
 	// kvdb will delete the object once ttl elapses.
 	if alert.Cleared {
 		// if the alert is marked Cleared, it is pushed to kvdb with a ttlOption of half day
-		alert.Ttl = m.ttl;
+		_, err := kvdb.Instance().Put(key, alert, m.ttl)
+		return err
+	} else {
+		// otherwise use the ttl value embedded in the alert object
+		_, err := kvdb.Instance().Put(key, alert, alert.Ttl)
+		return err
 	}
-	// otherwise use the ttl value embedded in the alert object
-	ttl := alert.Ttl
-	if (!m.useTtl) {
-		ttl = 0
-	}
-	_, err := kvdb.Instance().Put(key, alert, ttl)
-	return err
 }
 
 // Enumerate takes a variadic list of filters that are first analyzed to see if one filter
@@ -257,29 +246,6 @@ func (m *manager) Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, 
 	}
 
 	return alerts, nil
-}
-
-func (m *manager) Purge() error {
-	if (m.useTtl) {
-		return nil
-	}
-	if kvdb.Instance() != nil {
-		kvps, err := enumerate(kvdb.Instance(), kvdbKey)
-		if err == nil {
-			for _, kvp := range kvps {
-				alert := new(api.Alert)
-				if err := json.Unmarshal(kvp.Value, alert); err != nil {
-					continue
-				}
-				curtime := (int64)(time.Now().Unix())
-				if (curtime - alert.Timestamp.GetSeconds()) > (int64)(alert.Ttl) {
-					//Alert has lived its ttl. Time to delete it.
-					kvdb.Instance().Delete(kvp.Key)
-				}
-			}
-		}
-	}
-	return nil
 }
 
 func (m *manager) Delete(filters ...Filter) error {
