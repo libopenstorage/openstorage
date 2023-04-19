@@ -27,6 +27,8 @@ const (
 	// the resource id. Such option is useful for creating efficient filters that fetch efficiently
 	// from kvdb and apply filtering after fetching.
 	resourceIdOption
+	// Option to use ttl or not
+	useTtlOption
 )
 
 // Option defines what is an option.
