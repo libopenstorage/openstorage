@@ -260,6 +260,7 @@ func (m *manager) Filter(alerts []*api.Alert, filters ...Filter) ([]*api.Alert, 
 }
 
 func (m *manager) Purge() error {
+	errcount:= 0;
 	if (m.useTtl) {
 		return nil
 	}
@@ -269,17 +270,24 @@ func (m *manager) Purge() error {
 			for _, kvp := range kvps {
 				alert := new(api.Alert)
 				if err := json.Unmarshal(kvp.Value, alert); err != nil {
+					errcount ++;
 					continue
 				}
 				curtime := (int64)(time.Now().Unix())
 				if (curtime - alert.Timestamp.GetSeconds()) > (int64)(alert.Ttl) {
 					//Alert has lived its ttl. Time to delete it.
-					kvdb.Instance().Delete(kvp.Key)
+					_, err := kvdb.Instance().Delete(kvp.Key)
+					if (err != nil) {
+						errcount ++;
+					}
 				}
 			}
 		}
 	}
-	return nil
+	if (errcount > 0) {
+		return fmt.Errorf("Failed to delete %v alerts", errcount);
+	}
+	return nil;
 }
 
 func (m *manager) Delete(filters ...Filter) error {
