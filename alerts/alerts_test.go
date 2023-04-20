@@ -1054,7 +1054,7 @@ func TestManager_SetRules_EventRaise_ActionClear(t *testing.T) {
 	}
 
 	// create a ttl value of 5 seconds
-	manager, err := NewManager(NewTTLOption(1))
+	manager, err := NewManager(NewTTLOption(1), NewUSETTLOption(true))
 	if err != nil {
 		t.Fatal(err)
 	}

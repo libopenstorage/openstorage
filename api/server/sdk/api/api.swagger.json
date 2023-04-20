@@ -2552,9 +2552,24 @@
       },
       "apiSdkCloudBackupSizeResponse": {
         "properties": {
+          "capacity_required_for_restore": {
+            "format": "uint64",
+            "title": "Used size of the volume to be restored (in bytes)",
+            "type": "string"
+          },
+          "compressed_object_bytes": {
+            "format": "uint64",
+            "title": "Size of the compressed individual backup in object-store or NFS",
+            "type": "string"
+          },
           "size": {
             "format": "uint64",
-            "title": "Size is the size of the volume in bytes",
+            "title": "Same value as total_download_bytes, will be deprecated",
+            "type": "string"
+          },
+          "total_download_bytes": {
+            "format": "uint64",
+            "title": "Total download size of all the backups (full \u0026 incremental) required for a restore",
             "type": "string"
           }
         },
@@ -4041,6 +4056,33 @@
         "title": "Defines a response from the node which received the request to attach",
         "type": "object"
       },
+      "apiSdkVolumeBytesUsedRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "volume ids to be found in usage response, can be empty",
+            "type": "array"
+          },
+          "node_id": {
+            "title": "machine uuid of targeted node",
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization\nfrom multiple volume in a given node",
+        "type": "object"
+      },
+      "apiSdkVolumeBytesUsedResponse": {
+        "properties": {
+          "vol_util_info": {
+            "$ref": "#/components/schemas/apiVolumeBytesUsedByNode"
+          }
+        },
+        "title": "SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node",
+        "type": "object"
+      },
       "apiSdkVolumeCapacityUsageResponse": {
         "properties": {
           "capacity_usage_info": {
@@ -5242,6 +5284,38 @@
         },
         "type": "object"
       },
+      "apiVolumeBytesUsed": {
+        "properties": {
+          "total_bytes": {
+            "format": "uint64",
+            "title": "size in bytes by the volume/snapshot",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "id for the volume/snapshot",
+            "type": "string"
+          }
+        },
+        "title": "VolumeBytesUsed defines volume utilization",
+        "type": "object"
+      },
+      "apiVolumeBytesUsedByNode": {
+        "properties": {
+          "node_id": {
+            "title": "machine uuid",
+            "type": "string"
+          },
+          "vol_usage": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumeBytesUsed"
+            },
+            "title": "VolumeBytesUsed for each requested volume on the given node",
+            "type": "array"
+          }
+        },
+        "title": "VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node",
+        "type": "object"
+      },
       "apiVolumeConsumer": {
         "properties": {
           "name": {
@@ -5986,7 +6060,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.156.0"
+    "version": "0.159.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -8649,6 +8723,47 @@
           }
         },
         "summary": "UncordonAttachments re-enables volume attachments\non the provided node in the cluster.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/bytesused": {
+      "post": {
+        "operationId": "OpenStorageNode_VolumeBytesUsedByNode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeBytesUsedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeBytesUsedResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Returns bytes used of multiple volumes for a give node",
         "tags": [
           "OpenStorageNode"
         ]
