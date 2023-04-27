@@ -198,6 +198,51 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	assert.Contains(t, serverError.Message(), "credential name or uuid to use")
 }
 
+func TestSdkCloudBackupCreateNearSync(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myvol"
+	uuid := ""
+	taskId := "backup-task"
+	full := false
+	labels := map[string]string{"foo": "bar"}
+	req := &api.SdkCloudBackupCreateRequest{
+		VolumeId:        id,
+		CredentialId:    uuid,
+		Full:            full,
+		TaskId:          taskId,
+		Labels:          labels,
+		DeleteLocal:     true,
+		NearSyncMigrate: true,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:        id,
+			CredentialUUID:  uuid,
+			Full:            false,
+			Name:            taskId,
+			Labels:          labels,
+			DeleteLocal:     true,
+			NearSyncMigrate: true,
+		}).
+		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
+		Times(1)
+	// setupExpectedCredentialsNotPassing(s)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
+}
+
 func TestSdkCloudRestoreCreate(t *testing.T) {
 
 	// Create server and client connection
@@ -1150,9 +1195,9 @@ func TestSdkCloudBackupSize(t *testing.T) {
 	compressedSize := uint64(214535)
 	capacityForRestore := uint64(523046)
 	resp := &api.SdkCloudBackupSizeResponse{
-		Size: totalDownloadSize,
-		TotalDownloadBytes: totalDownloadSize,
-		CompressedObjectBytes: compressedSize,
+		Size:                       totalDownloadSize,
+		TotalDownloadBytes:         totalDownloadSize,
+		CompressedObjectBytes:      compressedSize,
 		CapacityRequiredForRestore: capacityForRestore,
 	}
 
