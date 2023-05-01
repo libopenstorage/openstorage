@@ -42,6 +42,7 @@ import (
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -141,6 +142,7 @@ func newTestServer(t *testing.T) *testServer {
 				KeyFile:  "test_certs/server.key",
 			},
 		},
+		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 	})
 
 	assert.Nil(t, err)
