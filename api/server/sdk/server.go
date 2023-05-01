@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -113,6 +114,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// gRPC round robin load balancer
+	RoundRobinBalancer loadbalancer.Balancer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -153,6 +156,7 @@ type serverAccessor interface {
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
 	bucketDriver(ctx context.Context) bucket.BucketDriver
+	balancer() loadbalancer.Balancer
 	auditLogWriter() io.Writer
 	port() string
 }
@@ -173,6 +177,9 @@ type sdkGrpcServer struct {
 	log             *logrus.Entry
 	auditLogOutput  io.Writer
 	accessLogOutput io.Writer
+
+	// gRPC request balancer
+	grpcBalancer loadbalancer.Balancer
 
 	// Interface implementations
 	clusterHandler       cluster.Cluster
@@ -256,6 +263,9 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	// For the SDK server listening on ports set the grpc balancer
+	// to the provided round robin balancer
+	netServer.grpcBalancer = config.RoundRobinBalancer
 
 	// Create a gRPC server on a unix domain socket
 	udsConfig := *config
@@ -265,6 +275,9 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	// For the SDK server listening on unix domain sockets, set the grpc balancer
+	// to the null balancer since we don't to forward requests received on it.
+	udsServer.grpcBalancer = loadbalancer.NewNullBalancer()
 
 	// Create REST Gateway and connect it to the unix domain socket server
 	restGateway, err := newSdkRestGateway(config, udsServer)
@@ -571,6 +584,17 @@ func (s *sdkGrpcServer) Start() error {
 	return nil
 }
 
+// Stop is used to stop the sdkGrpcServer as well as stop
+// any other routines it runs as part of it.
+func (s *sdkGrpcServer) Stop() {
+	if s.grpcBalancer != nil {
+		s.grpcBalancer.Stop()
+	}
+	if s.GrpcServer != nil {
+		s.GrpcServer.Stop()
+	}
+}
+
 func (s *sdkGrpcServer) registerPrometheusMetrics(grpcServer *grpc.Server) {
 	// Register the gRPCs and enable latency historgram
 	grpc_prometheus.Register(grpcServer)
@@ -642,6 +666,10 @@ func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
 	return s.clusterHandler
+}
+
+func (s *sdkGrpcServer) balancer() loadbalancer.Balancer {
+	return s.grpcBalancer
 }
 
 func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
