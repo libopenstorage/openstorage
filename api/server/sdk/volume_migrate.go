@@ -31,9 +31,20 @@ func (s *VolumeServer) Start(
 	ctx context.Context,
 	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
-	if s.cluster() == nil || s.driver(ctx) == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil || s.roundRobinBalancer() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
+
+	terminate, ok := ctx.Value(ContextRoundRobinTerminateKey).(bool)
+	if !ok || !terminate {
+		// Context key was not found OR terminate was not set.
+		// Forward the request to some other node and set the context.
+		rctx := context.WithValue(ctx, ContextRoundRobinTerminateKey, true)
+		remoteConn, err := s.roundRobinBalancer().GetGrpcConnection(rctx)
+		if err == nil {
+			return api.NewOpenStorageMigrateClient(remoteConn).Start(rctx, req)
+		} // else continue with processing of the request on this node.
+	} // else continue with processing of the request on this node.
 
 	if volume := req.GetVolume(); volume != nil {
 		// Check ownership

@@ -41,6 +41,11 @@ const (
 	// key as the location of the raw token coming from the standard REST
 	// header: Authorization: bearer <adaf0sdfsd...token>
 	ContextMetadataTokenKey = "bearer"
+
+	// ContextRoundRobinTerminateKey is a key used to set on the context
+	// to indicate the request needs to be terminated at the receiving node
+	// and should not be forwarded to another node.
+	ContextRoundRobinTerminateKey = "round-robin-terminate"
 )
 
 // This interceptor provides a way to lock out any unary calls while we adjust the server

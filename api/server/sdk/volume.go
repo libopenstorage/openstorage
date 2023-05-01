@@ -23,6 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/api/spec"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/auth"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/volume"
 
 	"google.golang.org/grpc/codes"
@@ -43,6 +44,10 @@ func (s *VolumeServer) cluster() cluster.Cluster {
 
 func (s *VolumeServer) driver(ctx context.Context) volume.VolumeDriver {
 	return s.server.driver(ctx)
+}
+
+func (s *VolumeServer) roundRobinBalancer() loadbalancer.RoundRobin {
+	return s.server.balancer()
 }
 
 func (s *VolumeServer) auditLog(ctx context.Context, method, format string, a ...interface{}) {

@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -113,6 +114,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// RoundRobin load balancer
+	RoundRobinBalancer loadbalancer.RoundRobin
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -153,6 +156,7 @@ type serverAccessor interface {
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
 	bucketDriver(ctx context.Context) bucket.BucketDriver
+	balancer() loadbalancer.RoundRobin
 	auditLogWriter() io.Writer
 	port() string
 }
@@ -200,6 +204,7 @@ type sdkGrpcServer struct {
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	bucketServer          *BucketServer
+	roundRobinBalancer    loadbalancer.RoundRobin
 }
 
 // Interface check
@@ -454,6 +459,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
+	s.roundRobinBalancer = config.RoundRobinBalancer
 
 	return s, nil
 }
@@ -641,6 +647,10 @@ func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
 	return s.clusterHandler
+}
+
+func (s *sdkGrpcServer) balancer() loadbalancer.RoundRobin {
+	return s.roundRobinBalancer
 }
 
 func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
