@@ -28,7 +28,6 @@ type roundRobin struct {
 	connMap              map[string]*TimedSDKConn
 	nextCreateNodeNumber int
 	mu                   sync.Mutex
-	stopCleanupCh        chan bool
 	grpcServerPort       string
 }
 
@@ -148,65 +147,43 @@ func (rr *roundRobin) cleanupMissingNodeConnections(ctx context.Context, nodes [
 }
 
 func (rr *roundRobin) cleanupConnections() {
-	rr.stopCleanupCh = make(chan bool)
-	ticker := time.NewTicker(connCleanupInterval)
+	ctx := correlation.WithCorrelationContext(context.Background(), correlation.ComponentRoundRobinBalancer)
+	rr.mu.Lock()
+	defer rr.mu.Unlock()
 
-	// Check every so often and delete/close connections
-	for {
-		select {
-		case <-rr.stopCleanupCh:
-			ticker.Stop()
-			return
+	rrlogger.Tracef("Cleaning up open gRPC connections created for round-robin balancing.")
 
-		case _ = <-ticker.C:
-			ctx := correlation.WithCorrelationContext(context.Background(), correlation.ComponentRoundRobinBalancer)
+	// Clean all expired connections
+	numConnsClosed := 0
+	for ip, timedConn := range rr.connMap {
+		expiryTime := timedConn.LastUsage.Add(connIdleConnLength)
 
-			// Anonymous function for using defer to unlock mutex
-			func() {
-				rr.mu.Lock()
-				defer rr.mu.Unlock()
-				rrlogger.Tracef("Cleaning up open gRPC connections for CSI distributed provisioning")
-
-				// Clean all expired connections
-				numConnsClosed := 0
-				for ip, timedConn := range rr.connMap {
-					expiryTime := timedConn.LastUsage.Add(connIdleConnLength)
-
-					// Connection has expired after 1hr of no usage.
-					// Close connection and remove from connMap
-					if expiryTime.Before(time.Now()) {
-						rrlogger.Infof("SDK gRPC connection to %s is has expired after %v minutes of no usage. Closing this connection", ip, connIdleConnLength.Minutes())
-						if err := timedConn.Conn.Close(); err != nil {
-							rrlogger.Errorf("failed to close connection to %s: %v", ip, timedConn.Conn)
-						}
-						delete(rr.connMap, ip)
-						numConnsClosed++
-					}
-				}
-
-				// Get all nodes and cleanup conns for missing/deprovisioned nodes
-				nodesResp, err := rr.cluster.Enumerate()
-				if err != nil {
-					rrlogger.Errorf("failed to get all nodes for connection cleanup: %v", err)
-					return
-				}
-				if len(nodesResp.Nodes) < 1 {
-					rrlogger.Errorf("no nodes available to cleanup: %v", err)
-					return
-				}
-				rr.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
-
-				if numConnsClosed > 0 {
-					rrlogger.Infof("Cleaned up %v connections for CSI distributed provisioning. %v connections remaining", numConnsClosed, len(rr.connMap))
-				}
-			}()
+		// Connection has expired after 1hr of no usage.
+		// Close connection and remove from connMap
+		if expiryTime.Before(time.Now()) {
+			rrlogger.Infof("SDK gRPC connection to %s is has expired after %v minutes of no usage. Closing this connection", ip, connIdleConnLength.Minutes())
+			if err := timedConn.Conn.Close(); err != nil {
+				rrlogger.Errorf("failed to close connection to %s: %v", ip, timedConn.Conn)
+			}
+			delete(rr.connMap, ip)
+			numConnsClosed++
 		}
 	}
-}
 
-func (rr *roundRobin) Stop() {
-	if rr.stopCleanupCh != nil {
-		close(rr.stopCleanupCh)
+	// Get all nodes and cleanup conns for missing/decommissioned nodes
+	nodesResp, err := rr.cluster.Enumerate()
+	if err != nil {
+		rrlogger.Errorf("failed to get all nodes for connection cleanup: %v", err)
+		return
+	}
+	if len(nodesResp.Nodes) < 1 {
+		rrlogger.Errorf("no nodes available to cleanup: %v", err)
+		return
+	}
+	rr.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
+
+	if numConnsClosed > 0 {
+		rrlogger.Infof("Cleaned up %v connections created for round-robin balancing. %v connections remaining", numConnsClosed, len(rr.connMap))
 	}
 }
 
