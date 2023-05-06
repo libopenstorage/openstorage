@@ -263,9 +263,6 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	// For the SDK server listening on ports set the grpc balancer
-	// to the provided round robin balancer
-	netServer.grpcBalancer = config.RoundRobinBalancer
 
 	// Create a gRPC server on a unix domain socket
 	udsConfig := *config
@@ -275,9 +272,6 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	// For the SDK server listening on unix domain sockets, set the grpc balancer
-	// to the null balancer since we don't to forward requests received on it.
-	udsServer.grpcBalancer = loadbalancer.NewNullBalancer()
 
 	// Create REST Gateway and connect it to the unix domain socket server
 	restGateway, err := newSdkRestGateway(config, udsServer)
@@ -467,6 +461,8 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
+	// For the SDK server set the grpc balancer to the provided round robin balancer
+	s.grpcBalancer = config.RoundRobinBalancer
 
 	return s, nil
 }

@@ -38,7 +38,7 @@ func (s *VolumeServer) Start(
 
 	md, _ := metadata.FromIncomingContext(ctx)
 	ctxMetadata := md.Get(ContextRoundRobinTerminateKey)
-	if len(ctxMetadata) == 0 || ctxMetadata[0] == "true" {
+	if len(ctxMetadata) == 0 || ctxMetadata[0] != "true" {
 		// Context metadata key was not found OR termination of the request was not set.
 		// Forward the request to some other node and set the context metadata so that
 		// the request is terminated at the receiving node.
