@@ -16,9 +16,6 @@ type Balancer interface {
 	// The boolean return argument is set to false if the connection is created
 	// to the local node.
 	GetRemoteNodeConnection(ctx context.Context) (*grpc.ClientConn, bool, error)
-
-	// Stop stops the balancer
-	Stop()
 }
 
 type nullBalancer struct{}
@@ -31,5 +28,3 @@ func NewNullBalancer() Balancer {
 func (n *nullBalancer) GetRemoteNodeConnection(ctx context.Context) (*grpc.ClientConn, bool, error) {
 	return nil, false, fmt.Errorf("remote connections not supported")
 }
-
-func (n *nullBalancer) Stop() {}
