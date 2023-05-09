@@ -294,6 +294,10 @@ type ProtoDriver interface {
 	Catalog(volumeid, subfolder string, depth string) (api.CatalogResponse, error)
 	// Does a Filesystem Trim operation to free unused space to block device(block discard)
 	VolService(volumeID string, vsreq *api.VolumeServiceRequest) (*api.VolumeServiceResponse, error)
+	// ControllerPublish sets up a volume to be exported from a node.
+	ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error)
+	// ControllerUnpublish clears up a previously published volume.
+	ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error
 }
 
 // Enumerator provides a set of interfaces to get details on a set of volumes.
@@ -324,6 +328,10 @@ type BlockDriver interface {
 	// Detach device from the host.
 	// Errors ErrEnoEnt, ErrVolDetached may be returned.
 	Detach(ctx context.Context, volumeID string, options map[string]string) error
+	// ControllerPublish csi extension
+	ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error)
+	// ControllerUnpublish csi extension
+	ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) error
 }
 
 // CredsDriver provides methods to handle credentials

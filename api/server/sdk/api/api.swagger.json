@@ -4151,6 +4151,61 @@
         "title": "Defines the response when creating a clone from a volume or a snapshot",
         "type": "object"
       },
+      "apiSdkVolumeControllerPublishRequest": {
+        "properties": {
+          "attach_options": {
+            "$ref": "#/components/schemas/apiSdkVolumeAttachOptions"
+          },
+          "node_id": {
+            "title": "Node Id where the volume needs to be published",
+            "type": "string"
+          },
+          "volume_id": {
+            "description": "Unique name of the volume. This will be used for idempotency.",
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeControllerPublishRequest request to publish volume",
+        "type": "object"
+      },
+      "apiSdkVolumeControllerPublishResponse": {
+        "properties": {
+          "context": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "opaque context returned by the driver",
+            "type": "object"
+          }
+        },
+        "title": "SdkVolumeControllerPublishResponse response from driver with a context",
+        "type": "object"
+      },
+      "apiSdkVolumeControllerUnpublishRequest": {
+        "properties": {
+          "node_id": {
+            "title": "Node Id where the volume needs to be unpublished",
+            "type": "string"
+          },
+          "options": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "The following options are private to the driver plugin running the\nOpenStorage SDK. Contact your driver developer for any special\nvalues that need to be provided here.",
+            "type": "object"
+          },
+          "volume_id": {
+            "description": "Unique name of the volume. This will be used for idempotency.",
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeControllerUnpublishRequest request to unpublish volume",
+        "type": "object"
+      },
+      "apiSdkVolumeControllerUnpublishResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkVolumeCreateRequest": {
         "description": "Defines a request to create a volume. Use OpenStorageVolume.Update()\nto update any labels on the volume.",
         "properties": {
@@ -10398,6 +10453,58 @@
         ]
       }
     },
+    "/v1/volumes/publish/{volume_id}": {
+      "post": {
+        "operationId": "OpenStorageVolume_ControllerPublish",
+        "parameters": [
+          {
+            "description": "Unique name of the volume. This will be used for idempotency.",
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeControllerPublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeControllerPublishResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Controller Publish Volume\nPublish volume for winshares, this receives the ip and sharename",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
     "/v1/volumes/snapshot/schedules/{volume_id}": {
       "post": {
         "description": "Requires access AccessType.Write of volume",
@@ -10674,6 +10781,58 @@
           }
         },
         "summary": "Stats returns the statistics for the requested volume",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volumes/unpublish/{volume_id}": {
+      "post": {
+        "operationId": "OpenStorageVolume_ControllerUnpublish",
+        "parameters": [
+          {
+            "description": "Unique name of the volume. This will be used for idempotency.",
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeControllerUnpublishRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeControllerUnpublishResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Controller Unpublish Volume\nDrops the reference on the sharename",
         "tags": [
           "OpenStorageVolume"
         ]

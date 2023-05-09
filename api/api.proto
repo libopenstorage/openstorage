@@ -2512,6 +2512,26 @@ service OpenStorageVolume {
           body: "*"
         };
     }
+
+    // Controller Publish Volume
+    // Publish volume for winshares, this receives the ip and sharename
+    rpc ControllerPublish(SdkVolumeControllerPublishRequest)
+    returns (SdkVolumeControllerPublishResponse) {
+        option(google.api.http) = {
+          post: "/v1/volumes/publish/{volume_id}"
+          body: "*"
+        };
+    }
+
+    // Controller Unpublish Volume
+    // Drops the reference on the sharename
+    rpc ControllerUnpublish(SdkVolumeControllerUnpublishRequest)
+    returns (SdkVolumeControllerUnpublishResponse) {
+        option(google.api.http) = {
+          post: "/v1/volumes/unpublish/{volume_id}"
+          body: "*"
+        };
+    }
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -3849,6 +3869,69 @@ message SdkClusterInspectCurrentResponse {
 message SdkNodeInspectRequest {
   // Id of node to inspect
   string node_id = 1;
+}
+
+// VolumeControllerPublishRequest is internal driver implementation of sdk
+message VolumeControllerPublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be published
+  string node_id = 2;
+  // Options to attach device
+  map<string, string> options = 3;
+}
+
+// VolumeControllerPublishResponse returns context to be passed to SP
+message VolumeControllerPublishResponse {
+  map<string, string> context = 1;
+}
+
+// SdkVolumeControllerPublishRequest request to publish volume
+message SdkVolumeControllerPublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be published
+  string node_id = 2;
+  // Options to attach device
+  SdkVolumeAttachOptions attach_options = 3;
+}
+
+// SdkVolumeControllerPublishResponse response from driver with a context
+message SdkVolumeControllerPublishResponse {
+  // opaque context returned by the driver
+  map<string, string> context = 1;
+}
+
+// VolumeControllerUnpublishRequest is internal proto driver impl
+message VolumeControllerUnpublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be unpublished
+  string node_id = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> options = 3;
+}
+
+// VolumeControllerUnpublishResponse empty response
+message VolumeControllerUnpublishResponse {
+}
+
+// SdkVolumeControllerUnpublishRequest request to unpublish volume
+message SdkVolumeControllerUnpublishRequest {
+  // Unique name of the volume. This will be used for idempotency.
+  string volume_id = 1;
+  // Node Id where the volume needs to be unpublished
+  string node_id = 2;
+  // The following options are private to the driver plugin running the
+  // OpenStorage SDK. Contact your driver developer for any special
+  // values that need to be provided here.
+  map<string, string> options = 3;
+}
+
+// Empty response
+message SdkVolumeControllerUnpublishResponse {
 }
 
 

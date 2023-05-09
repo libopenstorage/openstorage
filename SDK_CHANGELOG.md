@@ -1,6 +1,8 @@
 # Changelog
 
 ## Releases
+### v0.160.0 - (05/09/2023)
+* Extend SDK for Windows Support
 
 ### v0.160.0 - (06/12/2023)
 

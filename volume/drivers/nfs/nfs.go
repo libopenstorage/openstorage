@@ -776,6 +776,15 @@ func (d *driver) Detach(ctx context.Context, volumeID string, options map[string
 	return nil
 }
 
+func (d *driver) ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+
+func (d *driver) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (error) {
+	return nil
+}
+
 func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported

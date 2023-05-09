@@ -115,19 +115,102 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 // ControllerPublishVolume is a CSI API implements the attachment of a volume
 // on to a node.
 func (s *OsdCsiServer) ControllerPublishVolume(
-	context.Context,
-	*csi.ControllerPublishVolumeRequest,
+	ctx context.Context,
+	req *csi.ControllerPublishVolumeRequest,
 ) (*csi.ControllerPublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "This request is not supported")
+	clogger.WithContext(ctx).Infof("ControllerPublishVolume request recived. VolumeID: %s", req.GetVolumeId())
+
+	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+			return nil, status.Error(codes.NotFound, "Volume not found")
+		}
+		return nil, err
+	}
+
+	if !vol.Spec.Winshare {
+		return &csi.ControllerPublishVolumeResponse{}, nil
+	}
+
+	// have the volumeID, submit a new grpc request to px driver to prepare
+	// volume to be published only if the volume propery is winshare.
+	conn, err := s.getRemoteConn(ctx)
+	if err != nil {
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to the SDK server: %v", err)
+		}
+	}
+
+	// TODO: Add checks for capability and readonly, etc.
+
+	ctx = s.setupContext(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Check Id is valid with the specified volume capabilities, go ahead with publish.
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest {
+		VolumeId: req.GetVolumeId(),
+		NodeId: req.GetNodeId(),
+	})
+	result := &csi.ControllerPublishVolumeResponse{}
+	if resp != nil {
+		result.PublishContext = resp.Context
+	}
+	return result, err
 }
 
 // ControllerUnpublishVolume is a CSI API which implements the detaching of a volume
 // onto a node.
 func (s *OsdCsiServer) ControllerUnpublishVolume(
-	context.Context,
-	*csi.ControllerUnpublishVolumeRequest,
+	ctx context.Context,
+	req *csi.ControllerUnpublishVolumeRequest,
 ) (*csi.ControllerUnpublishVolumeResponse, error) {
-	return nil, status.Error(codes.Unimplemented, "This request is not supported")
+	clogger.WithContext(ctx).Infof("ControllerUnpublishVolume request received. VolumeID: %s", req.GetVolumeId())
+
+	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
+	if err != nil {
+		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
+			/// ignore volume not found error.
+			return &csi.ControllerUnpublishVolumeResponse{}, nil
+		}
+		return nil, err
+	}
+
+	if !vol.Spec.Winshare {
+		return &csi.ControllerUnpublishVolumeResponse{}, nil
+	}
+
+	/// have the volume, now submit a new grpc request to the px driver, to
+	/// cleanup volume that was published earlier.
+	/// TODO:
+	conn, err := s.getRemoteConn(ctx)
+	if err != nil {
+		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
+		conn, err = s.getConn()
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
+	}
+
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Check ID is valid with the specified volume capabilities
+	volumes := api.NewOpenStorageVolumeClient(conn)
+	_, err = volumes.ControllerUnpublish(ctx, &api.SdkVolumeControllerUnpublishRequest{
+		VolumeId: req.GetVolumeId(),
+		NodeId:   req.GetNodeId(),
+		Options:  req.GetSecrets(),
+	})
+
+	return &csi.ControllerUnpublishVolumeResponse{}, err
 }
 
 // ControllerGetVolume is a CSI API which implements getting a single volume.

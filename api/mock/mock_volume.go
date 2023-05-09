@@ -66,6 +66,36 @@ func (mr *MockOpenStorageVolumeServerMockRecorder) Clone(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clone", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).Clone), arg0, arg1)
 }
 
+// ControllerPublish mocks base method.
+func (m *MockOpenStorageVolumeServer) ControllerPublish(arg0 context.Context, arg1 *api.SdkVolumeControllerPublishRequest) (*api.SdkVolumeControllerPublishResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ControllerPublish", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeControllerPublishResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ControllerPublish indicates an expected call of ControllerPublish.
+func (mr *MockOpenStorageVolumeServerMockRecorder) ControllerPublish(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerPublish", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).ControllerPublish), arg0, arg1)
+}
+
+// ControllerUnpublish mocks base method.
+func (m *MockOpenStorageVolumeServer) ControllerUnpublish(arg0 context.Context, arg1 *api.SdkVolumeControllerUnpublishRequest) (*api.SdkVolumeControllerUnpublishResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ControllerUnpublish", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeControllerUnpublishResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ControllerUnpublish indicates an expected call of ControllerUnpublish.
+func (mr *MockOpenStorageVolumeServerMockRecorder) ControllerUnpublish(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerUnpublish", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).ControllerUnpublish), arg0, arg1)
+}
+
 // Create mocks base method.
 func (m *MockOpenStorageVolumeServer) Create(arg0 context.Context, arg1 *api.SdkVolumeCreateRequest) (*api.SdkVolumeCreateResponse, error) {
 	m.ctrl.T.Helper()
@@ -337,6 +367,46 @@ func (mr *MockOpenStorageVolumeClientMockRecorder) Clone(arg0, arg1 interface{},
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Clone", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).Clone), varargs...)
+}
+
+// ControllerPublish mocks base method.
+func (m *MockOpenStorageVolumeClient) ControllerPublish(arg0 context.Context, arg1 *api.SdkVolumeControllerPublishRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeControllerPublishResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ControllerPublish", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeControllerPublishResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ControllerPublish indicates an expected call of ControllerPublish.
+func (mr *MockOpenStorageVolumeClientMockRecorder) ControllerPublish(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerPublish", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).ControllerPublish), varargs...)
+}
+
+// ControllerUnpublish mocks base method.
+func (m *MockOpenStorageVolumeClient) ControllerUnpublish(arg0 context.Context, arg1 *api.SdkVolumeControllerUnpublishRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeControllerUnpublishResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ControllerUnpublish", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeControllerUnpublishResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ControllerUnpublish indicates an expected call of ControllerUnpublish.
+func (mr *MockOpenStorageVolumeClientMockRecorder) ControllerUnpublish(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ControllerUnpublish", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).ControllerUnpublish), varargs...)
 }
 
 // Create mocks base method.

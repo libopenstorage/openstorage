@@ -278,6 +278,14 @@ func (d *driver) Detach(ctx context.Context, volumeID string, options map[string
 	return nil
 }
 
+func (d *driver) ControllerPublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (map[string]string, error) {
+	return map[string]string{}, nil
+}
+
+func (d *driver) ControllerUnpublish(ctx context.Context, volumeID string, nodeID string, options map[string]string) (error) {
+	return nil
+}
+
 func (d *driver) CloudMigrateStart(request *api.CloudMigrateStartRequest) (*api.CloudMigrateStartResponse, error) {
 	return &api.CloudMigrateStartResponse{TaskId: request.TaskId}, nil
 }
