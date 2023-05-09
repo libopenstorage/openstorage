@@ -82,6 +82,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		// Creating and deleting snapshots
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
 
+		// Publish and Unpublish Volume
+		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
+
 		// Listing snapshots
 		csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS,
 
