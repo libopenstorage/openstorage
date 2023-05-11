@@ -41,10 +41,11 @@ const (
 	// ContextOriginKey represents the key for the correlation origin
 	ContextOriginKey = "correlation-context-origin"
 
-	ComponentUnknown   = Component("unknown")
-	ComponentCSIDriver = Component("csi-driver")
-	ComponentSDK       = Component("sdk-server")
-	ComponentAuth      = Component("openstorage/pkg/auth")
+	ComponentUnknown            = Component("unknown")
+	ComponentCSIDriver          = Component("csi-driver")
+	ComponentSDK                = Component("sdk-server")
+	ComponentRoundRobinBalancer = Component("round-robin-balancer")
+	ComponentAuth               = Component("openstorage/pkg/auth")
 )
 
 // RequestContext represents the context for a given a request.

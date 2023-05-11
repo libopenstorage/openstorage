@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -113,6 +114,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// gRPC round robin load balancer
+	RoundRobinBalancer loadbalancer.Balancer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -153,6 +156,7 @@ type serverAccessor interface {
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
 	bucketDriver(ctx context.Context) bucket.BucketDriver
+	balancer() loadbalancer.Balancer
 	auditLogWriter() io.Writer
 	port() string
 }
@@ -173,6 +177,9 @@ type sdkGrpcServer struct {
 	log             *logrus.Entry
 	auditLogOutput  io.Writer
 	accessLogOutput io.Writer
+
+	// gRPC request balancer
+	grpcBalancer loadbalancer.Balancer
 
 	// Interface implementations
 	clusterHandler       cluster.Cluster
@@ -360,7 +367,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 
 	// Setup authentication
-	for issuer, _ := range config.Security.Authenticators {
+	for issuer := range config.Security.Authenticators {
 		log.Infof("Authentication enabled for issuer: %s", issuer)
 
 		// Check the necessary security config options are set
@@ -454,6 +461,8 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
+	// For the SDK server set the grpc balancer to the provided round robin balancer
+	s.grpcBalancer = config.RoundRobinBalancer
 
 	return s, nil
 }
@@ -641,6 +650,10 @@ func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
 	return s.clusterHandler
+}
+
+func (s *sdkGrpcServer) balancer() loadbalancer.Balancer {
+	return s.grpcBalancer
 }
 
 func (s *sdkGrpcServer) alert() alerts.FilterDeleter {
