@@ -1805,10 +1805,12 @@
 			"revisionTime": "2017-11-21T19:13:43Z"
 		},
 		{
-			"checksumSHA1": "KeUmTZV+2X46C49cKyjp+xM7fvw=",
+			"checksumSHA1": "Hi7qypjVGFhoFakcCOUUTp3Itw4=",
 			"path": "google.golang.org/grpc/metadata",
-			"revision": "5a9f7b402fe85096d2e1d0383435ee1876e863d0",
-			"revisionTime": "2017-11-21T19:13:43Z"
+			"revision": "dba26e15a07f43875ccf806a2dd6cbcbc1c12eab",
+			"revisionTime": "2023-02-07T21:59:18Z",
+			"version": "v1.53.0",
+			"versionExact": "v1.53.0"
 		},
 		{
 			"checksumSHA1": "dgwdT20kXe4ZbXBOFbTwVQt8rmA=",
