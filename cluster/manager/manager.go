@@ -700,7 +700,7 @@ func (c *ClusterManager) joinCluster(
 		clusterLockKey,
 		lockKey,
 		lockTryDuration,
-		kvdb.Instance().GetLockTimeout(),
+		kvdb.Instance().GetLockHoldDuration(),
 	)
 	if err != nil {
 		logrus.Warnln("Unable to obtain cluster lock before creating snapshot: ",
