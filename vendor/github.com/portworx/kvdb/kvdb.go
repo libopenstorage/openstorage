@@ -163,7 +163,9 @@ var (
 	// ErrNoConnection no connection to server
 	ErrNoConnection = errors.New("No server connection")
 	// ErrNoQuorum kvdb has lost quorum
-	ErrNoQuorum = errors.New("Kvdb lost quorum")
+	ErrNoQuorum = errors.New("KVDB connection failed, either node has " +
+		"networking issues or KVDB members are down or KVDB cluster is unhealthy. " +
+		"All operations (get/update/delete) are unavailable.")
 )
 
 // KVAction specifies the action on a KV pair. This is useful to make decisions
@@ -202,6 +204,15 @@ type EnumerateSelect func(val interface{}) bool
 // CopySelect function is a callback function provided to EnumerateWithSelect API
 // This fn should perform a deep copy of the input interface and return the copy
 type CopySelect func(val interface{}) interface{}
+
+// EnumerateKVPSelect function is a callback function provided to EnumerateKVPWithSelect API
+// This fn is executed over all the keys and only those values are returned by Enumerate for which
+// this function return true.
+type EnumerateKVPSelect func(kvp *KVPair, val interface{}) bool
+
+// CopyKVPSelect function is a callback function provided to EnumerateKVPWithSelect API
+// This fn should perform a deep copy of the input KVPair and return the copy
+type CopyKVPSelect func(kvp *KVPair, val interface{}) *KVPair
 
 // KVPair represents the results of an operation on KVDB.
 type KVPair struct {
@@ -273,6 +284,9 @@ type Kvdb interface {
 	// EnumerateWithSelect returns a copy of all values under the prefix that satisfy the select
 	// function in the provided output array of interfaces
 	EnumerateWithSelect(prefix string, enumerateSelect EnumerateSelect, copySelect CopySelect) ([]interface{}, error)
+	// EnumerateKVPWithSelect returns a copy of all the KVPairs under the prefix that satisfy the select
+	// function in the provided output array of key-value pairs
+	EnumerateKVPWithSelect(prefix string, enumerateSelect EnumerateKVPSelect, copySelect CopyKVPSelect) (KVPairs, error)
 	// Delete deletes the KVPair specified by the key. ErrNotFound is returned
 	// if the key is not found. The old KVPair is returned if successful.
 	Delete(key string) (*KVPair, error)
@@ -314,6 +328,8 @@ type Kvdb interface {
 	// The KVPair returned should be used to unlock if successful.
 	LockWithTimeout(key string, lockerID string, lockTryDuration time.Duration,
 		lockHoldDuration time.Duration) (*KVPair, error)
+	// IsKeyLocked returns a boolean if the lock is held or not. If held, returns the owner.
+	IsKeyLocked(key string) (bool, string, error)
 	// Unlock kvp previously acquired through a call to lock.
 	Unlock(kvp *KVPair) error
 	// TxNew returns a new Tx coordinator object or ErrNotSupported
@@ -328,14 +344,18 @@ type Kvdb interface {
 	RevokeUsersAccess(username string, permType PermissionType, subtree string) error
 	// SetFatalCb sets the function to be called in case of fatal errors
 	SetFatalCb(f FatalErrorCB)
-	// SetLockTimeout sets maximum time a lock may be held
-	SetLockTimeout(timeout time.Duration)
-	// GetLockTimeout gets the currently set lock timeout
-	GetLockTimeout() time.Duration
+	// SetLockHoldDuration sets maximum time a lock may be held
+	SetLockHoldDuration(timeout time.Duration)
+	// GetLockTryDuration gets the maximum time to attempt to get a lock.
+	GetLockTryDuration() time.Duration
+	// GetLockHoldDuration gets the currently set lock hold timeout
+	GetLockHoldDuration() time.Duration
 	// Serialize serializes all the keys under the domain and returns a byte array
 	Serialize() ([]byte, error)
 	// Deserialize deserializes the given byte array into a list of kv pairs
 	Deserialize([]byte) (KVPairs, error)
+	// Compact removes the history before the specified index/revision to reduce the space and memory usage
+	Compact(index uint64) error
 	KvdbWrapper
 }
 

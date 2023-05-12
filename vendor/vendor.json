@@ -1235,40 +1235,40 @@
 			"revisionTime": "2016-01-10T10:55:54Z"
 		},
 		{
-			"checksumSHA1": "u+vvEUByEHvwVLMoEPipExZmmsU=",
+			"checksumSHA1": "OcijZ+hZF3JW3WLr3vhMycDf9yQ=",
 			"path": "github.com/portworx/kvdb",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
-			"checksumSHA1": "ZoLIbCwAKOvYeFGAZeUgD+EY4ow=",
+			"checksumSHA1": "EYbR9UF2r7gwtE0n6auAY4Tl4XM=",
 			"path": "github.com/portworx/kvdb/common",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
-			"checksumSHA1": "Oz3313Dxn0H5+nlyrpxMHSaIq1U=",
+			"checksumSHA1": "oTFuzMVkDBW4RqwoQzRud+1IjP4=",
 			"path": "github.com/portworx/kvdb/consul",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
-			"checksumSHA1": "qUVn3r8W8LP/98gTVP8RR/oCYhM=",
+			"checksumSHA1": "c+MG6VVgj+2sTCYTQDHCzyfRrgM=",
 			"path": "github.com/portworx/kvdb/etcd/common",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
-			"checksumSHA1": "7pWHCqKWW0LpP61/GV8HrQ5XAz0=",
+			"checksumSHA1": "VQAAWDGG/8nWlFU1VpCKd+Hk530=",
 			"path": "github.com/portworx/kvdb/etcd/v2",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
-			"checksumSHA1": "yv0t9D9eFCCRBRXg5UmUKYqXZzc=",
+			"checksumSHA1": "dhh+yrVvhijcP50OM7vIHCcrZ1E=",
 			"path": "github.com/portworx/kvdb/mem",
-			"revision": "7190161df3b01f2b3f344f50e448924f8597747d",
-			"revisionTime": "2019-11-22T19:16:54Z"
+			"revision": "2bfbbdc63731a7233036957bc86d5bff38a0bfc1",
+			"revisionTime": "2023-03-27T23:25:21Z"
 		},
 		{
 			"checksumSHA1": "4PlYObbaQFXyMQLOTbiWwGKAX7s=",
