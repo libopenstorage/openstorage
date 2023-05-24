@@ -73,6 +73,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 		// Creating and deleting volumes supported
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_VOLUME,
 
+		// Publish and Unpublish Volume
+		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
+
 		// Cloning: creation of volumes from snapshots, supported
 		csi.ControllerServiceCapability_RPC_CLONE_VOLUME,
 
@@ -81,9 +84,6 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// Creating and deleting snapshots
 		csi.ControllerServiceCapability_RPC_CREATE_DELETE_SNAPSHOT,
-
-		// Publish and Unpublish Volume
-		csi.ControllerServiceCapability_RPC_PUBLISH_UNPUBLISH_VOLUME,
 
 		// Listing snapshots
 		csi.ControllerServiceCapability_RPC_LIST_SNAPSHOTS,
@@ -131,9 +131,6 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 		return nil, err
 	}
 
-	if !vol.Spec.Winshare {
-		return &csi.ControllerPublishVolumeResponse{}, nil
-	}
 
 	// have the volumeID, submit a new grpc request to px driver to prepare
 	// volume to be published only if the volume propery is winshare.
@@ -182,10 +179,6 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 			return &csi.ControllerUnpublishVolumeResponse{}, nil
 		}
 		return nil, err
-	}
-
-	if !vol.Spec.Winshare {
-		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
 	/// have the volume, now submit a new grpc request to the px driver, to
