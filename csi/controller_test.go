@@ -1827,6 +1827,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 					Owner: "user1",
 				},
 				Xattr: api.Xattr_COW_ON_DEMAND,
+				FpPreference: true,
 			}).
 			Return(id, nil).
 			Times(1),
