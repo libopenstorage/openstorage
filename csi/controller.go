@@ -132,7 +132,6 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 		return nil, err
 	}
 
-
 	if !vol.Spec.Winshare {
 		// Ignore for the timebeing
 		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
@@ -154,12 +153,10 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 
 	// TODO: Add checks for capability and readonly, etc.
 
-	logrus.Infof("Calling Controller Publish Volume in the csi controller;4")
 	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
-	logrus.Infof("Calling Controller Publish Volume in the csi controller;3")
 	// Check Id is valid with the specified volume capabilities, go ahead with publish.
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest {
@@ -196,7 +193,6 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 
 	/// have the volume, now submit a new grpc request to the px driver, to
 	/// cleanup volume that was published earlier.
-	/// TODO:
 	conn, err := s.getRemoteConn(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get remote connection: %v, continuing with local node instead", err)
