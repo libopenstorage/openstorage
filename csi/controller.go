@@ -123,6 +123,7 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 ) (*csi.ControllerPublishVolumeResponse, error) {
 	clogger.WithContext(ctx).Infof("ControllerPublishVolume request recived. VolumeID: %s", req.GetVolumeId())
 
+	logrus.Debugf("Calling Controller Publish Volume in the csi controller")
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
@@ -131,6 +132,12 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 		return nil, err
 	}
 
+
+	if !vol.Spec.Winshare {
+		// Ignore for the timebeing
+		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
+		return &csi.ControllerPublishVolumeResponse{}, nil
+	}
 
 	// have the volumeID, submit a new grpc request to px driver to prepare
 	// volume to be published only if the volume propery is winshare.
@@ -147,10 +154,12 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 
 	// TODO: Add checks for capability and readonly, etc.
 
+	logrus.Infof("Calling Controller Publish Volume in the csi controller;4")
 	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
+	logrus.Infof("Calling Controller Publish Volume in the csi controller;3")
 	// Check Id is valid with the specified volume capabilities, go ahead with publish.
 	volumes := api.NewOpenStorageVolumeClient(conn)
 	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest {
@@ -179,6 +188,10 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 			return &csi.ControllerUnpublishVolumeResponse{}, nil
 		}
 		return nil, err
+	}
+
+	if !vol.Spec.Winshare {
+		return &csi.ControllerUnpublishVolumeResponse{}, nil
 	}
 
 	/// have the volume, now submit a new grpc request to the px driver, to

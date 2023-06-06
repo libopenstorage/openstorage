@@ -2514,7 +2514,10 @@ service OpenStorageVolume {
     }
 
     // Controller Publish Volume
-    // Publish volume for winshares, this receives the ip and sharename
+    // Publish volume for winshares,  receives the csi context.
+    // The csi context includes the ip of the node exporting the volume,
+    // Protocol to use to mount the volume, protocol specific details like
+    // share/export/device identification
     rpc ControllerPublish(SdkVolumeControllerPublishRequest)
     returns (SdkVolumeControllerPublishResponse) {
         option(google.api.http) = {
@@ -2524,7 +2527,7 @@ service OpenStorageVolume {
     }
 
     // Controller Unpublish Volume
-    // Drops the reference on the sharename
+    // Drops the reference on the volume
     rpc ControllerUnpublish(SdkVolumeControllerUnpublishRequest)
     returns (SdkVolumeControllerUnpublishResponse) {
         option(google.api.http) = {
