@@ -463,6 +463,12 @@
 			"revisionTime": "2015-11-05T21:09:06Z"
 		},
 		{
+			"checksumSHA1": "mUeojTdLEyzYOki70VUAeeYr/wQ=",
+			"path": "github.com/dgrijalva/jwt-go",
+			"revision": "0b96aaa707760d6ab28d9b9d1913ff5993328bae",
+			"revisionTime": "2018-07-19T21:18:23Z"
+		},
+		{
 			"checksumSHA1": "swrmSZR/wRFxtu7eftd7Vm9ykrI=",
 			"path": "github.com/docker/docker/daemon/graphdriver",
 			"revision": "4a7bd7eaef0038b006cf23adface84081e5aab3b",

@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/dgrijalva/jwt-go"
 	bucket "github.com/libopenstorage/openstorage/bucket"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/role"

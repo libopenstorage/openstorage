@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"strings"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/dgrijalva/jwt-go"
 )
 
 // JwtAuthConfig provides JwtAuthenticator the keys to validate the token

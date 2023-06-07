@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/dgrijalva/jwt-go"
 )
 
 var minsBeforeExpiration = time.Minute * 5

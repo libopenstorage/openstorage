@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"

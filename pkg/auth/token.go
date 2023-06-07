@@ -22,7 +22,7 @@ import (
 	"strings"
 	"time"
 
-	jwt "github.com/golang-jwt/jwt/v4"
+	jwt "github.com/dgrijalva/jwt-go"
 	"github.com/grpc-ecosystem/go-grpc-middleware/util/metautils"
 )
 
