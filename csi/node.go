@@ -498,9 +498,20 @@ func makeDir(targetPath string) error {
 }
 
 func (s *OsdCsiServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID must be present in the NodeStageVolumeReq")
+	}
+
+	if req.StagingTargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "StagingTargetPath must be present in the NodeSVolReq")
+	}
+
+	if req.VolumeCapability == nil {
+		return nil, status.Error(codes.InvalidArgument, "VolumeCaps must be present in the NodeSVolReq")
+	}
 	return &csi.NodeStageVolumeResponse{}, nil
 }
 
 func (s *OsdCsiServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
-	return nil, nil
+	return &csi.NodeUnstageVolumeResponse{}, nil
 }
