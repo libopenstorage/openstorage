@@ -121,9 +121,18 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	ctx context.Context,
 	req *csi.ControllerPublishVolumeRequest,
 ) (*csi.ControllerPublishVolumeResponse, error) {
-	clogger.WithContext(ctx).Infof("ControllerPublishVolume request recived. VolumeID: %s", req.GetVolumeId())
 
 	logrus.Debugf("Calling Controller Publish Volume in the csi controller")
+	// check if volumeID is present and volume is available on SP
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID is mandatory in ControllerPublishVolume request")
+	}
+	clogger.WithContext(ctx).Infof("ControllerPublishVolume request recived. VolumeID: %s", req.GetVolumeId())
+
+	// if nodeID is set, and node is actually present on SP
+	if req.NodeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "NodeID is mandatory in CPVolume request")
+	}
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
@@ -176,6 +185,11 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 	ctx context.Context,
 	req *csi.ControllerUnpublishVolumeRequest,
 ) (*csi.ControllerUnpublishVolumeResponse, error) {
+	// check if volumeID is present and volume is available on SP
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID is mandatory in ControllerUnpublishVolume request")
+	}
+
 	clogger.WithContext(ctx).Infof("ControllerUnpublishVolume request received. VolumeID: %s", req.GetVolumeId())
 
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
