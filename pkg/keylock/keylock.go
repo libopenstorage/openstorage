@@ -3,7 +3,12 @@ package keylock
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
+	"unsafe"
 )
+
+const mutexLocked = 1 << iota
 
 // ErrKeyLockNotFound error type for lock object not found
 type ErrKeyLockNotFound struct {
@@ -30,6 +35,10 @@ type KeyLock interface {
 	// Acquire a lock associated with the specified ID.
 	// Creates the lock if one doesn't already exist.
 	Acquire(id string) LockHandle
+
+	// Acquire a lock associated with the specified ID.
+	// Creates the lock if one doesn't already exist within a particular time
+	AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error)
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -81,6 +90,26 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	h.mutex.Lock()
 	h.genNum++
 	return *h
+}
+
+func (kl *keyLock) AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error) {
+	h := kl.getOrCreateLock(id)
+	for timeout := time.After(time.Second); ; {
+		select {
+		case <-timeout:
+			h.refcnt--
+			return *h, fmt.Errorf("error waiting for lock")
+		default:
+			if h.tryLock() {
+				h.genNum++
+				return *h, nil
+			}
+		}
+	}
+}
+
+func (h *LockHandle) tryLock() bool {
+	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(&h.mutex)), 0, mutexLocked)
 }
 
 func (kl *keyLock) Release(h *LockHandle) error {
