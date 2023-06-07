@@ -48,7 +48,7 @@ type KeyLock interface {
 	Dump() []string
 }
 
-// LockHandle is an opaque handle to an acquired lock.
+// LockHandle is an opaque handle to an aquired lock.
 type LockHandle struct {
 	id     string
 	genNum int64
@@ -92,24 +92,29 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
-func (kl *keyLock) AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error) {
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) (LockHandle, error) {
 	h := kl.getOrCreateLock(id)
-	for timeout := time.After(time.Second); ; {
+	timeout := time.After(duration)
+	for {
 		select {
 		case <-timeout:
 			h.refcnt--
 			return *h, fmt.Errorf("error waiting for lock")
 		default:
-			if h.tryLock() {
+			if kl.tryLock(id) {
 				h.genNum++
 				return *h, nil
 			}
+			time.Sleep(1 * time.Millisecond)
 		}
 	}
+
 }
 
-func (h *LockHandle) tryLock() bool {
-	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(&h.mutex)), 0, mutexLocked)
+func (kl *keyLock) tryLock(id string) bool {
+	h := kl.getOrCreateLock(id)
+	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(h.mutex)), 0, mutexLocked)
+
 }
 
 func (kl *keyLock) Release(h *LockHandle) error {
