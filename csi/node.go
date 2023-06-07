@@ -293,6 +293,8 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 	clogger.WithContext(ctx).Debugf("csi.NodeGetCapabilities request received")
 
 	caps := []csi.NodeServiceCapability_RPC_Type{
+		// Support for Stage/Unstage of Volume on a Node.
+		csi.NodeServiceCapability_RPC_STAGE_UNSTAGE_VOLUME,
 		// Getting volume stats for volume health monitoring
 		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
 		// Indicates that the Node service can report volume conditions.
@@ -493,4 +495,12 @@ func makeDir(targetPath string) error {
 	}
 
 	return nil
+}
+
+func (s *OsdCsiServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVolumeRequest) (*csi.NodeStageVolumeResponse, error) {
+	return &csi.NodeStageVolumeResponse{}, nil
+}
+
+func (s *OsdCsiServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+	return nil, nil
 }
