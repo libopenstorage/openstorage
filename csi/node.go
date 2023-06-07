@@ -513,5 +513,12 @@ func (s *OsdCsiServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVo
 }
 
 func (s *OsdCsiServer) NodeUnstageVolume(ctx context.Context, req *csi.NodeUnstageVolumeRequest) (*csi.NodeUnstageVolumeResponse, error) {
+	if req.VolumeId == "" {
+		return nil, status.Error(codes.InvalidArgument, "VolumeID must be present in the NodeUnstageVolumeReq")
+	}
+
+	if req.StagingTargetPath == "" {
+		return nil, status.Error(codes.InvalidArgument, "StagingTargetPath must be present in the NodeUVolReq")
+	}
 	return &csi.NodeUnstageVolumeResponse{}, nil
 }

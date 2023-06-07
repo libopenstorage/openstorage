@@ -159,9 +159,9 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 
 	// Check Id is valid with the specified volume capabilities, go ahead with publish.
 	volumes := api.NewOpenStorageVolumeClient(conn)
-	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest {
+	resp, err := volumes.ControllerPublish(ctx, &api.SdkVolumeControllerPublishRequest{
 		VolumeId: req.GetVolumeId(),
-		NodeId: req.GetNodeId(),
+		NodeId:   req.GetNodeId(),
 	})
 	result := &csi.ControllerPublishVolumeResponse{}
 	if resp != nil {
