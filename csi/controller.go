@@ -133,18 +133,16 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	if req.NodeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "NodeID is mandatory in CPVolume request")
 	}
+	// if VolumeCapability is nil, fail.
+	if req.VolumeCapability == nil {
+		return nil, status.Error(codes.InvalidArgument, "VolumeCaps must be present in the NodeSVolReq")
+	}
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
 		if s, ok := status.FromError(err); ok && s.Code() == codes.NotFound {
 			return nil, status.Error(codes.NotFound, "Volume not found")
 		}
 		return nil, err
-	}
-
-	if !vol.Spec.Winshare {
-		// Ignore for the timebeing
-		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
-		return &csi.ControllerPublishVolumeResponse{}, nil
 	}
 
 	// have the volumeID, submit a new grpc request to px driver to prepare
@@ -158,6 +156,12 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 				codes.Unavailable,
 				"Unable to connect to the SDK server: %v", err)
 		}
+	}
+
+	if !vol.Spec.Winshare {
+		// Ignore for the timebeing
+		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
+		return &csi.ControllerPublishVolumeResponse{}, nil
 	}
 
 	// TODO: Add checks for capability and readonly, etc.
