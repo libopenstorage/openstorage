@@ -115,10 +115,12 @@ func tryLock(h *LockHandle) bool {
 }
 
 func (kl *keyLock) Release(h *LockHandle) error {
+	if h == nil {
+		return &ErrInvalidHandle{}
+	}
 	if len(h.id) == 0 {
 		return &ErrInvalidHandle{}
 	}
-
 	kl.Lock()
 	defer kl.Unlock()
 	lockedH, exists := kl.lockMap[h.id]
