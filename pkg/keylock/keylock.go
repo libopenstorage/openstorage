@@ -38,7 +38,7 @@ type KeyLock interface {
 
 	// Acquire a lock associated with the specified ID.
 	// Creates the lock if one doesn't already exist within a particular time
-	AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error)
+	AcquireWithTimeout(id string, timeout time.Duration) *LockHandle
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -92,29 +92,26 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
-func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) (LockHandle, error) {
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHandle {
 	h := kl.getOrCreateLock(id)
 	timeout := time.After(duration)
 	for {
 		select {
 		case <-timeout:
 			h.refcnt--
-			return *h, fmt.Errorf("error waiting for lock")
+			return nil
 		default:
-			if kl.tryLock(id) {
+			if tryLock(h) {
 				h.genNum++
-				return *h, nil
+				return h
 			}
 			time.Sleep(1 * time.Millisecond)
 		}
 	}
-
 }
 
-func (kl *keyLock) tryLock(id string) bool {
-	h := kl.getOrCreateLock(id)
+func tryLock(h *LockHandle) bool {
 	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(h.mutex)), 0, mutexLocked)
-
 }
 
 func (kl *keyLock) Release(h *LockHandle) error {
