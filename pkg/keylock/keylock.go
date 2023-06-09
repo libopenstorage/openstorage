@@ -3,7 +3,12 @@ package keylock
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
+	"unsafe"
 )
+
+const mutexLocked = 1 << iota
 
 // ErrKeyLockNotFound error type for lock object not found
 type ErrKeyLockNotFound struct {
@@ -30,6 +35,11 @@ type KeyLock interface {
 	// Acquire a lock associated with the specified ID.
 	// Creates the lock if one doesn't already exist.
 	Acquire(id string) LockHandle
+
+	// Acquire a lock associated with the specified ID.
+	// Creates the lock if one doesn't already exist within a particular time
+	// and returns nil on timeout
+	AcquireWithTimeout(id string, timeout time.Duration) *LockHandle
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -83,11 +93,35 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHandle {
+	h := kl.getOrCreateLock(id)
+	timeout := time.After(duration)
+	for {
+		select {
+		case <-timeout:
+			kl.Lock()
+			h.refcnt--
+			kl.Unlock()
+			return nil
+		default:
+			if tryLock(h) {
+				h.genNum++
+				return h
+			}
+			time.Sleep(250 * time.Millisecond)
+		}
+	}
+}
+
+// TODO : replace this with the standard TryLock after the next golang upgrade to 1.18
+func tryLock(h *LockHandle) bool {
+	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(h.mutex)), 0, mutexLocked)
+}
+
 func (kl *keyLock) Release(h *LockHandle) error {
-	if len(h.id) == 0 {
+	if h == nil || len(h.id) == 0 {
 		return &ErrInvalidHandle{}
 	}
-
 	kl.Lock()
 	defer kl.Unlock()
 	lockedH, exists := kl.lockMap[h.id]
