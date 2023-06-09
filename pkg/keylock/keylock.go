@@ -99,14 +99,16 @@ func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHa
 	for {
 		select {
 		case <-timeout:
+			kl.Lock()
 			h.refcnt--
+			kl.Unlock()
 			return nil
 		default:
 			if tryLock(h) {
 				h.genNum++
 				return h
 			}
-			time.Sleep(1 * time.Millisecond)
+			time.Sleep(250 * time.Millisecond)
 		}
 	}
 }
