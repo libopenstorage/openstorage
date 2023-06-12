@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.160.0 - (06/12/2023)
+
+* Add journal IO profile
+
 ### v0.159.0 - (04/06/2023)
 
 * Add 3 new fields to the CloudBackupSize API:
