@@ -36,10 +36,10 @@ type KeyLock interface {
 	// Creates the lock if one doesn't already exist.
 	Acquire(id string) LockHandle
 
-	// Acquire a lock associated with the specified ID.
-	// Creates the lock if one doesn't already exist within a particular time
-	// and returns nil on timeout
-	AcquireWithTimeout(id string, timeout time.Duration) *LockHandle
+	// AcquireWithTimeout, tries to acquire a lock associated with the specified ID
+	// within a particular time.
+	// Creates the lock if one doesn't already and returns error on timeout
+	AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error)
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -93,7 +93,7 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
-func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHandle {
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) (LockHandle, error) {
 	h := kl.getOrCreateLock(id)
 	timeout := time.After(duration)
 	for {
@@ -102,11 +102,11 @@ func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHa
 			kl.Lock()
 			h.refcnt--
 			kl.Unlock()
-			return nil
+			return *h, fmt.Errorf("error timeout")
 		default:
 			if tryLock(h) {
 				h.genNum++
-				return h
+				return *h, nil
 			}
 			time.Sleep(250 * time.Millisecond)
 		}
