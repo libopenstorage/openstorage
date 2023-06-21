@@ -2513,6 +2513,15 @@ service OpenStorageVolume {
           body: "*"
         };
     }
+
+    // Watch streams a list of volumes exist in the system.
+    rpc Watch(SdkVolumeWatchRequest)
+    returns (stream SdkVolumeWatchResponse) {
+        option(google.api.http) = {
+          post: "/v1/volume/watch"
+          body: "*"
+        };
+    }
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -3762,6 +3771,22 @@ message SdkVolumeSnapshotScheduleUpdateRequest {
 
 // Empty response
 message SdkVolumeSnapshotScheduleUpdateResponse {
+}
+
+// Defines the request to watch a volume
+message SdkVolumeWatchRequest {
+  // Options during inspection
+  map<string, string> labels = 1;
+}
+
+// Defines the response when watching a volume
+message SdkVolumeWatchResponse {
+  // Information about the volume
+  Volume volume = 1;
+  // Name of volume
+  string name = 2;
+  // Volume labels
+  map<string, string> labels = 3;
 }
 
 

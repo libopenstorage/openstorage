@@ -20,10 +20,12 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"math/rand"
 	"strings"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"golang.org/x/sync/errgroup"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
@@ -464,6 +466,135 @@ func (s *VolumeServer) InspectWithFilters(
 	}, nil
 }
 
+type watchClient struct {
+	name    string
+	volChan chan *api.Volume
+}
+
+func (w *watchClient) callBack(vol *api.Volume) {
+	w.volChan <- vol
+}
+
+func (s *VolumeServer) registerWatcher(client watchClient) {
+	logrus.Infof("regsiter client %v", client.name)
+	s.watchClients = append(s.watchClients, client)
+}
+
+func (s *VolumeServer) startWatcher(ctx context.Context) error {
+	if s.volChan == nil {
+		logrus.Infof("Started watcher")
+		volChan, err := s.driver(ctx).GetVolumeWatcher(nil, make(map[string]string))
+		if err != nil {
+			return status.Errorf(
+				codes.Internal,
+				"Failed to enumerate volumes: %v",
+				err.Error())
+		}
+		s.volChan = volChan
+		for vol := range s.volChan {
+			for _, client := range s.watchClients {
+				logrus.Infof("Sending vol to client %v", client.name)
+				client.callBack(vol)
+			}
+		}
+	}
+
+	return nil
+}
+
+func (s *VolumeServer) Watch(
+	req *api.SdkVolumeWatchRequest,
+	stream api.OpenStorageVolume_WatchServer,
+) error {
+	ctx := stream.Context()
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	go s.startWatcher(ctx)
+
+	// if input has deadline, ensure graceful exit within that deadline.
+	deadline, ok := ctx.Deadline()
+	var cancel context.CancelFunc
+	if ok {
+		// create a new context that will get done on deadline
+		ctx, cancel = context.WithTimeout(ctx, deadline.Sub(time.Now()))
+		defer cancel()
+	}
+
+	group, _ := errgroup.WithContext(ctx)
+	errChan := make(chan error)
+
+	client := watchClient{
+		name:    fmt.Sprintf("%v", rand.Intn(100)),
+		volChan: make(chan *api.Volume),
+	}
+
+	s.registerWatcher(client)
+
+	// spawn err-group process.
+	group.Go(func() error {
+		if vols, err := s.driver(ctx).Enumerate(nil, req.Labels); err != nil {
+			return status.Errorf(
+				codes.Internal,
+				"Failed to enumerate volumes: %v",
+				err.Error())
+		} else {
+			for _, vol := range vols {
+				if !vol.IsPermitted(ctx, api.Ownership_Read) {
+					continue
+				}
+				resp := api.SdkVolumeWatchResponse{
+					Volume: vol,
+					Name:   vol.Locator.Name,
+					Labels: vol.Locator.VolumeLabels,
+				}
+				if err := stream.Send(&resp); err != nil {
+					return err
+				}
+			}
+			for {
+
+				for vol := range client.volChan {
+					logrus.Infof("Got response for vol %v", vol)
+					if !vol.IsPermitted(ctx, api.Ownership_Read) {
+						continue
+					}
+					resp := api.SdkVolumeWatchResponse{
+						Volume: vol,
+						Name:   "tmp",
+						Labels: make(map[string]string),
+					}
+					if err := stream.Send(&resp); err != nil {
+						return err
+					}
+				}
+			}
+
+		}
+
+	})
+
+	// wait for err-group processes to be done
+	go func() {
+		errChan <- group.Wait()
+	}()
+
+	// wait only as long as context deadline allows
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return status.Errorf(codes.Internal, "error enumerating alerts: %v", err)
+		} else {
+			return nil
+		}
+	case <-ctx.Done():
+		return status.Error(codes.DeadlineExceeded,
+			"Deadline is reached, server side func exiting")
+	}
+
+}
+
 // Inspect returns information about a volume
 func (s *VolumeServer) Inspect(
 	ctx context.Context,
@@ -768,10 +899,10 @@ func (s *VolumeServer) VolumeBytesUsedByNode(
 	req *api.SdkVolumeBytesUsedRequest,
 ) (*api.SdkVolumeBytesUsedResponse, error) {
 	return nil, status.Errorf(
-                codes.Unimplemented,
-                "Failed to obtain volume utilization on node %s: %v",
-                req.GetNodeId(),
-                volume.ErrNotSupported.Error())
+		codes.Unimplemented,
+		"Failed to obtain volume utilization on node %s: %v",
+		req.GetNodeId(),
+		volume.ErrNotSupported.Error())
 }
 
 func (s *VolumeServer) CapacityUsage(

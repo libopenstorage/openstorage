@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
@@ -58,6 +59,7 @@ type driver struct {
 	volume.FilesystemCheckDriver
 	kv          kvdb.Kvdb
 	thisCluster cluster.Cluster
+	volChan     chan *api.Volume
 }
 
 type fakeCred struct {
@@ -78,6 +80,7 @@ type fakeSchedules struct {
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
+	logrus.Infof("In new fake driver")
 	return newFakeDriver(params)
 }
 
@@ -98,6 +101,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                    kv,
+		volChan:               make(chan *api.Volume),
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -114,9 +118,30 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 			}
 		}
 	}
-
+	go testWatcher(inst)
 	logrus.Println("Fake driver initialized")
 	return inst, nil
+}
+
+func testWatcher(d *driver) {
+	iter := 0
+	for {
+		sleepRand := rand.Intn(10)
+		logrus.Infof("Sleeping for %v", sleepRand)
+		time.Sleep(time.Duration(sleepRand) * time.Second)
+		result := rand.Int31()
+		logrus.Infof("sending result %v with iteration %v", result, iter)
+		response := api.Volume{
+			Id: fmt.Sprintf("%v-%v", result, iter),
+		}
+		d.volChan <- &response
+
+		iter += 1
+	}
+}
+
+func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return d.volChan, nil
 }
 
 func (d *driver) Name() string {
@@ -371,7 +396,7 @@ func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.V
 		volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
 	}
 	return &api.VolumeBytesUsedByNode{
-		NodeId:  nodeMID,
+		NodeId:   nodeMID,
 		VolUsage: volusage,
 	}, nil
 }

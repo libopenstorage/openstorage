@@ -4551,6 +4551,39 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkVolumeWatchRequest": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Options during inspection",
+            "type": "object"
+          }
+        },
+        "title": "Defines the request to watch a volume",
+        "type": "object"
+      },
+      "apiSdkVolumeWatchResponse": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Volume labels",
+            "type": "object"
+          },
+          "name": {
+            "title": "Name of volume",
+            "type": "string"
+          },
+          "volume": {
+            "$ref": "#/components/schemas/apiVolume"
+          }
+        },
+        "title": "Defines the response when watching a volume",
+        "type": "object"
+      },
       "apiSeverityType": {
         "default": "SEVERITY_TYPE_NONE",
         "enum": [
@@ -10016,6 +10049,56 @@
           }
         },
         "summary": "Gets the volume catalog of an attached and mounted volume.\nReturns the entire tree up to \"n\"  depth (default is all of it)\nTakes a path that can be used as the new root for the catalog request.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/watch": {
+      "post": {
+        "operationId": "OpenStorageVolume_Watch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/runtimeStreamError"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
+                    }
+                  },
+                  "title": "Stream result of apiSdkVolumeWatchResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response.(streaming responses)"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Watch streams a list of volumes exist in the system.",
         "tags": [
           "OpenStorageVolume"
         ]

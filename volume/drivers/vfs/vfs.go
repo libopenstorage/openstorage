@@ -43,6 +43,7 @@ type driver struct {
 
 // Init Driver intialization.
 func Init(params map[string]string) (volume.VolumeDriver, error) {
+	volChan := make(chan *api.Volume)
 	return &driver{
 		volume.IONotSupported,
 		volume.BlockNotSupported,
@@ -55,6 +56,10 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
 	}, nil
+}
+
+func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
 }
 
 func (d *driver) Name() string {
