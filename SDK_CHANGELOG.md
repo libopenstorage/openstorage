@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.31 - (06/21/2023)
+
+* Add journal IO profile
+
 ### v0.101.30 - (11/08/2022)
 
 * FA DirectAccess CreateOptions is not honoroed by PX
