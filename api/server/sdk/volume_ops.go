@@ -480,21 +480,36 @@ func (s *VolumeServer) registerWatcher(client watchClient) {
 	s.watchClients = append(s.watchClients, client)
 }
 
-func (s *VolumeServer) startWatcher(ctx context.Context) error {
-	if s.volChan == nil {
-		logrus.Infof("Started watcher")
-		volChan, err := s.driver(ctx).GetVolumeWatcher(nil, make(map[string]string))
-		if err != nil {
-			return status.Errorf(
-				codes.Internal,
-				"Failed to enumerate volumes: %v",
-				err.Error())
+func (s *VolumeServer) removeWatcher(name string) {
+	var newWatcher []watchClient
+	for _, client := range s.watchClients {
+		if client.name == name {
+			continue
 		}
-		s.volChan = volChan
-		for vol := range s.volChan {
-			for _, client := range s.watchClients {
-				logrus.Infof("Sending vol to client %v", client.name)
-				client.callBack(vol)
+		newWatcher = append(newWatcher, client)
+	}
+	s.watchClients = newWatcher
+	logrus.Infof("removed watcher %v", name)
+}
+
+func (s *VolumeServer) startWatcher(ctx context.Context) error {
+
+	if s.volChan == nil {
+		for {
+			logrus.Infof("Started watcher")
+			volChan, err := s.driver(ctx).GetVolumeWatcher(nil, make(map[string]string))
+			if err != nil {
+				return status.Errorf(
+					codes.Internal,
+					"Failed to enumerate volumes: %v",
+					err.Error())
+			}
+			s.volChan = volChan
+			for vol := range s.volChan {
+				for _, client := range s.watchClients {
+					logrus.Infof("Sending vol to client %v", client.name)
+					client.callBack(vol)
+				}
 			}
 		}
 	}
@@ -531,9 +546,11 @@ func (s *VolumeServer) Watch(
 	}
 
 	s.registerWatcher(client)
+	defer s.removeWatcher(client.name)
 
 	// spawn err-group process.
 	group.Go(func() error {
+		logrus.Infof("Enumerating before")
 		if vols, err := s.driver(ctx).Enumerate(nil, req.Labels); err != nil {
 			return status.Errorf(
 				codes.Internal,
@@ -554,7 +571,6 @@ func (s *VolumeServer) Watch(
 				}
 			}
 			for {
-
 				for vol := range client.volChan {
 					logrus.Infof("Got response for vol %v", vol)
 					if !vol.IsPermitted(ctx, api.Ownership_Read) {

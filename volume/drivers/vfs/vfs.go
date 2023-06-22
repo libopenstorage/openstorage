@@ -43,7 +43,6 @@ type driver struct {
 
 // Init Driver intialization.
 func Init(params map[string]string) (volume.VolumeDriver, error) {
-	volChan := make(chan *api.Volume)
 	return &driver{
 		volume.IONotSupported,
 		volume.BlockNotSupported,
