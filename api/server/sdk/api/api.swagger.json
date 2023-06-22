@@ -10499,7 +10499,7 @@
             "description": "An unexpected error response."
           }
         },
-        "summary": "Controller Publish Volume\nPublish volume for winshares, this receives the ip and sharename",
+        "summary": "Controller Publish Volume\nPublish volume for winshares,  receives the csi context.\nThe csi context includes the ip of the node exporting the volume,\nProtocol to use to mount the volume, protocol specific details like\nshare/export/device identification",
         "tags": [
           "OpenStorageVolume"
         ]
@@ -10832,7 +10832,7 @@
             "description": "An unexpected error response."
           }
         },
-        "summary": "Controller Unpublish Volume\nDrops the reference on the sharename",
+        "summary": "Controller Unpublish Volume\nDrops the reference on the volume",
         "tags": [
           "OpenStorageVolume"
         ]

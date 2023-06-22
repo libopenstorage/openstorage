@@ -121,8 +121,6 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 	ctx context.Context,
 	req *csi.ControllerPublishVolumeRequest,
 ) (*csi.ControllerPublishVolumeResponse, error) {
-
-	logrus.Debugf("Calling Controller Publish Volume in the csi controller")
 	// check if volumeID is present and volume is available on SP
 	if req.VolumeId == "" {
 		return nil, status.Error(codes.InvalidArgument, "VolumeID is mandatory in ControllerPublishVolume request")
@@ -131,7 +129,7 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 
 	// if nodeID is set, and node is actually present on SP
 	if req.NodeId == "" {
-		return nil, status.Error(codes.InvalidArgument, "NodeID is mandatory in CPVolume request")
+		return nil, status.Error(codes.InvalidArgument, "NodeID is mandatory in ControllerPublishVolume request")
 	}
 	// if VolumeCapability is nil, fail.
 	if req.VolumeCapability == nil {
@@ -145,6 +143,12 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 		return nil, err
 	}
 
+	if !vol.Spec.Winshare {
+		// Ignore for the timebeing
+		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
+		return &csi.ControllerPublishVolumeResponse{}, nil
+	}
+
 	// have the volumeID, submit a new grpc request to px driver to prepare
 	// volume to be published only if the volume propery is winshare.
 	conn, err := s.getRemoteConn(ctx)
@@ -156,12 +160,6 @@ func (s *OsdCsiServer) ControllerPublishVolume(
 				codes.Unavailable,
 				"Unable to connect to the SDK server: %v", err)
 		}
-	}
-
-	if !vol.Spec.Winshare {
-		// Ignore for the timebeing
-		logrus.Debugf("ControllerPublishVolume: Not a Windows volume, return")
-		return &csi.ControllerPublishVolumeResponse{}, nil
 	}
 
 	// TODO: Add checks for capability and readonly, etc.

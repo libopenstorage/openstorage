@@ -165,38 +165,128 @@ func TestControllerGetVolume(t *testing.T) {
 // TODO: Temporarily skipping Publish/Unpublish tests till they are fixed
 func TestControllerPublishVolume(t *testing.T) {
 	// Create server and client connection
-	t.Skip("TestControllerPublishVolume")
 	s := newTestServer(t)
 	defer s.Stop()
 
-	// Make a call
+	// Normal Flow.
+	size := int64(4 * 1024 * 1024)
+	used := int64(1 * 1024 * 1024)
+	id := "myvol123"
+	vol := &api.Volume{
+		Id: id,
+		Locator: &api.VolumeLocator{
+			Name: id,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(size),
+		},
+		Usage:  uint64(used),
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
+	)
+
+	// Clean call.
 	c := csi.NewControllerClient(s.Conn())
-	_, err := c.ControllerPublishVolume(context.Background(), &csi.ControllerPublishVolumeRequest{})
+	_, err := c.ControllerPublishVolume(context.Background(),
+		&csi.ControllerPublishVolumeRequest{
+			VolumeId: id,
+			NodeId: id,
+			VolumeCapability: &csi.VolumeCapability{},})
+	assert.NoError(t, err)
+
+	// Make a call without volumeid.
+	_, err = c.ControllerPublishVolume(context.Background(),
+		&csi.ControllerPublishVolumeRequest{
+			NodeId: id,
+			VolumeCapability: &csi.VolumeCapability{},})
 	assert.NotNil(t, err)
 
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 
-	assert.Equal(t, serverError.Code(), codes.Unimplemented)
-	assert.Contains(t, serverError.Message(), "not supported")
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "Volume")
+
+	// Make a call without Nodeid.
+	_, err = c.ControllerPublishVolume(context.Background(),
+		&csi.ControllerPublishVolumeRequest{
+			VolumeId: id,
+			VolumeCapability: &csi.VolumeCapability{},})
+	assert.NotNil(t, err)
+
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "NodeID")
+
+	// Make a call without Capabilities.
+	_, err = c.ControllerPublishVolume(context.Background(),
+		&csi.ControllerPublishVolumeRequest{
+			NodeId: id,
+			VolumeId: id,})
+	assert.NotNil(t, err)
+
+	serverError, ok = status.FromError(err)
+	assert.True(t, ok)
+
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "VolumeCaps")
+
 }
 
 func TestControllerUnPublishVolume(t *testing.T) {
 	// Create server and client connection
-	t.Skip("TestControllerUnpublishVolume")
 	s := newTestServer(t)
 	defer s.Stop()
 
-	// Make a call
+	size := int64(4 * 1024 * 1024)
+	used := int64(1 * 1024 * 1024)
+	id := "myvol123"
+	vol := &api.Volume{
+		Id: id,
+		Locator: &api.VolumeLocator{
+			Name: id,
+		},
+		Spec: &api.VolumeSpec{
+			Size: uint64(size),
+		},
+		Usage:  uint64(used),
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
+	}
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{id}).
+			Return([]*api.Volume{
+				vol,
+			}, nil).
+			AnyTimes(),
+	)
+
 	c := csi.NewControllerClient(s.Conn())
-	_, err := c.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{})
+
+	// Clean call
+	_, err := c.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{VolumeId:id})
+	assert.NoError(t, err)
+
+	// Without volumeid
+	_, err = c.ControllerUnpublishVolume(context.Background(), &csi.ControllerUnpublishVolumeRequest{})
 	assert.NotNil(t, err)
 
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
 
-	assert.Equal(t, serverError.Code(), codes.Unimplemented)
-	assert.Contains(t, serverError.Message(), "not supported")
+	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
+	assert.Contains(t, serverError.Message(), "VolumeID")
 }
 
 func TestControllerValidateVolumeCapabilitiesBadArguments(t *testing.T) {
