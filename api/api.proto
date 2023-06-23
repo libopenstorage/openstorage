@@ -114,6 +114,7 @@ enum IoProfile {
   IO_PROFILE_SYNC_SHARED = 5;
   IO_PROFILE_AUTO = 6;
   IO_PROFILE_NONE = 7;
+  IO_PROFILE_JOURNAL = 8;
 }
 
 // VolumeState represents the state of a volume.
