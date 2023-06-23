@@ -114,6 +114,7 @@ enum IoProfile {
   IO_PROFILE_SYNC_SHARED = 5;
   IO_PROFILE_AUTO = 6;
   IO_PROFILE_NONE = 7;
+  IO_PROFILE_JOURNAL = 8;
 }
 
 // VolumeState represents the state of a volume.
@@ -5285,7 +5286,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 36;
+    Patch = 37;
   }
 
   // The following cannot be set to use the enum Version because the REST
