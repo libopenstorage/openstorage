@@ -118,16 +118,16 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 			}
 		}
 	}
-	go testWatcher(inst)
+	go volumeGenerator(inst)
 	logrus.Println("Fake driver initialized")
 	return inst, nil
 }
 
-func testWatcher(d *driver) {
+// volumeGenerator periocally
+func volumeGenerator(d *driver) {
 	iter := 0
 	for {
 		sleepRand := rand.Intn(10)
-		logrus.Infof("Sleeping for %v", sleepRand)
 		time.Sleep(time.Duration(sleepRand) * time.Second)
 		result := rand.Int31()
 		logrus.Infof("sending result %v with iteration %v", result, iter)
@@ -135,7 +135,6 @@ func testWatcher(d *driver) {
 			Id: fmt.Sprintf("%v-%v", result, iter),
 		}
 		d.volChan <- &response
-
 		iter += 1
 	}
 }
