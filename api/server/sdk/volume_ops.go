@@ -476,7 +476,6 @@ func (w *watchClient) callBack(vol *api.Volume) {
 }
 
 func (s *VolumeServer) registerWatcher(client watchClient) {
-	logrus.Infof("regsiter client %v", client.name)
 	s.watchClients = append(s.watchClients, client)
 }
 
@@ -489,32 +488,31 @@ func (s *VolumeServer) removeWatcher(name string) {
 		newWatcher = append(newWatcher, client)
 	}
 	s.watchClients = newWatcher
-	logrus.Infof("removed watcher %v", name)
 }
 
 func (s *VolumeServer) startWatcher(ctx context.Context) error {
-
-	if s.volChan == nil {
-		for {
-			logrus.Infof("Started watcher")
-			volChan, err := s.driver(ctx).GetVolumeWatcher(nil, make(map[string]string))
+	for {
+		if s.driver(ctx) == nil {
+			continue
+		}
+		if s.volChan == nil {
+			volChan, err := s.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
 			if err != nil {
 				return status.Errorf(
 					codes.Internal,
-					"Failed to enumerate volumes: %v",
+					"Failed to get volumes watcher: %v",
 					err.Error())
 			}
 			s.volChan = volChan
 			for vol := range s.volChan {
 				for _, client := range s.watchClients {
-					logrus.Infof("Sending vol to client %v", client.name)
 					client.callBack(vol)
 				}
 			}
+
 		}
 	}
 
-	return nil
 }
 
 func (s *VolumeServer) Watch(
@@ -525,8 +523,6 @@ func (s *VolumeServer) Watch(
 	if s.cluster() == nil || s.driver(ctx) == nil {
 		return status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
-
-	go s.startWatcher(ctx)
 
 	// if input has deadline, ensure graceful exit within that deadline.
 	deadline, ok := ctx.Deadline()
@@ -550,8 +546,7 @@ func (s *VolumeServer) Watch(
 
 	// spawn err-group process.
 	group.Go(func() error {
-		logrus.Infof("Enumerating before")
-		if vols, err := s.driver(ctx).Enumerate(nil, req.Labels); err != nil {
+		if vols, err := s.driver(ctx).Enumerate(&api.VolumeLocator{}, nil); err != nil {
 			return status.Errorf(
 				codes.Internal,
 				"Failed to enumerate volumes: %v",
@@ -572,14 +567,13 @@ func (s *VolumeServer) Watch(
 			}
 			for {
 				for vol := range client.volChan {
-					logrus.Infof("Got response for vol %v", vol)
 					if !vol.IsPermitted(ctx, api.Ownership_Read) {
 						continue
 					}
 					resp := api.SdkVolumeWatchResponse{
 						Volume: vol,
-						Name:   "tmp",
-						Labels: make(map[string]string),
+						Name:   vol.Locator.Name,
+						Labels: vol.Locator.VolumeLabels,
 					}
 					if err := stream.Send(&resp); err != nil {
 						return err
@@ -600,7 +594,7 @@ func (s *VolumeServer) Watch(
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "error enumerating alerts: %v", err)
+			return status.Errorf(codes.Internal, "error watching volume: %v", err)
 		} else {
 			return nil
 		}

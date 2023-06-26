@@ -569,6 +569,7 @@ func (s *sdkGrpcServer) Start() error {
 		s.registerPrometheusMetrics(grpcServer)
 
 		s.registerServerExtensions(grpcServer)
+		go s.volumeServer.startWatcher(context.Background())
 
 		return grpcServer
 	})
