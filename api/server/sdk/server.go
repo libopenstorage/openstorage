@@ -580,7 +580,7 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-	go s.volumeServer.startWatcher(context.Background())
+
 	return nil
 }
 
