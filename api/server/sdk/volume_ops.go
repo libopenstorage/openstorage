@@ -472,12 +472,10 @@ type watchClient struct {
 }
 
 func (w *watchClient) callBack(vol *api.Volume) {
-	logrus.Infof("callback client got vol %v", vol.Locator.Name)
 	w.volChan <- vol
 }
 
 func (s *VolumeServer) registerWatcher(client watchClient) {
-	logrus.Infof("Registered with client %v", client.name)
 	s.watchClients = append(s.watchClients, client)
 }
 
@@ -507,9 +505,7 @@ func (s *VolumeServer) startWatcher(ctx context.Context) error {
 			}
 			s.volChan = volChan
 			for vol := range s.volChan {
-				logrus.Infof("central client got vol %v %v", vol.Locator.Name, len(s.volChan))
 				for _, client := range s.watchClients {
-					logrus.Infof("on my way to send to client %v", client.name)
 					go client.callBack(vol)
 				}
 			}
@@ -577,7 +573,6 @@ func (s *VolumeServer) Watch(
 			}
 
 			for vol := range client.volChan {
-				logrus.Infof("Client got vol %v", vol.Locator.Name)
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
