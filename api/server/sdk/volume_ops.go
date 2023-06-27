@@ -472,10 +472,12 @@ type watchClient struct {
 }
 
 func (w *watchClient) callBack(vol *api.Volume) {
+	logrus.Infof("callback client got vol %v", vol.Locator.Name)
 	w.volChan <- vol
 }
 
 func (s *VolumeServer) registerWatcher(client watchClient) {
+	logrus.Infof("Registered with client %v", client.name)
 	s.watchClients = append(s.watchClients, client)
 }
 
@@ -505,8 +507,10 @@ func (s *VolumeServer) startWatcher(ctx context.Context) error {
 			}
 			s.volChan = volChan
 			for vol := range s.volChan {
+				logrus.Infof("central client got vol %v %v", vol.Locator.Name, len(s.volChan))
 				for _, client := range s.watchClients {
-					client.callBack(vol)
+					logrus.Infof("on my way to send to client %v", client.name)
+					go client.callBack(vol)
 				}
 			}
 
@@ -517,7 +521,7 @@ func (s *VolumeServer) startWatcher(ctx context.Context) error {
 
 func (s *VolumeServer) Watch(
 	req *api.SdkVolumeWatchRequest,
-	stream api.OpenStorageVolume_WatchServer,
+	stream api.OpenStorageWatch_WatchServer,
 ) error {
 	ctx := stream.Context()
 	if s.cluster() == nil || s.driver(ctx) == nil {
@@ -538,7 +542,7 @@ func (s *VolumeServer) Watch(
 
 	client := watchClient{
 		name:    fmt.Sprintf("%v", rand.Intn(100)),
-		volChan: make(chan *api.Volume),
+		volChan: make(chan *api.Volume, 10),
 	}
 
 	s.registerWatcher(client)
@@ -561,28 +565,40 @@ func (s *VolumeServer) Watch(
 					Name:   vol.Locator.Name,
 					Labels: vol.Locator.VolumeLabels,
 				}
-				if err := stream.Send(&resp); err != nil {
+				vresp := api.SdkWatchResponse_VolumeEvent{
+					VolumeEvent: &resp,
+				}
+				r := api.SdkWatchResponse{
+					EventType: &vresp,
+				}
+				if err := stream.Send(&r); err != nil {
 					return err
 				}
 			}
-			for {
-				for vol := range client.volChan {
-					if !vol.IsPermitted(ctx, api.Ownership_Read) {
-						continue
-					}
-					resp := api.SdkVolumeWatchResponse{
-						Volume: vol,
-						Name:   vol.Locator.Name,
-						Labels: vol.Locator.VolumeLabels,
-					}
-					if err := stream.Send(&resp); err != nil {
-						return err
-					}
+
+			for vol := range client.volChan {
+				logrus.Infof("Client got vol %v", vol.Locator.Name)
+				if !vol.IsPermitted(ctx, api.Ownership_Read) {
+					continue
+				}
+				resp := api.SdkVolumeWatchResponse{
+					Volume: vol,
+					Name:   vol.Locator.Name,
+					Labels: vol.Locator.VolumeLabels,
+				}
+				vresp := api.SdkWatchResponse_VolumeEvent{
+					VolumeEvent: &resp,
+				}
+				r := api.SdkWatchResponse{
+					EventType: &vresp,
+				}
+				if err := stream.Send(&r); err != nil {
+					return err
 				}
 			}
 
 		}
-
+		return nil
 	})
 
 	// wait for err-group processes to be done

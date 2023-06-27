@@ -2514,14 +2514,23 @@ service OpenStorageVolume {
         };
     }
 
-    // Watch streams a list of volumes exist in the system.
-    rpc Watch(SdkVolumeWatchRequest)
-    returns (stream SdkVolumeWatchResponse) {
+
+}
+
+
+// OpenStorageWatcher is a service used to stream objects accessible by
+// openstorage API. Right now, we will only support Volumes.
+service OpenStorageWatch{
+
+    // Watch streams of volumes exist in the system.
+    rpc Watch(SdkWatchRequest)
+    returns (stream SdkWatchResponse) {
         option(google.api.http) = {
-          post: "/v1/volume/watch"
+          post: "/v1/watch"
           body: "*"
         };
     }
+
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -3774,6 +3783,23 @@ message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
 // Defines the request to watch a volume
+message SdkWatchRequest {
+  // one of event type
+  oneof event_type {
+    // WatchRequest for volume
+    SdkVolumeWatchRequest volume_event = 200;
+  }
+}
+
+
+message SdkWatchResponse {
+  // one of event response
+  oneof event_type {
+    SdkVolumeWatchResponse volume_event = 200;
+  }
+}
+
+
 message SdkVolumeWatchRequest {
   // Options during inspection
   map<string, string> labels = 1;

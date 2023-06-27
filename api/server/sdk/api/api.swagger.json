@@ -4561,7 +4561,6 @@
             "type": "object"
           }
         },
-        "title": "Defines the request to watch a volume",
         "type": "object"
       },
       "apiSdkVolumeWatchResponse": {
@@ -4582,6 +4581,23 @@
           }
         },
         "title": "Defines the response when watching a volume",
+        "type": "object"
+      },
+      "apiSdkWatchRequest": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
+          }
+        },
+        "title": "Defines the request to watch a volume",
+        "type": "object"
+      },
+      "apiSdkWatchResponse": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
+          }
+        },
         "type": "object"
       },
       "apiSeverityType": {
@@ -10054,56 +10070,6 @@
         ]
       }
     },
-    "/v1/volume/watch": {
-      "post": {
-        "operationId": "OpenStorageVolume_Watch",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "properties": {
-                    "error": {
-                      "$ref": "#/components/schemas/runtimeStreamError"
-                    },
-                    "result": {
-                      "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
-                    }
-                  },
-                  "title": "Stream result of apiSdkVolumeWatchResponse",
-                  "type": "object"
-                }
-              }
-            },
-            "description": "A successful response.(streaming responses)"
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
-          }
-        },
-        "summary": "Watch streams a list of volumes exist in the system.",
-        "tags": [
-          "OpenStorageVolume"
-        ]
-      }
-    },
     "/v1/volumemigrate": {
       "get": {
         "operationId": "OpenStorageMigrate_Status",
@@ -10897,6 +10863,56 @@
         "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
         "tags": [
           "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/watch": {
+      "post": {
+        "operationId": "OpenStorageWatch_Watch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkWatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/runtimeStreamError"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/apiSdkWatchResponse"
+                    }
+                  },
+                  "title": "Stream result of apiSdkWatchResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response.(streaming responses)"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Watch streams of volumes exist in the system.",
+        "tags": [
+          "OpenStorageWatch"
         ]
       }
     }

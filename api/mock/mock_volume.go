@@ -276,20 +276,6 @@ func (mr *MockOpenStorageVolumeServerMockRecorder) VolumeCatalog(arg0, arg1 inte
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeCatalog", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).VolumeCatalog), arg0, arg1)
 }
 
-// Watch mocks base method.
-func (m *MockOpenStorageVolumeServer) Watch(arg0 *api.SdkVolumeWatchRequest, arg1 api.OpenStorageVolume_WatchServer) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Watch", arg0, arg1)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// Watch indicates an expected call of Watch.
-func (mr *MockOpenStorageVolumeServerMockRecorder) Watch(arg0, arg1 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).Watch), arg0, arg1)
-}
-
 // MockOpenStorageVolumeClient is a mock of OpenStorageVolumeClient interface.
 type MockOpenStorageVolumeClient struct {
 	ctrl     *gomock.Controller
@@ -631,24 +617,4 @@ func (mr *MockOpenStorageVolumeClientMockRecorder) VolumeCatalog(arg0, arg1 inte
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeCatalog", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).VolumeCatalog), varargs...)
-}
-
-// Watch mocks base method.
-func (m *MockOpenStorageVolumeClient) Watch(arg0 context.Context, arg1 *api.SdkVolumeWatchRequest, arg2 ...grpc.CallOption) (api.OpenStorageVolume_WatchClient, error) {
-	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1}
-	for _, a := range arg2 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "Watch", varargs...)
-	ret0, _ := ret[0].(api.OpenStorageVolume_WatchClient)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Watch indicates an expected call of Watch.
-func (mr *MockOpenStorageVolumeClientMockRecorder) Watch(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1}, arg2...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Watch", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).Watch), varargs...)
 }

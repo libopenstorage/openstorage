@@ -101,7 +101,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                    kv,
-		volChan:               make(chan *api.Volume),
+		volChan:               make(chan *api.Volume, 10),
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -133,6 +133,10 @@ func volumeGenerator(d *driver) {
 		logrus.Infof("sending result %v with iteration %v", result, iter)
 		response := api.Volume{
 			Id: fmt.Sprintf("%v-%v", result, iter),
+			Locator: &api.VolumeLocator{
+				Name:         fmt.Sprintf("%v-%v", result, iter),
+				VolumeLabels: make(map[string]string),
+			},
 		}
 		d.volChan <- &response
 		iter += 1

@@ -207,6 +207,7 @@ type sdkGrpcServer struct {
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	bucketServer          *BucketServer
+	watcherServer         *WathcerServer
 }
 
 // Interface check
@@ -458,6 +459,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.bucketServer = &BucketServer{
 		server: s,
 	}
+	s.watcherServer = &WathcerServer{
+		volumeServer: s.volumeServer,
+	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
@@ -546,6 +550,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
 		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
+		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
@@ -569,7 +574,6 @@ func (s *sdkGrpcServer) Start() error {
 		s.registerPrometheusMetrics(grpcServer)
 
 		s.registerServerExtensions(grpcServer)
-		go s.volumeServer.startWatcher(context.Background())
 
 		return grpcServer
 	})
@@ -577,7 +581,7 @@ func (s *sdkGrpcServer) Start() error {
 		return err
 	}
 
-	return nil
+	return s.volumeServer.startWatcher(context.Background())
 }
 
 func (s *sdkGrpcServer) registerPrometheusMetrics(grpcServer *grpc.Server) {
