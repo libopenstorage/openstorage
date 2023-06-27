@@ -118,7 +118,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 			}
 		}
 	}
-	go volumeGenerator(inst)
+	// go volumeGenerator(inst)
 	logrus.Println("Fake driver initialized")
 	return inst, nil
 }
