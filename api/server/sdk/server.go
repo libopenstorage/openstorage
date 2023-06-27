@@ -580,8 +580,8 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-
-	return s.volumeServer.startWatcher(context.Background())
+	go s.volumeServer.startWatcher(context.Background())
+	return nil
 }
 
 func (s *sdkGrpcServer) registerPrometheusMetrics(grpcServer *grpc.Server) {
