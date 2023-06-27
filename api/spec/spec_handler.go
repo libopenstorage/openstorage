@@ -204,6 +204,7 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 		HaLevel:   1,
 		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
 		Xattr:     api.Xattr_COW_ON_DEMAND,
+		FpPreference: true,
 	}
 }
 
@@ -229,6 +230,9 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 	// a variable outside the loop and then set it in the proper field at the end
 	var pureBackendVolName *string
 
+	// Set Fp preference to true by default
+	// If user has set the option it will get overridden
+	spec.FpPreference = true
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
