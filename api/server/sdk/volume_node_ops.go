@@ -25,6 +25,9 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"github.com/sirupsen/logrus"
+	"github.com/portworx/sched-ops/k8s/core"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // Attach volume to given node
@@ -122,6 +125,20 @@ func (s *VolumeServer) Detach(
 	return &api.SdkVolumeDetachResponse{}, nil
 }
 
+func getNodeIP(nodeName string) (string, bool) {
+	node, err := core.Instance().GetNodeByName(nodeName)
+	if err == nil {
+		logrus.Infof("Node: %v", node.Status.Addresses)
+		for _, addr := range node.Status.Addresses {
+			switch addr.Type {
+			case corev1.NodeInternalIP:
+				return addr.Address, true
+			}
+		}
+	}
+	return "", false
+}
+
 func (s *VolumeServer) ControllerPublish(
 	ctx context.Context,
 	req *api.SdkVolumeControllerPublishRequest,
@@ -135,6 +152,13 @@ func (s *VolumeServer) ControllerPublish(
 	}
 
 	opts := make(map[string]string)
+	ip, found := getNodeIP(req.GetNodeId())
+	if found {
+		opts["CallingNodeIP"] = ip
+	} else {
+		opts["ExportToALL"] = "All"
+	}
+	/*
 	context, err := s.driver(ctx).ControllerPublish(ctx, req.GetVolumeId(), req.GetNodeId(), opts)
 	if err != nil {
 		return nil, status.Errorf(
@@ -142,7 +166,42 @@ func (s *VolumeServer) ControllerPublish(
 			"Failed to publish the volume %v: %v", req.GetVolumeId(),
 			err.Error())
 	}
+	*/
 
+	_, err := s.driver(ctx).Attach(ctx, req.GetVolumeId(), opts)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to publish the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
+	err = s.driver(ctx).Mount(ctx, req.GetVolumeId(), "/dummyMountPoint", opts)
+	if err != nil {
+		s.driver(ctx).Detach(ctx, req.GetVolumeId(), opts)
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to mount the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
+	// Inspect volume 
+	resp, err := s.Inspect(ctx, &api.SdkVolumeInspectRequest{
+		VolumeId: req.GetVolumeId(),
+	})
+	if err != nil {
+		s.driver(ctx).Unmount(ctx, req.GetVolumeId(), "/dummyMountPoints", opts)
+		s.driver(ctx).Detach(ctx, req.GetVolumeId(), opts)
+		return nil, status.Errorf(
+			codes.Internal,
+			"Failed to inspect the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
+	volume := resp.GetVolume()
+
+	context := make(map[string]string)
+	context["csimode"] = "nfs"
+	context["endpointKey"] = volume.GetAttachedOn()
+	context["shareKey"] = req.GetVolumeId()
+	context["exportPathKey"] = volume.GetAttachPath()[0]
 	return &api.SdkVolumeControllerPublishResponse{
 		Context: context,
 	}, nil
@@ -161,14 +220,26 @@ func (s *VolumeServer) ControllerUnpublish(
 	}
 
 	opts := make(map[string]string)
-	err := s.driver(ctx).ControllerUnpublish(ctx, req.GetVolumeId(), req.GetNodeId(), opts)
+	ip, found := getNodeIP(req.GetNodeId())
+	if found {
+		opts["CallingNodeIP"] = ip
+	} else {
+		opts["ExportToALL"] = "All"
+	}
+
+	err := s.driver(ctx).Unmount(ctx, req.GetVolumeId(), "/dummyMountPoint", opts)
 	if err != nil {
-		return nil, status.Errorf(
-			codes.Internal,
-			"Failed to unpublish the volume %v: %v", req.GetVolumeId(),
+		logrus.Warnf(
+			"Failed to unmount the volume %v: %v", req.GetVolumeId(),
 			err.Error())
 	}
 
+	err = s.driver(ctx).Detach(ctx, req.GetVolumeId(), opts)
+	if err != nil {
+		logrus.Warnf(
+			"Failed to detach the volume %v: %v", req.GetVolumeId(),
+			err.Error())
+	}
 	return &api.SdkVolumeControllerUnpublishResponse{}, nil
 }
 
