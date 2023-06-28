@@ -207,7 +207,8 @@ type sdkGrpcServer struct {
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	bucketServer          *BucketServer
-	watcherServer         *WathcerServer
+	watcherServer         *WatcherServer
+	watchServerDone       chan bool
 }
 
 // Interface check
@@ -403,8 +404,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
-		alertHandler: config.AlertsFilterDeleter,
-		policyServer: config.StoragePolicy,
+		alertHandler:    config.AlertsFilterDeleter,
+		policyServer:    config.StoragePolicy,
+		watchServerDone: make(chan bool),
 	}
 
 	s.identityServer = &IdentityServer{
@@ -459,7 +461,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.bucketServer = &BucketServer{
 		server: s,
 	}
-	s.watcherServer = &WathcerServer{
+	s.watcherServer = &WatcherServer{
 		volumeServer: s.volumeServer,
 	}
 
@@ -580,7 +582,7 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-
+	go s.watcherServer.startWatcher(context.Background(), s.watchServerDone)
 	return nil
 }
 

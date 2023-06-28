@@ -2,10 +2,12 @@ package sdk
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/pborman/uuid"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -15,12 +17,13 @@ const (
 	volumeEventType = "Volume"
 )
 
-type WathcerServer struct {
+type WatcherServer struct {
 	volumeServer *VolumeServer
 
 	watchConnections map[string][]*watchConnection
-	volChan          chan *api.Volume
-	nodeChan         chan *api.Node
+	volumeChannel    chan *api.Volume
+	done             chan bool
+	sync.RWMutex
 }
 
 // Watch streams a list of events back to clients. Events are resources that can typically fetch with openstorage API, such as Volumes,
@@ -28,8 +31,7 @@ type WathcerServer struct {
 //
 // Implementation note: the flow of data starts from porx ETCD changes, then the data will be send to openstorage via a golang channel.
 // Once the event object arrives at openstorage, it will be redistributed to a list of watch connections via another set of channels.
-func (w *WathcerServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWatch_WatchServer) error {
-	go w.startWatcher(context.Background())
+func (w *WatcherServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWatch_WatchServer) error {
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
@@ -38,24 +40,38 @@ func (w *WathcerServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWa
 
 type watchConnection struct {
 	name         string
+	eventType    string
 	eventChannel chan interface{}
 }
 
-func (w *watchConnection) callBack(vol interface{}) {
-	w.eventChannel <- vol
+func (w *watchConnection) callBack(eventData interface{}) {
+	select {
+	case w.eventChannel <- eventData:
+		logrus.Debugf("successfully callback event for %v", w.name)
+	default:
+		logrus.Warnf("failed to send eventData for %v with event type %v", w.name, w.eventType)
+	}
+
 }
 
-func (s *WathcerServer) registerWatcher(client *watchConnection, eventType string) {
+func (s *WatcherServer) registerWatcher(client *watchConnection, eventType string) {
+	s.Lock()
+	defer s.Unlock()
 	if s.watchConnections == nil {
 		s.watchConnections = make(map[string][]*watchConnection)
 	}
 	s.watchConnections[eventType] = append(s.watchConnections[eventType], client)
+	logrus.Debugf("successfully register watcher %v", client.name)
 }
 
-func (s *WathcerServer) removeWatcher(name string, eventType string) {
+func (s *WatcherServer) removeWatcher(name string, eventType string) {
+	s.Lock()
+	defer s.Unlock()
 	var newWatchers []*watchConnection
 	for _, client := range s.watchConnections[eventType] {
 		if client.name == name {
+			// cleanup client go channel
+			close(client.eventChannel)
 			continue
 		}
 		newWatchers = append(newWatchers, client)
@@ -63,39 +79,71 @@ func (s *WathcerServer) removeWatcher(name string, eventType string) {
 	s.watchConnections[eventType] = newWatchers
 }
 
-func (s *WathcerServer) startWatcher(ctx context.Context) error {
-	go s.startVolumeWatcher(ctx)
-	return nil
+func (s *WatcherServer) startWatcher(ctx context.Context, done chan bool) error {
+	group, _ := errgroup.WithContext(ctx)
+	errChan := make(chan error)
+	group.Go(func() error {
+		return s.startVolumeWatcher(ctx, done)
+	})
+
+	// wait for err-group processes to be done
+	go func() {
+		errChan <- group.Wait()
+	}()
+
+	// wait only as long as context deadline allows
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return status.Errorf(codes.Internal, "error starting watcher: %v", err)
+		} else {
+			return nil
+		}
+	case <-ctx.Done():
+		return status.Error(codes.DeadlineExceeded,
+			"Deadline is reached, server side func exiting")
+	}
 }
 
-func (s *WathcerServer) startVolumeWatcher(ctx context.Context) error {
+func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) error {
+	if s.watchConnections == nil {
+		s.watchConnections = make(map[string][]*watchConnection)
+	}
+
 	for {
 		if s.volumeServer.driver(ctx) == nil {
 			continue
 		}
 
-		if s.watchConnections == nil {
-			s.watchConnections = make(map[string][]*watchConnection)
+		volumeChannel, _ := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
+		if volumeChannel == nil {
+			continue
 		}
+		s.volumeChannel = volumeChannel
+		goto volumeWatch
+	}
+	// volChan should be stuck here to wait for incoming events
+volumeWatch:
+	for {
 
-		volChan, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
-		if err != nil {
-			return status.Errorf(
-				codes.Internal,
-				"Failed to get volumes watcher: %v",
-				err.Error())
-		}
-		s.volChan = volChan
-		// volChan should be stuck here to wait for incoming events
-		for vol := range s.volChan {
+		select {
+		case vol := <-s.volumeChannel:
+			logrus.Infof("In waiting for volume")
+			s.RLock()
 			for _, client := range s.watchConnections[volumeEventType] {
 				go client.callBack(vol)
 			}
+			s.RUnlock()
+		case <-done:
+			logrus.Infof("exiting volume watcher\n")
+			break volumeWatch
 		}
 	}
+
+	return nil
 }
 
-func (w *WathcerServer) volumeWatch(
+func (w *WatcherServer) volumeWatch(
 	req *api.SdkVolumeWatchRequest,
 	stream api.OpenStorageWatch_WatchServer,
 ) error {
@@ -115,6 +163,7 @@ func (w *WathcerServer) volumeWatch(
 
 	client := watchConnection{
 		name:         uuid.New(),
+		eventType:    volumeEventType,
 		eventChannel: make(chan interface{}, 2),
 	}
 
