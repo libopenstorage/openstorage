@@ -17413,7 +17413,8 @@ type SdkWatchRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// one of event type
+	// event_type is an option to indicate the type of openStorage event to watch on.
+	// examples of options are volume, node, disk, etc
 	//
 	// Types that are assignable to EventType:
 	//	*SdkWatchRequest_VolumeEvent
@@ -17471,18 +17472,20 @@ type isSdkWatchRequest_EventType interface {
 }
 
 type SdkWatchRequest_VolumeEvent struct {
-	// WatchRequest for volume
+	// watch request for volume event
 	VolumeEvent *SdkVolumeWatchRequest `protobuf:"bytes,1,opt,name=volume_event,json=volumeEvent,proto3,oneof"`
 }
 
 func (*SdkWatchRequest_VolumeEvent) isSdkWatchRequest_EventType() {}
 
+// Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc
 type SdkWatchResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// one of event response
+	// event_type is an option to indicate the type of openStorage event to watch on.
+	// examples of options are volume, node, disk, etc
 	//
 	// Types that are assignable to EventType:
 	//	*SdkWatchResponse_VolumeEvent
@@ -17545,6 +17548,8 @@ type SdkWatchResponse_VolumeEvent struct {
 
 func (*SdkWatchResponse_VolumeEvent) isSdkWatchResponse_EventType() {}
 
+// Defines the request to watch an openstorage volume event for the given label
+// if the label is empty, it returns all the volume events
 type SdkVolumeWatchRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -17593,7 +17598,7 @@ func (x *SdkVolumeWatchRequest) GetLabels() map[string]string {
 	return nil
 }
 
-// Defines the response when watching a volume
+// Defines the response containing an volume with a state changed
 type SdkVolumeWatchResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache

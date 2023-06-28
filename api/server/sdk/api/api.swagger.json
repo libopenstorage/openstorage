@@ -4561,6 +4561,7 @@
             "type": "object"
           }
         },
+        "title": "Defines the request to watch an openstorage volume event for the given label\nif the label is empty, it returns all the volume events",
         "type": "object"
       },
       "apiSdkVolumeWatchResponse": {
@@ -4580,7 +4581,7 @@
             "$ref": "#/components/schemas/apiVolume"
           }
         },
-        "title": "Defines the response when watching a volume",
+        "title": "Defines the response containing an volume with a state changed",
         "type": "object"
       },
       "apiSdkWatchRequest": {
@@ -4598,6 +4599,7 @@
             "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
           }
         },
+        "title": "Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc",
         "type": "object"
       },
       "apiSeverityType": {

@@ -3785,28 +3785,31 @@ message SdkVolumeSnapshotScheduleUpdateResponse {
 
 // Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc
 message SdkWatchRequest {
-  // one of event type
+  // event_type is an option to indicate the type of openStorage event to watch on.
+  // examples of options are volume, node, disk, etc
   oneof event_type {
-    // WatchRequest for volume
+    // watch request for volume event
     SdkVolumeWatchRequest volume_event = 1;
   }
 }
 
-
+// Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc
 message SdkWatchResponse {
-  // one of event response
+  // event_type is an option to indicate the type of openStorage event to watch on.
+  // examples of options are volume, node, disk, etc
   oneof event_type {
     SdkVolumeWatchResponse volume_event = 1;
   }
 }
 
-
+// Defines the request to watch an openstorage volume event for the given label
+// if the label is empty, it returns all the volume events
 message SdkVolumeWatchRequest {
   // Options during watch
   map<string, string> labels = 1;
 }
 
-// Defines the response when watching a volume
+// Defines the response containing an volume with a state changed
 message SdkVolumeWatchResponse {
   // Information about the volume
   Volume volume = 1;
