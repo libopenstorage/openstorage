@@ -2,21 +2,25 @@ package sdk
 
 import (
 	"context"
-	"fmt"
-	"math/rand"
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/pborman/uuid"
 	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
 
+const (
+	volumeEventType = "Volume"
+)
+
 type WathcerServer struct {
 	volumeServer *VolumeServer
 
-	watchConnections []*watchConnection
+	watchConnections map[string][]*watchConnection
 	volChan          chan *api.Volume
+	nodeChan         chan *api.Node
 }
 
 // Watch streams a list of events back to clients. Events are resources that can typically fetch with openstorage API, such as Volumes,
@@ -33,36 +37,45 @@ func (w *WathcerServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWa
 }
 
 type watchConnection struct {
-	name    string
-	volChan chan *api.Volume
+	name         string
+	eventChannel chan interface{}
 }
 
-func (w *watchConnection) callBack(vol *api.Volume) {
-	w.volChan <- vol
+func (w *watchConnection) callBack(vol interface{}) {
+	w.eventChannel <- vol
 }
 
-func (s *WathcerServer) registerWatcher(client *watchConnection) {
-	s.watchConnections = append(s.watchConnections, client)
+func (s *WathcerServer) registerWatcher(client *watchConnection, eventType string) {
+	if s.watchConnections == nil {
+		s.watchConnections = make(map[string][]*watchConnection)
+	}
+	s.watchConnections[eventType] = append(s.watchConnections[eventType], client)
 }
 
-func (s *WathcerServer) removeWatcher(name string) {
-	defer close(s.volChan)
-
+func (s *WathcerServer) removeWatcher(name string, eventType string) {
 	var newWatchers []*watchConnection
-	for _, client := range s.watchConnections {
+	for _, client := range s.watchConnections[eventType] {
 		if client.name == name {
 			continue
 		}
 		newWatchers = append(newWatchers, client)
 	}
-	s.watchConnections = newWatchers
-
+	s.watchConnections[eventType] = newWatchers
 }
 
 func (s *WathcerServer) startWatcher(ctx context.Context) error {
+	go s.startVolumeWatcher(ctx)
+	return nil
+}
+
+func (s *WathcerServer) startVolumeWatcher(ctx context.Context) error {
 	for {
 		if s.volumeServer.driver(ctx) == nil {
 			continue
+		}
+
+		if s.watchConnections == nil {
+			s.watchConnections = make(map[string][]*watchConnection)
 		}
 
 		volChan, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
@@ -75,21 +88,19 @@ func (s *WathcerServer) startWatcher(ctx context.Context) error {
 		s.volChan = volChan
 		// volChan should be stuck here to wait for incoming events
 		for vol := range s.volChan {
-			for _, client := range s.watchConnections {
+			for _, client := range s.watchConnections[volumeEventType] {
 				go client.callBack(vol)
 			}
 		}
-
 	}
-
 }
 
-func (s *WathcerServer) volumeWatch(
+func (w *WathcerServer) volumeWatch(
 	req *api.SdkVolumeWatchRequest,
 	stream api.OpenStorageWatch_WatchServer,
 ) error {
 	ctx := stream.Context()
-	if s.volumeServer.cluster() == nil || s.volumeServer.driver(ctx) == nil {
+	if w.volumeServer.cluster() == nil || w.volumeServer.driver(ctx) == nil {
 		return status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 
@@ -102,20 +113,20 @@ func (s *WathcerServer) volumeWatch(
 		defer cancel()
 	}
 
+	client := watchConnection{
+		name:         uuid.New(),
+		eventChannel: make(chan interface{}, 2),
+	}
+
+	w.registerWatcher(&client, volumeEventType)
+	defer w.removeWatcher(client.name, volumeEventType)
+
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 
-	client := watchConnection{
-		name:    fmt.Sprintf("%v", rand.Intn(100)),
-		volChan: make(chan *api.Volume, 10),
-	}
-
-	s.registerWatcher(&client)
-	defer s.removeWatcher(client.name)
-
 	// spawn err-group process.
 	group.Go(func() error {
-		if vols, err := s.volumeServer.driver(ctx).Enumerate(&api.VolumeLocator{}, nil); err != nil {
+		if vols, err := w.volumeServer.driver(ctx).Enumerate(&api.VolumeLocator{}, nil); err != nil {
 			return status.Errorf(
 				codes.Internal,
 				"Failed to enumerate volumes: %v",
@@ -131,7 +142,11 @@ func (s *WathcerServer) volumeWatch(
 				}
 			}
 
-			for vol := range client.volChan {
+			for event := range client.eventChannel {
+				var vol *api.Volume
+				if vol, ok = event.(*api.Volume); !ok {
+					continue
+				}
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
