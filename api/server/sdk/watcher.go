@@ -15,41 +15,48 @@ import (
 type WathcerServer struct {
 	volumeServer *VolumeServer
 
-	watchClients []watchClient
-	volChan      chan *api.Volume
+	watchConnections []*watchConnection
+	volChan          chan *api.Volume
 }
 
+// Watch streams a list of events back to clients. Events are resources that can typically fetch with openstorage API, such as Volumes,
+// Nodes, Disks, etc.
+//
+// Implementation note: the flow of data starts from porx ETCD changes, then the data will be send to openstorage via a golang channel.
+// Once the event object arrives at openstorage, it will be redistributed to a list of watch connections via another set of channels.
 func (w *WathcerServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWatch_WatchServer) error {
 	go w.startWatcher(context.Background())
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
 	return nil
-
 }
 
-type watchClient struct {
+type watchConnection struct {
 	name    string
 	volChan chan *api.Volume
 }
 
-func (w *watchClient) callBack(vol *api.Volume) {
+func (w *watchConnection) callBack(vol *api.Volume) {
 	w.volChan <- vol
 }
 
-func (s *WathcerServer) registerWatcher(client watchClient) {
-	s.watchClients = append(s.watchClients, client)
+func (s *WathcerServer) registerWatcher(client *watchConnection) {
+	s.watchConnections = append(s.watchConnections, client)
 }
 
 func (s *WathcerServer) removeWatcher(name string) {
-	var newWatcher []watchClient
-	for _, client := range s.watchClients {
+	defer close(s.volChan)
+
+	var newWatchers []*watchConnection
+	for _, client := range s.watchConnections {
 		if client.name == name {
 			continue
 		}
-		newWatcher = append(newWatcher, client)
+		newWatchers = append(newWatchers, client)
 	}
-	s.watchClients = newWatcher
+	s.watchConnections = newWatchers
+
 }
 
 func (s *WathcerServer) startWatcher(ctx context.Context) error {
@@ -57,22 +64,22 @@ func (s *WathcerServer) startWatcher(ctx context.Context) error {
 		if s.volumeServer.driver(ctx) == nil {
 			continue
 		}
-		if s.volChan == nil {
-			volChan, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
-			if err != nil {
-				return status.Errorf(
-					codes.Internal,
-					"Failed to get volumes watcher: %v",
-					err.Error())
-			}
-			s.volChan = volChan
-			for vol := range s.volChan {
-				for _, client := range s.watchClients {
-					go client.callBack(vol)
-				}
-			}
 
+		volChan, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
+		if err != nil {
+			return status.Errorf(
+				codes.Internal,
+				"Failed to get volumes watcher: %v",
+				err.Error())
 		}
+		s.volChan = volChan
+		// volChan should be stuck here to wait for incoming events
+		for vol := range s.volChan {
+			for _, client := range s.watchConnections {
+				go client.callBack(vol)
+			}
+		}
+
 	}
 
 }
@@ -98,12 +105,12 @@ func (s *WathcerServer) volumeWatch(
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 
-	client := watchClient{
+	client := watchConnection{
 		name:    fmt.Sprintf("%v", rand.Intn(100)),
 		volChan: make(chan *api.Volume, 10),
 	}
 
-	s.registerWatcher(client)
+	s.registerWatcher(&client)
 	defer s.removeWatcher(client.name)
 
 	// spawn err-group process.
@@ -118,18 +125,8 @@ func (s *WathcerServer) volumeWatch(
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
-				resp := api.SdkVolumeWatchResponse{
-					Volume: vol,
-					Name:   vol.Locator.Name,
-					Labels: vol.Locator.VolumeLabels,
-				}
-				vresp := api.SdkWatchResponse_VolumeEvent{
-					VolumeEvent: &resp,
-				}
-				r := api.SdkWatchResponse{
-					EventType: &vresp,
-				}
-				if err := stream.Send(&r); err != nil {
+				resp := convertVolumeToSdkReponse(vol)
+				if err := stream.Send(resp); err != nil {
 					return err
 				}
 			}
@@ -138,18 +135,8 @@ func (s *WathcerServer) volumeWatch(
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
-				resp := api.SdkVolumeWatchResponse{
-					Volume: vol,
-					Name:   vol.Locator.Name,
-					Labels: vol.Locator.VolumeLabels,
-				}
-				vresp := api.SdkWatchResponse_VolumeEvent{
-					VolumeEvent: &resp,
-				}
-				r := api.SdkWatchResponse{
-					EventType: &vresp,
-				}
-				if err := stream.Send(&r); err != nil {
+				resp := convertVolumeToSdkReponse(vol)
+				if err := stream.Send(resp); err != nil {
 					return err
 				}
 			}
@@ -176,4 +163,18 @@ func (s *WathcerServer) volumeWatch(
 			"Deadline is reached, server side func exiting")
 	}
 
+}
+
+func convertVolumeToSdkReponse(vol *api.Volume) *api.SdkWatchResponse {
+	resp := api.SdkVolumeWatchResponse{
+		Volume: vol,
+		Name:   vol.Locator.Name,
+		Labels: vol.Locator.VolumeLabels,
+	}
+	volumeEventResponse := api.SdkWatchResponse_VolumeEvent{
+		VolumeEvent: &resp,
+	}
+	return &api.SdkWatchResponse{
+		EventType: &volumeEventResponse,
+	}
 }
