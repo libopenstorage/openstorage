@@ -2518,15 +2518,16 @@ service OpenStorageVolume {
 }
 
 
-// OpenStorageWatcher is a service used to stream objects accessible by
-// openstorage API. Right now, we will only support Volumes.
+// OpenStorageWatcher is a service used to stream events in the system
 service OpenStorageWatch{
 
-    // Watch streams of volumes exist in the system.
+    // Watch streams of event exist in the system
+    //
+    // Requires access AccessType.Read
     rpc Watch(SdkWatchRequest)
     returns (stream SdkWatchResponse) {
         option(google.api.http) = {
-          post: "/v1/watch"
+          post: "/v1/watch/watch"
           body: "*"
         };
     }
@@ -3782,12 +3783,12 @@ message SdkVolumeSnapshotScheduleUpdateRequest {
 message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
-// Defines the request to watch a volume
+// Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc
 message SdkWatchRequest {
   // one of event type
   oneof event_type {
     // WatchRequest for volume
-    SdkVolumeWatchRequest volume_event = 200;
+    SdkVolumeWatchRequest volume_event = 1;
   }
 }
 
@@ -3795,13 +3796,13 @@ message SdkWatchRequest {
 message SdkWatchResponse {
   // one of event response
   oneof event_type {
-    SdkVolumeWatchResponse volume_event = 200;
+    SdkVolumeWatchResponse volume_event = 1;
   }
 }
 
 
 message SdkVolumeWatchRequest {
-  // Options during inspection
+  // Options during watch
   map<string, string> labels = 1;
 }
 

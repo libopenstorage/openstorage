@@ -22,7 +22,6 @@ type WatcherServer struct {
 
 	watchConnections map[string][]*watchConnection
 	volumeChannel    chan *api.Volume
-	done             chan bool
 	sync.RWMutex
 }
 
@@ -70,7 +69,7 @@ func (s *WatcherServer) removeWatcher(name string, eventType string) {
 	var newWatchers []*watchConnection
 	for _, client := range s.watchConnections[eventType] {
 		if client.name == name {
-			// cleanup client go channel
+			// clean up client go channel
 			close(client.eventChannel)
 			continue
 		}
@@ -110,6 +109,7 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) 
 		s.watchConnections = make(map[string][]*watchConnection)
 	}
 
+	// wait for driver to be initialized with an non-empty volume watcher
 	for {
 		if s.volumeServer.driver(ctx) == nil {
 			continue
@@ -122,13 +122,11 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) 
 		s.volumeChannel = volumeChannel
 		goto volumeWatch
 	}
-	// volChan should be stuck here to wait for incoming events
+	// volumeChannel should be waiting for incoming events
 volumeWatch:
 	for {
-
 		select {
 		case vol := <-s.volumeChannel:
-			logrus.Infof("In waiting for volume")
 			s.RLock()
 			for _, client := range s.watchConnections[volumeEventType] {
 				go client.callBack(vol)
@@ -157,7 +155,7 @@ func (w *WatcherServer) volumeWatch(
 	var cancel context.CancelFunc
 	if ok {
 		// create a new context that will get done on deadline
-		ctx, cancel = context.WithTimeout(ctx, deadline.Sub(time.Now()))
+		ctx, cancel = context.WithTimeout(ctx, time.Until(deadline))
 		defer cancel()
 	}
 
@@ -185,7 +183,7 @@ func (w *WatcherServer) volumeWatch(
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
-				resp := convertVolumeToSdkReponse(vol)
+				resp := convertApiVolumeToSdkReponse(vol)
 				if err := stream.Send(resp); err != nil {
 					return err
 				}
@@ -199,7 +197,7 @@ func (w *WatcherServer) volumeWatch(
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
-				resp := convertVolumeToSdkReponse(vol)
+				resp := convertApiVolumeToSdkReponse(vol)
 				if err := stream.Send(resp); err != nil {
 					return err
 				}
@@ -229,7 +227,7 @@ func (w *WatcherServer) volumeWatch(
 
 }
 
-func convertVolumeToSdkReponse(vol *api.Volume) *api.SdkWatchResponse {
+func convertApiVolumeToSdkReponse(vol *api.Volume) *api.SdkWatchResponse {
 	resp := api.SdkVolumeWatchResponse{
 		Volume: vol,
 		Name:   vol.Locator.Name,

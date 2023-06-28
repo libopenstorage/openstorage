@@ -57,9 +57,9 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
-	kv          kvdb.Kvdb
-	thisCluster cluster.Cluster
-	volChan     chan *api.Volume
+	kv            kvdb.Kvdb
+	thisCluster   cluster.Cluster
+	volumeChannel chan *api.Volume
 }
 
 type fakeCred struct {
@@ -101,7 +101,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                    kv,
-		volChan:               make(chan *api.Volume, 10),
+		volumeChannel:         make(chan *api.Volume, 2),
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -128,7 +128,7 @@ func volumeGenerator(d *driver) {
 	iter := 0
 	for {
 		sleepRand := rand.Intn(10)
-		time.Sleep(time.Duration(sleepRand) * time.Second)
+		time.Sleep(time.Duration(sleepRand+1) * time.Second)
 		result := rand.Int31()
 		logrus.Infof("sending result %v with iteration %v", result, iter)
 		response := api.Volume{
@@ -138,13 +138,16 @@ func volumeGenerator(d *driver) {
 				VolumeLabels: make(map[string]string),
 			},
 		}
-		d.volChan <- &response
+		d.volumeChannel <- &response
 		iter += 1
 	}
 }
 
 func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
-	return d.volChan, nil
+	if d.volumeChannel == nil {
+		d.volumeChannel = make(chan *api.Volume, 2)
+	}
+	return d.volumeChannel, nil
 }
 
 func (d *driver) Name() string {

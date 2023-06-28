@@ -4557,7 +4557,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "title": "Options during inspection",
+            "title": "Options during watch",
             "type": "object"
           }
         },
@@ -4589,7 +4589,7 @@
             "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
           }
         },
-        "title": "Defines the request to watch a volume",
+        "title": "Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc",
         "type": "object"
       },
       "apiSdkWatchResponse": {
@@ -10866,8 +10866,9 @@
         ]
       }
     },
-    "/v1/watch": {
+    "/v1/watch/watch": {
       "post": {
+        "description": "Requires access AccessType.Read",
         "operationId": "OpenStorageWatch_Watch",
         "requestBody": {
           "content": {
@@ -10910,7 +10911,7 @@
             "description": "An unexpected error response."
           }
         },
-        "summary": "Watch streams of volumes exist in the system.",
+        "summary": "Watch streams of event exist in the system",
         "tags": [
           "OpenStorageWatch"
         ]

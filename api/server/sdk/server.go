@@ -147,8 +147,9 @@ type Server struct {
 	udsServer   *sdkGrpcServer
 	restGateway *sdkRestGateway
 
-	accessLog *os.File
-	auditLog  *os.File
+	accessLog              *os.File
+	auditLog               *os.File
+	watchServerDoneChannel chan bool
 }
 
 type serverAccessor interface {
@@ -208,7 +209,6 @@ type sdkGrpcServer struct {
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	bucketServer          *BucketServer
 	watcherServer         *WatcherServer
-	watchServerDone       chan bool
 }
 
 // Interface check
@@ -293,6 +293,10 @@ func New(config *ServerConfig) (*Server, error) {
 
 // Start all servers
 func (s *Server) Start() error {
+	// watcherServer should only be called once, since netServer an udsServer both implments grpcServer,
+	// we are starting the watch server here
+	s.watchServerDoneChannel = make(chan bool)
+	go s.netServer.watcherServer.startWatcher(context.Background(), s.watchServerDoneChannel)
 	if err := s.netServer.Start(); err != nil {
 		return err
 	} else if err := s.udsServer.Start(); err != nil {
@@ -305,6 +309,9 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() {
+	go func() {
+		s.watchServerDoneChannel <- true
+	}()
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
@@ -582,7 +589,6 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-	go s.watcherServer.startWatcher(context.Background(), s.watchServerDone)
 	return nil
 }
 
