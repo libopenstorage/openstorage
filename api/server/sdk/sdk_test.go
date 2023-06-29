@@ -152,8 +152,7 @@ func newTestServer(t *testing.T) *testServer {
 		return ch, nil
 	}).AnyTimes()
 	go func() {
-		tester.server.netServer.watchServerDone <- true
-		tester.server.udsServer.watchServerDone <- true
+		tester.server.watchServerDoneChannel <- true
 	}()
 	err = tester.server.Start()
 	assert.Nil(t, err)
@@ -241,8 +240,7 @@ func newTestServerAuth(t *testing.T) *testServer {
 		return ch, nil
 	}).AnyTimes()
 	go func() {
-		tester.server.netServer.watchServerDone <- true
-		tester.server.udsServer.watchServerDone <- true
+		tester.server.watchServerDoneChannel <- true
 	}()
 	err = tester.server.Start()
 	assert.Nil(t, err)
