@@ -109,9 +109,96 @@ func lock(t *testing.T, kl KeyLock, key string, cb chan<- *LockHandle) {
 	cb <- &h
 }
 
+func TestLockWithTimeout(t *testing.T) {
+	kl := New()
+
+	cb := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb)
+	_, err := wait(t, kl, cb)
+	require.NoError(t, err, "wait")
+
+	endState(t, kl, 1)
+}
+
+func TestLockWithTimeoutRelease(t *testing.T) {
+	kl := ByName("test")
+
+	cb := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb)
+	h, err := wait(t, kl, cb)
+	require.NoError(t, err, "wait")
+	require.NoError(t, kl.Release(h), "unlock")
+
+	endState(t, kl, 0)
+}
+
+func TestDoubleLockWithTimeout(t *testing.T) {
+	kl := ByName("test")
+
+	cb1 := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb1)
+	h1, err := wait(t, kl, cb1)
+	require.NoError(t, err, "wait")
+
+	cb2 := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb2)
+	h2, err := wait(t, kl, cb2)
+	require.Error(t, err, "wait")
+
+	require.NoError(t, kl.Release(h1), "unlock")
+
+	h2, err = wait(t, kl, cb2)
+	require.NoError(t, err, "wait")
+	require.NoError(t, kl.Release(h2), "unlock")
+
+	endState(t, kl, 0)
+}
+
+func TestWithTimeoutBadRelease(t *testing.T) {
+	kl := ByName("test")
+
+	cb1 := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb1)
+	h1, err := wait(t, kl, cb1)
+	require.NoError(t, err, "wait")
+
+	cb2 := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, "foo", cb2)
+	h2, err := wait(t, kl, cb2)
+	require.Error(t, err, "wait")
+	require.NoError(t, kl.Release(h1), "unlock")
+	h2, err = wait(t, kl, cb2)
+	require.NoError(t, err, "wait")
+
+	require.Error(t, kl.Release(h1), "unlock")
+	require.NoError(t, kl.Release(h2), "unlock")
+
+	endState(t, kl, 0)
+}
+
+func lockAndSleepWithTimeout(t *testing.T, kl KeyLock, key string, doneCb chan<- int) {
+	cb := make(chan *LockHandle)
+	go lockWithTimeout(t, kl, key, cb)
+
+	fmt.Printf("-")
+	h, err := wait(t, kl, cb)
+	for err != nil {
+		h, err = wait(t, kl, cb)
+	}
+	time.Sleep(2)
+	require.NoError(t, kl.Release(h), "unlock")
+	doneCb <- 1
+}
+
+func lockWithTimeout(t *testing.T, kl KeyLock, key string, cb chan<- *LockHandle) {
+	h, _ := kl.AcquireWithTimeout(key, 5*time.Second)
+	cb <- &h
+}
+
 func wait(t *testing.T,
 	kl KeyLock,
 	cb chan *LockHandle,
+
 ) (*LockHandle, error) {
 	select {
 	case h := <-cb:
