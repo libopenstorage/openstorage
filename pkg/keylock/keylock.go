@@ -30,16 +30,27 @@ func (e *ErrInvalidHandle) Error() string {
 	return fmt.Sprintf("Invalid Handle with ID: %v", e.ID)
 }
 
+// ErrTimedOut error type for timeout during acquiring lock.
+type ErrTimedOut struct {
+	// ID unique object identifier.
+	ID       string
+	Duration time.Duration
+}
+
+func (e *ErrTimedOut) Error() string {
+	return fmt.Sprintf("Timed out for ID: %v, after %v", e.ID, e.Duration)
+}
+
 // KeyLock is a thread-safe interface for acquiring locks on arbitrary strings.
 type KeyLock interface {
 	// Acquire a lock associated with the specified ID.
 	// Creates the lock if one doesn't already exist.
 	Acquire(id string) LockHandle
 
-	// Acquire a lock associated with the specified ID.
-	// Creates the lock if one doesn't already exist within a particular time
-	// and returns nil on timeout
-	AcquireWithTimeout(id string, timeout time.Duration) *LockHandle
+	// AcquireWithTimeout, tries to acquire a lock associated with the specified ID
+	// within a particular time.
+	// Creates the lock if one doesn't exist and returns error on timeout
+	AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error)
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -93,7 +104,7 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
-func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHandle {
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) (LockHandle, error) {
 	h := kl.getOrCreateLock(id)
 	timeout := time.After(duration)
 	for {
@@ -102,11 +113,11 @@ func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) *LockHa
 			kl.Lock()
 			h.refcnt--
 			kl.Unlock()
-			return nil
+			return LockHandle{}, &ErrTimedOut{ID: id, Duration: duration}
 		default:
 			if tryLock(h) {
 				h.genNum++
-				return h
+				return *h, nil
 			}
 			time.Sleep(250 * time.Millisecond)
 		}
