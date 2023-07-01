@@ -80,7 +80,6 @@ type fakeSchedules struct {
 }
 
 func Init(params map[string]string) (volume.VolumeDriver, error) {
-	logrus.Infof("In new fake driver")
 	return newFakeDriver(params)
 }
 
@@ -118,7 +117,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 			}
 		}
 	}
-	go volumeGenerator(inst)
+
 	logrus.Println("Fake driver initialized")
 	return inst, nil
 }
@@ -144,6 +143,7 @@ func volumeGenerator(d *driver) {
 }
 
 func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	go volumeGenerator(d)
 	if d.volumeChannel == nil {
 		d.volumeChannel = make(chan *api.Volume, 2)
 	}

@@ -120,7 +120,7 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) 
 
 		volumeChannel, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
 		if err != nil {
-			logrus.Warnf("error getting volume watcher", err)
+			logrus.Warnf("error getting volume watcher %v", err)
 		}
 		if volumeChannel == nil {
 			continue
@@ -231,6 +231,9 @@ func (w *WatcherServer) volumeWatch(
 		errChan <- group.Wait()
 	}()
 
+	var value chan *api.Volume
+	value = make(chan *api.Volume)
+	anotherCtx := context.WithValue(ctx, "myKey", value)
 	// wait only as long as context deadline allows
 	select {
 	case err := <-errChan:

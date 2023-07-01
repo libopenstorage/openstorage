@@ -485,6 +485,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		"/openstorage.api.OpenStorageVolume/SnapshotEnumerate",
 		"/openstorage.api.OpenStorageVolume/SnapshotEnumerateWithFilters",
 		"/openstorage.api.OpenStorageVolume/SnapshotScheduleUpdate",
+		"/openstorage.api.OpenStorageWatch/Watch",
 		"/openstorage.api.OpenStorageMountAttach/Attach",
 		"/openstorage.api.OpenStorageMountAttach/Detach",
 		"/openstorage.api.OpenStorageMountAttach/Mount",
