@@ -198,7 +198,7 @@ func (w *WatcherServer) volumeWatch(
 			for event := range client.eventChannel {
 
 				// create a new context that will return error if execution took more than streamTimeout
-				ctx, timeoutCancelled := context.WithTimeout(ctx, streamTimeout)
+				timeoutCtx, timeoutCancelled := context.WithTimeout(ctx, streamTimeout)
 				defer timeoutCancelled()
 				var vol *api.Volume
 				if vol, ok = event.(*api.Volume); !ok {
@@ -216,12 +216,12 @@ func (w *WatcherServer) volumeWatch(
 					logrus.Warnf("error sending stream: %v", err)
 					return err
 				}
-				if ctx.Err() != nil {
-					logrus.Warnf("context error: %v", ctx.Err())
-					return ctx.Err()
+				if timeoutCtx.Err() != nil {
+					logrus.Warnf("context error: %v", timeoutCtx.Err())
+					return timeoutCtx.Err()
 				}
+				timeoutCancelled()
 			}
-
 		}
 		return nil
 	})
@@ -231,9 +231,6 @@ func (w *WatcherServer) volumeWatch(
 		errChan <- group.Wait()
 	}()
 
-	var value chan *api.Volume
-	value = make(chan *api.Volume)
-	anotherCtx := context.WithValue(ctx, "myKey", value)
 	// wait only as long as context deadline allows
 	select {
 	case err := <-errChan:
