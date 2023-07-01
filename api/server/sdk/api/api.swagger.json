@@ -4557,7 +4557,7 @@
             "additionalProperties": {
               "type": "string"
             },
-            "title": "Options during watch",
+            "title": "labels to filter out the volumes to watch on",
             "type": "object"
           }
         },
@@ -10868,7 +10868,7 @@
         ]
       }
     },
-    "/v1/watch/watch": {
+    "/v1/watch": {
       "post": {
         "description": "Requires access AccessType.Read",
         "operationId": "OpenStorageWatch_Watch",
@@ -10913,7 +10913,7 @@
             "description": "An unexpected error response."
           }
         },
-        "summary": "Watch streams of event exist in the system",
+        "summary": "Watch on resources managed by the driver and receive them as a stream of events.",
         "tags": [
           "OpenStorageWatch"
         ]

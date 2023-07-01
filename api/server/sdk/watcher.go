@@ -15,6 +15,9 @@ import (
 
 const (
 	volumeEventType = "Volume"
+
+	eventChannelSize = 100
+	streamTimeout    = 2 * time.Second
 )
 
 type WatcherServer struct {
@@ -34,7 +37,7 @@ func (w *WatcherServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWa
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
-	return nil
+	return status.Errorf(codes.InvalidArgument, "invalid request type for watcher %v", req)
 }
 
 type watchConnection struct {
@@ -115,7 +118,10 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) 
 			continue
 		}
 
-		volumeChannel, _ := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
+		volumeChannel, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
+		if err != nil {
+			logrus.Warnf("error getting volume watcher", err)
+		}
 		if volumeChannel == nil {
 			continue
 		}
@@ -162,7 +168,7 @@ func (w *WatcherServer) volumeWatch(
 	client := watchConnection{
 		name:         uuid.New(),
 		eventType:    volumeEventType,
-		eventChannel: make(chan interface{}, 2),
+		eventChannel: make(chan interface{}, eventChannelSize),
 	}
 
 	w.registerWatcher(&client, volumeEventType)
@@ -190,16 +196,29 @@ func (w *WatcherServer) volumeWatch(
 			}
 
 			for event := range client.eventChannel {
+
+				// create a new context that will return error if execution took more than streamTimeout
+				ctx, timeoutCancelled := context.WithTimeout(ctx, streamTimeout)
+				defer timeoutCancelled()
 				var vol *api.Volume
 				if vol, ok = event.(*api.Volume); !ok {
+					logrus.Warnf("error converting event to Volume Type for event %v", event)
 					continue
 				}
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
 					continue
 				}
+
 				resp := convertApiVolumeToSdkReponse(vol)
-				if err := stream.Send(resp); err != nil {
+				err := stream.Send(resp)
+
+				if err != nil {
+					logrus.Warnf("error sending stream: %v", err)
 					return err
+				}
+				if ctx.Err() != nil {
+					logrus.Warnf("context error: %v", ctx.Err())
+					return ctx.Err()
 				}
 			}
 

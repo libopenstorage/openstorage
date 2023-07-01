@@ -411,9 +411,8 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 			config.DriverName: d,
 			DefaultDriverName: d,
 		},
-		alertHandler:    config.AlertsFilterDeleter,
-		policyServer:    config.StoragePolicy,
-		watchServerDone: make(chan bool),
+		alertHandler: config.AlertsFilterDeleter,
+		policyServer: config.StoragePolicy,
 	}
 
 	s.identityServer = &IdentityServer{
