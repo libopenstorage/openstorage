@@ -34,6 +34,9 @@ type WatcherServer struct {
 // Implementation note: the flow of data starts from porx ETCD changes, then the data will be send to openstorage via a golang channel.
 // Once the event object arrives at openstorage, it will be redistributed to a list of watch connections via another set of channels.
 func (w *WatcherServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWatch_WatchServer) error {
+	if w.volumeServer.cluster() == nil || w.volumeServer.driver(stream.Context()) == nil {
+		return status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
