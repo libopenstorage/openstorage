@@ -84,11 +84,11 @@ func (s *WatcherServer) removeWatcher(name string, eventType string) {
 	s.watchConnections[eventType] = newWatchers
 }
 
-func (s *WatcherServer) startWatcher(ctx context.Context, done chan bool) error {
+func (s *WatcherServer) startWatcher(ctx context.Context) error {
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 	group.Go(func() error {
-		return s.startVolumeWatcher(ctx, done)
+		return s.startVolumeWatcher(ctx)
 	})
 
 	// wait for err-group processes to be done
@@ -110,7 +110,7 @@ func (s *WatcherServer) startWatcher(ctx context.Context, done chan bool) error 
 	}
 }
 
-func (s *WatcherServer) startVolumeWatcher(ctx context.Context, done chan bool) error {
+func (s *WatcherServer) startVolumeWatcher(ctx context.Context) error {
 	if s.watchConnections == nil {
 		s.watchConnections = make(map[string][]*watchConnection)
 	}
@@ -141,7 +141,7 @@ volumeWatch:
 				go client.callBack(vol)
 			}
 			s.RUnlock()
-		case <-done:
+		case <-ctx.Done():
 			logrus.Infof("exiting volume watcher\n")
 			break volumeWatch
 		}

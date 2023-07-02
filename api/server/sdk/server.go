@@ -142,14 +142,15 @@ type ServerConfig struct {
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
+	ctx         context.Context
+	ctxCancel   context.CancelFunc
 	config      ServerConfig
 	netServer   *sdkGrpcServer
 	udsServer   *sdkGrpcServer
 	restGateway *sdkRestGateway
 
-	accessLog              *os.File
-	auditLog               *os.File
-	watchServerDoneChannel chan bool
+	accessLog *os.File
+	auditLog  *os.File
 }
 
 type serverAccessor interface {
@@ -280,8 +281,10 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
+		ctx:         ctx,
+		ctxCancel:   cancel,
 		config:      *config,
 		netServer:   netServer,
 		udsServer:   udsServer,
@@ -295,8 +298,7 @@ func New(config *ServerConfig) (*Server, error) {
 func (s *Server) Start() error {
 	// watcherServer should only be called once, since netServer an udsServer both implments grpcServer,
 	// we are starting the watch server here
-	s.watchServerDoneChannel = make(chan bool)
-	go s.netServer.watcherServer.startWatcher(context.Background(), s.watchServerDoneChannel)
+	go s.netServer.watcherServer.startWatcher(s.ctx)
 	if err := s.netServer.Start(); err != nil {
 		return err
 	} else if err := s.udsServer.Start(); err != nil {
@@ -309,12 +311,10 @@ func (s *Server) Start() error {
 }
 
 func (s *Server) Stop() {
-	go func() {
-		s.watchServerDoneChannel <- true
-	}()
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
+	s.ctxCancel()
 
 	if s.accessLog != nil {
 		s.accessLog.Close()
