@@ -20,6 +20,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -337,7 +339,9 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 		v.Spec.Shared = spec.Shared
 		v.Spec.Sharedv4 = spec.Sharedv4
 		v.Spec.Journal = spec.Journal
-		v.Spec.SnapshotInterval = spec.SnapshotInterval
+		if spec.SnapshotInterval != math.MaxUint32 {
+			v.Spec.SnapshotInterval = spec.SnapshotInterval
+		}
 		v.Spec.IoProfile = spec.IoProfile
 		v.Spec.SnapshotSchedule = spec.SnapshotSchedule
 		v.Spec.Ownership = spec.Ownership
@@ -359,6 +363,17 @@ func (d *driver) UsedSize(volumeID string) (uint64, error) {
 	}
 
 	return uint64(12345), nil
+}
+
+func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.VolumeBytesUsedByNode, error) {
+	volusage := []*api.VolumeBytesUsed{}
+	for _, id := range volumes {
+		volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
+	}
+	return &api.VolumeBytesUsedByNode{
+		NodeId:  nodeMID,
+		VolUsage: volusage,
+	}, nil
 }
 
 func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {

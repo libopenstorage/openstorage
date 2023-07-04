@@ -3,7 +3,12 @@ package keylock
 import (
 	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
+	"unsafe"
 )
+
+const mutexLocked = 1 << iota
 
 // ErrKeyLockNotFound error type for lock object not found
 type ErrKeyLockNotFound struct {
@@ -25,11 +30,27 @@ func (e *ErrInvalidHandle) Error() string {
 	return fmt.Sprintf("Invalid Handle with ID: %v", e.ID)
 }
 
+// ErrTimedOut error type for timeout during acquiring lock.
+type ErrTimedOut struct {
+	// ID unique object identifier.
+	ID       string
+	Duration time.Duration
+}
+
+func (e *ErrTimedOut) Error() string {
+	return fmt.Sprintf("Timed out for ID: %v, after %v", e.ID, e.Duration)
+}
+
 // KeyLock is a thread-safe interface for acquiring locks on arbitrary strings.
 type KeyLock interface {
 	// Acquire a lock associated with the specified ID.
 	// Creates the lock if one doesn't already exist.
 	Acquire(id string) LockHandle
+
+	// AcquireWithTimeout, tries to acquire a lock associated with the specified ID
+	// within a particular time.
+	// Creates the lock if one doesn't exist and returns error on timeout
+	AcquireWithTimeout(id string, timeout time.Duration) (LockHandle, error)
 
 	// Release the lock associated with the specified LockHandle
 	// Returns an error if it is an invalid LockHandle.
@@ -83,11 +104,35 @@ func (kl *keyLock) Acquire(id string) LockHandle {
 	return *h
 }
 
+func (kl *keyLock) AcquireWithTimeout(id string, duration time.Duration) (LockHandle, error) {
+	h := kl.getOrCreateLock(id)
+	timeout := time.After(duration)
+	for {
+		select {
+		case <-timeout:
+			kl.Lock()
+			h.refcnt--
+			kl.Unlock()
+			return LockHandle{}, &ErrTimedOut{ID: id, Duration: duration}
+		default:
+			if tryLock(h) {
+				h.genNum++
+				return *h, nil
+			}
+			time.Sleep(250 * time.Millisecond)
+		}
+	}
+}
+
+// TODO : replace this with the standard TryLock after the next golang upgrade to 1.18
+func tryLock(h *LockHandle) bool {
+	return atomic.CompareAndSwapInt32((*int32)(unsafe.Pointer(h.mutex)), 0, mutexLocked)
+}
+
 func (kl *keyLock) Release(h *LockHandle) error {
-	if len(h.id) == 0 {
+	if h == nil || len(h.id) == 0 {
 		return &ErrInvalidHandle{}
 	}
-
 	kl.Lock()
 	defer kl.Unlock()
 	lockedH, exists := kl.lockMap[h.id]

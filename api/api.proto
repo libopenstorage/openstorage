@@ -114,6 +114,7 @@ enum IoProfile {
   IO_PROFILE_SYNC_SHARED = 5;
   IO_PROFILE_AUTO = 6;
   IO_PROFILE_NONE = 7;
+  IO_PROFILE_JOURNAL = 8;
 }
 
 // VolumeState represents the state of a volume.
@@ -597,6 +598,12 @@ message IoThrottle {
     uint32 write_bw_mbytes = 4;
 }
 
+enum NearSyncReplicationStrategy {
+    NEAR_SYNC_STRATEGY_NONE = 0;
+    NEAR_SYNC_STRATEGY_AGGRESSIVE = 1;
+    NEAR_SYNC_STRATEGY_OPTIMIZED = 2;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -698,6 +705,10 @@ message VolumeSpec {
   bool winshare = 49;
   // Filesystem create options to be honored.
   string fa_create_options = 50;
+  // NearSync specifies the volume has a near-sync replica
+  bool near_sync = 51;
+  // NearSyncReplicationStrategy is replication strategy for near sync volumes
+  NearSyncReplicationStrategy near_sync_replication_strategy = 52;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -771,6 +782,8 @@ message VolumeSpecUpdate {
   oneof readahead_opt { bool readahead  = 41; }
   // winshare is true if this volume can be accessed from windows pods.
   oneof winshare_opt { bool winshare = 42; }
+  // NearSyncReplicationStrategy is replication strategy for near sync volumes
+  oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 43;}
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -1081,6 +1094,22 @@ message VolumeUsage {
 message VolumeUsageByNode {
   // VolumeUsage returns list of VolumeUsage for given node
   repeated VolumeUsage volume_usage= 1;
+}
+
+// VolumeBytesUsed defines volume utilization
+message VolumeBytesUsed {
+  // id for the volume/snapshot
+  string volume_id = 1;
+  //  size in bytes by the volume/snapshot
+  uint64 total_bytes = 2;
+}
+
+// VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node
+message VolumeBytesUsedByNode {
+  // machine uuid
+  string node_id = 1;
+  // VolumeBytesUsed for each requested volume on the given node
+  repeated VolumeBytesUsed vol_usage = 2;
 }
 
 // FstrimVolUsageInfo
@@ -2140,6 +2169,15 @@ service OpenStorageNode {
       returns (SdkNodeUncordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/enable/{node_id}"
+        body: "*"
+      };
+    }
+
+  // Returns bytes used of multiple volumes for a give node
+  rpc VolumeBytesUsedByNode(SdkVolumeBytesUsedRequest)
+    returns (SdkVolumeBytesUsedResponse) {
+      option(google.api.http) = {
+        post: "/v1/nodes/bytesused"
         body: "*"
       };
     }
@@ -4464,6 +4502,8 @@ message SdkCloudBackupCreateRequest {
   // DeleteLocal indicates if local snap created for backup must be deleted after
   // the backup is complete
   bool delete_local = 7;
+  // Indicates if this is a near sync migrate
+  bool near_sync_migrate = 8;
 }
 
 // Empty response
@@ -4650,6 +4690,12 @@ enum SdkCloudBackupOpType {
   SdkCloudBackupOpTypeBackupOp = 1;
   // Restore
   SdkCloudBackupOpTypeRestoreOp = 2;
+  // NearSync clone
+  SdkNearSyncOpTypeCloneOp = 3;
+  // NearSync replication add
+  SdkNearSyncOpTypeReplAddOp = 4;
+  // NearSync restore
+  SdkNearSyncOpTypeRestoreOp = 5;
 }
 
 // CloudBackup status types
@@ -4674,7 +4720,22 @@ enum SdkCloudBackupStatusType {
   SdkCloudBackupStatusTypeQueued = 8;
   // Invalid, used by enumerate, includes failed,
   // stopped and aborted
- SdkCloudBackupStatusTypeInvalid = 9;
+  SdkCloudBackupStatusTypeInvalid = 9;
+  // Near sync
+  // Not started
+  SdkNearSyncStatusTypeNotStarted = 10;
+  // Done
+  SdkNearSyncStatusTypeDone = 11;
+  // Paused
+  SdkNearSyncStatusTypePaused = 12;
+  // Stopped
+  SdkNearSyncStatusTypeStopped = 13;
+  // Active
+  SdkNearSyncStatusTypeActive = 14;
+  // Failed
+  SdkNearSyncStatusTypeFailed = 15;
+  // Invalid
+  SdkNearSyncStatusTypeInvalid = 16;
 }
 
 // SdkCloudBackupStatus defines the status of a backup stored by a cloud provider
@@ -4721,6 +4782,8 @@ message SdkCloudBackupStatusRequest {
   // TaskId of the backup/restore task, if this is specified,
   // volume_id is ignored.
   string task_id = 3;
+  // Indicates if this is for nearsync migration
+  bool near_sync_migrate = 4;
 }
 
 // Defines a response containing the status of the backups for a specified volume
@@ -4780,6 +4843,12 @@ enum SdkCloudBackupRequestedState {
   SdkCloudBackupRequestedStateResume = 2;
   // Stop a backup or restore
   SdkCloudBackupRequestedStateStop = 3;
+  // Pause the near sync migrate
+  SdkNearSyncRequestedStatePause = 4;
+  // Resume the near sync migrate
+  SdkNearSyncRequestedStateResume = 5;
+  // Stop a near sync migrate
+  SdkNearSyncRequestedStateStop = 6;
 }
 
 // Defines a request to change the state of a backup or restore to or
@@ -4879,8 +4948,14 @@ message SdkCloudBackupSizeRequest{
 
 // Defines a response containing the size of the volume
 message SdkCloudBackupSizeResponse{
-  // Size is the size of the volume in bytes
+  // Same value as total_download_bytes, will be deprecated
   uint64 size = 1;
+  // Total download size of all the backups (full & incremental) required for a restore
+  uint64 total_download_bytes = 2;
+  // Size of the compressed individual backup in object-store or NFS
+  uint64 compressed_object_bytes = 3;
+  // Used size of the volume to be restored (in bytes)
+  uint64 capacity_required_for_restore = 4;
 }
 
 //
@@ -5092,6 +5167,21 @@ message SdkFilesystemTrimStopRequest {
   string mount_path = 2;
 }
 
+// SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node
+message SdkVolumeBytesUsedResponse {
+  // Provides vol util of multiple requested volumes from a given node
+  VolumeBytesUsedByNode vol_util_info = 1;
+}
+
+// SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization
+// from multiple volume in a given node
+message SdkVolumeBytesUsedRequest {
+  // machine uuid of targeted node
+  string node_id = 1;
+  // volume ids to be found in usage response, can be empty
+  repeated uint64 ids = 2;
+}
+
 // Empty response
 message SdkFilesystemTrimStopResponse{
 }
@@ -5281,7 +5371,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 154;
+    Minor = 160;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -146,7 +146,6 @@ github.com/coreos/go-systemd/v22/dbus
 github.com/davecgh/go-spew/spew
 # github.com/dgrijalva/jwt-go v3.2.1-0.20180719211823-0b96aaa70776+incompatible
 ## explicit
-github.com/dgrijalva/jwt-go
 # github.com/docker/distribution v2.7.1+incompatible
 ## explicit
 github.com/docker/distribution/registry/api/errcode
@@ -230,6 +229,9 @@ github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/gogo/protobuf/sortkeys
+# github.com/golang-jwt/jwt/v4 v4.3.0
+## explicit; go 1.15
+github.com/golang-jwt/jwt/v4
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 ## explicit
 github.com/golang/groupcache/lru
@@ -457,7 +459,7 @@ github.com/pkg/errors
 # github.com/pmezard/go-difflib v1.0.0
 ## explicit
 github.com/pmezard/go-difflib/difflib
-# github.com/portworx/kvdb v0.0.0-20200723230726-2734b7f40194
+# github.com/portworx/kvdb v0.0.0-20230326003017-21a38cf82d4b
 ## explicit
 github.com/portworx/kvdb
 github.com/portworx/kvdb/common
@@ -516,7 +518,7 @@ github.com/sirupsen/logrus
 # github.com/spf13/pflag v1.0.5
 ## explicit; go 1.12
 github.com/spf13/pflag
-# github.com/stretchr/testify v1.8.1
+# github.com/stretchr/testify v1.8.2
 ## explicit; go 1.13
 github.com/stretchr/testify/assert
 github.com/stretchr/testify/require

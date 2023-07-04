@@ -264,7 +264,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 
 	n, ok := c.nodeCache[nodeID]
 	if !ok {
-		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
+		return api.Node{}, fmt.Errorf("Unable to locate node with provided UUID '%s'.", nodeID)
 	}
 
 	if n.Status == api.Status_STATUS_OFFLINE &&
@@ -700,7 +700,7 @@ func (c *ClusterManager) joinCluster(
 		clusterLockKey,
 		lockKey,
 		lockTryDuration,
-		kvdb.Instance().GetLockTimeout(),
+		kvdb.Instance().GetLockHoldDuration(),
 	)
 	if err != nil {
 		logrus.Warnln("Unable to obtain cluster lock before creating snapshot: ",

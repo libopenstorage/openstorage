@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/gorilla/mux"
 	"github.com/kubernetes-csi/csi-test/utils"
@@ -23,9 +23,9 @@ import (
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/pkg/auth"
 	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -116,7 +116,7 @@ func (s *testServer) DisableGuestAccess() error {
 		Role: &api.SdkRole{
 			Name: "system.guest",
 			Rules: []*api.SdkRule{
-				&api.SdkRule{
+				{
 					Services: []string{"!*"},
 					Apis:     []string{"!*"},
 				},
@@ -236,15 +236,16 @@ func newTestServerSdkNoAuth(t *testing.T) *testServer {
 
 	os.Remove(testSdkSock)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":" + tester.port,
-		RestPort:      tester.gwport,
-		StoragePolicy: stp,
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:         "fake",
+		Net:                "tcp",
+		Address:            ":" + tester.port,
+		RestPort:           tester.gwport,
+		StoragePolicy:      stp,
+		Cluster:            tester.c,
+		Socket:             testSdkSock,
+		AccessOutput:       ioutil.Discard,
+		AuditOutput:        ioutil.Discard,
+		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 	})
 	assert.Nil(t, err)
 	err = tester.sdk.Start()
@@ -301,24 +302,25 @@ func newTestServerSdk(t *testing.T) *testServer {
 	assert.NotNil(t, stp)
 
 	os.Remove(testSdkSock)
-	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+	selfsignedJwt, err := sdkauth.NewJwtAuth(&sdkauth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
-		UsernameClaim: auth.UsernameClaimTypeName,
+		UsernameClaim: sdkauth.UsernameClaimTypeName,
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
-		DriverName:    "fake",
-		Net:           "tcp",
-		Address:       ":" + tester.port,
-		RestPort:      tester.gwport,
-		Cluster:       tester.c,
-		Socket:        testSdkSock,
-		StoragePolicy: stp,
-		AccessOutput:  ioutil.Discard,
-		AuditOutput:   ioutil.Discard,
+		DriverName:         "fake",
+		Net:                "tcp",
+		Address:            ":" + tester.port,
+		RestPort:           tester.gwport,
+		Cluster:            tester.c,
+		Socket:             testSdkSock,
+		StoragePolicy:      stp,
+		AccessOutput:       ioutil.Discard,
+		AuditOutput:        ioutil.Discard,
+		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 		Security: &sdk.SecurityConfig{
 			Role: rm,
-			Authenticators: map[string]auth.Authenticator{
+			Authenticators: map[string]sdkauth.Authenticator{
 				"testcode": selfsignedJwt,
 			},
 		},

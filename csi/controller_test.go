@@ -19,6 +19,7 @@ package csi
 import (
 	"encoding/json"
 	"fmt"
+	"math"
 	"testing"
 
 	"github.com/golang/protobuf/ptypes"
@@ -49,7 +50,7 @@ func containsCap(c csi.ControllerServiceCapability_RPC_Type, resp *csi.Controlle
 
 func getDefaultVolumeCapabilities(t *testing.T) []*csi.VolumeCapability {
 	return []*csi.VolumeCapability{
-		&csi.VolumeCapability{
+		{
 			AccessType: &csi.VolumeCapability_Mount{
 				Mount: &csi.VolumeCapability_MountVolume{
 					FsType: "ext4",
@@ -225,7 +226,7 @@ func TestControllerValidateVolumeCapabilitiesBadArguments(t *testing.T) {
 
 	// Miss id
 	req.VolumeCapabilities = []*csi.VolumeCapability{
-		&csi.VolumeCapability{},
+		{},
 	}
 	_, err = c.ValidateVolumeCapabilities(context.Background(), req)
 	assert.NotNil(t, err)
@@ -272,7 +273,7 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: "bad volume id",
 				},
 			}, nil),
@@ -280,7 +281,7 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		VolumeId: id,
 		Secrets:  map[string]string{authsecrets.SecretTokenKey: systemUserToken},
@@ -335,7 +336,7 @@ func TestControllerValidateVolumeInvalidCapabilities(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -344,7 +345,7 @@ func TestControllerValidateVolumeInvalidCapabilities(t *testing.T) {
 	// Setup validate request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		VolumeId: id,
 		Secrets:  map[string]string{authsecrets.SecretTokenKey: systemUserToken},
@@ -382,7 +383,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -398,7 +399,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -414,7 +415,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -430,7 +431,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -443,7 +444,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 	// Setup request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -499,7 +500,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -515,7 +516,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -531,7 +532,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -547,7 +548,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -560,7 +561,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 	// Setup request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -616,7 +617,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -632,7 +633,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -648,7 +649,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -664,7 +665,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -677,7 +678,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 	// Setup request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -733,7 +734,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -749,7 +750,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -765,7 +766,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: false,
 					Spec: &api.VolumeSpec{
@@ -781,7 +782,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:       id,
 					Readonly: true,
 					Spec: &api.VolumeSpec{
@@ -794,7 +795,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 	// Setup request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -842,7 +843,7 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:       id,
 				Readonly: false,
 				Spec: &api.VolumeSpec{
@@ -855,7 +856,7 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 	// Setup request
 	req := &csi.ValidateVolumeCapabilitiesRequest{
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Mount{
 					Mount: &csi.VolumeCapability_MountVolume{},
 				},
@@ -947,7 +948,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 				s.MockDriver().
 					EXPECT().
 					Enumerate(&api.VolumeLocator{Name: "size"}, nil).
-					Return([]*api.Volume{&api.Volume{
+					Return([]*api.Volume{{
 						Id: "size",
 						Locator: &api.VolumeLocator{
 							Name: "size",
@@ -970,7 +971,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 				s.MockDriver().
 					EXPECT().
 					Enumerate(&api.VolumeLocator{Name: "size"}, nil).
-					Return([]*api.Volume{&api.Volume{
+					Return([]*api.Volume{{
 						Id: "size",
 						Locator: &api.VolumeLocator{
 							Name: "size",
@@ -1008,7 +1009,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	}
@@ -1048,7 +1049,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -1083,7 +1084,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1103,7 +1104,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 			EXPECT().
 			Enumerate(&api.VolumeLocator{Name: name}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: name,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -1126,7 +1127,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 			EXPECT().
 			Enumerate(&api.VolumeLocator{Name: name}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: name,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -1144,7 +1145,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{name},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{
+			Return([]*api.Volume{{
 				Id: name,
 				Locator: &api.VolumeLocator{
 					Name: name,
@@ -1178,7 +1179,7 @@ func TestControllerCreateVolumeBadParameters(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1210,7 +1211,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1229,7 +1230,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{parent},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: parent}}, nil).
+			Return([]*api.Volume{{Id: parent}}, nil).
 			Times(1),
 
 		// VolFromName (name)
@@ -1279,7 +1280,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1298,7 +1299,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{parent},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: parent}}, nil).
+			Return([]*api.Volume{{Id: parent}}, nil).
 			Times(1),
 
 		// VolFromName (name)
@@ -1318,7 +1319,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Inspect([]string{parent}).
-			Return([]*api.Volume{&api.Volume{Id: parent}}, nil).
+			Return([]*api.Volume{{Id: parent}}, nil).
 			Times(1),
 
 		// Return an error from snapshot
@@ -1333,7 +1334,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 	assert.NotNil(t, err)
 	serverError, ok := status.FromError(err)
 	assert.True(t, ok)
-	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Code(), codes.Aborted)
 	assert.Contains(t, serverError.Message(), "snapshoterr")
 }
 
@@ -1355,7 +1356,7 @@ func TestControllerCreateVolumeWithSharedv4Volume(t *testing.T) {
 		req := &csi.CreateVolumeRequest{
 			Name: name,
 			VolumeCapabilities: []*csi.VolumeCapability{
-				&csi.VolumeCapability{
+				{
 					AccessMode: &csi.VolumeCapability_AccessMode{
 						Mode: mode,
 					},
@@ -1394,7 +1395,7 @@ func TestControllerCreateVolumeWithSharedv4Volume(t *testing.T) {
 					VolumeIds: []string{id},
 				}, nil).
 				Return([]*api.Volume{
-					&api.Volume{
+					{
 						Id: id,
 						Locator: &api.VolumeLocator{
 							Name: name,
@@ -1436,7 +1437,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 		req := &csi.CreateVolumeRequest{
 			Name: name,
 			VolumeCapabilities: []*csi.VolumeCapability{
-				&csi.VolumeCapability{
+				{
 					AccessMode: &csi.VolumeCapability_AccessMode{
 						Mode: mode,
 					},
@@ -1478,7 +1479,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 					VolumeIds: []string{id},
 				}, nil).
 				Return([]*api.Volume{
-					&api.Volume{
+					{
 						Id: id,
 						Locator: &api.VolumeLocator{
 							Name: name,
@@ -1515,7 +1516,7 @@ func TestControllerCreateVolumeFails(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1564,7 +1565,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1638,7 +1639,7 @@ func TestControllerCreateVolumeFailedRemoteConn(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1673,7 +1674,7 @@ func TestControllerCreateVolumeFailedRemoteConn(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name:         name,
@@ -1716,7 +1717,7 @@ func TestControllerCreateVolume(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1751,7 +1752,7 @@ func TestControllerCreateVolume(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name:         name,
@@ -1793,7 +1794,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1827,6 +1828,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 					Owner: "user1",
 				},
 				Xattr: api.Xattr_COW_ON_DEMAND,
+				FpPreference: true,
 			}).
 			Return(id, nil).
 			Times(1),
@@ -1837,7 +1839,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name:         name,
@@ -1874,7 +1876,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -1900,7 +1902,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{mockParentID},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: mockParentID}}, nil).
+			Return([]*api.Volume{{Id: mockParentID}}, nil).
 			Times(1),
 
 		// VolFromName (name)
@@ -1921,7 +1923,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 			EXPECT().
 			Inspect(gomock.Any()).
 			Return(
-				[]*api.Volume{&api.Volume{
+				[]*api.Volume{{
 					Id: mockParentID,
 				}}, nil).
 			Times(1),
@@ -1938,7 +1940,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 				VolumeIds: []string{snapID},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:     id,
 					Source: &api.Source{Parent: mockParentID},
 				},
@@ -1953,11 +1955,9 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{snapID},
-			}, nil).
+			Enumerate(gomock.Any(), nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id:     id,
 					Source: &api.Source{Parent: mockParentID},
 				},
@@ -1988,7 +1988,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -2008,7 +2008,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{mockParentID},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: mockParentID}}, nil).
+			Return([]*api.Volume{{Id: mockParentID}}, nil).
 			Times(1),
 
 		//VolFromName name
@@ -2029,7 +2029,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 			EXPECT().
 			Inspect([]string{mockParentID}).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: mockParentID,
 				},
 			}, nil).
@@ -2048,11 +2048,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// check snap
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2070,11 +2068,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// update - inspect and set
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2096,11 +2092,9 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// final inspect
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2145,7 +2139,7 @@ func TestControllerCreateVolumeBlock(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Block{
 					Block: &csi.VolumeCapability_BlockVolume{},
 				},
@@ -2180,11 +2174,9 @@ func TestControllerCreateVolumeBlock(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name:         name,
@@ -2225,12 +2217,12 @@ func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{
+			{
 				AccessType: &csi.VolumeCapability_Block{
 					Block: &csi.VolumeCapability_BlockVolume{},
 				},
 			},
-			&csi.VolumeCapability{
+			{
 				AccessMode: &csi.VolumeCapability_AccessMode{
 					Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 				},
@@ -2263,7 +2255,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -2308,7 +2300,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2334,7 +2326,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 	req = &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -2369,11 +2361,9 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2411,7 +2401,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	req := &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -2474,7 +2464,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	req = &csi.CreateVolumeRequest{
 		Name: name,
 		VolumeCapabilities: []*csi.VolumeCapability{
-			&csi.VolumeCapability{},
+			{},
 		},
 		CapacityRange: &csi.CapacityRange{
 			RequiredBytes: size,
@@ -2557,11 +2547,9 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{id},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: id,
 					Locator: &api.VolumeLocator{
 						Name: name,
@@ -2622,11 +2610,9 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{myid},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{myid}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: myid,
 				},
 			}, nil).
@@ -2665,9 +2651,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 	// Now return no error, but empty list
 	s.MockDriver().
 		EXPECT().
-		Enumerate(&api.VolumeLocator{
-			VolumeIds: []string{myid},
-		}, nil).
+		Enumerate(&api.VolumeLocator{VolumeIds: []string{myid}}, nil).
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
@@ -2678,11 +2662,9 @@ func TestControllerDeleteVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{myid},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{myid}}, nil).
 			Return([]*api.Volume{
-				&api.Volume{
+				{
 					Id: myid,
 				},
 			}, nil).
@@ -2757,15 +2739,14 @@ func TestControllerExpandVolume(t *testing.T) {
 			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
-			Enumerate(&api.VolumeLocator{
-				VolumeIds: []string{myid},
-			}, nil).
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{myid}}, nil).
 			Return([]*api.Volume{vol}, nil).
 			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
 			Set(gomock.Any(), gomock.Any(), &api.VolumeSpec{
-				Size: 46 * units.GiB, // Round up from 45.5 to 46
+				Size:             46 * units.GiB, // Round up from 45.5 to 46
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
@@ -2862,6 +2843,7 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 		Spec: &api.VolumeSpec{
 			Size: uint64(size),
 		},
+		Status: api.VolumeStatus_VOLUME_STATUS_UP,
 	}
 
 	// Snapshot already exists
@@ -2937,7 +2919,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 			Enumerate(&api.VolumeLocator{
 				VolumeIds: []string{volume},
 			}, nil).
-			Return([]*api.Volume{&api.Volume{Id: volume, Spec: &api.VolumeSpec{
+			Return([]*api.Volume{{Id: volume, Spec: &api.VolumeSpec{
 				Size: size,
 			}}}, nil).
 			Times(1),
@@ -3020,7 +3002,7 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{},
+				{},
 			}, nil).
 			Times(1),
 
@@ -3156,14 +3138,14 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should accept supported non-default FsType and Sharedv4",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{
 								FsType: "xfs",
 							},
 						},
 					},
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},
@@ -3181,14 +3163,14 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should override with the CSI parameter if both are provided",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{
 								FsType: "xfs",
 							},
 						},
 					},
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},
@@ -3210,14 +3192,14 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should accept shared instead of sharedv4 if explicitly provided already",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{
 								FsType: "ext4",
 							},
 						},
 					},
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},
@@ -3237,14 +3219,14 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should not accept bad FsType",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Mount{
 							Mount: &csi.VolumeCapability_MountVolume{
 								FsType: "badfs",
 							},
 						},
 					},
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},
@@ -3259,12 +3241,12 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should accept block volumes",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessType: &csi.VolumeCapability_Block{
 							Block: &csi.VolumeCapability_BlockVolume{},
 						},
 					},
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},
@@ -3281,7 +3263,7 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			name: "Should not set shared flag to true when using pure backends RWX",
 			req: &csi.CreateVolumeRequest{
 				VolumeCapabilities: []*csi.VolumeCapability{
-					&csi.VolumeCapability{
+					{
 						AccessMode: &csi.VolumeCapability_AccessMode{
 							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
 						},

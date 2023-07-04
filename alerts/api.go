@@ -23,6 +23,11 @@ func NewTTLOption(ttl uint64) Option {
 	return &option{optionType: ttlOption, value: ttl}
 }
 
+// UseTtl decides whether we use ttl or a purge method for alert lifecycle
+func NewUSETTLOption(useTtl bool) Option {
+	return &option{optionType: useTtlOption, value: useTtl}
+}
+
 // NewTimeSpanOption provides an option to be used in filter definition.
 // Filters that take options, apply options only during matching alerts.
 func NewTimeSpanOption(start, stop time.Time) Option {

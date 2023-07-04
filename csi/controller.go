@@ -139,7 +139,7 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
 
-	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
+	clogger.WithContext(ctx).Tracef("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
@@ -188,9 +188,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 
 	// Log request
 	clogger.WithContext(ctx).Infof("csi.ValidateVolumeCapabilities of id %s "+
-		"capabilities %#v "+
-		id,
-		capabilities)
+		"capabilities %#v ", id, capabilities)
 
 	// Get grpc connection
 	conn, err := s.getConn()
@@ -854,6 +852,10 @@ func resolveSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*ap
 	return spec, nil
 }
 
+func isSnapshotReady(v *api.Volume) bool {
+	return v.GetError() == "" && v.Status == api.VolumeStatus_VOLUME_STATUS_UP
+}
+
 // CreateSnapshot is a CSI implementation to create a snapshot from the volume
 func (s *OsdCsiServer) CreateSnapshot(
 	ctx context.Context,
@@ -889,16 +891,18 @@ func (s *OsdCsiServer) CreateSnapshot(
 		if req.GetSourceVolumeId() != v.GetSource().GetParent() {
 			return nil, status.Error(codes.AlreadyExists, "Requested snapshot already exists for another source volume id")
 		}
-
-		return &csi.CreateSnapshotResponse{
-			Snapshot: &csi.Snapshot{
-				SizeBytes:      int64(v.GetSpec().GetSize()),
-				SnapshotId:     v.GetId(),
-				SourceVolumeId: v.GetSource().GetParent(),
-				CreationTime:   v.GetCtime(),
-				ReadyToUse:     true,
-			},
-		}, nil
+		readyToUse := isSnapshotReady(v)
+		if readyToUse {
+			return &csi.CreateSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SizeBytes:      int64(v.GetSpec().GetSize()),
+					SnapshotId:     v.GetId(),
+					SourceVolumeId: v.GetSource().GetParent(),
+					CreationTime:   v.GetCtime(),
+					ReadyToUse:     readyToUse,
+				},
+			}, nil
+		}
 	}
 
 	// Get any labels passed in by the CO
@@ -914,16 +918,37 @@ func (s *OsdCsiServer) CreateSnapshot(
 		Labels:   locator.GetVolumeLabels(),
 	})
 	if err != nil {
-		if err == kvdb.ErrNotFound {
-			return nil, status.Errorf(codes.NotFound, "Volume id %s not found", req.GetSourceVolumeId())
+		errStatus, ok := status.FromError(err)
+		if ok && errStatus.Code() == codes.NotFound {
+			// Return a non-final Aborted error, as the PVC may not have been created yet. Otherwise
+			// the CSI Snapshotter will not issue retries:
+			// https://github.com/kubernetes-csi/external-snapshotter/blob/v6.0.1/pkg/sidecar-controller/snapshot_controller.go#L656-L678
+			return nil, status.Errorf(codes.Aborted, "Volume id %s not found: %v", req.GetSourceVolumeId(), err)
 		}
-		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
+
+		// Check if snapshot has been created but is in error state
+		snapInfo, errFindFailed := util.VolumeFromIdSdk(ctx, volumes, req.GetName())
+		if errFindFailed == nil && !isSnapshotReady(snapInfo) {
+
+			// If snapshot was created but has errors, cleanup and re-create it on the next iteration.
+			_, errCleanupSnap := volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
+				VolumeId: snapInfo.Id,
+			})
+			if errCleanupSnap != nil {
+				return nil, status.Errorf(codes.Aborted, "Snapshot create failed and unable to delete failed snapshot %s: %v",
+					snapInfo.Id,
+					errCleanupSnap)
+			}
+			logrus.Infof("cleaned up failed snapshot %v in order to retry snapshot create", snapInfo.Id)
+		}
+
+		return nil, status.Errorf(codes.Aborted, "Failed to create snapshot: %v", err)
 	}
 	snapshotID := snapResp.SnapshotId
 
 	snapInfo, err := util.VolumeFromIdSdk(ctx, volumes, snapshotID)
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
+		return nil, status.Errorf(codes.Aborted, "Failed to get information about the snapshot: %v", err)
 	}
 
 	return &csi.CreateSnapshotResponse{
@@ -932,7 +957,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 			SnapshotId:     snapshotID,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			CreationTime:   snapInfo.GetCtime(),
-			ReadyToUse:     true,
+			ReadyToUse:     isSnapshotReady(snapInfo),
 		},
 	}, nil
 }
@@ -967,7 +992,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		VolumeId: req.GetSnapshotId(),
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, "Unable to delete snapshot %s: %v",
+		return nil, status.Errorf(codes.Aborted, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),
 			err)
 	}
@@ -1035,7 +1060,7 @@ func (s *OsdCsiServer) listSingleSnapshot(
 		SnapshotId:     snapshotId,
 		SourceVolumeId: resp.Volume.GetSource().Parent,
 		CreationTime:   resp.Volume.Ctime,
-		ReadyToUse:     true,
+		ReadyToUse:     isSnapshotReady(resp.Volume),
 	}
 
 	return &csi.ListSnapshotsResponse{
@@ -1145,7 +1170,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 				SnapshotId:     vol.Id,
 				SourceVolumeId: vol.GetSource().Parent,
 				CreationTime:   vol.Ctime,
-				ReadyToUse:     true,
+				ReadyToUse:     isSnapshotReady(vol),
 			},
 		}
 

@@ -1120,7 +1120,8 @@
           "IO_PROFILE_CMS",
           "IO_PROFILE_SYNC_SHARED",
           "IO_PROFILE_AUTO",
-          "IO_PROFILE_NONE"
+          "IO_PROFILE_NONE",
+          "IO_PROFILE_JOURNAL"
         ],
         "type": "string"
       },
@@ -1304,6 +1305,15 @@
           }
         },
         "type": "object"
+      },
+      "apiNearSyncReplicationStrategy": {
+        "default": "NEAR_SYNC_STRATEGY_NONE",
+        "enum": [
+          "NEAR_SYNC_STRATEGY_NONE",
+          "NEAR_SYNC_STRATEGY_AGGRESSIVE",
+          "NEAR_SYNC_STRATEGY_OPTIMIZED"
+        ],
+        "type": "string"
       },
       "apiNodeDrainAttachmentsJob": {
         "properties": {
@@ -2130,6 +2140,10 @@
             "description": "Labels are list of key value pairs to tag the cloud backup. These labels\nare stored in the metadata associated with the backup.",
             "type": "object"
           },
+          "near_sync_migrate": {
+            "title": "Indicates if this is a near sync migrate",
+            "type": "boolean"
+          },
           "task_id": {
             "description": "TaskId of the task performing this backup. This value can be used for\nidempotency.",
             "type": "string"
@@ -2366,23 +2380,29 @@
       },
       "apiSdkCloudBackupOpType": {
         "default": "SdkCloudBackupOpTypeUnknown",
-        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore",
+        "description": "- SdkCloudBackupOpTypeUnknown: Unknown\n - SdkCloudBackupOpTypeBackupOp: Backup\n - SdkCloudBackupOpTypeRestoreOp: Restore\n - SdkNearSyncOpTypeCloneOp: NearSync clone\n - SdkNearSyncOpTypeReplAddOp: NearSync replication add\n - SdkNearSyncOpTypeRestoreOp: NearSync restore",
         "enum": [
           "SdkCloudBackupOpTypeUnknown",
           "SdkCloudBackupOpTypeBackupOp",
-          "SdkCloudBackupOpTypeRestoreOp"
+          "SdkCloudBackupOpTypeRestoreOp",
+          "SdkNearSyncOpTypeCloneOp",
+          "SdkNearSyncOpTypeReplAddOp",
+          "SdkNearSyncOpTypeRestoreOp"
         ],
         "title": "CloudBackup operations types",
         "type": "string"
       },
       "apiSdkCloudBackupRequestedState": {
         "default": "SdkCloudBackupRequestedStateUnknown",
-        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore",
+        "description": "- SdkCloudBackupRequestedStateUnknown: Unknown state\n - SdkCloudBackupRequestedStatePause: Pause the backup or restore\n - SdkCloudBackupRequestedStateResume: Resume the backup or restore\n - SdkCloudBackupRequestedStateStop: Stop a backup or restore\n - SdkNearSyncRequestedStatePause: Pause the near sync migrate\n - SdkNearSyncRequestedStateResume: Resume the near sync migrate\n - SdkNearSyncRequestedStateStop: Stop a near sync migrate",
         "enum": [
           "SdkCloudBackupRequestedStateUnknown",
           "SdkCloudBackupRequestedStatePause",
           "SdkCloudBackupRequestedStateResume",
-          "SdkCloudBackupRequestedStateStop"
+          "SdkCloudBackupRequestedStateStop",
+          "SdkNearSyncRequestedStatePause",
+          "SdkNearSyncRequestedStateResume",
+          "SdkNearSyncRequestedStateStop"
         ],
         "title": "SdkCloudBackupRequestedState defines states to set a specified backup or restore\nto or from a cloud provider",
         "type": "string"
@@ -2533,9 +2553,24 @@
       },
       "apiSdkCloudBackupSizeResponse": {
         "properties": {
+          "capacity_required_for_restore": {
+            "format": "uint64",
+            "title": "Used size of the volume to be restored (in bytes)",
+            "type": "string"
+          },
+          "compressed_object_bytes": {
+            "format": "uint64",
+            "title": "Size of the compressed individual backup in object-store or NFS",
+            "type": "string"
+          },
           "size": {
             "format": "uint64",
-            "title": "Size is the size of the volume in bytes",
+            "title": "Same value as total_download_bytes, will be deprecated",
+            "type": "string"
+          },
+          "total_download_bytes": {
+            "format": "uint64",
+            "title": "Total download size of all the backups (full \u0026 incremental) required for a restore",
             "type": "string"
           }
         },
@@ -2629,6 +2664,10 @@
             "title": "Local indicates if only those backups/restores that are\nactive on current node must be returned",
             "type": "boolean"
           },
+          "near_sync_migrate": {
+            "title": "Indicates if this is for nearsync migration",
+            "type": "boolean"
+          },
           "task_id": {
             "description": "TaskId of the backup/restore task, if this is specified,\nvolume_id is ignored.",
             "type": "string"
@@ -2656,7 +2695,7 @@
       },
       "apiSdkCloudBackupStatusType": {
         "default": "SdkCloudBackupStatusTypeUnknown",
-        "description": "- SdkCloudBackupStatusTypeUnknown: Unknown\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted",
+        "description": "- SdkCloudBackupStatusTypeUnknown: Unknown\n - SdkCloudBackupStatusTypeNotStarted: Not started\n - SdkCloudBackupStatusTypeDone: Done\n - SdkCloudBackupStatusTypeAborted: Aborted\n - SdkCloudBackupStatusTypePaused: Paused\n - SdkCloudBackupStatusTypeStopped: Stopped\n - SdkCloudBackupStatusTypeActive: Active\n - SdkCloudBackupStatusTypeFailed: Failed\n - SdkCloudBackupStatusTypeQueued: Queued\n - SdkCloudBackupStatusTypeInvalid: Invalid, used by enumerate, includes failed,\nstopped and aborted\n - SdkNearSyncStatusTypeNotStarted: Near sync\nNot started\n - SdkNearSyncStatusTypeDone: Done\n - SdkNearSyncStatusTypePaused: Paused\n - SdkNearSyncStatusTypeStopped: Stopped\n - SdkNearSyncStatusTypeActive: Active\n - SdkNearSyncStatusTypeFailed: Failed\n - SdkNearSyncStatusTypeInvalid: Invalid",
         "enum": [
           "SdkCloudBackupStatusTypeUnknown",
           "SdkCloudBackupStatusTypeNotStarted",
@@ -2667,7 +2706,14 @@
           "SdkCloudBackupStatusTypeActive",
           "SdkCloudBackupStatusTypeFailed",
           "SdkCloudBackupStatusTypeQueued",
-          "SdkCloudBackupStatusTypeInvalid"
+          "SdkCloudBackupStatusTypeInvalid",
+          "SdkNearSyncStatusTypeNotStarted",
+          "SdkNearSyncStatusTypeDone",
+          "SdkNearSyncStatusTypePaused",
+          "SdkNearSyncStatusTypeStopped",
+          "SdkNearSyncStatusTypeActive",
+          "SdkNearSyncStatusTypeFailed",
+          "SdkNearSyncStatusTypeInvalid"
         ],
         "title": "CloudBackup status types",
         "type": "string"
@@ -4011,6 +4057,33 @@
         "title": "Defines a response from the node which received the request to attach",
         "type": "object"
       },
+      "apiSdkVolumeBytesUsedRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "volume ids to be found in usage response, can be empty",
+            "type": "array"
+          },
+          "node_id": {
+            "title": "machine uuid of targeted node",
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization\nfrom multiple volume in a given node",
+        "type": "object"
+      },
+      "apiSdkVolumeBytesUsedResponse": {
+        "properties": {
+          "vol_util_info": {
+            "$ref": "#/components/schemas/apiVolumeBytesUsedByNode"
+          }
+        },
+        "title": "SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node",
+        "type": "object"
+      },
       "apiSdkVolumeCapacityUsageResponse": {
         "properties": {
           "capacity_usage_info": {
@@ -5212,6 +5285,38 @@
         },
         "type": "object"
       },
+      "apiVolumeBytesUsed": {
+        "properties": {
+          "total_bytes": {
+            "format": "uint64",
+            "title": "size in bytes by the volume/snapshot",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "id for the volume/snapshot",
+            "type": "string"
+          }
+        },
+        "title": "VolumeBytesUsed defines volume utilization",
+        "type": "object"
+      },
+      "apiVolumeBytesUsedByNode": {
+        "properties": {
+          "node_id": {
+            "title": "machine uuid",
+            "type": "string"
+          },
+          "vol_usage": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumeBytesUsed"
+            },
+            "title": "VolumeBytesUsed for each requested volume on the given node",
+            "type": "array"
+          }
+        },
+        "title": "VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node",
+        "type": "object"
+      },
       "apiVolumeConsumer": {
         "properties": {
           "name": {
@@ -5425,6 +5530,13 @@
           },
           "mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
+          },
+          "near_sync": {
+            "title": "NearSync specifies the volume has a near-sync replica",
+            "type": "boolean"
+          },
+          "near_sync_replication_strategy": {
+            "$ref": "#/components/schemas/apiNearSyncReplicationStrategy"
           },
           "nodiscard": {
             "description": "Nodiscard specifies if the volume will be mounted with discard support disabled.\ni.e. FS will not release allocated blocks back to the backing storage pool.",
@@ -5700,6 +5812,9 @@
           "mount_opt_spec": {
             "$ref": "#/components/schemas/apiMountOptions"
           },
+          "near_sync_replication_strategy": {
+            "$ref": "#/components/schemas/apiNearSyncReplicationStrategy"
+          },
           "nodiscard": {
             "type": "boolean"
           },
@@ -5946,7 +6061,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.154.0"
+    "version": "0.160.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -8609,6 +8724,47 @@
           }
         },
         "summary": "UncordonAttachments re-enables volume attachments\non the provided node in the cluster.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/bytesused": {
+      "post": {
+        "operationId": "OpenStorageNode_VolumeBytesUsedByNode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeBytesUsedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeBytesUsedResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Returns bytes used of multiple volumes for a give node",
         "tags": [
           "OpenStorageNode"
         ]

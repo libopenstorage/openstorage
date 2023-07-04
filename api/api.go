@@ -16,52 +16,54 @@ import (
 
 // Strings for VolumeSpec
 const (
-	Name                     = "name"
-	Token                    = "token"
-	TokenSecret              = "token_secret"
-	TokenSecretNamespace     = "token_secret_namespace"
-	SpecNodes                = "nodes"
-	SpecParent               = "parent"
-	SpecEphemeral            = "ephemeral"
-	SpecShared               = "shared"
-	SpecJournal              = "journal"
-	SpecSharedv4             = "sharedv4"
-	SpecCascaded             = "cascaded"
-	SpecSticky               = "sticky"
-	SpecSecure               = "secure"
-	SpecCompressed           = "compressed"
-	SpecSize                 = "size"
-	SpecScale                = "scale"
-	SpecFilesystem           = "fs"
-	SpecBlockSize            = "block_size"
-	SpecQueueDepth           = "queue_depth"
-	SpecHaLevel              = "repl"
-	SpecPriority             = "io_priority"
-	SpecSnapshotInterval     = "snap_interval"
-	SpecSnapshotSchedule     = "snap_schedule"
-	SpecAggregationLevel     = "aggregation_level"
-	SpecDedupe               = "dedupe"
-	SpecPassphrase           = "secret_key"
-	SpecAutoAggregationValue = "auto"
-	SpecGroup                = "group"
-	SpecGroupEnforce         = "fg"
-	SpecZones                = "zones"
-	SpecRacks                = "racks"
-	SpecRack                 = "rack"
-	SpecRegions              = "regions"
-	SpecLabels               = "labels"
-	SpecPriorityAlias        = "priority_io"
-	SpecIoProfile            = "io_profile"
-	SpecAsyncIo              = "async_io"
-	SpecEarlyAck             = "early_ack"
-	SpecExportProtocol       = "export"
-	SpecExportProtocolISCSI  = "iscsi"
-	SpecExportProtocolPXD    = "pxd"
-	SpecExportProtocolNFS    = "nfs"
-	SpecExportProtocolCustom = "custom"
-	SpecExportOptions        = "export_options"
-	SpecExportOptionsEmpty   = "empty_export_options"
-	SpecMountOptions         = "mount_options"
+	Name                            = "name"
+	Token                           = "token"
+	TokenSecret                     = "token_secret"
+	TokenSecretNamespace            = "token_secret_namespace"
+	SpecNodes                       = "nodes"
+	SpecParent                      = "parent"
+	SpecEphemeral                   = "ephemeral"
+	SpecShared                      = "shared"
+	SpecJournal                     = "journal"
+	SpecSharedv4                    = "sharedv4"
+	SpecCascaded                    = "cascaded"
+	SpecSticky                      = "sticky"
+	SpecSecure                      = "secure"
+	SpecCompressed                  = "compressed"
+	SpecSize                        = "size"
+	SpecScale                       = "scale"
+	SpecFilesystem                  = "fs"
+	SpecBlockSize                   = "block_size"
+	SpecQueueDepth                  = "queue_depth"
+	SpecHaLevel                     = "repl"
+	SpecPriority                    = "io_priority"
+	SpecSnapshotInterval            = "snap_interval"
+	SpecSnapshotSchedule            = "snap_schedule"
+	SpecAggregationLevel            = "aggregation_level"
+	SpecDedupe                      = "dedupe"
+	SpecPassphrase                  = "secret_key"
+	SpecAutoAggregationValue        = "auto"
+	SpecGroup                       = "group"
+	SpecGroupEnforce                = "fg"
+	SpecZones                       = "zones"
+	SpecRacks                       = "racks"
+	SpecRack                        = "rack"
+	SpecRegions                     = "regions"
+	SpecLabels                      = "labels"
+	SpecPriorityAlias               = "priority_io"
+	SpecIoProfile                   = "io_profile"
+	SpecNearSync                    = "nearsync"
+	SpecNearSyncReplicationStrategy = "nearsync_replication_strategy"
+	SpecAsyncIo                     = "async_io"
+	SpecEarlyAck                    = "early_ack"
+	SpecExportProtocol              = "export"
+	SpecExportProtocolISCSI         = "iscsi"
+	SpecExportProtocolPXD           = "pxd"
+	SpecExportProtocolNFS           = "nfs"
+	SpecExportProtocolCustom        = "custom"
+	SpecExportOptions               = "export_options"
+	SpecExportOptionsEmpty          = "empty_export_options"
+	SpecMountOptions                = "mount_options"
 	// spec key cannot change due to parity with existing PSO storageclasses
 	SpecFaCreateOptions      = "createoptions"
 	SpecCSIMountOptions      = "csi_mount_options"
@@ -364,6 +366,8 @@ type CloudBackupCreateRequest struct {
 	// DeleteLocal indicates if local snap must be deleted after the
 	// backup is complete
 	DeleteLocal bool
+	// Indicates if this is a nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -511,6 +515,8 @@ type CloudBackupStatusRequest struct {
 	// ignored. This could be GroupCloudBackupId too, and in that case multiple
 	// statuses belonging to the groupCloudBackupID is returned.
 	ID string
+	// Indicates if this is for nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupStatusRequestOld struct {
@@ -525,6 +531,10 @@ type CloudBackupOpType string
 const (
 	CloudBackupOp  = CloudBackupOpType("Backup")
 	CloudRestoreOp = CloudBackupOpType("Restore")
+
+	NearSyncCloneOp   = CloudBackupOpType("NsClone")
+	NearSyncReplAddOp = CloudBackupOpType("NsReplAdd")
+	NearSyncRestoreOp = CloudBackupOpType("NsRestore")
 )
 
 // Allowed storage classes s3
@@ -550,9 +560,22 @@ const (
 )
 
 const (
+	NearSyncStatusNotStarted = CloudBackupStatusType("NsNotStarted")
+	NearSyncStatusDone       = CloudBackupStatusType("NsDone")
+	NearSyncStatusPaused     = CloudBackupStatusType("NsPaused")
+	NearSyncStatusStopped    = CloudBackupStatusType("NsStopped")
+	NearSyncStatusActive     = CloudBackupStatusType("NsActive")
+	NearSyncStatusFailed     = CloudBackupStatusType("NsFailed")
+	NearSyncStatusInvalid    = CloudBackupStatusType("NsInvalid")
+)
+
+const (
 	CloudBackupRequestedStatePause  = "pause"
 	CloudBackupRequestedStateResume = "resume"
 	CloudBackupRequestedStateStop   = "stop"
+	NearSyncRequestedStatePause     = "ns_pause"
+	NearSyncRequestedStateResume    = "ns_resume"
+	NearSyncRequestedStateStop      = "ns_stop"
 )
 
 type CloudBackupStatus struct {
@@ -807,6 +830,12 @@ func IoProfileSimpleValueOf(s string) (IoProfile, error) {
 	return IoProfile(obj), err
 }
 
+// NearSyncReplicationStrategySimpleValueOf returns the string format of NearSyncReplicationStrategy
+func NearSyncReplicationStrategySimpleValueOf(s string) (NearSyncReplicationStrategy, error) {
+	obj, err := simpleValueOf("near_sync_strategy", NearSyncReplicationStrategy_value, s)
+	return NearSyncReplicationStrategy(obj), err
+}
+
 // SimpleString returns the string format of IoProfile
 func (x IoProfile) SimpleString() string {
 	return simpleString("io_profile", IoProfile_name, int32(x))
@@ -1056,6 +1085,20 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued
 	case CloudBackupStatusInvalid:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid
+	case NearSyncStatusNotStarted:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted
+	case NearSyncStatusDone:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone
+	case NearSyncStatusPaused:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused
+	case NearSyncStatusStopped:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped
+	case NearSyncStatusActive:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive
+	case NearSyncStatusFailed:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed
+	case NearSyncStatusInvalid:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 	}
@@ -1083,6 +1126,20 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(CloudBackupStatusQueued)
 	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid:
 		return string(CloudBackupStatusInvalid)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted:
+		return string(NearSyncStatusNotStarted)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone:
+		return string(NearSyncStatusDone)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused:
+		return string(NearSyncStatusPaused)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped:
+		return string(NearSyncStatusStopped)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive:
+		return string(NearSyncStatusActive)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed:
+		return string(NearSyncStatusFailed)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid:
+		return string(NearSyncStatusInvalid)
 	default:
 		return string(CloudBackupStatusFailed)
 	}
@@ -1126,6 +1183,12 @@ func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackup
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
 	case CloudRestoreOp:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
+	case NearSyncCloneOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp
+	case NearSyncReplAddOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp
+	case NearSyncRestoreOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp
 	default:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeUnknown
 	}
@@ -1141,6 +1204,12 @@ func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackup
 		return CloudBackupOp
 	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
 		return CloudRestoreOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp: // for internal state transition
+		return NearSyncCloneOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp: // for internal state transition
+		return NearSyncReplAddOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp: // for internal state transition
+		return NearSyncRestoreOp
 	default:
 		return CloudBackupOpType("Unknown")
 	}
@@ -1302,6 +1371,12 @@ func CloudBackupRequestedStateToSdkCloudBackupRequestedState(
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause
 	case CloudBackupRequestedStateResume:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume
+	case NearSyncRequestedStateStop:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop
+	case NearSyncRequestedStatePause:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStatePause
+	case NearSyncRequestedStateResume:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateResume
 	default:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown
 	}

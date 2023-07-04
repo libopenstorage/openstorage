@@ -2,6 +2,33 @@
 
 ## Releases
 
+### v0.160.0 - (06/12/2023)
+
+* Add journal IO profile
+
+### v0.159.0 - (04/06/2023)
+
+* Add 3 new fields to the CloudBackupSize API:
+  * total_download_bytes
+  * compressed_object_bytes
+  * capacity_required_for_restore
+
+### v0.158.0 - (03/31/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
+### v0.157.0 - (03/23/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
+### v0.156.0 - (02/21/2023)
+
+* Update NearSync clone state related fields
+
+### v0.155.0 - (01/11/2023)
+
+* Add NearSync related fields
+
 ### v0.154.0 - (12/21/2022)
 
 * Adds additionalLabels field in SDK Clone request to pass additional labels to be added post-clone

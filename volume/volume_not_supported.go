@@ -112,6 +112,11 @@ func (s *statsNotSupported) VolumeUsageByNode(
 	return nil, ErrNotSupported
 }
 
+func (s *statsNotSupported)	VolumeBytesUsedByNode(nodeID string,
+	ids []uint64,
+) (*api.VolumeBytesUsedByNode, error) {
+	return nil, ErrNotSupported
+}
 func (v *statsNotSupported) RelaxedReclaimPurge(
 	nodeID string,
 ) (*api.RelaxedReclaimPurge, error) {

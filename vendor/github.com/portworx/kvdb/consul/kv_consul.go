@@ -165,7 +165,7 @@ func New(
 		}
 		if config, client, err = newKvClient(machine, connParams); err == nil {
 			return &consulKV{
-				BaseKvdb:   common.BaseKvdb{FatalCb: connParams.fatalErrorCb},
+				BaseKvdb:   common.BaseKvdb{FatalCb: connParams.fatalErrorCb, LockTryDuration: kvdb.DefaultLockTryDuration},
 				domain:     domain,
 				Controller: kvdb.ControllerNotSupported,
 				client:     newConsulClient(config, client, refreshDelay, connParams),
@@ -548,6 +548,10 @@ func (kv *consulKV) WatchTree(prefix string, waitIndex uint64, opaque interface{
 	return nil
 }
 
+func (kv *consulKV) Compact(index uint64) error {
+	return kvdb.ErrNotSupported
+}
+
 func (kv *consulKV) Lock(key string) (*kvdb.KVPair, error) {
 	return kv.LockWithID(key, "locked")
 }
@@ -556,7 +560,7 @@ func (kv *consulKV) LockWithID(key string, lockerID string) (
 	*kvdb.KVPair,
 	error,
 ) {
-	return kv.LockWithTimeout(key, lockerID, kvdb.DefaultLockTryDuration, kv.GetLockTimeout())
+	return kv.LockWithTimeout(key, lockerID, kv.LockTryDuration, kv.GetLockHoldDuration())
 }
 
 func (kv *consulKV) LockWithTimeout(
@@ -592,6 +596,17 @@ func (kv *consulKV) LockWithTimeout(
 		Key:  key,
 		Lock: l,
 	}, nil
+}
+
+func (kv *consulKV) IsKeyLocked(key string) (bool, string, error) {
+	kvPair, err := kv.Get(key)
+	if err == kvdb.ErrNotFound {
+		return false, "", nil
+	} else if err != nil {
+		return false, "", err
+	}
+	lockerID := string(kvPair.Value)
+	return true, lockerID, nil
 }
 
 func (kv *consulKV) Unlock(kvp *kvdb.KVPair) error {
