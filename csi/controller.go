@@ -414,7 +414,6 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 	}
 
 	var shared bool
-	var block bool
 	var mount bool
 	for _, cap := range caps {
 		mode := cap.GetAccessMode().GetMode()
@@ -422,10 +421,6 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
 			shared = true
-		}
-
-		if cap.GetBlock() != nil {
-			block = true
 		}
 
 		if cap.GetMount() != nil {
@@ -443,20 +438,6 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 				"FlashArray Direct Access shared filesystems are not supported",
 			)
 		}
-		if block {
-			return status.Errorf(
-				codes.InvalidArgument,
-				"FlashArray Direct Access raw block devices are not yet supported",
-			)
-		}
-	}
-
-	// Check for FB DA volumes: all allowed except raw block
-	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE && block {
-		return status.Errorf(
-			codes.InvalidArgument,
-			"FlashBlade Direct Access volumes do not support raw block",
-		)
 	}
 
 	return nil
