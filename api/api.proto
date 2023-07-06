@@ -115,6 +115,7 @@ enum IoProfile {
   IO_PROFILE_AUTO = 6;
   IO_PROFILE_NONE = 7;
   IO_PROFILE_JOURNAL = 8;
+  IO_PROFILE_AUTO_JOURNAL = 9;
 }
 
 // VolumeState represents the state of a volume.
@@ -5371,7 +5372,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 160;
+    Minor = 161;
     // SDK version patch value of this specification
     Patch = 0;
   }

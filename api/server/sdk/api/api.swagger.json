@@ -1121,7 +1121,8 @@
           "IO_PROFILE_SYNC_SHARED",
           "IO_PROFILE_AUTO",
           "IO_PROFILE_NONE",
-          "IO_PROFILE_JOURNAL"
+          "IO_PROFILE_JOURNAL",
+          "IO_PROFILE_AUTO_JOURNAL"
         ],
         "type": "string"
       },
@@ -6061,7 +6062,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.160.0"
+    "version": "0.161.0"
   },
   "openapi": "3.0.0",
   "paths": {
