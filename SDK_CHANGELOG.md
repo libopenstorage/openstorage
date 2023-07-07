@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.161.0 - (06/12/2023)
+
+* Add auto-journal IO profile
+
 ### v0.160.0 - (06/12/2023)
 
 * Add journal IO profile
