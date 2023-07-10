@@ -3815,8 +3815,6 @@ message SdkVolumeWatchResponse {
   Volume volume = 1;
   // Name of volume
   string name = 2;
-  // Volume labels
-  map<string, string> labels = 3;
 }
 
 

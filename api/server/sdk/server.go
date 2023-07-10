@@ -142,12 +142,12 @@ type ServerConfig struct {
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
-	ctx         context.Context
-	ctxCancel   context.CancelFunc
-	config      ServerConfig
-	netServer   *sdkGrpcServer
-	udsServer   *sdkGrpcServer
-	restGateway *sdkRestGateway
+	watcherCtx       context.Context
+	watcherCtxCancel context.CancelFunc
+	config           ServerConfig
+	netServer        *sdkGrpcServer
+	udsServer        *sdkGrpcServer
+	restGateway      *sdkRestGateway
 
 	accessLog *os.File
 	auditLog  *os.File
@@ -283,14 +283,14 @@ func New(config *ServerConfig) (*Server, error) {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
-		ctx:         ctx,
-		ctxCancel:   cancel,
-		config:      *config,
-		netServer:   netServer,
-		udsServer:   udsServer,
-		restGateway: restGateway,
-		auditLog:    auditLog,
-		accessLog:   accessLog,
+		watcherCtx:       ctx,
+		watcherCtxCancel: cancel,
+		config:           *config,
+		netServer:        netServer,
+		udsServer:        udsServer,
+		restGateway:      restGateway,
+		auditLog:         auditLog,
+		accessLog:        accessLog,
 	}, nil
 }
 
@@ -298,7 +298,7 @@ func New(config *ServerConfig) (*Server, error) {
 func (s *Server) Start() error {
 	// watcherServer should only be called once, since netServer an udsServer both implments grpcServer,
 	// we are starting the watch server here
-	go s.netServer.watcherServer.startWatcher(s.ctx)
+	go s.netServer.watcherServer.startWatcher(s.watcherCtx)
 	if err := s.netServer.Start(); err != nil {
 		return err
 	} else if err := s.udsServer.Start(); err != nil {
@@ -314,7 +314,7 @@ func (s *Server) Stop() {
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
-	s.ctxCancel()
+	s.watcherCtxCancel()
 
 	if s.accessLog != nil {
 		s.accessLog.Close()

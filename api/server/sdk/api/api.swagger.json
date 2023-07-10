@@ -4566,13 +4566,6 @@
       },
       "apiSdkVolumeWatchResponse": {
         "properties": {
-          "labels": {
-            "additionalProperties": {
-              "type": "string"
-            },
-            "title": "Volume labels",
-            "type": "object"
-          },
           "name": {
             "title": "Name of volume",
             "type": "string"

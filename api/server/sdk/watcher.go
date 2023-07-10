@@ -40,7 +40,7 @@ func (w *WatcherServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWa
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
-	return status.Errorf(codes.InvalidArgument, "invalid request type for watcher %v", req)
+	return status.Errorf(codes.InvalidArgument, "Invalid request type for watcher %v", req)
 }
 
 type watchConnection struct {
@@ -52,9 +52,9 @@ type watchConnection struct {
 func (w *watchConnection) callBack(eventData interface{}) {
 	select {
 	case w.eventChannel <- eventData:
-		logrus.Debugf("successfully callback event for %v", w.name)
+		logrus.Debugf("Successfully callback event for %v", w.name)
 	default:
-		logrus.Warnf("failed to send eventData for %v with event type %v", w.name, w.eventType)
+		logrus.Warnf("Failed to send eventData for %v with event type %v", w.name, w.eventType)
 	}
 
 }
@@ -66,7 +66,7 @@ func (s *WatcherServer) registerWatcher(client *watchConnection, eventType strin
 		s.watchConnections = make(map[string][]*watchConnection)
 	}
 	s.watchConnections[eventType] = append(s.watchConnections[eventType], client)
-	logrus.Debugf("successfully register watcher %v", client.name)
+	logrus.Debugf("Successfully register watcher %v", client.name)
 }
 
 func (s *WatcherServer) removeWatcher(name string, eventType string) {
@@ -100,7 +100,7 @@ func (s *WatcherServer) startWatcher(ctx context.Context) error {
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "error starting watcher: %v", err)
+			return status.Errorf(codes.Internal, "Error starting watcher: %v", err)
 		} else {
 			return nil
 		}
@@ -118,12 +118,13 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context) error {
 	// wait for driver to be initialized with an non-empty volume watcher
 	for {
 		if s.volumeServer.driver(ctx) == nil {
+			time.Sleep(2 * time.Second)
 			continue
 		}
 
 		volumeChannel, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
 		if err != nil {
-			logrus.Warnf("error getting volume watcher %v", err)
+			logrus.Warnf("Error getting volume watcher %v", err)
 		}
 		if volumeChannel == nil {
 			continue
@@ -142,7 +143,7 @@ volumeWatch:
 			}
 			s.RUnlock()
 		case <-ctx.Done():
-			logrus.Infof("exiting volume watcher\n")
+			logrus.Infof("Exiting volume watcher")
 			break volumeWatch
 		}
 	}
@@ -199,13 +200,9 @@ func (w *WatcherServer) volumeWatch(
 			}
 
 			for event := range client.eventChannel {
-
-				// create a new context that will return error if execution took more than streamTimeout
-				timeoutCtx, timeoutCancelled := context.WithTimeout(ctx, streamTimeout)
-				defer timeoutCancelled()
 				var vol *api.Volume
 				if vol, ok = event.(*api.Volume); !ok {
-					logrus.Warnf("error converting event to Volume Type for event %v", event)
+					logrus.Warnf("Error converting event to Volume Type for event %v", event)
 					continue
 				}
 				if !vol.IsPermitted(ctx, api.Ownership_Read) {
@@ -216,14 +213,9 @@ func (w *WatcherServer) volumeWatch(
 				err := stream.Send(resp)
 
 				if err != nil {
-					logrus.Warnf("error sending stream: %v", err)
+					logrus.Warnf("Error sending stream: %v", err)
 					return err
 				}
-				if timeoutCtx.Err() != nil {
-					logrus.Warnf("context error: %v", timeoutCtx.Err())
-					return timeoutCtx.Err()
-				}
-				timeoutCancelled()
 			}
 		}
 		return nil
@@ -238,7 +230,7 @@ func (w *WatcherServer) volumeWatch(
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "error watching volume: %v", err)
+			return status.Errorf(codes.Internal, "Error watching volume: %v", err)
 		} else {
 			return nil
 		}
