@@ -245,7 +245,6 @@ func convertApiVolumeToSdkReponse(vol *api.Volume) *api.SdkWatchResponse {
 	resp := api.SdkVolumeWatchResponse{
 		Volume: vol,
 		Name:   vol.Locator.Name,
-		Labels: vol.Locator.VolumeLabels,
 	}
 	volumeEventResponse := api.SdkWatchResponse_VolumeEvent{
 		VolumeEvent: &resp,
