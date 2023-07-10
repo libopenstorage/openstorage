@@ -95,6 +95,7 @@ type OsdCsiServer struct {
 	roundRobinBalancer loadbalancer.Balancer
 	config             *OsdCsiServerConfig
 	autoRecoverStopCh  chan struct{}
+	stopCleanupCh      chan bool
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -159,6 +160,9 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 }
 
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
 	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
 	return remoteConn, err
 }
