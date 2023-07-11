@@ -152,7 +152,7 @@ func newTestServer(t *testing.T) *testServer {
 		return ch, nil
 	}).Times(1)
 	go func() {
-		tester.server.ctxCancel()
+		tester.server.watcherCtxCancel()
 	}()
 	err = tester.server.Start()
 	assert.Nil(t, err)
@@ -240,7 +240,7 @@ func newTestServerAuth(t *testing.T) *testServer {
 		return ch, nil
 	}).Times(1)
 	go func() {
-		tester.server.ctxCancel()
+		tester.server.watcherCtxCancel()
 	}()
 	err = tester.server.Start()
 	assert.Nil(t, err)
