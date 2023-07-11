@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/moby/sys/mount"
+	"github.com/moby/sys/mountinfo"
 	"github.com/stretchr/testify/require"
 )
 
@@ -21,8 +21,8 @@ func addMountEntry(t *testing.T, device string, mountpoint string) int {
 	_, err := os.Create(device)
 	require.NoError(t, err, "Failed to create test device: ", device)
 	index := len(testMounts)
-	info := &mount.Info{
-		Fstype:     "ext4",
+	info := &mountinfo.Info{
+		FSType:     "ext4",
 		Minor:      index,
 		Mountpoint: mountpoint,
 		Source:     device,
