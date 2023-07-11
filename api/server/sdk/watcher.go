@@ -35,12 +35,12 @@ type WatcherServer struct {
 // Once the event object arrives at openstorage, it will be redistributed to a list of watch connections via another set of channels.
 func (w *WatcherServer) Watch(req *api.SdkWatchRequest, stream api.OpenStorageWatch_WatchServer) error {
 	if w.volumeServer.cluster() == nil || w.volumeServer.driver(stream.Context()) == nil {
-		return status.Error(codes.Unavailable, "Resource has not been initialized")
+		return status.Error(codes.Unavailable, "resource has not been initialized")
 	}
 	if req.GetVolumeEvent() != nil {
 		return w.volumeWatch(req.GetVolumeEvent(), stream)
 	}
-	return status.Errorf(codes.InvalidArgument, "Invalid request type for watcher %v", req)
+	return status.Errorf(codes.InvalidArgument, "invalid request type for watcher %v", req)
 }
 
 type watchConnection struct {
@@ -100,13 +100,13 @@ func (s *WatcherServer) startWatcher(ctx context.Context) error {
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "Error starting watcher: %v", err)
+			return status.Errorf(codes.Internal, "error starting watcher: %v", err)
 		} else {
 			return nil
 		}
 	case <-ctx.Done():
 		return status.Error(codes.DeadlineExceeded,
-			"Deadline is reached, server side func exiting")
+			"deadline is reached, server side func exiting")
 	}
 }
 
@@ -186,7 +186,7 @@ func (w *WatcherServer) volumeWatch(
 		if vols, err := w.volumeServer.driver(ctx).Enumerate(&api.VolumeLocator{}, nil); err != nil {
 			return status.Errorf(
 				codes.Internal,
-				"Failed to enumerate volumes: %v",
+				"failed to enumerate volumes: %v",
 				err.Error())
 		} else {
 			for _, vol := range vols {
@@ -230,13 +230,13 @@ func (w *WatcherServer) volumeWatch(
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return status.Errorf(codes.Internal, "Error watching volume: %v", err)
+			return status.Errorf(codes.Internal, "error watching volume: %v", err)
 		} else {
 			return nil
 		}
 	case <-ctx.Done():
 		return status.Error(codes.DeadlineExceeded,
-			"Deadline is reached, server side func exiting")
+			"deadline is reached, server side func exiting")
 	}
 
 }
