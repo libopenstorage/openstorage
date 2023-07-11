@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/docker/docker/pkg/mount"
+	"github.com/moby/sys/mount"
 	"github.com/stretchr/testify/require"
 )
 
