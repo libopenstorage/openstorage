@@ -159,6 +159,7 @@ func (s *sdkRestGateway) restServerSetupHandlers() (http.Handler, error) {
 		api.RegisterOpenStorageFilesystemCheckHandler,
 		api.RegisterOpenStorageFilesystemTrimHandler,
 		api.RegisterOpenStorageJobHandler,
+		api.RegisterOpenStorageWatchHandler,
 	}
 
 	// REST Gateway extensions

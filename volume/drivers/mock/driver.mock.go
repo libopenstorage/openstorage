@@ -695,6 +695,21 @@ func (mr *MockVolumeDriverMockRecorder) GetActiveRequests() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveRequests", reflect.TypeOf((*MockVolumeDriver)(nil).GetActiveRequests))
 }
 
+// GetVolumeWatcher mocks base method
+func (m *MockVolumeDriver) GetVolumeWatcher(arg0 *api.VolumeLocator, arg1 map[string]string) (chan *api.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVolumeWatcher", arg0, arg1)
+	ret0, _ := ret[0].(chan *api.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVolumeWatcher indicates an expected call of GetVolumeWatcher
+func (mr *MockVolumeDriverMockRecorder) GetVolumeWatcher(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).GetVolumeWatcher), arg0, arg1)
+}
+
 // Inspect mocks base method
 func (m *MockVolumeDriver) Inspect(arg0 []string) ([]*api.Volume, error) {
 	m.ctrl.T.Helper()

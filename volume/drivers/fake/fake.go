@@ -21,20 +21,22 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"math/rand"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -56,8 +58,9 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
-	kv          kvdb.Kvdb
-	thisCluster cluster.Cluster
+	kv            kvdb.Kvdb
+	thisCluster   cluster.Cluster
+	volumeChannel chan *api.Volume
 }
 
 type fakeCred struct {
@@ -98,6 +101,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                    kv,
+		volumeChannel:         make(chan *api.Volume, 2),
 	}
 
 	inst.thisCluster, err = clustermanager.Inst()
@@ -117,6 +121,34 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 
 	logrus.Println("Fake driver initialized")
 	return inst, nil
+}
+
+// volumeGenerator periocally
+func volumeGenerator(d *driver) {
+	iter := 0
+	for {
+		sleepRand := rand.Intn(10)
+		time.Sleep(time.Duration(sleepRand+1) * time.Second)
+		result := rand.Int31()
+		logrus.Infof("sending result %v with iteration %v", result, iter)
+		response := api.Volume{
+			Id: fmt.Sprintf("%v-%v", result, iter),
+			Locator: &api.VolumeLocator{
+				Name:         uuid.New(),
+				VolumeLabels: make(map[string]string),
+			},
+		}
+		d.volumeChannel <- &response
+		iter += 1
+	}
+}
+
+func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	go volumeGenerator(d)
+	if d.volumeChannel == nil {
+		d.volumeChannel = make(chan *api.Volume, 2)
+	}
+	return d.volumeChannel, nil
 }
 
 func (d *driver) Name() string {
@@ -391,16 +423,15 @@ func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 }
 
 func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.VolumeBytesUsedByNode, error) {
-   volusage := []*api.VolumeBytesUsed{}
-   for _, id := range volumes {
-       volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
-   }
-   return &api.VolumeBytesUsedByNode{
-       NodeId:  nodeMID,
-       VolUsage: volusage,
-   }, nil
+	volusage := []*api.VolumeBytesUsed{}
+	for _, id := range volumes {
+		volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
+	}
+	return &api.VolumeBytesUsedByNode{
+		NodeId:   nodeMID,
+		VolUsage: volusage,
+	}, nil
 }
-
 
 func (d *driver) CapacityUsage(
 	volumeID string,
