@@ -23,16 +23,16 @@ import (
 	"strings"
 	"time"
 
+	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
-	"github.com/portworx/kvdb"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // When create is called for an existing volume, this function is called to make sure
@@ -764,14 +764,14 @@ func (s *VolumeServer) Stats(
 }
 
 func (s *VolumeServer) VolumeBytesUsedByNode(
-   ctx context.Context,
-   req *api.SdkVolumeBytesUsedRequest,
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
 ) (*api.SdkVolumeBytesUsedResponse, error) {
-   return nil, status.Errorf(
-                codes.Unimplemented,
-                "Failed to obtain volume utilization on node %s: %v",
-                req.GetNodeId(),
-                volume.ErrNotSupported.Error())
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"Failed to obtain volume utilization on node %s: %v",
+		req.GetNodeId(),
+		volume.ErrNotSupported.Error())
 }
 
 func (s *VolumeServer) CapacityUsage(

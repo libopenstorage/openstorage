@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.42 - (09/19/2023)
+
+* Add new Watch endpoint
+
 ### v0.101.41 - (09/7/2023)
 
 * Update stats for new VolumeBytesUsedByNode api
