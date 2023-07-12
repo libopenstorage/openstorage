@@ -4551,6 +4551,50 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkVolumeWatchRequest": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "labels to filter out the volumes to watch on",
+            "type": "object"
+          }
+        },
+        "title": "Defines the request to watch an openstorage volume event for the given label\nif the label is empty, it returns all the volume events",
+        "type": "object"
+      },
+      "apiSdkVolumeWatchResponse": {
+        "properties": {
+          "name": {
+            "title": "Name of volume",
+            "type": "string"
+          },
+          "volume": {
+            "$ref": "#/components/schemas/apiVolume"
+          }
+        },
+        "title": "Defines the response containing an volume with a state changed",
+        "type": "object"
+      },
+      "apiSdkWatchRequest": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
+          }
+        },
+        "title": "Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc",
+        "type": "object"
+      },
+      "apiSdkWatchResponse": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
+          }
+        },
+        "title": "Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc",
+        "type": "object"
+      },
       "apiSeverityType": {
         "default": "SEVERITY_TYPE_NONE",
         "enum": [
@@ -6062,7 +6106,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.161.0"
+    "version": "0.162.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -10814,6 +10858,57 @@
         "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
         "tags": [
           "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/watch": {
+      "post": {
+        "description": "Requires access AccessType.Read",
+        "operationId": "OpenStorageWatch_Watch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkWatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/runtimeStreamError"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/apiSdkWatchResponse"
+                    }
+                  },
+                  "title": "Stream result of apiSdkWatchResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response.(streaming responses)"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Watch on resources managed by the driver and receive them as a stream of events.",
+        "tags": [
+          "OpenStorageWatch"
         ]
       }
     }
