@@ -4280,6 +4280,16 @@ message SdkStorageRebalanceRequest {
   uint64 max_duration_minutes = 5;
   // RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots
   bool remove_repl_1_snapshots = 6;
+  // Mode specifies the mode of the volume reorg job
+  Mode mode = 7;
+
+  // Mode is an enum that defines the mode of the volume reorg job
+  enum Mode {
+    // StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)
+    STORAGE_REBALANCE = 0;
+    // VolumePlacementFix mode: scan all volumes for incorrect placement and fix them
+    VOLUME_PLACEMENT_FIX = 1;
+  }
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -5425,7 +5435,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 162;
+    Minor = 163;
     // SDK version patch value of this specification
     Patch = 0;
   }

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.163.0 - (07/13/2023)
+
+* Add mode field to SdkStorageRebalanceRequest
+
 ### v0.162.0 - (07/11/2023)
 
 * Add new Watch endpoint
