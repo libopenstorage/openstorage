@@ -142,10 +142,12 @@ type ServerConfig struct {
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
-	config      ServerConfig
-	netServer   *sdkGrpcServer
-	udsServer   *sdkGrpcServer
-	restGateway *sdkRestGateway
+	watcherCtx       context.Context
+	watcherCtxCancel context.CancelFunc
+	config           ServerConfig
+	netServer        *sdkGrpcServer
+	udsServer        *sdkGrpcServer
+	restGateway      *sdkRestGateway
 
 	accessLog *os.File
 	auditLog  *os.File
@@ -207,6 +209,7 @@ type sdkGrpcServer struct {
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	bucketServer          *BucketServer
+	watcherServer         *WatcherServer
 }
 
 // Interface check
@@ -278,19 +281,24 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
-		config:      *config,
-		netServer:   netServer,
-		udsServer:   udsServer,
-		restGateway: restGateway,
-		auditLog:    auditLog,
-		accessLog:   accessLog,
+		watcherCtx:       ctx,
+		watcherCtxCancel: cancel,
+		config:           *config,
+		netServer:        netServer,
+		udsServer:        udsServer,
+		restGateway:      restGateway,
+		auditLog:         auditLog,
+		accessLog:        accessLog,
 	}, nil
 }
 
 // Start all servers
 func (s *Server) Start() error {
+	// watcherServer should only be called once, since netServer an udsServer both implments grpcServer,
+	// we are starting the watch server here
+	go s.netServer.watcherServer.startWatcher(s.watcherCtx)
 	if err := s.netServer.Start(); err != nil {
 		return err
 	} else if err := s.udsServer.Start(); err != nil {
@@ -306,6 +314,7 @@ func (s *Server) Stop() {
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
+	s.watcherCtxCancel()
 
 	if s.accessLog != nil {
 		s.accessLog.Close()
@@ -458,6 +467,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.bucketServer = &BucketServer{
 		server: s,
 	}
+	s.watcherServer = &WatcherServer{
+		volumeServer: s.volumeServer,
+	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
@@ -546,6 +558,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
 		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
+		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
@@ -575,7 +588,6 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 

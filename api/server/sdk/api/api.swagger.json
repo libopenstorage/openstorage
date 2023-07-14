@@ -12,16 +12,6 @@
         ],
         "type": "string"
       },
-      "ClusterPairModeMode": {
-        "default": "Default",
-        "enum": [
-          "Default",
-          "DisasterRecovery",
-          "OneTimeMigration"
-        ],
-        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery\n - OneTimeMigration: Paired for one-time migration",
-        "type": "string"
-      },
       "FilesystemCheckFilesystemCheckStatus": {
         "default": "FS_CHECK_UNKNOWN",
         "description": "- FS_CHECK_UNKNOWN: Filesystem Check operation is an unknown state\n - FS_CHECK_NOT_RUNNING: FilesystemCheck operation not running for the specified volume\n - FS_CHECK_STARTED: FilesystemCheck operation started for the specified volume\n - FS_CHECK_INPROGRESS: FilesystemCheck operation is in progress\n - FS_CHECK_STOPPED: FilesystemCheck operation was stopped by the user\n - FS_CHECK_COMPLETED: FilesystemCheck operation completed successfully\n - FS_CHECK_FAILED: FilesystemCheck operation failed due to internal error",
@@ -661,7 +651,7 @@
             "type": "string"
           },
           "mode": {
-            "$ref": "#/components/schemas/ClusterPairModeMode"
+            "$ref": "#/components/schemas/apiClusterPairModeMode"
           },
           "remote_cluster_ip": {
             "title": "IP of the remote cluster",
@@ -725,7 +715,7 @@
             "type": "string"
           },
           "mode": {
-            "$ref": "#/components/schemas/ClusterPairModeMode"
+            "$ref": "#/components/schemas/apiClusterPairModeMode"
           },
           "name": {
             "title": "Name of the cluster",
@@ -749,6 +739,16 @@
         },
         "title": "Information about a cluster pair",
         "type": "object"
+      },
+      "apiClusterPairModeMode": {
+        "default": "Default",
+        "enum": [
+          "Default",
+          "DisasterRecovery",
+          "OneTimeMigration"
+        ],
+        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery\n - OneTimeMigration: Paired for one-time migration",
+        "type": "string"
       },
       "apiClusterPairTokenGetResponse": {
         "properties": {
@@ -1120,7 +1120,9 @@
           "IO_PROFILE_CMS",
           "IO_PROFILE_SYNC_SHARED",
           "IO_PROFILE_AUTO",
-          "IO_PROFILE_NONE"
+          "IO_PROFILE_NONE",
+          "IO_PROFILE_JOURNAL",
+          "IO_PROFILE_AUTO_JOURNAL"
         ],
         "type": "string"
       },
@@ -3890,6 +3892,9 @@
             "title": "MaxDurationMinutes defines how long operation should run when started at schedule.\n0 values means no limit on duration",
             "type": "string"
           },
+          "mode": {
+            "$ref": "#/components/schemas/apiSdkStorageRebalanceRequestMode"
+          },
           "remove_repl_1_snapshots": {
             "title": "RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots",
             "type": "boolean"
@@ -3921,6 +3926,16 @@
           }
         },
         "type": "object"
+      },
+      "apiSdkStorageRebalanceRequestMode": {
+        "default": "STORAGE_REBALANCE",
+        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them",
+        "enum": [
+          "STORAGE_REBALANCE",
+          "VOLUME_PLACEMENT_FIX"
+        ],
+        "title": "Mode is an enum that defines the mode of the volume reorg job",
+        "type": "string"
       },
       "apiSdkStorageRebalanceResponse": {
         "properties": {
@@ -4547,6 +4562,50 @@
       },
       "apiSdkVolumeUpdateResponse": {
         "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkVolumeWatchRequest": {
+        "properties": {
+          "labels": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "labels to filter out the volumes to watch on",
+            "type": "object"
+          }
+        },
+        "title": "Defines the request to watch an openstorage volume event for the given label\nif the label is empty, it returns all the volume events",
+        "type": "object"
+      },
+      "apiSdkVolumeWatchResponse": {
+        "properties": {
+          "name": {
+            "title": "Name of volume",
+            "type": "string"
+          },
+          "volume": {
+            "$ref": "#/components/schemas/apiVolume"
+          }
+        },
+        "title": "Defines the response containing an volume with a state changed",
+        "type": "object"
+      },
+      "apiSdkWatchRequest": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchRequest"
+          }
+        },
+        "title": "Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc",
+        "type": "object"
+      },
+      "apiSdkWatchResponse": {
+        "properties": {
+          "volume_event": {
+            "$ref": "#/components/schemas/apiSdkVolumeWatchResponse"
+          }
+        },
+        "title": "Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc",
         "type": "object"
       },
       "apiSeverityType": {
@@ -6060,7 +6119,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.159.0"
+    "version": "0.163.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -10812,6 +10871,57 @@
         "summary": "Update provides a method for manipulating the specification and attributes of a volume.\nSet can be used to resize a volume, update labels, change replica count, and much more.",
         "tags": [
           "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/watch": {
+      "post": {
+        "description": "Requires access AccessType.Read",
+        "operationId": "OpenStorageWatch_Watch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkWatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "error": {
+                      "$ref": "#/components/schemas/runtimeStreamError"
+                    },
+                    "result": {
+                      "$ref": "#/components/schemas/apiSdkWatchResponse"
+                    }
+                  },
+                  "title": "Stream result of apiSdkWatchResponse",
+                  "type": "object"
+                }
+              }
+            },
+            "description": "A successful response.(streaming responses)"
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Watch on resources managed by the driver and receive them as a stream of events.",
+        "tags": [
+          "OpenStorageWatch"
         ]
       }
     }

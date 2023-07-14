@@ -23,7 +23,6 @@ import (
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
-	"github.com/libopenstorage/openstorage/pkg/auth"
 	sdkauth "github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
 	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
@@ -303,9 +302,9 @@ func newTestServerSdk(t *testing.T) *testServer {
 	assert.NotNil(t, stp)
 
 	os.Remove(testSdkSock)
-	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
+	selfsignedJwt, err := sdkauth.NewJwtAuth(&sdkauth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
-		UsernameClaim: auth.UsernameClaimTypeName,
+		UsernameClaim: sdkauth.UsernameClaimTypeName,
 	})
 	assert.NoError(t, err)
 	tester.sdk, err = sdk.New(&sdk.ServerConfig{
@@ -321,7 +320,7 @@ func newTestServerSdk(t *testing.T) *testServer {
 		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 		Security: &sdk.SecurityConfig{
 			Role: rm,
-			Authenticators: map[string]auth.Authenticator{
+			Authenticators: map[string]sdkauth.Authenticator{
 				"testcode": selfsignedJwt,
 			},
 		},

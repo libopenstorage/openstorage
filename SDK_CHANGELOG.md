@@ -2,6 +2,22 @@
 
 ## Releases
 
+### v0.163.0 - (07/13/2023)
+
+* Add mode field to SdkStorageRebalanceRequest
+
+### v0.162.0 - (07/11/2023)
+
+* Add new Watch endpoint
+
+### v0.161.0 - (06/12/2023)
+
+* Add auto-journal IO profile
+
+### v0.160.0 - (06/12/2023)
+
+* Add journal IO profile
+
 ### v0.159.0 - (04/06/2023)
 
 * Add 3 new fields to the CloudBackupSize API:
