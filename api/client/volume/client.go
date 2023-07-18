@@ -75,6 +75,10 @@ func (v *volumeClient) GraphDriverRemove(id string) error {
 	return nil
 }
 
+func (v *volumeClient) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
+}
+
 func (v *volumeClient) GraphDriverGet(id string, mountLabel string) (string, error) {
 	response := ""
 	if err := v.c.Get().Resource(graphPath + "/inspect").Instance(id).Do().Unmarshal(&response); err != nil {

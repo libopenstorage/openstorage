@@ -2513,6 +2513,25 @@ service OpenStorageVolume {
           body: "*"
         };
     }
+
+
+}
+
+
+// OpenStorageWatcher is a service that provides APIs for watching on resources and receive them as a stream of events.
+service OpenStorageWatch{
+
+    // Watch on resources managed by the driver and receive them as a stream of events.
+    //
+    // Requires access AccessType.Read
+    rpc Watch(SdkWatchRequest)
+    returns (stream SdkWatchResponse) {
+        option(google.api.http) = {
+          post: "/v1/watch"
+          body: "*"
+        };
+    }
+
 }
 
 // OpenStorageMountAttach is a service used to manage node access to a volume.
@@ -3764,6 +3783,40 @@ message SdkVolumeSnapshotScheduleUpdateRequest {
 message SdkVolumeSnapshotScheduleUpdateResponse {
 }
 
+// Defines the request to watch an openstorage event. An event can be a volume, a node, a disk, etc
+message SdkWatchRequest {
+  // event_type is an option to indicate the type of openStorage event to watch on.
+  // examples of options are volume, node, disk, etc
+  oneof event_type {
+    // watch request for volume event
+    SdkVolumeWatchRequest volume_event = 1;
+  }
+}
+
+// Defines the response to watch an openstorage event. An event can be a volume, a node, a disk, etc
+message SdkWatchResponse {
+  // event_type is an option to indicate the type of openStorage event to watch on.
+  // examples of options are volume, node, disk, etc
+  oneof event_type {
+    SdkVolumeWatchResponse volume_event = 1;
+  }
+}
+
+// Defines the request to watch an openstorage volume event for the given label
+// if the label is empty, it returns all the volume events
+message SdkVolumeWatchRequest {
+  // labels to filter out the volumes to watch on
+  map<string, string> labels = 1;
+}
+
+// Defines the response containing an volume with a state changed
+message SdkVolumeWatchResponse {
+  // Information about the volume
+  Volume volume = 1;
+  // Name of volume
+  string name = 2;
+}
+
 
 // Defines request to retrieve all volumes/snapshots capacity usage details
 // for a given node
@@ -4227,6 +4280,16 @@ message SdkStorageRebalanceRequest {
   uint64 max_duration_minutes = 5;
   // RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots
   bool remove_repl_1_snapshots = 6;
+  // Mode specifies the mode of the volume reorg job
+  Mode mode = 7;
+
+  // Mode is an enum that defines the mode of the volume reorg job
+  enum Mode {
+    // StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)
+    STORAGE_REBALANCE = 0;
+    // VolumePlacementFix mode: scan all volumes for incorrect placement and fix them
+    VOLUME_PLACEMENT_FIX = 1;
+  }
 }
 
 // SdkStorageRebalanceResponse is the response to a storage rebalance request
@@ -5372,7 +5435,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 161;
+    Minor = 163;
     // SDK version patch value of this specification
     Patch = 0;
   }

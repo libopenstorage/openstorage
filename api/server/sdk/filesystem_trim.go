@@ -47,9 +47,6 @@ func (s *FilesystemTrimServer) Start(
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
 	}
-	if len(req.GetMountPath()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
-	}
 
 	r, err := s.driver(ctx).FilesystemTrimStart(req)
 
@@ -66,12 +63,6 @@ func (s *FilesystemTrimServer) Status(
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
 	var err error
-	if len(req.GetVolumeId()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	}
-	if len(req.GetMountPath()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
-	}
 
 	r, err := s.driver(ctx).FilesystemTrimStatus(req)
 
@@ -120,9 +111,6 @@ func (s *FilesystemTrimServer) Stop(
 	var err error
 	if len(req.GetVolumeId()) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Must supply a volume id")
-	}
-	if len(req.GetMountPath()) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Must supply a volume mount path")
 	}
 
 	r, err := s.driver(ctx).FilesystemTrimStop(req)
