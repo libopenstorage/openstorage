@@ -149,11 +149,10 @@ func newTestServer(t *testing.T) *testServer {
 
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
 		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
 		return ch, nil
 	}).Times(1)
-	go func() {
-		tester.server.watcherCtxCancel()
-	}()
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
@@ -237,11 +236,10 @@ func newTestServerAuth(t *testing.T) *testServer {
 
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
 		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
 		return ch, nil
 	}).Times(1)
-	go func() {
-		tester.server.watcherCtxCancel()
-	}()
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
