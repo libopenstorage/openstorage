@@ -455,5 +455,6 @@ pr-verify: vet fmt sdk-check-version
 	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
 	hack/check-api-version.sh
 	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-
+	hack/check-registered-rest.sh
+	
 pr-test: osd-tests docker-test e2e
