@@ -80,16 +80,19 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler        spec.SpecHandler
-	driver             volume.VolumeDriver
-	cluster            cluster.Cluster
-	sdkUds             string
-	sdkPort            string
-	conn               *grpc.ClientConn
-	mu                 sync.Mutex
-	csiDriverName      string
-	allowInlineVolumes bool
-	roundRobinBalancer loadbalancer.Balancer
+	cloudBackupClient    func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
+	specHandler          spec.SpecHandler
+	driver               volume.VolumeDriver
+	cluster              cluster.Cluster
+	sdkUds               string
+	sdkPort              string
+	conn                 *grpc.ClientConn
+	roundRobinBalancer   loadbalancer.Balancer
+	nextCreateNodeNumber int
+	mu                   sync.Mutex
+	csiDriverName        string
+	allowInlineVolumes   bool
+	stopCleanupCh        chan bool
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -156,6 +159,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
 		roundRobinBalancer: config.RoundRobinBalancer,
+		cloudBackupClient:  api.NewOpenStorageCloudBackupClient,
 	}, nil
 }
 
