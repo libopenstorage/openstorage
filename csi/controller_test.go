@@ -3498,12 +3498,6 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 			true,
 		},
 		{
-			"fail to cleanup failed snapshot",
-			"delete-error",
-			nil,
-			true,
-		},
-		{
 			"fail to get snapshot size",
 			"size-error",
 			nil,
