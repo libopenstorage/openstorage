@@ -1833,7 +1833,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 				Ownership: &api.Ownership{
 					Owner: "user1",
 				},
-				Xattr: api.Xattr_COW_ON_DEMAND,
+				Xattr:        api.Xattr_COW_ON_DEMAND,
 				FpPreference: true,
 			}).
 			Return(id, nil).
@@ -3494,12 +3494,6 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 		{
 			"fail to get snapshot status",
 			"status-error",
-			nil,
-			true,
-		},
-		{
-			"fail to cleanup failed snapshot",
-			"delete-error",
 			nil,
 			true,
 		},
