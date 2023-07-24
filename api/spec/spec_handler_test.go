@@ -582,7 +582,7 @@ func TestOptWinshare(t *testing.T) {
 	spec := testSpecFromString(t, api.SpecWinshare, "true")
 	require.True(t, spec.Winshare, "Failed to parse winshare option into spec")
 
-	spec = testSpecFromString(t, api.Winshare, "false")
+	spec = testSpecFromString(t, api.SpecWinshare, "false")
 	require.False(t, spec.Winshare, "Failed to parse winshare option into spec")
 }
 
