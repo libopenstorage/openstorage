@@ -429,7 +429,7 @@ mockgen:
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
 	mockgen -destination=api/mock/mock_diags.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageDiagsServer,OpenStorageDiagsClient
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
-	mockgen -destination=api/mock/mock_watch.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageWatchServer,OpenStorageWatchClient
+	mockgen -destination=api/mock/mock_watch.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageWatchServer,OpenStorageWatchClient,OpenStorageWatch_WatchClient,OpenStorageWatch_WatchServer
 	mockgen -destination=api/mock/mock_bucket.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageBucketServer,OpenStorageBucketClient
 	mockgen -destination=api/mock/mock_cloud_backup.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageCloudBackupServer,OpenStorageCloudBackupClient
 	mockgen -destination=cluster/mock/cluster.mock.go -package=mock github.com/libopenstorage/openstorage/cluster Cluster
