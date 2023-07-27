@@ -2017,6 +2017,10 @@
           "secret_key": {
             "title": "Secret key",
             "type": "string"
+          },
+          "server_side_encryption": {
+            "title": "(optional) server side encryption",
+            "type": "string"
           }
         },
         "title": "Defines credentials for Aws/S3 endpoints",
@@ -2048,6 +2052,10 @@
           },
           "s3_storage_class": {
             "title": "(optional) Storage class for s3 puts",
+            "type": "string"
+          },
+          "server_side_encryption": {
+            "title": "(optional) server side encryption",
             "type": "string"
           }
         },
@@ -5960,7 +5968,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.36"
+    "version": "0.101.37"
   },
   "openapi": "3.0.0",
   "paths": {
