@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.37 - (07/26/2023)
+
+* Add serverSideEncryption field to aws credentials
+
 ### v0.101.36 - (04/14/2023)
 
 * Add 3 new fields to the CloudBackupSize API:
