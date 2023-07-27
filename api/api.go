@@ -157,6 +157,8 @@ const (
 	OptCredSecretKey = "CredSecretKey"
 	// OptCredBucket is the optional bucket name
 	OptCredBucket = "CredBucket"
+	// OptCredSSE for s3 sse flag
+	OptCredSSE = "CredSSE"
 	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
 	// OptCredGoogleJsonKey for google cloud

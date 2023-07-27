@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.164.0 - (07/17/2023)
+
+* Add serverSideEncryption field to aws credentials
+
 ### v0.163.0 - (07/13/2023)
 
 * Add mode field to SdkStorageRebalanceRequest
