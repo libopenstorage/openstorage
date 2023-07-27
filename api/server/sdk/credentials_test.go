@@ -22,6 +22,7 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/jsonpb"
 	"github.com/kubernetes-csi/csi-test/utils"
@@ -50,12 +51,13 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 		IamPolicy:     false,
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
-				AccessKey:        "dummy-access",
-				SecretKey:        "dummy-secret",
-				Endpoint:         "dummy-endpoint",
-				Region:           "dummy-region",
-				DisableSsl:       true,
-				DisablePathStyle: false,
+				AccessKey:            "dummy-access",
+				SecretKey:            "dummy-secret",
+				Endpoint:             "dummy-endpoint",
+				Region:               "dummy-region",
+				DisableSsl:           true,
+				DisablePathStyle:     false,
+				ServerSideEncryption: s3.ServerSideEncryptionAes256,
 			},
 		},
 	}
@@ -70,6 +72,7 @@ func TestSdkAWSCredentialCreateSuccess(t *testing.T) {
 	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredSSE] = s3.ServerSideEncryptionAes256
 	params[api.OptCredDisableSSL] = "true"
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "true"
@@ -107,10 +110,11 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 		IamPolicy: false,
 		CredentialType: &api.SdkCredentialCreateRequest_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialRequest{
-				AccessKey: "dummy-access",
-				SecretKey: "dummy-secret",
-				Endpoint:  "dummy-endpoint",
-				Region:    "dummy-region",
+				AccessKey:            "dummy-access",
+				SecretKey:            "dummy-secret",
+				Endpoint:             "dummy-endpoint",
+				Region:               "dummy-region",
+				ServerSideEncryption: s3.ServerSideEncryptionAes256,
 			},
 		},
 	}
@@ -130,6 +134,7 @@ func TestSdkAWSCredentialCreateFailed(t *testing.T) {
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredSSE] = s3.ServerSideEncryptionAes256
 
 	uuid := "bad-uuid"
 	s.MockDriver().
@@ -742,6 +747,7 @@ func TestSdkAWSInspect(t *testing.T) {
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
 		api.OptCredStorageClass:     "",
+		api.OptCredSSE:              s3.ServerSideEncryptionAes256,
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -767,6 +773,7 @@ func TestSdkAWSInspect(t *testing.T) {
 	assert.Equal(t, enumAws[api.OptCredAccessKey], resp.GetAwsCredential().GetAccessKey())
 	assert.Equal(t, enumAws[api.OptCredDisableSSL] == "true", resp.GetAwsCredential().GetDisableSsl())
 	assert.Equal(t, enumAws[api.OptCredDisablePathStyle] == "true", resp.GetAwsCredential().GetDisablePathStyle())
+	assert.Equal(t, enumAws[api.OptCredSSE], resp.GetAwsCredential().GetServerSideEncryption())
 }
 
 func TestSdkCredentialAzureInspect(t *testing.T) {
@@ -966,6 +973,7 @@ func TestSdkCredentialOwnership(t *testing.T) {
 	params[api.OptCredProxy] = "false"
 	params[api.OptCredIAMPolicy] = "false"
 	params[api.OptCredStorageClass] = ""
+	params[api.OptCredSSE] = ""
 
 	// Create a marshalled ownership for the expect params
 	ownership := &api.Ownership{
@@ -1212,6 +1220,7 @@ func TestSdkAWSCredentialUpdateSuccess(t *testing.T) {
 	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredSSE] = ""
 	params[api.OptCredDisableSSL] = "true"
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "true"
@@ -1232,6 +1241,7 @@ func TestSdkAWSCredentialUpdateSuccess(t *testing.T) {
 		api.OptCredDisablePathStyle: "false",
 		api.OptCredProxy:            "false",
 		api.OptCredIAMPolicy:        "false",
+		api.OptCredSSE:              "",
 	}
 	enumerateData := map[string]interface{}{
 		uuid: enumAws,
@@ -1307,6 +1317,7 @@ func TestSdkAWSCredentialUpdateFailed(t *testing.T) {
 	params[api.OptCredEndpoint] = req.GetAwsCredential().GetEndpoint()
 	params[api.OptCredAccessKey] = req.GetAwsCredential().GetAccessKey()
 	params[api.OptCredSecretKey] = req.GetAwsCredential().GetSecretKey()
+	params[api.OptCredSSE] = ""
 	params[api.OptCredDisableSSL] = "true"
 	params[api.OptCredDisablePathStyle] = "false"
 	params[api.OptCredProxy] = "true"

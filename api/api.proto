@@ -3220,6 +3220,8 @@ message SdkAwsCredentialRequest {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) server side encryption
+  string server_side_encryption = 7;
 }
 
 // Defines credentials for Azure
@@ -3264,6 +3266,8 @@ message SdkAwsCredentialResponse {
   bool disable_path_style = 6;
   // (optional) Storage class for s3 puts
   string s3_storage_class = 7;
+  // (optional) server side encryption
+  string server_side_encryption = 8;
 }
 
 // Defines the response for Azure credentials
@@ -5286,7 +5290,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 37;
+    Patch = 38;
   }
 
   // The following cannot be set to use the enum Version because the REST
