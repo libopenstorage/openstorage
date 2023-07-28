@@ -3563,3 +3563,168 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+
+	ctx := context.Background()
+
+	mockErr := errors.New("MOCK ERROR")
+	creationTime := timestamppb.Now()
+
+	mockCloudBackupClient.EXPECT().EnumerateWithFilters(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupEnumerateWithFiltersRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupEnumerateWithFiltersResponse, error) {
+			if req.CredentialId == "invalid-cred" {
+				return nil, mockErr
+			}
+
+			if req.CloudBackupId == "list-cloud-backup-error" {
+				return nil, mockErr
+			}
+
+			return &api.SdkCloudBackupEnumerateWithFiltersResponse{
+				Backups: []*api.SdkCloudBackupInfo{
+					&api.SdkCloudBackupInfo{
+						Id:        req.CloudBackupId,
+						Timestamp: creationTime,
+					},
+				},
+			}, nil
+
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+			if req.TaskId == "status-error" {
+				return nil, mockErr
+			}
+
+			return &api.SdkCloudBackupStatusResponse{
+				Statuses: map[string]*api.SdkCloudBackupStatus{
+					req.TaskId: {
+						Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
+						StartTime: creationTime,
+					},
+				},
+			}, nil
+
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Size(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupSizeRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupSizeResponse, error) {
+			if req.BackupId == "size-error" {
+				return nil, mockErr
+			}
+
+			return &api.SdkCloudBackupSizeResponse{
+				Size: defaultCSIVolumeSize,
+			}, nil
+
+		}).AnyTimes()
+	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
+	// nil, false, nil
+	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
+		func(ctx context.Context) (*grpc.ClientConn, bool, error) {
+			var err error
+			if ctx.Value("remote-client-error").(bool) {
+				err = mockErr
+			}
+			return nil, false, err
+		}).AnyTimes()
+	tests := []struct {
+		name         string
+		SnapshotName string
+		Cred         string
+		want         *csi.ListSnapshotsResponse
+		wantErr      bool
+	}{
+		{
+			"remote client connection failed",
+			"remote-client-error",
+			"invalid-cred",
+			nil,
+			true,
+		},
+		{
+			"failed to fetch secret",
+			"secret-fetch-error",
+			"invalid-cred",
+			nil,
+			true,
+		},
+		{
+			"failed to list cloud backups",
+			"list-cloud-backup-error",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"failed to get cloud snapshot status",
+			"status-error",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"failed to get cloud snapshot status",
+			"size-error",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"ok",
+			"ok",
+			"valid-cred",
+			&csi.ListSnapshotsResponse{
+				Entries: []*csi.ListSnapshotsResponse_Entry{
+					{
+						Snapshot: &csi.Snapshot{
+							SnapshotId:   "ok",
+							SizeBytes:    int64(defaultCSIVolumeSize),
+							CreationTime: creationTime,
+							ReadyToUse:   true,
+						},
+					},
+				},
+			},
+			false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &csi.ListSnapshotsRequest{
+				SnapshotId: tt.SnapshotName,
+				Secrets: map[string]string{
+					api.SpecLabels: osdSnapshotCredentialIDKey + "=" + tt.Cred,
+				},
+			}
+
+			s := &OsdCsiServer{
+				specHandler: spec.NewSpecHandler(),
+				mu:          sync.Mutex{},
+				cloudBackupClient: func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient {
+					return mockCloudBackupClient
+				},
+				roundRobinBalancer: mockRoundRobinBalancer,
+			}
+
+			doClientErr := tt.SnapshotName == "remote-client-error"
+
+			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+
+			got, err := s.listCloudSnapshots(ctx, req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OsdCsiServer.listCloudSnapshots() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !assert.Equal(t, got, tt.want) {
+				t.Errorf("OsdCsiServer.listCloudSnapshots() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

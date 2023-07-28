@@ -1128,6 +1128,36 @@ func (s *OsdCsiServer) ListSnapshots(
 	ctx context.Context,
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	_, ok := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	// Check ID is valid with the specified volume capabilities
+	snapshotType := DriverTypeCloud
+	if !ok {
+		snapshotType = DriverTypeLocal
+	}
+	switch snapshotType {
+	case DriverTypeCloud:
+		return s.listCloudSnapshots(ctx, req)
+	case DriverTypeLocal:
+		fallthrough
+	default:
+		return s.listLocalSnapshots(ctx, req)
+	}
+}
+
+// ListSnapshots lists all snapshots in a cluster.
+// This is mainly implemented for Nomad, as Kubernetes will not call
+// list snapshots for drivers which have synchronous snapshot creation.
+// This is because ReadyToUse is set to true immediately upon on our snapshot creation.
+func (s *OsdCsiServer) listLocalSnapshots(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
 
 	if len(req.GetSnapshotId()) > 0 {
 		return s.listSingleSnapshot(ctx, req)
@@ -1298,6 +1328,76 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	}
 
 	return listSnapshotsResp, nil
+}
+
+// ListSnapshots lists all cloud backups as snapshot in a cluster.
+func (s *OsdCsiServer) listCloudSnapshots(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
+	cloudBackupClient, err := s.getCloudBackupClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get secrets: %v", err)
+	}
+
+	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+
+	maxBackups := req.GetMaxEntries()
+	if len(req.GetSnapshotId()) > 0 {
+		maxBackups = 1
+	}
+	resp, err := cloudBackupClient.EnumerateWithFilters(ctx, &api.SdkCloudBackupEnumerateWithFiltersRequest{
+		SrcVolumeId:       req.GetSourceVolumeId(),
+		CloudBackupId:     req.GetSnapshotId(),
+		CredentialId:      credentialID,
+		ContinuationToken: req.GetStartingToken(),
+		MaxBackups:        uint64(maxBackups),
+	})
+	if nil != err {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to list cloud backups: %v", err)
+	}
+
+	csiSnapshotResp := &csi.ListSnapshotsResponse{
+		Entries: make([]*csi.ListSnapshotsResponse_Entry, len(resp.Backups)),
+	}
+
+	for i, backup := range resp.Backups {
+		// Check if snapshot has been created but is in error state
+		backupStatus, errFindFailed := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+			VolumeId: req.GetSourceVolumeId(),
+			TaskId:   backup.GetId(),
+		})
+		if errFindFailed != nil {
+			return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot status: %v", err)
+		}
+		isBackupReady := backupStatus.Statuses[backup.GetId()].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+
+		snapSize, errSizeFailed := cloudBackupClient.Size(ctx, &api.SdkCloudBackupSizeRequest{
+			BackupId:     backup.GetId(),
+			CredentialId: credentialID,
+		})
+		if errSizeFailed != nil {
+			return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot size: %v", err)
+		}
+
+		csiSnapshotResp.Entries[i] = &csi.ListSnapshotsResponse_Entry{
+			Snapshot: &csi.Snapshot{
+				SnapshotId:     backup.GetId(),
+				SourceVolumeId: backup.GetSrcVolumeId(),
+				CreationTime:   backup.GetTimestamp(),
+				SizeBytes:      int64(snapSize.GetSize()),
+				ReadyToUse:     isBackupReady,
+			},
+		}
+	}
+
+	return csiSnapshotResp, nil
 }
 
 func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {
