@@ -3563,3 +3563,133 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+
+	ctx := context.Background()
+
+	mockErr := errors.New("MOCK ERROR")
+
+	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
+	// nil, false, nil
+	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
+		func(ctx context.Context) (*grpc.ClientConn, bool, error) {
+			var err error
+			if ctx.Value("remote-client-error").(bool) {
+				err = mockErr
+			}
+			return nil, false, err
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupDeleteRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupDeleteResponse, error) {
+			if req.CredentialId == "invalid-cred" {
+				return nil, mockErr
+			}
+
+			if req.BackupId == "delete-error" {
+				return nil, mockErr
+			}
+
+			if req.BackupId == "delete-notfound" {
+				return nil, mockErr
+			}
+
+			if req.BackupId == "unexpected-error" {
+				return nil, nil
+			}
+
+			return &api.SdkCloudBackupDeleteResponse{}, nil
+
+		}).AnyTimes()
+
+	tests := []struct {
+		name         string
+		SnapshotName string
+		Cred         string
+		want         *csi.DeleteSnapshotResponse
+		wantErr      bool
+	}{
+		{
+			"remote client connection failed",
+			"remote-client-error",
+			"invalid-cred",
+			nil,
+			true,
+		},
+		{
+			"invalid cred for delete",
+			"delete-invalid-cred-error",
+			"invalid-cred",
+			nil,
+			true,
+		},
+		{
+			"fail snapshot delete",
+			"delete-error",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"volume id not found while creating",
+			"delete-notfound",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"unexpected error",
+			"unexpected-error",
+			"valid-cred",
+			&csi.DeleteSnapshotResponse{},
+			true,
+		},
+		{
+			"deletion completes without any error",
+			"ok",
+			"valid-cred",
+			&csi.DeleteSnapshotResponse{},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &csi.DeleteSnapshotRequest{
+				SnapshotId: tt.SnapshotName,
+				Secrets: map[string]string{
+					api.SpecLabels: osdSnapshotCredentialIDKey + "=" + tt.Cred,
+				},
+			}
+
+			s := &OsdCsiServer{
+				specHandler: spec.NewSpecHandler(),
+				mu:          sync.Mutex{},
+				cloudBackupClient: func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient {
+					return mockCloudBackupClient
+				},
+				roundRobinBalancer: mockRoundRobinBalancer,
+			}
+
+			doClientErr := tt.SnapshotName == "remote-client-error"
+
+			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+
+			got, err := s.DeleteSnapshot(ctx, req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OsdCsiServer.DeleteSnapshot()2 error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if tt.want != nil && got != nil {
+				if !assert.EqualValues(t, got, tt.want) {
+					t.Errorf("OsdCsiServer.DeleteSnapshot()3 = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}

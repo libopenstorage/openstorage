@@ -1092,6 +1092,32 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
 
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	_, ok := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	// Check ID is valid with the specified volume capabilities
+	snapshotType := DriverTypeCloud
+	if !ok {
+		snapshotType = DriverTypeLocal
+	}
+	switch snapshotType {
+	case DriverTypeCloud:
+		return s.deleteCloudBackup(ctx, req)
+	case DriverTypeLocal:
+		fallthrough
+	default:
+		return s.deleteLocalSnapshot(ctx, req)
+	}
+}
+
+func (s *OsdCsiServer) deleteLocalSnapshot(
+	ctx context.Context,
+	req *csi.DeleteSnapshotRequest,
+) (*csi.DeleteSnapshotResponse, error) {
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
@@ -1118,6 +1144,41 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	}
 
 	return &csi.DeleteSnapshotResponse{}, nil
+}
+
+func (s *OsdCsiServer) deleteCloudBackup(
+	ctx context.Context,
+	req *csi.DeleteSnapshotRequest,
+) (*csi.DeleteSnapshotResponse, error) {
+	cloudBackupClient, err := s.getCloudBackupClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+
+	backupID := req.GetSnapshotId()
+
+	// Delete snapshot
+	resp, err := cloudBackupClient.Delete(ctx, &api.SdkCloudBackupDeleteRequest{
+		BackupId:     backupID,
+		CredentialId: credentialID,
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "Failed to delete cloud snapshot: %v", err)
+	}
+
+	if resp != nil {
+		return &csi.DeleteSnapshotResponse{}, nil
+	}
+
+	return nil, status.Errorf(codes.Aborted, "unexpected error occured: %v", err)
 }
 
 // ListSnapshots lists all snapshots in a cluster.
