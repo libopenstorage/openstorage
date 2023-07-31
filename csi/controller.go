@@ -403,8 +403,8 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 	}
 
 	var shared bool
-	var block bool
 	var mount bool
+	var block bool
 	for _, cap := range caps {
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
@@ -430,12 +430,6 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 			return status.Errorf(
 				codes.InvalidArgument,
 				"FlashArray Direct Access shared filesystems are not supported",
-			)
-		}
-		if block {
-			return status.Errorf(
-				codes.InvalidArgument,
-				"FlashArray Direct Access raw block devices are not yet supported",
 			)
 		}
 	}
