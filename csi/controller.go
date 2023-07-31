@@ -432,12 +432,6 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 				"FlashArray Direct Access shared filesystems are not supported",
 			)
 		}
-		if block {
-			return status.Errorf(
-				codes.InvalidArgument,
-				"FlashArray Direct Access raw block devices are not yet supported",
-			)
-		}
 	}
 
 	// Check for FB DA volumes: all allowed except raw block
