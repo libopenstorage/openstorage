@@ -1322,6 +1322,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		spec.AutoFstrim = req.GetAutoFstrim()
 	}
 
+	//Winshare
+	if req.GetWinshareOpt() != nil {
+		if isValidate && vol.GetWinshare() != req.GetWinshare() {
+			return vol, errMsg
+		}
+		spec.Winshare = req.GetWinshare()
+	}
+
 	logrus.Debugf("Updated VolumeSpecs %v", spec)
 	return spec, nil
 }

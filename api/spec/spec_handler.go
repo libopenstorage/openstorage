@@ -141,6 +141,7 @@ var (
 	sharedv4ServiceTypeRegex      = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
 	sharedv4ServiceNameRegex      = regexp.MustCompile(api.SpecSharedv4ServiceName + "=([A-Za-z]+),?")
 	Sharedv4FailoverStrategyRegex = regexp.MustCompile(api.SpecSharedv4FailoverStrategy + "=([A-Za-z]+),?")
+	winshareRegex                 = regexp.MustCompile(api.SpecWinshare + "=([A-Za-z]+),?")
 	AutoFstrimRegex               = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 	SpecIoThrottleRdIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
@@ -569,6 +570,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.FpPreference = fastpath
 			}
+		case api.SpecWinshare:
+			if winshare, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Winshare = winshare
+			}
 		case api.SpecBackendType:
 			// Treat Pure FlashArray and FlashBlade volumes as proxy volumes and store the backend type as ProxyProtocol
 			// in the spec, but the key to pass this value in is specified as 'backend' to reduce confusions
@@ -856,6 +863,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, failoverStrategy := d.getVal(Sharedv4FailoverStrategyRegex, str); ok {
 		opts[api.SpecSharedv4FailoverStrategy] = failoverStrategy
+	}
+	if ok, winshare := d.getVal(winshareRegex, str); ok {
+		opts[api.SpecWinshare] = winshare
 	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
