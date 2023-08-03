@@ -3299,6 +3299,8 @@ message SdkAwsCredentialRequest {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) server side encryption
+  string server_side_encryption = 7;
 }
 
 // Defines credentials for Azure
@@ -3343,6 +3345,8 @@ message SdkAwsCredentialResponse {
   bool disable_path_style = 6;
   // (optional) Storage class for s3 puts
   string s3_storage_class = 7;
+  // (optional) server side encryption
+  string server_side_encryption = 8;
 }
 
 // Defines the response for Azure credentials
@@ -5435,7 +5439,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 163;
+    Minor = 164;
     // SDK version patch value of this specification
     Patch = 0;
   }
