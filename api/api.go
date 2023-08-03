@@ -108,6 +108,7 @@ const (
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
+	SpecWinshare                            = "winshare"
 )
 
 // OptionKey specifies a set of recognized query params.
