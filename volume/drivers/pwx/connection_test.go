@@ -247,7 +247,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *tes
 	}
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
 	require.Equal(t, "https://portworx-service.non-default-ns.svc.cluster.local:9902", pxMgmtEndpoint)
 	require.Equal(t, "portworx-service.non-default-ns.svc.cluster.local:9999", sdkEndpoint)
@@ -261,7 +261,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts_NO_TLS(t *
 	require.NoError(t, err, "ConnectionParamsBuilder creation error")
 
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
 	require.Equal(t, "http://k8s-node-0:9039", pxMgmtEndpoint)
 	require.Equal(t, "k8s-node-0:9020", sdkEndpoint)
@@ -374,7 +374,7 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 
 	// with TLS enabled
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
-	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
+	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
 	require.Equal(t, "https://portworx-service.kube-system.svc.cluster.local:9902", pxMgmtEndpoint)
 	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
