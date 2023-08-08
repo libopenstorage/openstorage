@@ -1473,3 +1473,21 @@ func (s *ProxySpec) GetPureFullVolumeName() string {
 func GetAllEnumInfo() []protoimpl.EnumInfo {
 	return file_api_api_proto_enumTypes
 }
+
+// Constants defined for proxy mounts
+const (
+	// OptProxyCaller is an option to pass NodeID of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCaller = "caller"
+	// OptProxyCallerIP is an option to pass NodeIP of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCallerIP = "caller_ip"
+	// OptMountID is an option to pass mount path of the client requesting a sharedv4
+	// mount from the server
+	OptMountID = "mountID"
+)
+
+const (
+	// SharedVolExportPrefix is the export path where shared volumes are mounted
+	SharedVolExportPrefix = "/var/lib/osd/pxns"
+)
