@@ -1129,12 +1129,8 @@ func (s *OsdCsiServer) ListSnapshots(
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
 	// Get any labels passed in by the CO
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
-	}
 
-	_, ok := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	_, ok := req.GetSecrets()[osdSnapshotCredentialIDKey]
 	// Check ID is valid with the specified volume capabilities
 	snapshotType := DriverTypeCloud
 	if !ok {
@@ -1340,13 +1336,7 @@ func (s *OsdCsiServer) listCloudSnapshots(
 		return nil, err
 	}
 
-	// Get any labels passed in by the CO
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Unable to get secrets: %v", err)
-	}
-
-	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	credentialID := req.GetSecrets()[osdSnapshotCredentialIDKey]
 
 	maxBackups := req.GetMaxEntries()
 	if len(req.GetSnapshotId()) > 0 {
@@ -1360,7 +1350,7 @@ func (s *OsdCsiServer) listCloudSnapshots(
 		MaxBackups:        uint64(maxBackups),
 	})
 	if nil != err {
-		return nil, status.Errorf(codes.InvalidArgument, "Unable to list cloud backups: %v", err)
+		return nil, status.Errorf(codes.InvalidArgument, "unable to list cloud backups: %v", err)
 	}
 
 	csiSnapshotResp := &csi.ListSnapshotsResponse{
@@ -1374,7 +1364,7 @@ func (s *OsdCsiServer) listCloudSnapshots(
 			TaskId:   backup.GetId(),
 		})
 		if errFindFailed != nil {
-			return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot status: %v", err)
+			return nil, status.Errorf(codes.Aborted, "failed to get cloud snapshot status: %v", err)
 		}
 		isBackupReady := backupStatus.Statuses[backup.GetId()].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 
@@ -1383,7 +1373,7 @@ func (s *OsdCsiServer) listCloudSnapshots(
 			CredentialId: credentialID,
 		})
 		if errSizeFailed != nil {
-			return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot size: %v", err)
+			return nil, status.Errorf(codes.Aborted, "failed to get cloud snapshot size: %v", err)
 		}
 
 		csiSnapshotResp.Entries[i] = &csi.ListSnapshotsResponse_Entry{

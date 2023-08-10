@@ -3649,13 +3649,6 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 			true,
 		},
 		{
-			"failed to fetch secret",
-			"secret-fetch-error",
-			"invalid-cred",
-			nil,
-			true,
-		},
-		{
 			"failed to list cloud backups",
 			"list-cloud-backup-error",
 			"valid-cred",
