@@ -30,6 +30,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
+	api_err "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/spec"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -3574,6 +3575,11 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 
 	mockErr := errors.New("MOCK ERROR")
 
+	notFoundErr := &api_err.ErrNotFound{
+		Type: "CloudBackup",
+		ID:   "not-found-error",
+	}
+
 	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
 	// nil, false, nil
 	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -3589,6 +3595,10 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupDeleteRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupDeleteResponse, error) {
 			if req.CredentialId == "invalid-cred" {
 				return nil, mockErr
+			}
+
+			if req.BackupId == "not-found-error" {
+				return nil, notFoundErr
 			}
 
 			if req.BackupId == "delete-error" {
@@ -3630,13 +3640,20 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		},
 		{
 			"fail snapshot delete",
+			"not-found-error",
+			"valid-cred",
+			nil,
+			true,
+		},
+		{
+			"fail snapshot delete",
 			"delete-error",
 			"valid-cred",
 			nil,
 			true,
 		},
 		{
-			"volume id not found while creating",
+			"volume id not found while deleting",
 			"delete-notfound",
 			"valid-cred",
 			nil,
@@ -3663,7 +3680,7 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 			req := &csi.DeleteSnapshotRequest{
 				SnapshotId: tt.SnapshotName,
 				Secrets: map[string]string{
-					api.SpecLabels: osdSnapshotCredentialIDKey + "=" + tt.Cred,
+					osdSnapshotCredentialIDKey: tt.Cred,
 				},
 			}
 

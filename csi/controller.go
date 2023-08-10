@@ -22,6 +22,7 @@ import (
 	"math"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -1092,13 +1093,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
 
-	// Get any labels passed in by the CO
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
-	}
-
-	_, ok := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	_, ok := req.GetSecrets()[osdSnapshotCredentialIDKey]
 	// Check ID is valid with the specified volume capabilities
 	snapshotType := DriverTypeCloud
 	if !ok {
@@ -1155,13 +1150,7 @@ func (s *OsdCsiServer) deleteCloudBackup(
 		return nil, err
 	}
 
-	// Get any labels passed in by the CO
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetSecrets())
-	if err != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
-	}
-
-	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	credentialID := req.GetSecrets()[osdSnapshotCredentialIDKey]
 
 	backupID := req.GetSnapshotId()
 
@@ -1171,7 +1160,10 @@ func (s *OsdCsiServer) deleteCloudBackup(
 		CredentialId: credentialID,
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "Failed to delete cloud snapshot: %v", err)
+		if strings.HasSuffix(err.Error(), " not found") {
+			return nil, status.Errorf(codes.NotFound, err.Error())
+		}
+		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
 	}
 
 	if resp != nil {
