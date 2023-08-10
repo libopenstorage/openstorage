@@ -3653,20 +3653,6 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 			true,
 		},
 		{
-			"volume id not found while deleting",
-			"delete-notfound",
-			"valid-cred",
-			nil,
-			true,
-		},
-		{
-			"unexpected error",
-			"unexpected-error",
-			"valid-cred",
-			&csi.DeleteSnapshotResponse{},
-			true,
-		},
-		{
 			"deletion completes without any error",
 			"ok",
 			"valid-cred",

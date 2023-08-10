@@ -1155,7 +1155,7 @@ func (s *OsdCsiServer) deleteCloudBackup(
 	backupID := req.GetSnapshotId()
 
 	// Delete snapshot
-	resp, err := cloudBackupClient.Delete(ctx, &api.SdkCloudBackupDeleteRequest{
+	_, err = cloudBackupClient.Delete(ctx, &api.SdkCloudBackupDeleteRequest{
 		BackupId:     backupID,
 		CredentialId: credentialID,
 	})
@@ -1166,12 +1166,7 @@ func (s *OsdCsiServer) deleteCloudBackup(
 		}
 		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
 	}
-
-	if resp != nil {
-		return &csi.DeleteSnapshotResponse{}, nil
-	}
-
-	return nil, status.Errorf(codes.Aborted, "unexpected error occured: %v", err)
+	return &csi.DeleteSnapshotResponse{}, nil
 }
 
 // ListSnapshots lists all snapshots in a cluster.
