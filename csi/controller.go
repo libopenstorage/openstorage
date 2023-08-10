@@ -1161,7 +1161,8 @@ func (s *OsdCsiServer) deleteCloudBackup(
 	})
 	if err != nil {
 		if strings.HasSuffix(err.Error(), " not found") {
-			return nil, status.Errorf(codes.NotFound, err.Error())
+			clogger.WithContext(ctx).Errorln(err.Error())
+			return &csi.DeleteSnapshotResponse{}, nil
 		}
 		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
 	}
