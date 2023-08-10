@@ -136,7 +136,7 @@ func (s *OsdCsiServer) ControllerGetVolume(
 	req *csi.ControllerGetVolumeRequest,
 ) (*csi.ControllerGetVolumeResponse, error) {
 
-	clogger.WithContext(ctx).Infof("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
+	clogger.WithContext(ctx).Tracef("ControllerGetVolume request received. VolumeID: %s", req.GetVolumeId())
 
 	vol, err := s.driverGetVolume(ctx, req.GetVolumeId())
 	if err != nil {
