@@ -1019,9 +1019,13 @@ func (s *OsdCsiServer) createCloudBackup(
 	}
 
 	// Get any labels passed in by the CO
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	spec, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
 		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	if spec.IsPureVolume() {
+		return nil, status.Errorf(codes.InvalidArgument, "cloudsnap feature is not supported for pure volumes")
 	}
 
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
