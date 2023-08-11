@@ -84,10 +84,15 @@ func (s *WatcherServer) removeWatcher(name string, eventType string) {
 	s.watchConnections[eventType] = newWatchers
 }
 
+func (s *WatcherServer) stopWatcher(ctx context.Context) {
+	s.volumeServer.driver(ctx).StopVolumeWatcher()
+}
+
 func (s *WatcherServer) startWatcher(ctx context.Context) error {
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 	group.Go(func() error {
+		s.volumeServer.driver(ctx).StartVolumeWatcher()
 		return s.startVolumeWatcher(ctx)
 	})
 
