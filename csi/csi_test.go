@@ -270,6 +270,7 @@ func (s *testServer) Stop() {
 
 	// Shutdown servers
 	s.conn.Close()
+	s.m.EXPECT().StopVolumeWatcher().Return().AnyTimes()
 	s.server.Stop()
 	s.sdk.Stop()
 

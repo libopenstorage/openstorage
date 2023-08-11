@@ -92,7 +92,6 @@ func (s *WatcherServer) startWatcher(ctx context.Context) error {
 	group, _ := errgroup.WithContext(ctx)
 	errChan := make(chan error)
 	group.Go(func() error {
-		s.volumeServer.driver(ctx).StartVolumeWatcher()
 		return s.startVolumeWatcher(ctx)
 	})
 
@@ -126,7 +125,7 @@ func (s *WatcherServer) startVolumeWatcher(ctx context.Context) error {
 			time.Sleep(2 * time.Second)
 			continue
 		}
-
+		s.volumeServer.driver(ctx).StartVolumeWatcher()
 		volumeChannel, err := s.volumeServer.driver(ctx).GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string))
 		if err != nil {
 			logrus.Warnf("Error getting volume watcher %v", err)
