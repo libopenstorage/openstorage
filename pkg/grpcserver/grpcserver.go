@@ -153,6 +153,11 @@ func (s *GrpcServer) IsRunning() bool {
 	return s.running
 }
 
+// Listener returns the listener used for this gRPC server
+func (s *GrpcServer) Listener() net.Listener {
+	return s.listener
+}
+
 func (s *GrpcServer) goServe(started chan<- bool) {
 	s.wg.Add(1)
 	go func() {
