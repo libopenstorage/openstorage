@@ -1025,7 +1025,7 @@ func (s *OsdCsiServer) createCloudBackup(
 	}
 
 	if spec.IsPureVolume() {
-		return nil, status.Errorf(codes.InvalidArgument, "cloudsnap feature is not supported for pure volumes")
+		return nil, status.Errorf(codes.InvalidArgument, "cloudsnaps are not supported for pure volumes")
 	}
 
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
