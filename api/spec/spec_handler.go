@@ -570,8 +570,6 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.FpPreference = fastpath
 			}
-<<<<<<< HEAD
-=======
 		case api.SpecWinshare:
 			if winshare, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -584,13 +582,6 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.AutoFstrim = autoFstrim
 			}
-		case api.SpecReadahead:
-			if readahead, err := strconv.ParseBool(v); err != nil {
-				return nil, nil, nil, err
-			} else {
-				spec.Readahead = readahead
-			}
->>>>>>> 97966f78... Merge pull request #2300 from libopenstorage/windows_no_controllerpublish
 		case api.SpecBackendType:
 			// Treat Pure FlashArray and FlashBlade volumes as proxy volumes and store the backend type as ProxyProtocol
 			// in the spec, but the key to pass this value in is specified as 'backend' to reduce confusions
@@ -879,15 +870,12 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, failoverStrategy := d.getVal(Sharedv4FailoverStrategyRegex, str); ok {
 		opts[api.SpecSharedv4FailoverStrategy] = failoverStrategy
 	}
-<<<<<<< HEAD
-=======
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
 	}
 	if ok, winshare := d.getVal(winshareRegex, str); ok {
 		opts[api.SpecWinshare] = winshare
 	}
->>>>>>> 97966f78... Merge pull request #2300 from libopenstorage/windows_no_controllerpublish
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
 	}
