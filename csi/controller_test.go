@@ -30,7 +30,6 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
-	api_err "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/spec"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
@@ -3573,12 +3572,10 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockErr := errors.New("MOCK ERROR")
+	mockErrMsg := "MOCK ERROR"
+	mockErr := status.Error(codes.Internal, mockErrMsg)
 
-	notFoundErr := &api_err.ErrNotFound{
-		Type: "CloudBackup",
-		ID:   "not-found-error",
-	}
+	notFoundErr := status.Error(codes.NotFound, mockErrMsg)
 
 	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
 	// nil, false, nil

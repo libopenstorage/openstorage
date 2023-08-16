@@ -22,13 +22,13 @@ import (
 	"math"
 	"reflect"
 	"sort"
-	"strings"
 
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -1159,11 +1159,9 @@ func (s *OsdCsiServer) deleteCloudBackup(
 		BackupId:     backupID,
 		CredentialId: credentialID,
 	})
-	if err != nil {
-		if strings.HasSuffix(err.Error(), " not found") {
-			clogger.WithContext(ctx).Errorln(err.Error())
-			return &csi.DeleteSnapshotResponse{}, nil
-		}
+	// NOTE: Currently, the Delete API call has no implementation that returns
+	//  a not found gRPC error with the status code.
+	if err != nil && !sdk.IsErrorNotFound(err) {
 		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
 	}
 	return &csi.DeleteSnapshotResponse{}, nil
