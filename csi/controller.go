@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -1349,12 +1350,13 @@ func (s *OsdCsiServer) listCloudSnapshots(
 		ContinuationToken: req.GetStartingToken(),
 		MaxBackups:        uint64(maxBackups),
 	})
-	if nil != err {
+	if nil != err && !sdk.IsErrorNotFound(err) {
 		return nil, status.Errorf(codes.InvalidArgument, "unable to list cloud backups: %v", err)
 	}
 
 	csiSnapshotResp := &csi.ListSnapshotsResponse{
-		Entries: make([]*csi.ListSnapshotsResponse_Entry, len(resp.Backups)),
+		Entries:   make([]*csi.ListSnapshotsResponse_Entry, len(resp.Backups)),
+		NextToken: resp.GetContinuationToken(),
 	}
 
 	for i, backup := range resp.Backups {

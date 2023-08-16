@@ -3572,7 +3572,11 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 
 	ctx := context.Background()
 
-	mockErr := errors.New("MOCK ERROR")
+	mockErrMsg := "MOCK ERROR"
+	mockErr := status.Error(codes.Internal, mockErrMsg)
+
+	notFoundErr := status.Error(codes.NotFound, mockErrMsg)
+
 	creationTime := timestamppb.Now()
 
 	mockCloudBackupClient.EXPECT().EnumerateWithFilters(gomock.Any(), gomock.Any(), gomock.Any()).
@@ -3583,6 +3587,12 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 
 			if req.CloudBackupId == "list-cloud-backup-error" {
 				return nil, mockErr
+			}
+
+			if req.CloudBackupId == "list-cloud-backup-not-found-error" {
+				return &api.SdkCloudBackupEnumerateWithFiltersResponse{
+					Backups: []*api.SdkCloudBackupInfo{},
+				}, notFoundErr
 			}
 
 			return &api.SdkCloudBackupEnumerateWithFiltersResponse{
@@ -3654,6 +3664,15 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 			"valid-cred",
 			nil,
 			true,
+		},
+		{
+			"list cloud backups not found error",
+			"list-cloud-backup-not-found-error",
+			"valid-cred",
+			&csi.ListSnapshotsResponse{
+				Entries: []*csi.ListSnapshotsResponse_Entry{},
+			},
+			false,
 		},
 		{
 			"failed to get cloud snapshot status",
