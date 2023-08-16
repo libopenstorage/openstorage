@@ -3600,6 +3600,7 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 					&api.SdkCloudBackupInfo{
 						Id:        req.CloudBackupId,
 						Timestamp: creationTime,
+						Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
 					},
 				},
 			}, nil
@@ -3673,13 +3674,6 @@ func TestOsdCsiServer_listCloudSnapshots(t *testing.T) {
 				Entries: []*csi.ListSnapshotsResponse_Entry{},
 			},
 			false,
-		},
-		{
-			"failed to get cloud snapshot status",
-			"status-error",
-			"valid-cred",
-			nil,
-			true,
 		},
 		{
 			"failed to get cloud snapshot status",

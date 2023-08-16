@@ -1360,15 +1360,7 @@ func (s *OsdCsiServer) listCloudSnapshots(
 	}
 
 	for i, backup := range resp.Backups {
-		// Check if snapshot has been created but is in error state
-		backupStatus, errFindFailed := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
-			VolumeId: req.GetSourceVolumeId(),
-			TaskId:   backup.GetId(),
-		})
-		if errFindFailed != nil {
-			return nil, status.Errorf(codes.Aborted, "failed to get cloud snapshot status: %v", err)
-		}
-		isBackupReady := backupStatus.Statuses[backup.GetId()].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+		isBackupReady := backup.GetStatus() == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 
 		snapSize, errSizeFailed := cloudBackupClient.Size(ctx, &api.SdkCloudBackupSizeRequest{
 			BackupId:     backup.GetId(),
