@@ -499,6 +499,10 @@ func (s *CredentialServer) Inspect(
 			// older format creds
 			disablePathStyle = "false"
 		}
+		sse, ok := info[api.OptCredSSE].(string)
+		if !ok {
+			sse = ""
+		}
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
 				AccessKey:            accessKey,
@@ -507,7 +511,7 @@ func (s *CredentialServer) Inspect(
 				DisableSsl:           disableSsl == "true",
 				DisablePathStyle:     disablePathStyle == "true",
 				S3StorageClass:       storageClass,
-				ServerSideEncryption: info[api.OptCredSSE].(string),
+				ServerSideEncryption: sse,
 			},
 		}
 	case "azure":
