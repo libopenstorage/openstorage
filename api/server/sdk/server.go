@@ -314,6 +314,7 @@ func (s *Server) Stop() {
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
+	s.netServer.watcherServer.stopWatcher(s.watcherCtx)
 	s.watcherCtxCancel()
 
 	if s.accessLog != nil {
