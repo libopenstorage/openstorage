@@ -5594,6 +5594,11 @@
             "title": "(deprecated, do not use) VolumeLabels configuration labels",
             "type": "object"
           },
+          "winshare": {
+            "description": "winshare is true if this volume can be accessed from windows pods.",
+            "format": "boolean",
+            "type": "boolean"
+          },
           "xattr": {
             "$ref": "#/components/schemas/apiXattrValue"
           }
@@ -5729,6 +5734,10 @@
             },
             "title": "VolumeLabels configuration labels",
             "type": "object"
+          },
+          "winshare": {
+            "format": "boolean",
+            "type": "boolean"
           }
         },
         "title": "VolumeSpecPolicy provides a method to set volume storage policy",
@@ -5840,6 +5849,10 @@
             "type": "string"
           },
           "sticky": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "winshare": {
             "format": "boolean",
             "type": "boolean"
           },
