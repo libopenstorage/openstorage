@@ -897,6 +897,18 @@ func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1, arg2, arg3 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1, arg2, arg3)
 }
 
+// StartVolumeWatcher mocks base method.
+func (m *MockVolumeDriver) StartVolumeWatcher() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StartVolumeWatcher")
+}
+
+// StartVolumeWatcher indicates an expected call of StartVolumeWatcher.
+func (mr *MockVolumeDriverMockRecorder) StartVolumeWatcher() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).StartVolumeWatcher))
+}
+
 // Stats mocks base method.
 func (m *MockVolumeDriver) Stats(arg0 string, arg1 bool) (*api.Stats, error) {
 	m.ctrl.T.Helper()
@@ -924,6 +936,18 @@ func (m *MockVolumeDriver) Status() [][2]string {
 func (mr *MockVolumeDriverMockRecorder) Status() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockVolumeDriver)(nil).Status))
+}
+
+// StopVolumeWatcher mocks base method.
+func (m *MockVolumeDriver) StopVolumeWatcher() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StopVolumeWatcher")
+}
+
+// StopVolumeWatcher indicates an expected call of StopVolumeWatcher.
+func (mr *MockVolumeDriverMockRecorder) StopVolumeWatcher() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).StopVolumeWatcher))
 }
 
 // Type mocks base method.
