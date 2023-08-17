@@ -59,9 +59,16 @@ func newVolumeDriver(
 		provider,
 	}
 }
+func (v *volumeDriver) StartVolumeWatcher() {
+	return
+}
 
 func (v *volumeDriver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
 	return nil, nil
+}
+
+func (v *volumeDriver) StopVolumeWatcher() {
+	return
 }
 
 func (v *volumeDriver) Name() string {

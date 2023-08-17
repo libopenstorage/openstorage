@@ -308,8 +308,12 @@ type Enumerator interface {
 
 // Water provides a set of function to get volume
 type Watcher interface {
+	// Stop Volume notifier
+	StartVolumeWatcher()
 	// Gets Volume notifier
 	GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error)
+	// Stop Volume notifier
+	StopVolumeWatcher()
 }
 
 // StoreEnumerator combines Store and Enumerator capabilities
