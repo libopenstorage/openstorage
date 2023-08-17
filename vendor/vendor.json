@@ -943,6 +943,534 @@
 			"revisionTime": "2019-03-24T16:03:46Z"
 		},
 		{
+			"checksumSHA1": "pCOOuKPCnuCPtp8LZ5bQch0UER0=",
+			"path": "github.com/libopenstorage/openstorage/alert",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "EBRajx9/wciWgnH032Prb3CPqqQ=",
+			"path": "github.com/libopenstorage/openstorage/alerts",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "GxtpykaBUkGmf6FqjEHS0mszK30=",
+			"path": "github.com/libopenstorage/openstorage/alerts/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "dd7uOyeiaW+ldcrtSh61x0Pybiw=",
+			"path": "github.com/libopenstorage/openstorage/api",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "IphTsONzbt/9Kkf+fJAXrqLa6WE=",
+			"path": "github.com/libopenstorage/openstorage/api/client",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "TMH68JRM9UWHt8HlkNLBEezxjxM=",
+			"path": "github.com/libopenstorage/openstorage/api/client/cluster",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "bnfuzc1If7ncWIWfkmuPVU0qUM4=",
+			"path": "github.com/libopenstorage/openstorage/api/client/volume",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "3SeFnoxbOWIIVJjZ2p96pq9eBYw=",
+			"path": "github.com/libopenstorage/openstorage/api/errors",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "ntLIrK79NlpCAl+rOdIxeipc/q0=",
+			"path": "github.com/libopenstorage/openstorage/api/flexvolume",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "DgI6y2IJaGTAJAoY5c7P0wSoFNY=",
+			"path": "github.com/libopenstorage/openstorage/api/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "6EhQgvYkT8Iv5MkjWwLWf0ejrkI=",
+			"path": "github.com/libopenstorage/openstorage/api/server",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "pBlVAO5S7j4Egm7vVqmVqWkX37w=",
+			"path": "github.com/libopenstorage/openstorage/api/server/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "hu2Ti6a/ivj8wySYlJVFRyjxkps=",
+			"path": "github.com/libopenstorage/openstorage/api/server/sdk",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "VvakmfwjwEpCQyyl2PInlXCBxSY=",
+			"path": "github.com/libopenstorage/openstorage/api/spec",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "feNcZnPQi164aL1X0j2hA20b0nI=",
+			"path": "github.com/libopenstorage/openstorage/bucket",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "In8cAtgTGlnGgnsUICzABuuYjaM=",
+			"path": "github.com/libopenstorage/openstorage/bucket/drivers/fake",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "qnRPuVeOmidUlFjpxKl8eiIju3U=",
+			"path": "github.com/libopenstorage/openstorage/bucket/drivers/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "ubQ8+LzrAxE0Uxve2g5eaGUQsQ0=",
+			"path": "github.com/libopenstorage/openstorage/bucket/drivers/purefb",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "58JEEEow0+8oQRF9MgX5n6ea1KY=",
+			"path": "github.com/libopenstorage/openstorage/bucket/drivers/s3",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "GiOtSWrYBGOatkBYg36Q0UjXQsQ=",
+			"path": "github.com/libopenstorage/openstorage/cli",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "W/Qe+A5N1jQZ8DpMcNZZh3gdK0A=",
+			"path": "github.com/libopenstorage/openstorage/cluster",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "vvLS1hczun8ISwi21IXL26cGiIc=",
+			"path": "github.com/libopenstorage/openstorage/cluster/manager",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "6rU1J5HV6W/Bo/uhdFXSvI71iAw=",
+			"path": "github.com/libopenstorage/openstorage/cluster/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "j43U4dU/LnVLusBfrLzBzqKEjqU=",
+			"path": "github.com/libopenstorage/openstorage/cmd/osd",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "gP/UwJKMntPDhdw/b+zkcud8GP0=",
+			"path": "github.com/libopenstorage/openstorage/cmd/osd-sanity",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "xHLXHSkR4OnOspAGfRpGZ6K2G1U=",
+			"path": "github.com/libopenstorage/openstorage/cmd/osd-token-generator",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "VrZE8Kruh/tk3aR+P1AyW5UDGe4=",
+			"path": "github.com/libopenstorage/openstorage/config",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "3wuwDLYDYQ8oOw5SpDpF7Fz3BsE=",
+			"path": "github.com/libopenstorage/openstorage/csi",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "sQskAhjzBrd3Nl5LYGgIKs2z4Ek=",
+			"path": "github.com/libopenstorage/openstorage/csi/sched",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "mogXbHPokG+Y2J+Df6iySXL/zbw=",
+			"path": "github.com/libopenstorage/openstorage/csi/sched/k8s",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "EWR4W0am52+Kqsu0bfUzgoTgA8M=",
+			"path": "github.com/libopenstorage/openstorage/csi/v0.3",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "08IqAljXZs6NF1O79y/Q/1mktSA=",
+			"path": "github.com/libopenstorage/openstorage/csi/v0.3/spec",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Rx869/nuIARCkWU2y7ETcrycUrs=",
+			"path": "github.com/libopenstorage/openstorage/graph",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "KfRkTeEhgpQfQAp60uaIGD3RtAw=",
+			"path": "github.com/libopenstorage/openstorage/graph/drivers",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "9H+uDxtPeSmHI/ZtM30CjmYI+PE=",
+			"path": "github.com/libopenstorage/openstorage/graph/drivers/chainfs",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "5Re/hALpTaPE8X9TIoCNt9r+AaM=",
+			"path": "github.com/libopenstorage/openstorage/graph/drivers/layer0",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "0qzNe6QqCsh762OiOXS+SysKFVk=",
+			"path": "github.com/libopenstorage/openstorage/graph/drivers/proxy",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "mr7ewphi+J/LxhmiMb5qC7RcKX8=",
+			"path": "github.com/libopenstorage/openstorage/objectstore",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "aCGcmXBUGLybMUCoPH4xgJkBobQ=",
+			"path": "github.com/libopenstorage/openstorage/osdconfig",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "4AF812WhrwCrQWGE4f5hvQQIAwc=",
+			"path": "github.com/libopenstorage/openstorage/pkg/auth",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "wjwUq5qBMKtqxAcbm/6/V0OmIc0=",
+			"path": "github.com/libopenstorage/openstorage/pkg/auth/secrets",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Jf77fixtNz/TI4vh0aKJVAhe3w0=",
+			"path": "github.com/libopenstorage/openstorage/pkg/auth/systemtoken",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "SFIobhNsWaQk42rvdB9FH9/MpX8=",
+			"path": "github.com/libopenstorage/openstorage/pkg/chaos",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "/0Eq3Snb3lGUCHPW5ZNyFFa2n98=",
+			"path": "github.com/libopenstorage/openstorage/pkg/chattr",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "izbagS8x6RNHT/lI86h/ar0g1Zk=",
+			"path": "github.com/libopenstorage/openstorage/pkg/clusterdomain",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Sz8buWmrKCx6AJgYOvG3ui8tBOU=",
+			"path": "github.com/libopenstorage/openstorage/pkg/correlation",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "ktTlGUTMixuYxgdDtVhEbu/yZRA=",
+			"path": "github.com/libopenstorage/openstorage/pkg/dbg",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "mLKOQyNSG7a//LuziBeeJWUcHlM=",
+			"path": "github.com/libopenstorage/openstorage/pkg/defaultcontext",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "3fz03WUWa/OYO8G2Utm9MyF1yo4=",
+			"path": "github.com/libopenstorage/openstorage/pkg/device",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "EotfDu11vklXuBBwUO5LptXhj8k=",
+			"path": "github.com/libopenstorage/openstorage/pkg/diags",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "bSZEpXCWILrPkC5Q7hbMIpEqvdU=",
+			"path": "github.com/libopenstorage/openstorage/pkg/exec",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "5kRNpI51rqbnqA0vSU+Iva7JrM4=",
+			"path": "github.com/libopenstorage/openstorage/pkg/flexvolume",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "HvrOmAo9W8pZ3D4A7tiYg02B9b0=",
+			"path": "github.com/libopenstorage/openstorage/pkg/flexvolume/cmd/flexvolume",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "vxvuhZmCbKKOTkLb9IdGwpehmh0=",
+			"path": "github.com/libopenstorage/openstorage/pkg/grpcserver",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "ahmkn2R9mhp87NTsjGRDvLzFciY=",
+			"path": "github.com/libopenstorage/openstorage/pkg/grpcutil",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "H083+weg4zBmHMyHWBGmXUZbcxg=",
+			"path": "github.com/libopenstorage/openstorage/pkg/job",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "/kHI9Cl7sr6Gn1TM1dFn+G4gMtA=",
+			"path": "github.com/libopenstorage/openstorage/pkg/jsonpb",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "na4XMScPR7+ZL8kfvneaq7MbqFw=",
+			"path": "github.com/libopenstorage/openstorage/pkg/jsonpb/testing",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "aIjgYhDkoIe5upOXsuiT62k5D1g=",
+			"path": "github.com/libopenstorage/openstorage/pkg/keylock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "BqRNpB0AHfFZk9dhq9oxdCguszI=",
+			"path": "github.com/libopenstorage/openstorage/pkg/loadbalancer",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Co6alc+kFXcrkwa5VIFTJZq8Wx4=",
+			"path": "github.com/libopenstorage/openstorage/pkg/mount",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "7QPykfj6rkwcG46OA8VSLRj7ny8=",
+			"path": "github.com/libopenstorage/openstorage/pkg/nodedrain",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "HAwRQDAX4cfRk4ZXy6Ggbx28BCg=",
+			"path": "github.com/libopenstorage/openstorage/pkg/options",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "tlWJCvo6RdbnpC868VEebAHHoqk=",
+			"path": "github.com/libopenstorage/openstorage/pkg/parser",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "bMB96X21MN8i4Axy7G/D1wdixQY=",
+			"path": "github.com/libopenstorage/openstorage/pkg/proto/time",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "ABNolL3hft3vEcdlk4INkxe/yR8=",
+			"path": "github.com/libopenstorage/openstorage/pkg/role",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "dLe+wV19Eto6HFRf7lxj994pGro=",
+			"path": "github.com/libopenstorage/openstorage/pkg/sanity",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "IxVlnJStacRS93wu2O2rsUkRkoo=",
+			"path": "github.com/libopenstorage/openstorage/pkg/sched",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Ssf/jpRZW8mnqr2+YZVf+/gnbh4=",
+			"path": "github.com/libopenstorage/openstorage/pkg/seed",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "lEyXBzi2G2tpcKQq34g0cpm8T0U=",
+			"path": "github.com/libopenstorage/openstorage/pkg/storagepolicy",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "KBWJhD15Qfl2pizQjGGuQgY9VE4=",
+			"path": "github.com/libopenstorage/openstorage/pkg/storagepool",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Cg2J3NQ8hIAVKDfQmtg+m/X9/Yk=",
+			"path": "github.com/libopenstorage/openstorage/pkg/units",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "kef9y9ZD9nzVrj5e3at/YBVfAVo=",
+			"path": "github.com/libopenstorage/openstorage/pkg/util",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "LULs2Q/k0tr3x3W/Kfg3PUrspGI=",
+			"path": "github.com/libopenstorage/openstorage/schedpolicy",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "jlhJY0TetbzVR5bk+p6G5TpiBeE=",
+			"path": "github.com/libopenstorage/openstorage/secrets",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "3hNpPrjDvbzm5nvO16oe4hG6gKM=",
+			"path": "github.com/libopenstorage/openstorage/tools/sdkver",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "XKun/NmIB4gpb1DwUSksqhR6LrE=",
+			"path": "github.com/libopenstorage/openstorage/volume",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "YSxonB3DPV5HVgec/2OZi1p7yRk=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "Xw/D5gCIRAvZhSngBwAOr6yNndM=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/btrfs",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "tSpjGNVijcoHsQOrmXSsR7Jk1kg=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/buse",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "SaLUsVDUhhGbSu8aHOptPtbGkE8=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/common",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "dxmke9z0fK2/LkpJjy8HKhjhhuU=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/fake",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "fV7UevRGVzXm2Wi3PaW099I2B54=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/fuse",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "WWWUkSBgoyrondXsYP9ruKVfpDU=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/mock",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "IO8xoX3cPOblAN1Oej1NdVWpcyc=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/nfs",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "uoj0xcHKKs/iZaKRXKTa3QUXej8=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/pwx",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "a7mxihe21ZurhPJsJCpN7nhGO2c=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/test",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
+			"checksumSHA1": "X9rJfbzFI3gK4+IGgjrX4cEFivY=",
+			"path": "github.com/libopenstorage/openstorage/volume/drivers/vfs",
+			"revision": "913c95fb554cb6ea9bac8726e408af093e22b72e",
+			"revisionTime": "2023-08-16T10:24:55Z"
+		},
+		{
 			"checksumSHA1": "kEzH5QEVZjcZCtT5ILxyrR0I040=",
 			"path": "github.com/libopenstorage/secrets",
 			"revision": "cdb443738c6796ef4f34f203646a7a6bd0e7df05",
