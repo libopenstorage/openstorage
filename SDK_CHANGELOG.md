@@ -1,10 +1,20 @@
 # Changelog
 
 ## Releases
-### v0.101.37 - (07/26/2023)
+
+### v0.101.39 - (08/1/2023)
+
+* Add auto-journal IO profile
+
+### v0.101.38 - (07/27/2023)
 
 * Add serverSideEncryption field to aws credentials
 * Add api for windows share
+
+
+### v0.101.37 - (06/21/2023)
+
+* Add journal IO profile
 
 ### v0.101.36 - (04/14/2023)
 
