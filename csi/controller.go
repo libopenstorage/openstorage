@@ -783,6 +783,11 @@ func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 		return spec, nil
 	}
 
+	// don't default to sharedv4/shared for RWX Volumes if proxy spec is set
+	if spec.ProxySpec != nil {
+		return spec, nil
+	}
+
 	var shared bool
 	for _, cap := range req.GetVolumeCapabilities() {
 		mode := cap.GetAccessMode().GetMode()
