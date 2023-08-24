@@ -3307,7 +3307,8 @@ func TestResolveSpecFromCSI(t *testing.T) {
 			},
 
 			expectedSpec: &api.VolumeSpec{
-				Shared: false,
+				Shared:   false,
+				Sharedv4: false,
 				ProxySpec: &api.ProxySpec{
 					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_NFS,
 				},
