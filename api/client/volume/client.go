@@ -75,8 +75,16 @@ func (v *volumeClient) GraphDriverRemove(id string) error {
 	return nil
 }
 
+func (v *volumeClient) StartVolumeWatcher() {
+	return
+}
+
 func (v *volumeClient) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
 	return nil, nil
+}
+
+func (v *volumeClient) StopVolumeWatcher() {
+	return
 }
 
 func (v *volumeClient) GraphDriverGet(id string, mountLabel string) (string, error) {
