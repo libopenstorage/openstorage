@@ -142,12 +142,20 @@ func volumeGenerator(d *driver) {
 	}
 }
 
+func (d *driver) StartVolumeWatcher() {
+	return
+}
+
 func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
 	go volumeGenerator(d)
 	if d.volumeChannel == nil {
 		d.volumeChannel = make(chan *api.Volume, 2)
 	}
 	return d.volumeChannel, nil
+}
+
+func (d *driver) StopVolumeWatcher() {
+	return
 }
 
 func (d *driver) Name() string {
