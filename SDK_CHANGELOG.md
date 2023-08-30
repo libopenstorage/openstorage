@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.40 - (09/1/2023)
+
+* Add CloudDriveType field to StorageResource
+
 ### v0.101.39 - (08/1/2023)
 
 * Add auto-journal IO profile
@@ -35,11 +39,11 @@
 
 ### v0.101.32 - (12/09/2022)
 
-* Update SDK cloudBackup delete API 
+* Update SDK cloudBackup delete API
 
 ### v0.101.31 - (12/04/2022)
 
-* Add NFS Credential support 
+* Add NFS Credential support
 
 ### v0.101.30 - (11/08/2022)
 
