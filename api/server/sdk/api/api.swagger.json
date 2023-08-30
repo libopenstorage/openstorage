@@ -5110,6 +5110,10 @@
             "title": "True if dedicated as cache",
             "type": "boolean"
           },
+          "cloud_drive_type": {
+            "title": "Cloud drive type",
+            "type": "string"
+          },
           "id": {
             "description": "Id is the LUN identifier.",
             "type": "string"
