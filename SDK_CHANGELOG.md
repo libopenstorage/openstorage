@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.165.0 - (08/30/2023)
+
+* Add CloudDriveType field to StorageResource
+
 ### v0.164.0 - (07/17/2023)
 
 * Add serverSideEncryption field to aws credentials
@@ -51,7 +55,7 @@
 
 ### v0.153.0 - (11/09/2022)
 
-* Add api for autofstrim push and pop 
+* Add api for autofstrim push and pop
 
 ### v0.152.0 - (10/26/2022)
 
@@ -67,11 +71,11 @@
 
 ### v0.149.0 - (8/4/2022)
 
-* Add NFS Credential support 
+* Add NFS Credential support
 
 ### v0.148.0 - (8/2/2022)
 
-* Update SDK cloudBackup delete API 
+* Update SDK cloudBackup delete API
 
 ### v0.147.0 - (7/29/2022)
 

@@ -5110,6 +5110,10 @@
             "title": "True if dedicated as cache",
             "type": "boolean"
           },
+          "cloud_drive_type": {
+            "title": "Cloud drive type",
+            "type": "string"
+          },
           "id": {
             "description": "Id is the LUN identifier.",
             "type": "string"
@@ -6127,7 +6131,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.164.0"
+    "version": "0.165.0"
   },
   "openapi": "3.0.0",
   "paths": {
