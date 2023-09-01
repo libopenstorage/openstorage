@@ -234,6 +234,8 @@ message StorageResource {
   bool cache = 14;
   // True if the resource is used as thin pool metadata disk
   bool pool_metadata_dev = 15;
+  // Cloud drive type
+  string cloud_drive_type = 16;
 }
 
 // StoragePool groups different storage devices based on their CosType
@@ -5291,7 +5293,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 39;
+    Patch = 40;
   }
 
   // The following cannot be set to use the enum Version because the REST
