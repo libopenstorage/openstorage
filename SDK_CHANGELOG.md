@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.166.0 - (09/01/2023)
+
+* Add pool rebalance schedule related APIs
+
 ### v0.165.0 - (08/30/2023)
 
 * Add CloudDriveType field to StorageResource

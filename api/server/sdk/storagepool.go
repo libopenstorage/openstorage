@@ -58,3 +58,27 @@ func (sp *StoragePoolServer) EnumerateRebalanceJobs(
 	}
 	return sp.cluster().EnumerateRebalanceJobs(c, req)
 }
+
+func (sp *StoragePoolServer) CreateRebalanceSchedule(
+	c context.Context, req *api.SdkCreateRebalanceScheduleRequest) (*api.SdkCreateRebalanceScheduleResponse, error) {
+	if sp.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+	return sp.cluster().CreateRebalanceSchedule(c, req)
+}
+
+func (sp *StoragePoolServer) GetRebalanceSchedule(
+	c context.Context, req *api.SdkGetRebalanceScheduleRequest) (*api.SdkGetRebalanceScheduleResponse, error) {
+	if sp.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+	return sp.cluster().GetRebalanceSchedule(c, req)
+}
+
+func (sp *StoragePoolServer) DeleteRebalanceSchedule(
+	c context.Context, req *api.SdkDeleteRebalanceScheduleRequest) (*api.SdkDeleteRebalanceScheduleResponse, error) {
+	if sp.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+	return sp.cluster().DeleteRebalanceSchedule(c, req)
+}
