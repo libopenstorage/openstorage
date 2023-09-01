@@ -10103,7 +10103,7 @@
           "OpenStoragePool"
         ]
       },
-      "put": {
+      "post": {
         "operationId": "OpenStoragePool_CreateRebalanceSchedule",
         "responses": {
           "200": {

@@ -2048,7 +2048,7 @@ service OpenStoragePool {
   // CreateRebalanceSchedule creates a scheudle for the input rebalance requests
   rpc CreateRebalanceSchedule (SdkCreateRebalanceScheduleRequest) returns (SdkCreateRebalanceScheduleResponse) {
     option (google.api.http) = {
-        put: "/v1/storagepools/rebalance/schedule"
+        post: "/v1/storagepools/rebalance/schedule"
       };
   }
 
