@@ -36,6 +36,36 @@ func (m *MockOpenStoragePoolServer) EXPECT() *MockOpenStoragePoolServerMockRecor
 	return m.recorder
 }
 
+// CreateRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolServer) CreateRebalanceSchedule(arg0 context.Context, arg1 *api.SdkCreateRebalanceScheduleRequest) (*api.SdkCreateRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkCreateRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRebalanceSchedule indicates an expected call of CreateRebalanceSchedule.
+func (mr *MockOpenStoragePoolServerMockRecorder) CreateRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).CreateRebalanceSchedule), arg0, arg1)
+}
+
+// DeleteRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolServer) DeleteRebalanceSchedule(arg0 context.Context, arg1 *api.SdkDeleteRebalanceScheduleRequest) (*api.SdkDeleteRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkDeleteRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteRebalanceSchedule indicates an expected call of DeleteRebalanceSchedule.
+func (mr *MockOpenStoragePoolServerMockRecorder) DeleteRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).DeleteRebalanceSchedule), arg0, arg1)
+}
+
 // EnumerateRebalanceJobs mocks base method.
 func (m *MockOpenStoragePoolServer) EnumerateRebalanceJobs(arg0 context.Context, arg1 *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	m.ctrl.T.Helper()
@@ -64,6 +94,21 @@ func (m *MockOpenStoragePoolServer) GetRebalanceJobStatus(arg0 context.Context, 
 func (mr *MockOpenStoragePoolServerMockRecorder) GetRebalanceJobStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceJobStatus", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).GetRebalanceJobStatus), arg0, arg1)
+}
+
+// GetRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolServer) GetRebalanceSchedule(arg0 context.Context, arg1 *api.SdkGetRebalanceScheduleRequest) (*api.SdkGetRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkGetRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRebalanceSchedule indicates an expected call of GetRebalanceSchedule.
+func (mr *MockOpenStoragePoolServerMockRecorder) GetRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).GetRebalanceSchedule), arg0, arg1)
 }
 
 // Rebalance mocks base method.
@@ -134,6 +179,46 @@ func (m *MockOpenStoragePoolClient) EXPECT() *MockOpenStoragePoolClientMockRecor
 	return m.recorder
 }
 
+// CreateRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolClient) CreateRebalanceSchedule(arg0 context.Context, arg1 *api.SdkCreateRebalanceScheduleRequest, arg2 ...grpc.CallOption) (*api.SdkCreateRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "CreateRebalanceSchedule", varargs...)
+	ret0, _ := ret[0].(*api.SdkCreateRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRebalanceSchedule indicates an expected call of CreateRebalanceSchedule.
+func (mr *MockOpenStoragePoolClientMockRecorder) CreateRebalanceSchedule(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).CreateRebalanceSchedule), varargs...)
+}
+
+// DeleteRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolClient) DeleteRebalanceSchedule(arg0 context.Context, arg1 *api.SdkDeleteRebalanceScheduleRequest, arg2 ...grpc.CallOption) (*api.SdkDeleteRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteRebalanceSchedule", varargs...)
+	ret0, _ := ret[0].(*api.SdkDeleteRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteRebalanceSchedule indicates an expected call of DeleteRebalanceSchedule.
+func (mr *MockOpenStoragePoolClientMockRecorder) DeleteRebalanceSchedule(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).DeleteRebalanceSchedule), varargs...)
+}
+
 // EnumerateRebalanceJobs mocks base method.
 func (m *MockOpenStoragePoolClient) EnumerateRebalanceJobs(arg0 context.Context, arg1 *api.SdkEnumerateRebalanceJobsRequest, arg2 ...grpc.CallOption) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	m.ctrl.T.Helper()
@@ -172,6 +257,26 @@ func (mr *MockOpenStoragePoolClientMockRecorder) GetRebalanceJobStatus(arg0, arg
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceJobStatus", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).GetRebalanceJobStatus), varargs...)
+}
+
+// GetRebalanceSchedule mocks base method.
+func (m *MockOpenStoragePoolClient) GetRebalanceSchedule(arg0 context.Context, arg1 *api.SdkGetRebalanceScheduleRequest, arg2 ...grpc.CallOption) (*api.SdkGetRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "GetRebalanceSchedule", varargs...)
+	ret0, _ := ret[0].(*api.SdkGetRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRebalanceSchedule indicates an expected call of GetRebalanceSchedule.
+func (mr *MockOpenStoragePoolClientMockRecorder) GetRebalanceSchedule(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceSchedule", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).GetRebalanceSchedule), varargs...)
 }
 
 // Rebalance mocks base method.

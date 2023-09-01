@@ -40,3 +40,18 @@ func (n *UnsupportedPoolProvider) GetRebalanceJobStatus(
 	c context.Context, request *api.SdkGetRebalanceJobStatusRequest) (*api.SdkGetRebalanceJobStatusResponse, error) {
 	panic("implement me")
 }
+
+func (n *UnsupportedPoolProvider) CreateRebalanceSchedule(
+	c context.Context, request *api.SdkCreateRebalanceScheduleRequest) (*api.SdkCreateRebalanceScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
+func (n *UnsupportedPoolProvider) GetRebalanceSchedule(
+	c context.Context, request *api.SdkGetRebalanceScheduleRequest) (*api.SdkGetRebalanceScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
+func (n *UnsupportedPoolProvider) DeleteRebalanceSchedule(
+	c context.Context, request *api.SdkDeleteRebalanceScheduleRequest) (*api.SdkDeleteRebalanceScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}

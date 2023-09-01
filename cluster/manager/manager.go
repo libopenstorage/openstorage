@@ -2174,6 +2174,24 @@ func (c *ClusterManager) EnumerateRebalanceJobs(
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
 }
 
+func (c *ClusterManager) CreateRebalanceSchedule(
+	context context.Context, request *api.SdkCreateRebalanceScheduleRequest) (
+	*api.SdkCreateRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.CreateRebalanceSchedule(context, request)
+}
+
+func (c *ClusterManager)  GetRebalanceSchedule(
+	context context.Context, request *api.SdkGetRebalanceScheduleRequest) (
+	*api.SdkGetRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.GetRebalanceSchedule(context, request)
+}
+
+func (c *ClusterManager)  DeleteRebalanceSchedule(
+	context context.Context, request *api.SdkDeleteRebalanceScheduleRequest) (
+	*api.SdkDeleteRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.DeleteRebalanceSchedule(context, request)
+}
+
 func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
 	return c.diagsProvider.Collect(ctx, in)
 }
