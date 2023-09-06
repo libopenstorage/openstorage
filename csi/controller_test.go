@@ -3289,6 +3289,31 @@ func TestResolveSpecFromCSI(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Should not set shared flag to true for RWX Volumes if proxy spec is set",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_NFS,
+				},
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Shared:   false,
+				Sharedv4: false,
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_NFS,
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
