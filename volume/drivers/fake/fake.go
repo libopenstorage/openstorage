@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -388,6 +389,18 @@ func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 		IntervalMs: uint64(4),
 	}, nil
 }
+
+func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.VolumeBytesUsedByNode, error) {
+   volusage := []*api.VolumeBytesUsed{}
+   for _, id := range volumes {
+       volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
+   }
+   return &api.VolumeBytesUsedByNode{
+       NodeId:  nodeMID,
+       VolUsage: volusage,
+   }, nil
+}
+
 
 func (d *driver) CapacityUsage(
 	volumeID string,

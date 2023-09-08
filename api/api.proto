@@ -1075,6 +1075,22 @@ message VolumeUsageByNode {
   repeated VolumeUsage volume_usage= 1;
 }
 
+// VolumeBytesUsed defines volume utilization
+message VolumeBytesUsed {
+  // id for the volume/snapshot
+  string volume_id = 1;
+  //  size in bytes by the volume/snapshot
+  uint64 total_bytes = 2;
+}
+
+// VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node
+message VolumeBytesUsedByNode {
+  // machine uuid
+  string node_id = 1;
+  // VolumeBytesUsed for each requested volume on the given node
+  repeated VolumeBytesUsed vol_usage = 2;
+}
+
 // FstrimVolUsageInfo
 message FstrimVolumeUsageInfo {
   // Volume name
@@ -2122,6 +2138,15 @@ service OpenStorageNode {
       returns (SdkNodeUncordonAttachmentsResponse) {
       option(google.api.http) = {
         put: "/v1/nodes/attachments/enable/{node_id}"
+        body: "*"
+      };
+    }
+
+  // Returns bytes used of multiple volumes for a give node
+  rpc VolumeBytesUsedByNode(SdkVolumeBytesUsedRequest)
+      returns (SdkVolumeBytesUsedResponse) {
+      option(google.api.http) = {
+        post: "/v1/nodes/bytesused"
         body: "*"
       };
     }
@@ -5134,6 +5159,21 @@ message SdkAutoFSTrimPopResponse {
   string message = 1;
 }
 
+// SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node
+message SdkVolumeBytesUsedResponse {
+  // Provides vol util of multiple requested volumes from a given node
+  VolumeBytesUsedByNode vol_util_info = 1;
+}
+
+// SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization
+// from multiple volume in a given node
+message SdkVolumeBytesUsedRequest {
+  // machine uuid of targeted node
+  string node_id = 1;
+  // volume ids to be found in usage response, can be empty
+  repeated uint64 ids = 2;
+}
+
 message FilesystemCheck {
   // FilesystemChecktatus represents the status codes returned from
   // OpenStorageFilesystemCheck service APIs()
@@ -5293,7 +5333,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 40;
+    Patch = 41;
   }
 
   // The following cannot be set to use the enum Version because the REST

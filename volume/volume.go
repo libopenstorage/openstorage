@@ -147,6 +147,9 @@ type StatsDriver interface {
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
 	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	// VolumeBytesUsedByNode returns currently used volume util of multiple volumes
+	// on a given node
+	VolumeBytesUsedByNode(nodeID string, ids []uint64) (*api.VolumeBytesUsedByNode, error)
 }
 
 type QuiesceDriver interface {

@@ -96,6 +96,12 @@ func (s *statsNotSupported) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }
 
+func (s *statsNotSupported)    VolumeBytesUsedByNode(nodeID string,
+   ids []uint64,
+) (*api.VolumeBytesUsedByNode, error) {
+   return nil, ErrNotSupported
+}
+
 // GetCapacityUsage gets exclusive and shared capacity
 // usage of snap
 func (s *statsNotSupported) CapacityUsage(

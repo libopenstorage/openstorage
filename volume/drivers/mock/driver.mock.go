@@ -982,6 +982,21 @@ func (mr *MockVolumeDriverMockRecorder) VolService(arg0, arg1 interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolService", reflect.TypeOf((*MockVolumeDriver)(nil).VolService), arg0, arg1)
 }
 
+// VolumeBytesUsedByNode mocks base method
+func (m *MockVolumeDriver) VolumeBytesUsedByNode(arg0 string, arg1 []uint64) (*api.VolumeBytesUsedByNode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumeBytesUsedByNode", arg0, arg1)
+	ret0, _ := ret[0].(*api.VolumeBytesUsedByNode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode
+func (mr *MockVolumeDriverMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockVolumeDriver)(nil).VolumeBytesUsedByNode), arg0, arg1)
+}
+
 // VolumeUsageByNode mocks base method
 func (m *MockVolumeDriver) VolumeUsageByNode(arg0 string) (*api.VolumeUsageByNode, error) {
 	m.ctrl.T.Helper()

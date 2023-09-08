@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.41 - (09/7/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
 ### v0.101.40 - (09/1/2023)
 
 * Add CloudDriveType field to StorageResource
