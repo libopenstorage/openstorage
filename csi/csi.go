@@ -19,7 +19,6 @@ package csi
 import (
 	"fmt"
 	"os"
-	"strings"
 	"sync"
 	"time"
 
@@ -98,6 +97,7 @@ type OsdCsiServer struct {
 	allowInlineVolumes   bool
 	stopCleanupCh        chan bool
 	config               *OsdCsiServerConfig
+	autoRecoverStopCh    chan struct{}
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -138,6 +138,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		roundRobinBalancer: config.RoundRobinBalancer,
 		cloudBackupClient:  api.NewOpenStorageCloudBackupClient,
 		config:             config,
+		autoRecoverStopCh:  make(chan struct{}),
 	}, nil
 }
 
@@ -245,7 +246,7 @@ func (s *OsdCsiServer) Start() error {
 
 	if s.config.Net == "unix" {
 		go func() {
-			err := autoSocketRecover(s)
+			err := autoSocketRecover(s, s.autoRecoverStopCh)
 			if err != nil {
 				logrus.Errorf("failed to start CSI driver socket auto-recover watcher: %v", err)
 			}
@@ -257,6 +258,7 @@ func (s *OsdCsiServer) Start() error {
 
 // Start is used to stop the server.
 func (s *OsdCsiServer) Stop() {
+	close(s.autoRecoverStopCh)
 	s.GrpcServer.Stop()
 }
 
@@ -297,12 +299,17 @@ func createGrpcServer(config *OsdCsiServerConfig) (*grpcserver.GrpcServer, error
 	return gServer, nil
 }
 
-func autoSocketRecover(s *OsdCsiServer) error {
-	socketPath := strings.TrimPrefix(s.Address(), "unix://")
+func autoSocketRecover(s *OsdCsiServer, stopCh chan struct{}) error {
+	socketPath := s.Address()
+	ticker := time.NewTicker(csiSocketCheckInterval)
 
 	// Start checking for CSI socket delete
 	for {
-		time.Sleep(csiSocketCheckInterval)
+		select {
+		case <-stopCh:
+			return nil
+		case <-ticker.C:
+		}
 
 		// Check if socket deleted
 		_, err := os.Stat(socketPath)
@@ -310,20 +317,22 @@ func autoSocketRecover(s *OsdCsiServer) error {
 			continue
 		}
 
-		logrus.Infof("Detected CSI socket deleted at path %s. Stopping CSI server", socketPath)
-		s.Stop()
+		logrus.Infof("Detected CSI socket deleted at path %s. Stopping CSI gRPC server", socketPath)
+		s.GrpcServer.Stop()
 
 		// Re-create gRPC server
 		gServer, err := createGrpcServer(s.config)
 		if err != nil {
-			return fmt.Errorf("failed to re-create gRPC server: %v", err)
+			logrus.Errorf("failed to re-create gRPC server: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
 		}
 		s.GrpcServer = gServer
 
 		// Start server
 		logrus.Infof("Restarting CSI gRPC server at %s", socketPath)
 		if err := s.Start(); err != nil {
-			return fmt.Errorf("CSI server failed to auto-recover after socket deletion: %v. A full restart is required", err)
+			logrus.Errorf("CSI server failed to auto-recover after socket deletion: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
 		}
 
 		// Exit for next process to start
