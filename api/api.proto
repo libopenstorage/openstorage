@@ -234,6 +234,8 @@ message StorageResource {
   bool cache = 14;
   // True if the resource is used as thin pool metadata disk
   bool pool_metadata_dev = 15;
+  // Cloud drive type
+  string cloud_drive_type = 16;
 }
 
 // StoragePool groups different storage devices based on their CosType
@@ -2042,6 +2044,27 @@ service OpenStoragePool {
         get: "/v1/storagepools/rebalance/job"
       };
   }
+
+  // CreateRebalanceSchedule creates a scheudle for the input rebalance requests
+  rpc CreateRebalanceSchedule (SdkCreateRebalanceScheduleRequest) returns (SdkCreateRebalanceScheduleResponse) {
+    option (google.api.http) = {
+        post: "/v1/storagepools/rebalance/schedule"
+      };
+  }
+
+  // GetRebalanceSchedule returns the information of rebalance schedule
+  rpc GetRebalanceSchedule (SdkGetRebalanceScheduleRequest) returns (SdkGetRebalanceScheduleResponse) {
+    option (google.api.http) = {
+        get: "/v1/storagepools/rebalance/schedule"
+      };
+  }
+
+  // DeleteRebalanceSchedule deletes the rebalance schedule
+  rpc DeleteRebalanceSchedule (SdkDeleteRebalanceScheduleRequest) returns (SdkDeleteRebalanceScheduleResponse) {
+    option (google.api.http) = {
+        delete: "/v1/storagepools/rebalance/schedule"
+      };
+  }
 }
 
 // OpenStorageDiags service provides methods to manage diagnostic bundles
@@ -3299,6 +3322,8 @@ message SdkAwsCredentialRequest {
   bool disable_ssl = 5;
   // (optional) Disable path-style access
   bool disable_path_style = 6;
+  // (optional) server side encryption
+  string server_side_encryption = 7;
 }
 
 // Defines credentials for Azure
@@ -3343,6 +3368,8 @@ message SdkAwsCredentialResponse {
   bool disable_path_style = 6;
   // (optional) Storage class for s3 puts
   string s3_storage_class = 7;
+  // (optional) server side encryption
+  string server_side_encryption = 8;
 }
 
 // Defines the response for Azure credentials
@@ -4426,6 +4453,34 @@ message SdkEnumerateRebalanceJobsResponse {
   repeated StorageRebalanceJob jobs = 1;
 }
 
+message RebalanceScheduleInfo {
+  string schedule = 1;
+  repeated SdkStorageRebalanceRequest rebalance_requests = 2;
+  google.protobuf.Timestamp create_time = 3;
+}
+
+message SdkCreateRebalanceScheduleRequest {
+  string schedule = 1;
+  repeated SdkStorageRebalanceRequest rebalance_requests = 2;
+}
+
+message SdkCreateRebalanceScheduleResponse {
+  RebalanceScheduleInfo scheduleInfo = 1;
+}
+
+message SdkGetRebalanceScheduleRequest {
+}
+
+message SdkGetRebalanceScheduleResponse {
+  RebalanceScheduleInfo scheduleInfo = 1;
+}
+
+message SdkDeleteRebalanceScheduleRequest {
+}
+
+message SdkDeleteRebalanceScheduleResponse {
+}
+
 message SdkStoragePool {
   // OperationStatus captures the various statuses of a storage pool operation
   enum OperationStatus {
@@ -5435,7 +5490,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 163;
+    Minor = 166;
     // SDK version patch value of this specification
     Patch = 0;
   }

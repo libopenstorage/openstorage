@@ -129,6 +129,21 @@ func (mr *MockClusterMockRecorder) CreatePair(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePair", reflect.TypeOf((*MockCluster)(nil).CreatePair), arg0)
 }
 
+// CreateRebalanceSchedule mocks base method.
+func (m *MockCluster) CreateRebalanceSchedule(arg0 context.Context, arg1 *api.SdkCreateRebalanceScheduleRequest) (*api.SdkCreateRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkCreateRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateRebalanceSchedule indicates an expected call of CreateRebalanceSchedule.
+func (mr *MockClusterMockRecorder) CreateRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateRebalanceSchedule", reflect.TypeOf((*MockCluster)(nil).CreateRebalanceSchedule), arg0, arg1)
+}
+
 // DeleteDomain mocks base method.
 func (m *MockCluster) DeleteDomain(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -169,6 +184,21 @@ func (m *MockCluster) DeletePair(arg0 string) error {
 func (mr *MockClusterMockRecorder) DeletePair(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePair", reflect.TypeOf((*MockCluster)(nil).DeletePair), arg0)
+}
+
+// DeleteRebalanceSchedule mocks base method.
+func (m *MockCluster) DeleteRebalanceSchedule(arg0 context.Context, arg1 *api.SdkDeleteRebalanceScheduleRequest) (*api.SdkDeleteRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkDeleteRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteRebalanceSchedule indicates an expected call of DeleteRebalanceSchedule.
+func (mr *MockClusterMockRecorder) DeleteRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteRebalanceSchedule", reflect.TypeOf((*MockCluster)(nil).DeleteRebalanceSchedule), arg0, arg1)
 }
 
 // DisableUpdates mocks base method.
@@ -479,6 +509,21 @@ func (m *MockCluster) GetRebalanceJobStatus(arg0 context.Context, arg1 *api.SdkG
 func (mr *MockClusterMockRecorder) GetRebalanceJobStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceJobStatus", reflect.TypeOf((*MockCluster)(nil).GetRebalanceJobStatus), arg0, arg1)
+}
+
+// GetRebalanceSchedule mocks base method.
+func (m *MockCluster) GetRebalanceSchedule(arg0 context.Context, arg1 *api.SdkGetRebalanceScheduleRequest) (*api.SdkGetRebalanceScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRebalanceSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkGetRebalanceScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetRebalanceSchedule indicates an expected call of GetRebalanceSchedule.
+func (mr *MockClusterMockRecorder) GetRebalanceSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRebalanceSchedule", reflect.TypeOf((*MockCluster)(nil).GetRebalanceSchedule), arg0, arg1)
 }
 
 // GetSelfDomain mocks base method.

@@ -112,6 +112,7 @@ const (
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
 	SpecReadahead                           = "readahead"
+	SpecWinshare                            = "winshare"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -157,6 +158,8 @@ const (
 	OptCredSecretKey = "CredSecretKey"
 	// OptCredBucket is the optional bucket name
 	OptCredBucket = "CredBucket"
+	// OptCredSSE for s3 sse flag
+	OptCredSSE = "CredSSE"
 	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
 	// OptCredGoogleJsonKey for google cloud
@@ -1470,3 +1473,21 @@ func (s *ProxySpec) GetPureFullVolumeName() string {
 func GetAllEnumInfo() []protoimpl.EnumInfo {
 	return file_api_api_proto_enumTypes
 }
+
+// Constants defined for proxy mounts
+const (
+	// OptProxyCaller is an option to pass NodeID of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCaller = "caller"
+	// OptProxyCallerIP is an option to pass NodeIP of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCallerIP = "caller_ip"
+	// OptMountID is an option to pass mount path of the client requesting a sharedv4
+	// mount from the server
+	OptMountID = "mountID"
+)
+
+const (
+	// SharedVolExportPrefix is the export path where shared volumes are mounted
+	SharedVolExportPrefix = "/var/lib/osd/pxns"
+)

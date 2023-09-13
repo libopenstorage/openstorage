@@ -147,13 +147,13 @@ func newTestServer(t *testing.T) *testServer {
 
 	assert.Nil(t, err)
 
+	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
 		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
 		return ch, nil
 	}).Times(1)
-	go func() {
-		tester.server.watcherCtxCancel()
-	}()
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
@@ -234,14 +234,13 @@ func newTestServerAuth(t *testing.T) *testServer {
 		},
 	})
 	assert.Nil(t, err)
-
+	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
 		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
 		return ch, nil
 	}).Times(1)
-	go func() {
-		tester.server.watcherCtxCancel()
-	}()
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
@@ -296,6 +295,7 @@ func (s *testServer) Stop() {
 
 	// Shutdown servers
 	s.conn.Close()
+	s.m.EXPECT().StopVolumeWatcher().Return().AnyTimes()
 	s.server.Stop()
 	s.gw.Close()
 

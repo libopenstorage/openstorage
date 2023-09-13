@@ -1490,6 +1490,24 @@
         "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",
         "type": "object"
       },
+      "apiRebalanceScheduleInfo": {
+        "properties": {
+          "create_time": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "rebalance_requests": {
+            "items": {
+              "$ref": "#/components/schemas/apiSdkStorageRebalanceRequest"
+            },
+            "type": "array"
+          },
+          "schedule": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiRelaxedReclaimPurge": {
         "properties": {
           "num_purged": {
@@ -2018,6 +2036,10 @@
           "secret_key": {
             "title": "Secret key",
             "type": "string"
+          },
+          "server_side_encryption": {
+            "title": "(optional) server side encryption",
+            "type": "string"
           }
         },
         "title": "Defines credentials for Aws/S3 endpoints",
@@ -2047,6 +2069,10 @@
           },
           "s3_storage_class": {
             "title": "(optional) Storage class for s3 puts",
+            "type": "string"
+          },
+          "server_side_encryption": {
+            "title": "(optional) server side encryption",
             "type": "string"
           }
         },
@@ -2879,6 +2905,14 @@
         "title": "Defines a response for the token request",
         "type": "object"
       },
+      "apiSdkCreateRebalanceScheduleResponse": {
+        "properties": {
+          "scheduleInfo": {
+            "$ref": "#/components/schemas/apiRebalanceScheduleInfo"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkCredentialCreateRequest": {
         "properties": {
           "aws_credential": {
@@ -3014,6 +3048,9 @@
       },
       "apiSdkCredentialValidateResponse": {
         "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkDeleteRebalanceScheduleResponse": {
         "type": "object"
       },
       "apiSdkDiagsCollectRequest": {
@@ -3228,6 +3265,14 @@
           },
           "summary": {
             "$ref": "#/components/schemas/apiStorageRebalanceSummary"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkGetRebalanceScheduleResponse": {
+        "properties": {
+          "scheduleInfo": {
+            "$ref": "#/components/schemas/apiRebalanceScheduleInfo"
           }
         },
         "type": "object"
@@ -5102,6 +5147,10 @@
             "title": "True if dedicated as cache",
             "type": "boolean"
           },
+          "cloud_drive_type": {
+            "title": "Cloud drive type",
+            "type": "string"
+          },
           "id": {
             "description": "Id is the LUN identifier.",
             "type": "string"
@@ -6119,7 +6168,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.163.0"
+    "version": "0.166.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -9990,6 +10039,95 @@
           }
         },
         "summary": "UpdateRebalanceJobState updates existing rebalance task state.\nOnly acceptable values are\nStorageRebalanceJobState_PAUSED - acceptable only from running state\nStorageRebalanceJobState_CANCELLED - acceptable only from running/pause state\nStorageRebalanceJobState_RUNNING - acceptable only from pause state",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/storagepools/rebalance/schedule": {
+      "delete": {
+        "operationId": "OpenStoragePool_DeleteRebalanceSchedule",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkDeleteRebalanceScheduleResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "DeleteRebalanceSchedule deletes the rebalance schedule",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      },
+      "get": {
+        "operationId": "OpenStoragePool_GetRebalanceSchedule",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkGetRebalanceScheduleResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "GetRebalanceSchedule returns the information of rebalance schedule",
+        "tags": [
+          "OpenStoragePool"
+        ]
+      },
+      "post": {
+        "operationId": "OpenStoragePool_CreateRebalanceSchedule",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCreateRebalanceScheduleResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "CreateRebalanceSchedule creates a scheudle for the input rebalance requests",
         "tags": [
           "OpenStoragePool"
         ]

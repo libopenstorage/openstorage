@@ -46,6 +46,10 @@ const (
 	osdPvcAnnotationsKey = osdParameterPrefix + "pvc-annotations"
 	osdPvcLabelsKey      = osdParameterPrefix + "pvc-labels"
 
+	// These keys are for accessing Snapshot Metadata added from the external-provisioner
+	osdSnapshotLabelsTypeKey   = osdParameterPrefix + "snapshot-type"
+	osdSnapshotCredentialIDKey = osdParameterPrefix + "credential-id"
+
 	// in-tree keys for name and namespace
 	intreePvcNameKey      = "pvc"
 	intreePvcNamespaceKey = "namespace"
@@ -60,6 +64,10 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
+
+	// driver type
+	DriverTypeLocal = "local"
+	DriverTypeCloud = "cloud"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -413,12 +421,17 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 
 	var shared bool
 	var mount bool
+	var block bool
 	for _, cap := range caps {
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
 			shared = true
+		}
+
+		if cap.GetBlock() != nil {
+			block = true
 		}
 
 		if cap.GetMount() != nil {
@@ -436,6 +449,14 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 				"FlashArray Direct Access shared filesystems are not supported",
 			)
 		}
+	}
+
+	// Check for FB DA volumes: all allowed except raw block
+	if proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE && block {
+		return status.Errorf(
+			codes.InvalidArgument,
+			"FlashBlade Direct Access volumes do not support raw block",
+		)
 	}
 
 	return nil
@@ -779,6 +800,11 @@ func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 		return spec, nil
 	}
 
+	// don't default to sharedv4/shared for RWX Volumes if proxy spec is set
+	if spec.ProxySpec != nil {
+		return spec, nil
+	}
+
 	var shared bool
 	for _, cap := range req.GetVolumeCapabilities() {
 		mode := cap.GetAccessMode().GetMode()
@@ -868,6 +894,35 @@ func (s *OsdCsiServer) CreateSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
+	// Get secret if any was passed
+	ctx = s.setupContext(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+	// Check ID is valid with the specified volume capabilities
+	snapshotType, ok := locator.VolumeLabels[osdSnapshotLabelsTypeKey]
+	if !ok {
+		snapshotType = DriverTypeLocal
+	}
+	switch snapshotType {
+	case DriverTypeCloud:
+		return s.createCloudBackup(ctx, req)
+	case DriverTypeLocal:
+		fallthrough
+	default:
+		return s.createLocalSnapshot(ctx, req)
+	}
+}
+
+func (s *OsdCsiServer) createLocalSnapshot(
+	ctx context.Context,
+	req *csi.CreateSnapshotRequest,
+) (*csi.CreateSnapshotResponse, error) {
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
@@ -958,6 +1013,76 @@ func (s *OsdCsiServer) CreateSnapshot(
 			SourceVolumeId: req.GetSourceVolumeId(),
 			CreationTime:   snapInfo.GetCtime(),
 			ReadyToUse:     isSnapshotReady(snapInfo),
+		},
+	}, nil
+}
+func (s *OsdCsiServer) getCloudBackupClient(ctx context.Context) (api.OpenStorageCloudBackupClient, error) {
+	// Get grpc connection
+	conn, err := s.getRemoteConn(ctx)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.Unavailable,
+			"Unable to connect to SDK server: %v", err)
+	}
+	return s.cloudBackupClient(conn), nil
+}
+
+func (s *OsdCsiServer) createCloudBackup(
+	ctx context.Context,
+	req *csi.CreateSnapshotRequest,
+) (*csi.CreateSnapshotResponse, error) {
+	cloudBackupClient, err := s.getCloudBackupClient(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+
+	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	backupID := req.GetName()
+	// Create snapshot
+	_, err = cloudBackupClient.Create(ctx, &api.SdkCloudBackupCreateRequest{
+		VolumeId:     req.GetSourceVolumeId(),
+		TaskId:       backupID,
+		CredentialId: credentialID,
+		Labels:       locator.GetVolumeLabels(),
+	})
+
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+	}
+
+	var isBackupReady bool
+	var backupStatus *api.SdkCloudBackupStatusResponse
+
+	// Check if snapshot has been created but is in error state
+	backupStatus, errFindFailed := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		VolumeId: req.GetSourceVolumeId(),
+		TaskId:   backupID,
+	})
+	if errFindFailed != nil {
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+	}
+	isBackupReady = backupStatus.Statuses[backupID].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+
+	snapSize, errSizeFailed := cloudBackupClient.Size(ctx, &api.SdkCloudBackupSizeRequest{
+		BackupId: backupID,
+	})
+	if errSizeFailed != nil {
+		return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot size: %v", err)
+	}
+
+	return &csi.CreateSnapshotResponse{
+		Snapshot: &csi.Snapshot{
+			SizeBytes:      int64(snapSize.GetTotalDownloadBytes()),
+			SnapshotId:     backupID,
+			SourceVolumeId: req.GetSourceVolumeId(),
+			CreationTime:   backupStatus.Statuses[backupID].StartTime,
+			ReadyToUse:     isBackupReady,
 		},
 	}, nil
 }
