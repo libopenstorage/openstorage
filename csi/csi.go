@@ -83,20 +83,18 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler          spec.SpecHandler
-	driver               volume.VolumeDriver
-	cluster              cluster.Cluster
-	sdkUds               string
-	sdkPort              string
-	conn                 *grpc.ClientConn
-	roundRobinBalancer   loadbalancer.Balancer
-	nextCreateNodeNumber int
-	mu                   sync.Mutex
-	csiDriverName        string
-	allowInlineVolumes   bool
-	stopCleanupCh        chan bool
-	config               *OsdCsiServerConfig
-	autoRecoverStopCh    chan struct{}
+	specHandler        spec.SpecHandler
+	driver             volume.VolumeDriver
+	cluster            cluster.Cluster
+	sdkUds             string
+	sdkPort            string
+	conn               *grpc.ClientConn
+	mu                 sync.Mutex
+	csiDriverName      string
+	allowInlineVolumes bool
+	roundRobinBalancer loadbalancer.Balancer
+	config             *OsdCsiServerConfig
+	autoRecoverStopCh  chan struct{}
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
