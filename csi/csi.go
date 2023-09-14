@@ -83,21 +83,19 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	cloudBackupClient    func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
-	specHandler          spec.SpecHandler
-	driver               volume.VolumeDriver
-	cluster              cluster.Cluster
-	sdkUds               string
-	sdkPort              string
-	conn                 *grpc.ClientConn
-	roundRobinBalancer   loadbalancer.Balancer
-	nextCreateNodeNumber int
-	mu                   sync.Mutex
-	csiDriverName        string
-	allowInlineVolumes   bool
-	stopCleanupCh        chan bool
-	config               *OsdCsiServerConfig
-	autoRecoverStopCh    chan struct{}
+	cloudBackupClient  func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
+	specHandler        spec.SpecHandler
+	driver             volume.VolumeDriver
+	cluster            cluster.Cluster
+	sdkUds             string
+	sdkPort            string
+	conn               *grpc.ClientConn
+	mu                 sync.Mutex
+	csiDriverName      string
+	allowInlineVolumes bool
+	roundRobinBalancer loadbalancer.Balancer
+	config             *OsdCsiServerConfig
+	autoRecoverStopCh  chan struct{}
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -163,9 +161,6 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 }
 
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
 	return remoteConn, err
 }
