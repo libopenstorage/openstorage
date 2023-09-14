@@ -457,10 +457,10 @@
 			"revisionTime": "2016-05-30T11:15:57Z"
 		},
 		{
-			"checksumSHA1": "5rPfda8jFccr3A6heL+JAmi9K9g=",
+			"checksumSHA1": "CSPbwbyzqA6sfORicn4HFtIhF/c=",
 			"path": "github.com/davecgh/go-spew/spew",
-			"revision": "5215b55f46b2b919f50a1df0eaa5886afe4e3b3d",
-			"revisionTime": "2015-11-05T21:09:06Z"
+			"revision": "d8f796af33cc11cb798c1aaeb27a4ebc5099927d",
+			"revisionTime": "2018-08-30T19:11:22Z"
 		},
 		{
 			"checksumSHA1": "mUeojTdLEyzYOki70VUAeeYr/wQ=",
@@ -1403,16 +1403,21 @@
 			"revisionTime": "2018-08-31T15:14:32Z"
 		},
 		{
-			"checksumSHA1": "Bn333k9lTndxU3D6n/G5c+GMcYY=",
+			"checksumSHA1": "mCZlyemHWuVUdQpnAk7fOzOKLIA=",
 			"path": "github.com/stretchr/testify/assert",
-			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
-			"revisionTime": "2016-03-05T16:54:46Z"
+			"revision": "3ebf1ddaeb260c4b1ae502a01c7844fa8c1fa0e9",
+			"revisionTime": "2020-02-19T19:36:43Z"
+		},
+		{
+			"path": "github.com/stretchr/testify/mock",
+			"revision": "f36bfe3c337aa95c86f04c721acdbafb5ffb1611",
+			"revisionTime": "2023-02-25T12:46:30Z"
 		},
 		{
 			"checksumSHA1": "P9FJpir2c4G5PA46qEkaWy3l60U=",
 			"path": "github.com/stretchr/testify/require",
-			"revision": "6fe211e493929a8aac0469b93f28b1d0688a9a3a",
-			"revisionTime": "2016-03-05T16:54:46Z"
+			"revision": "f36bfe3c337aa95c86f04c721acdbafb5ffb1611",
+			"revisionTime": "2023-02-25T12:46:30Z"
 		},
 		{
 			"checksumSHA1": "tHm2SMtuRfrwh6NnnymsuoJ6e0Q=",

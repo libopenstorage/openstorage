@@ -18,7 +18,9 @@ package csi
 
 import (
 	"fmt"
+	"os"
 	"sync"
+	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
@@ -44,7 +46,8 @@ import (
 )
 
 var (
-	clogger *logrus.Logger
+	clogger                *logrus.Logger
+	csiSocketCheckInterval = 30 * time.Second
 )
 
 func init() {
@@ -90,6 +93,8 @@ type OsdCsiServer struct {
 	csiDriverName      string
 	allowInlineVolumes bool
 	roundRobinBalancer loadbalancer.Balancer
+	config             *OsdCsiServerConfig
+	autoRecoverStopCh  chan struct{}
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -113,37 +118,9 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
 
-	// create correlation interceptor
-	var unaryInterceptors []grpc.UnaryServerInterceptor
-	correlationInterceptor := correlation.ContextInterceptor{
-		Origin: correlation.ComponentCSIDriver,
-	}
-	opts := make([]grpc.ServerOption, 0)
-	unaryInterceptors = append(unaryInterceptors, correlationInterceptor.ContextUnaryServerInterceptor)
-
-	// create scheduler interceptor
-	switch config.SchedulerName {
-	case "kubernetes":
-		logrus.Infof("CSI K8s filter being added for %s scheduler", config.SchedulerName)
-		ki := k8s.NewInterceptor()
-		unaryInterceptors = append(unaryInterceptors, ki.SchedUnaryInterceptor)
-
-	default:
-		logrus.Infof("No CSI filter being added for %s scheduler", config.SchedulerName)
-	}
-
-	// Add interceptors
-	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)))
-
-	// Create server
-	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "CSI 1.7",
-		Net:     config.Net,
-		Address: config.Address,
-		Opts:    opts,
-	})
+	gServer, err := createGrpcServer(config)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
+		return nil, err
 	}
 
 	return &OsdCsiServer{
@@ -156,6 +133,8 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
 		roundRobinBalancer: config.RoundRobinBalancer,
+		config:             config,
+		autoRecoverStopCh:  make(chan struct{}),
 	}, nil
 }
 
@@ -253,16 +232,108 @@ func (s *OsdCsiServer) addEncryptionInfoToLabels(labels, csiSecrets map[string]s
 // Start is used to start the server.
 // It will return an error if the server is already running.
 func (s *OsdCsiServer) Start() error {
-	return s.GrpcServer.Start(func(grpcServer *grpc.Server) {
+	if err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		csi.RegisterIdentityServer(grpcServer, s)
 		csi.RegisterControllerServer(grpcServer, s)
 		csi.RegisterNodeServer(grpcServer, s)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if s.config.Net == "unix" {
+		go func() {
+			err := autoSocketRecover(s, s.autoRecoverStopCh)
+			if err != nil {
+				logrus.Errorf("failed to start CSI driver socket auto-recover watcher: %v", err)
+			}
+		}()
+	}
+
+	return nil
 }
 
 // Start is used to stop the server.
 func (s *OsdCsiServer) Stop() {
+	close(s.autoRecoverStopCh)
 	s.GrpcServer.Stop()
+}
+
+func createGrpcServer(config *OsdCsiServerConfig) (*grpcserver.GrpcServer, error) {
+	// create correlation interceptor
+	var unaryInterceptors []grpc.UnaryServerInterceptor
+	correlationInterceptor := correlation.ContextInterceptor{
+		Origin: correlation.ComponentCSIDriver,
+	}
+	opts := make([]grpc.ServerOption, 0)
+	unaryInterceptors = append(unaryInterceptors, correlationInterceptor.ContextUnaryServerInterceptor)
+
+	// create scheduler interceptor
+	switch config.SchedulerName {
+	case "kubernetes":
+		logrus.Infof("CSI K8s filter being added for %s scheduler", config.SchedulerName)
+		ki := k8s.NewInterceptor()
+		unaryInterceptors = append(unaryInterceptors, ki.SchedUnaryInterceptor)
+
+	default:
+		logrus.Infof("No CSI filter being added for %s scheduler", config.SchedulerName)
+	}
+
+	// Add interceptors
+	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)))
+
+	// Create server
+	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
+		Name:    "CSI 1.7",
+		Net:     config.Net,
+		Address: config.Address,
+		Opts:    opts,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
+	}
+
+	return gServer, nil
+}
+
+func autoSocketRecover(s *OsdCsiServer, stopCh chan struct{}) error {
+	socketPath := s.Address()
+	ticker := time.NewTicker(csiSocketCheckInterval)
+
+	// Start checking for CSI socket delete
+	for {
+		select {
+		case <-stopCh:
+			return nil
+		case <-ticker.C:
+		}
+
+		// Check if socket deleted
+		_, err := os.Stat(socketPath)
+		if err == nil {
+			continue
+		}
+
+		logrus.Infof("Detected CSI socket deleted at path %s. Stopping CSI gRPC server", socketPath)
+		s.GrpcServer.Stop()
+
+		// Re-create gRPC server
+		gServer, err := createGrpcServer(s.config)
+		if err != nil {
+			logrus.Errorf("failed to re-create gRPC server: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
+		}
+		s.GrpcServer = gServer
+
+		// Start server
+		logrus.Infof("Restarting CSI gRPC server at %s", socketPath)
+		if err := s.Start(); err != nil {
+			logrus.Errorf("CSI server failed to auto-recover after socket deletion: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
+		}
+
+		// Exit for next process to start
+		return nil
+	}
 }
 
 // adjustFinalErrors adjusts certain gRPC status to make CSI callers
