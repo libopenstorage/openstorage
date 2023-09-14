@@ -180,9 +180,6 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 }
 
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
 	return remoteConn, err
 }
