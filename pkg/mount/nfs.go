@@ -9,7 +9,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/docker/docker/pkg/mount"
+	"github.com/moby/sys/mountinfo"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
@@ -83,8 +83,8 @@ func (m *nfsMounter) serverExists(server string) bool {
 
 // normalizeSource - NFS source is returned as IP:share or just :share
 // normalize that to always IP:share
-func (m *nfsMounter) normalizeSource(info *mount.Info, host string) {
-	if info.Fstype != "nfs" {
+func (m *nfsMounter) normalizeSource(info *mountinfo.Info, host string) {
+	if info.FSType != "nfs" {
 		return
 	}
 
@@ -110,10 +110,10 @@ MountLoop:
 	for _, v := range info {
 		host := "localhost"
 		if len(m.servers) != 0 {
-			if !strings.HasPrefix(v.Fstype, "nfs") {
+			if !strings.HasPrefix(v.FSType, "nfs") {
 				continue
 			}
-			matches := re.FindStringSubmatch(v.VfsOpts)
+			matches := re.FindStringSubmatch(v.VFSOptions)
 			if len(matches) != 2 {
 				continue
 			}
@@ -128,7 +128,7 @@ MountLoop:
 		if !ok {
 			mount = &Info{
 				Device:     v.Source,
-				Fs:         v.Fstype,
+				Fs:         v.FSType,
 				Minor:      v.Minor,
 				Mountpoint: make([]*PathInfo, 0),
 			}
