@@ -4078,6 +4078,33 @@
         "title": "Defines a response from the node which received the request to attach",
         "type": "object"
       },
+      "apiSdkVolumeBytesUsedRequest": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uint64",
+              "type": "string"
+            },
+            "title": "volume ids to be found in usage response, can be empty",
+            "type": "array"
+          },
+          "node_id": {
+            "title": "machine uuid of targeted node",
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeBytesUsedRequest defines a request for fetching per volume utilization\nfrom multiple volume in a given node",
+        "type": "object"
+      },
+      "apiSdkVolumeBytesUsedResponse": {
+        "properties": {
+          "vol_util_info": {
+            "$ref": "#/components/schemas/apiVolumeBytesUsedByNode"
+          }
+        },
+        "title": "SdkVolumeBytesUsedResponse defines a response to fetch multiple volume util from a given node",
+        "type": "object"
+      },
       "apiSdkVolumeCapacityUsageResponse": {
         "properties": {
           "capacity_usage_info": {
@@ -5276,6 +5303,38 @@
         },
         "type": "object"
       },
+      "apiVolumeBytesUsed": {
+        "properties": {
+          "total_bytes": {
+            "format": "uint64",
+            "title": "size in bytes by the volume/snapshot",
+            "type": "string"
+          },
+          "volume_id": {
+            "title": "id for the volume/snapshot",
+            "type": "string"
+          }
+        },
+        "title": "VolumeBytesUsed defines volume utilization",
+        "type": "object"
+      },
+      "apiVolumeBytesUsedByNode": {
+        "properties": {
+          "node_id": {
+            "title": "machine uuid",
+            "type": "string"
+          },
+          "vol_usage": {
+            "items": {
+              "$ref": "#/components/schemas/apiVolumeBytesUsed"
+            },
+            "title": "VolumeBytesUsed for each requested volume on the given node",
+            "type": "array"
+          }
+        },
+        "title": "VolumeBytesUsedByNode defines volume utilization for multiple volumes in a given node",
+        "type": "object"
+      },
       "apiVolumeConsumer": {
         "properties": {
           "name": {
@@ -5974,7 +6033,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.40"
+    "version": "0.101.41"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7980,6 +8039,37 @@
           }
         },
         "summary": "UncordonAttachments re-enables volume attachments\non the provided node in the cluster.",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/bytesused": {
+      "post": {
+        "operationId": "VolumeBytesUsedByNode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeBytesUsedRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeBytesUsedResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Returns bytes used of multiple volumes for a give node",
         "tags": [
           "OpenStorageNode"
         ]

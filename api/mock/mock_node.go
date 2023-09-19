@@ -140,6 +140,21 @@ func (mr *MockOpenStorageNodeServerMockRecorder) UncordonAttachments(arg0, arg1 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncordonAttachments", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).UncordonAttachments), arg0, arg1)
 }
 
+// VolumeBytesUsedByNode mocks base method
+func (m *MockOpenStorageNodeServer) VolumeBytesUsedByNode(arg0 context.Context, arg1 *api.SdkVolumeBytesUsedRequest) (*api.SdkVolumeBytesUsedResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumeBytesUsedByNode", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeBytesUsedResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode
+func (mr *MockOpenStorageNodeServerMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockOpenStorageNodeServer)(nil).VolumeBytesUsedByNode), arg0, arg1)
+}
+
 // VolumeUsageByNode mocks base method
 func (m *MockOpenStorageNodeServer) VolumeUsageByNode(arg0 context.Context, arg1 *api.SdkNodeVolumeUsageByNodeRequest) (*api.SdkNodeVolumeUsageByNodeResponse, error) {
 	m.ctrl.T.Helper()
@@ -316,6 +331,26 @@ func (mr *MockOpenStorageNodeClientMockRecorder) UncordonAttachments(arg0, arg1 
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UncordonAttachments", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).UncordonAttachments), varargs...)
+}
+
+// VolumeBytesUsedByNode mocks base method
+func (m *MockOpenStorageNodeClient) VolumeBytesUsedByNode(arg0 context.Context, arg1 *api.SdkVolumeBytesUsedRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeBytesUsedResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "VolumeBytesUsedByNode", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeBytesUsedResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode
+func (mr *MockOpenStorageNodeClientMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockOpenStorageNodeClient)(nil).VolumeBytesUsedByNode), varargs...)
 }
 
 // VolumeUsageByNode mocks base method
