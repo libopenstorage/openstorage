@@ -7,18 +7,18 @@
 // This document represents the API documentaton of Openstorage, for the GO client please visit:
 // https://github.com/libopenstorage/openstorage
 //
-//     Schemes: http, https
-//     Host: localhost
-//     BasePath: /v1
-//     Version: 2.0.0
-//     License: APACHE2 https://opensource.org/licenses/Apache-2.0
-//     Contact: https://github.com/libopenstorage/openstorage
+//	Schemes: http, https
+//	Host: localhost
+//	BasePath: /v1
+//	Version: 2.0.0
+//	License: APACHE2 https://opensource.org/licenses/Apache-2.0
+//	Contact: https://github.com/libopenstorage/openstorage
 //
-//     Consumes:
-//     - application/json
+//	Consumes:
+//	- application/json
 //
-//     Produces:
-//     - application/json
+//	Produces:
+//	- application/json
 //
 // swagger:meta
 package main
@@ -33,6 +33,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -54,7 +55,9 @@ import (
 	"github.com/libopenstorage/openstorage/objectstore"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -488,14 +491,23 @@ func start(c *cli.Context) error {
 			return fmt.Errorf("Unable to find cluster instance: %v", err)
 		}
 		sdkPort := c.String("sdkport")
+		// Initialize the scheduler
+		sched.Init(time.Second)
+
+		roundRobinBalancer, err := loadbalancer.NewRoundRobinBalancer(cm, sdkPort)
+		if err != nil {
+			return fmt.Errorf("Unable to get round robin balancer: %v", err)
+		}
+
 		csiServer, err := csi.NewOsdCsiServer(&csi.OsdCsiServerConfig{
-			Net:           "unix",
-			Address:       csisock,
-			DriverName:    d,
-			Cluster:       cm,
-			SdkUds:        sdksocket,
-			SdkPort:       sdkPort,
-			CsiDriverName: c.String("csidrivername"),
+			Net:                "unix",
+			Address:            csisock,
+			DriverName:         d,
+			Cluster:            cm,
+			SdkUds:             sdksocket,
+			SdkPort:            sdkPort,
+			CsiDriverName:      c.String("csidrivername"),
+			RoundRobinBalancer: roundRobinBalancer,
 		})
 		if err != nil {
 			return fmt.Errorf("Failed to create CSI server for driver %s: %v", d, err)
