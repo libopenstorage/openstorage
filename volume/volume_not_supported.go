@@ -38,6 +38,9 @@ var (
 	FilesystemCheckNotSupported = &filesystemCheckNotSupported{}
 	// UpgraderNotSupported implements Upgrader by returning Not supported error
 	UpgraderNotSupported = &upgraderNotSupported{}
+	// VerifyChecksumNotSupported implements VerifyChecksumDriver by returning
+	// Not supported error
+	VerifyChecksumNotSupported = &verifyChecksumNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -326,5 +329,17 @@ func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFiles
 type upgraderNotSupported struct{}
 
 func (cl *upgraderNotSupported) FilterNonOverlappingNodes(inputNodes, downNodes []string) ([]string, error) {
+	return nil, ErrNotSupported
+}
+
+type verifyChecksumNotSupported struct{}
+
+func (cl *verifyChecksumNotSupported) VerifyChecksumStart(request *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *verifyChecksumNotSupported) VerifyChecksumStatus(request *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *verifyChecksumNotSupported) VerifyChecksumStop(request *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error) {
 	return nil, ErrNotSupported
 }

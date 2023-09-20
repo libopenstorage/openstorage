@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.52 - (10/26/2023)
+
+* Add new CLI to trigger checksum validation
+
 ### v0.101.51 - (06/18/2024)
 
 * Add defrag job and status data structures

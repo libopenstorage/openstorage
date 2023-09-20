@@ -232,6 +232,20 @@
         "title": "Metric is an enum that defines the metric to use for rebalance",
         "type": "string"
       },
+      "VerifyChecksumVerifyChecksumStatus": {
+        "default": "VERIFY_CHECKSUM_UNKNOWN",
+        "description": "- VERIFY_CHECKSUM_UNKNOWN: VerifyChecksum operation is an unknown state\n - VERIFY_CHECKSUM_NOT_RUNNING: VerifyChecksum operation is not running for the specified volume\n - VERIFY_CHECKSUM_STARTED: VerifyChecksum operation started for the specified volume\n - VERIFY_CHECKSUM_STOPPED: VerifyChecksum operation was stopped by the user for the specified volume\n - VERIFY_CHECKSUM_COMPLETED: VerifyChecksum operation completed successfully for the specified volume\n - VERIFY_CHECKSUM_FAILED: VerifyChecksum operation failed",
+        "enum": [
+          "VERIFY_CHECKSUM_UNKNOWN",
+          "VERIFY_CHECKSUM_NOT_RUNNING",
+          "VERIFY_CHECKSUM_STARTED",
+          "VERIFY_CHECKSUM_STOPPED",
+          "VERIFY_CHECKSUM_COMPLETED",
+          "VERIFY_CHECKSUM_FAILED"
+        ],
+        "title": "VerifyChecksumStatus represents the status codes returned from\nOpenStorageVerifyChecksum service APIs()",
+        "type": "string"
+      },
       "VolumeSpecPolicyPolicyOp": {
         "default": "Equal",
         "description": "- Equal: Policy will make sure the value must be equal\n - Minimum: Policy will make sure the requested value must be greater than or equal\n - Maximum: Policy will make sure the requested value must be less than or equal",
@@ -4305,6 +4319,62 @@
       "apiSdkUpdateRebalanceJobResponse": {
         "type": "object"
       },
+      "apiSdkVerifyChecksumStartRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkVerifyChecksumStartRequest defines a request to start a background verify checksum operation",
+        "type": "object"
+      },
+      "apiSdkVerifyChecksumStartResponse": {
+        "description": "SdkVerifyChecksumStartResponse defines the response for a\nSdkVerifyChecksumStartRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerifyChecksumVerifyChecksumStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkVerifyChecksumStatusResponse": {
+        "description": "SdkVerifyChecksumStatusResponse defines the response for a\nSdkVerifyChecksumStatusRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          },
+          "status": {
+            "$ref": "#/components/schemas/VerifyChecksumVerifyChecksumStatus"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkVerifyChecksumStopRequest": {
+        "properties": {
+          "volume_id": {
+            "title": "Id of the volume",
+            "type": "string"
+          }
+        },
+        "title": "SdkVerifyChecksumStopRequest defines a request to stop a background\nfilesystem check operation",
+        "type": "object"
+      },
+      "apiSdkVerifyChecksumStopResponse": {
+        "description": "SdkVerifyChecksumStopResponse defines the response for a\nSdkVerifyChecksumStopRequest.",
+        "properties": {
+          "message": {
+            "title": "Text blob containing ASCII text providing details of the operation",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkVersion": {
         "description": "SDK version in Major.Minor.Patch format. The goal of this\nmessage is to provide clients a method to determine the SDK\nversion run by an SDK server.",
         "properties": {
@@ -5849,6 +5919,10 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "checksum_clone_id": {
+            "title": "clone created to trigger checksum verification",
+            "type": "string"
+          },
           "compressed": {
             "description": "Compressed is true if this volume is to be compressed.",
             "format": "boolean",
@@ -6398,7 +6472,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.51"
+    "version": "0.101.52"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -9566,6 +9640,100 @@
         "summary": "Resize expands the specified storage pool based on the request parameters",
         "tags": [
           "OpenStoragePool"
+        ]
+      }
+    },
+    "/v1/verify-checksum/start": {
+      "post": {
+        "operationId": "Start",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVerifyChecksumStartRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVerifyChecksumStartResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Start a verify checksum background operation on a volume.",
+        "tags": [
+          "OpenStorageVerifyChecksum"
+        ]
+      }
+    },
+    "/v1/verify-checksum/status": {
+      "get": {
+        "operationId": "Status",
+        "parameters": [
+          {
+            "description": "Id of the volume.",
+            "in": "query",
+            "name": "volume_id",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVerifyChecksumStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get Status of a verify checksum background operation on a volume",
+        "tags": [
+          "OpenStorageVerifyChecksum"
+        ]
+      }
+    },
+    "/v1/verify-checksum/stop": {
+      "post": {
+        "operationId": "Stop",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVerifyChecksumStopRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVerifyChecksumStopResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Stop a verify checksum background operation on a volume",
+        "tags": [
+          "OpenStorageVerifyChecksum"
         ]
       }
     },
