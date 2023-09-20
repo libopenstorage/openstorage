@@ -208,6 +208,7 @@ type sdkGrpcServer struct {
 	jobServer             api.OpenStorageJobServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
+	verifyChecksumServer  api.OpenStorageVerifyChecksumServer
 	bucketServer          *BucketServer
 	watcherServer         *WatcherServer
 }
@@ -471,6 +472,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.watcherServer = &WatcherServer{
 		volumeServer: s.volumeServer,
 	}
+	s.verifyChecksumServer = &VerifyChecksumServer{
+		server: s,
+	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
@@ -559,6 +563,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
 		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
+		api.RegisterOpenStorageVerifyChecksumServer(grpcServer, s.verifyChecksumServer)
 		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)

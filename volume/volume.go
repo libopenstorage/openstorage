@@ -263,6 +263,7 @@ type ProtoDriver interface {
 	CloudMigrateDriver
 	FilesystemTrimDriver
 	FilesystemCheckDriver
+	VerifyChecksumDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
@@ -374,6 +375,17 @@ type VolumeDriverRegistry interface {
 
 	// Removes driver from registry. Does nothing if driver name does not exist.
 	Remove(name string)
+}
+
+// VerifyChecksumDriver interface exposes APIs to manage checksum validation
+// on a volume
+type VerifyChecksumDriver interface {
+	// VerifyChecksumStart starts a checksum validation on a specified volume
+	VerifyChecksumStart(request *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error)
+	// VerifyChecksumStatus returns the status of checksum validation task
+	VerifyChecksumStatus(request *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error)
+	// VerifyChecksumStop stops the checksum validation task
+	VerifyChecksumStop(request *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error)
 }
 
 // NewVolumeDriverRegistry constructs a new VolumeDriverRegistry.

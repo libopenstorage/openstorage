@@ -44,6 +44,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	buseDevices map[string]*buseDev
 	cl          cluster.ClusterListener
 }
@@ -109,6 +110,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {

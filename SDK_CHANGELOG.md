@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.170.0 - (10/26/2023)
+
+* Add new CLI to trigger checksum validation
+
 ### v0.169.0 - (10/24/2023)
 
 * Add quorum member flag to StorageNode

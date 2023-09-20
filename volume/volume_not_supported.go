@@ -36,6 +36,9 @@ var (
 	// FilesystemCheckNotSupported implements FilesystemCheckDriver by returning
 	// Not supported error
 	FilesystemCheckNotSupported = &filesystemCheckNotSupported{}
+	// VerifyChecksumNotSupported implements VerifyChecksumDriver by returning
+	// Not supported error
+	VerifyChecksumNotSupported = &verifyChecksumNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -112,7 +115,7 @@ func (s *statsNotSupported) VolumeUsageByNode(
 	return nil, ErrNotSupported
 }
 
-func (s *statsNotSupported)	VolumeBytesUsedByNode(nodeID string,
+func (s *statsNotSupported) VolumeBytesUsedByNode(nodeID string,
 	ids []uint64,
 ) (*api.VolumeBytesUsedByNode, error) {
 	return nil, ErrNotSupported
@@ -323,5 +326,17 @@ func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFil
 	return nil, ErrNotSupported
 }
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
+	return nil, ErrNotSupported
+}
+
+type verifyChecksumNotSupported struct{}
+
+func (cl *verifyChecksumNotSupported) VerifyChecksumStart(request *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *verifyChecksumNotSupported) VerifyChecksumStatus(request *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *verifyChecksumNotSupported) VerifyChecksumStop(request *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error) {
 	return nil, ErrNotSupported
 }
