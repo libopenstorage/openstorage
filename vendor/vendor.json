@@ -1529,10 +1529,10 @@
 			"revisionTime": "2022-04-23T18:50:08Z"
 		},
 		{
-			"checksumSHA1": "S18ZU0E6QwZFMTGvpKVh/ZQI+cc=",
+			"checksumSHA1": "lY5nR+NOb5UMve9PfU20/h7Rnw4=",
 			"path": "github.com/moby/sys/mountinfo",
-			"revision": "c0711cde08c8fa33857a2c28721659267f49b5e2",
-			"revisionTime": "2023-09-18T20:18:40Z"
+			"revision": "9a75fe61baf4b9788826b48b0518abecffb79b16",
+			"revisionTime": "2020-10-21T16:37:52Z"
 		},
 		{
 			"checksumSHA1": "ZTcgWKWHsrX0RXYVXn5Xeb8Q0go=",

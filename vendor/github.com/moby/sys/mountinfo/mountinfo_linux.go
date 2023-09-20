@@ -12,8 +12,7 @@ import (
 // GetMountsFromReader retrieves a list of mounts from the
 // reader provided, with an optional filter applied (use nil
 // for no filter). This can be useful in tests or benchmarks
-// that provide fake mountinfo data, or when a source other
-// than /proc/self/mountinfo needs to be read from.
+// that provide a fake mountinfo data.
 //
 // This function is Linux-specific.
 func GetMountsFromReader(r io.Reader, filter FilterFunc) ([]*Info, error) {
@@ -52,7 +51,7 @@ func GetMountsFromReader(r io.Reader, filter FilterFunc) ([]*Info, error) {
 		numFields := len(fields)
 		if numFields < 10 {
 			// should be at least 10 fields
-			return nil, fmt.Errorf("parsing '%s' failed: not enough fields (%d)", text, numFields)
+			return nil, fmt.Errorf("Parsing '%s' failed: not enough fields (%d)", text, numFields)
 		}
 
 		// separator field
@@ -67,7 +66,7 @@ func GetMountsFromReader(r io.Reader, filter FilterFunc) ([]*Info, error) {
 		for fields[sepIdx] != "-" {
 			sepIdx--
 			if sepIdx == 5 {
-				return nil, fmt.Errorf("parsing '%s' failed: missing - separator", text)
+				return nil, fmt.Errorf("Parsing '%s' failed: missing - separator", text)
 			}
 		}
 
@@ -75,39 +74,46 @@ func GetMountsFromReader(r io.Reader, filter FilterFunc) ([]*Info, error) {
 
 		p.Mountpoint, err = unescape(fields[4])
 		if err != nil {
-			return nil, fmt.Errorf("parsing '%s' failed: mount point: %w", fields[4], err)
+			return nil, fmt.Errorf("Parsing '%s' failed: mount point: %w", fields[4], err)
 		}
 		p.FSType, err = unescape(fields[sepIdx+1])
 		if err != nil {
-			return nil, fmt.Errorf("parsing '%s' failed: fstype: %w", fields[sepIdx+1], err)
+			return nil, fmt.Errorf("Parsing '%s' failed: fstype: %w", fields[sepIdx+1], err)
 		}
 		p.Source, err = unescape(fields[sepIdx+2])
 		if err != nil {
-			return nil, fmt.Errorf("parsing '%s' failed: source: %w", fields[sepIdx+2], err)
+			return nil, fmt.Errorf("Parsing '%s' failed: source: %w", fields[sepIdx+2], err)
 		}
 		p.VFSOptions = fields[sepIdx+3]
 
 		// ignore any numbers parsing errors, as there should not be any
 		p.ID, _ = strconv.Atoi(fields[0])
 		p.Parent, _ = strconv.Atoi(fields[1])
-		mm := strings.SplitN(fields[2], ":", 3)
+		mm := strings.Split(fields[2], ":")
 		if len(mm) != 2 {
-			return nil, fmt.Errorf("parsing '%s' failed: unexpected major:minor pair %s", text, mm)
+			return nil, fmt.Errorf("Parsing '%s' failed: unexpected minor:major pair %s", text, mm)
 		}
 		p.Major, _ = strconv.Atoi(mm[0])
 		p.Minor, _ = strconv.Atoi(mm[1])
 
 		p.Root, err = unescape(fields[3])
 		if err != nil {
-			return nil, fmt.Errorf("parsing '%s' failed: root: %w", fields[3], err)
+			return nil, fmt.Errorf("Parsing '%s' failed: root: %w", fields[3], err)
 		}
 
 		p.Options = fields[5]
 
 		// zero or more optional fields
-		p.Optional = strings.Join(fields[6:sepIdx], " ")
+		switch {
+		case sepIdx == 6:
+			// zero, do nothing
+		case sepIdx == 7:
+			p.Optional = fields[6]
+		default:
+			p.Optional = strings.Join(fields[6:sepIdx-1], " ")
+		}
 
-		// Run the filter after parsing all fields.
+		// Run the filter after parsing all of the fields.
 		var skip, stop bool
 		if filter != nil {
 			skip, stop = filter(p)
@@ -127,6 +133,8 @@ func GetMountsFromReader(r io.Reader, filter FilterFunc) ([]*Info, error) {
 	return out, nil
 }
 
+// Parse /proc/self/mountinfo because comparing Dev and ino does not work from
+// bind mounts
 func parseMountTable(filter FilterFunc) ([]*Info, error) {
 	f, err := os.Open("/proc/self/mountinfo")
 	if err != nil {
@@ -158,10 +166,10 @@ func PidMountInfo(pid int) ([]*Info, error) {
 // A few specific characters in mountinfo path entries (root and mountpoint)
 // are escaped using a backslash followed by a character's ascii code in octal.
 //
-//	space              -- as \040
-//	tab (aka \t)       -- as \011
-//	newline (aka \n)   -- as \012
-//	backslash (aka \\) -- as \134
+//   space              -- as \040
+//   tab (aka \t)       -- as \011
+//   newline (aka \n)   -- as \012
+//   backslash (aka \\) -- as \134
 //
 // This function converts path from mountinfo back, i.e. it unescapes the above sequences.
 func unescape(path string) (string, error) {
