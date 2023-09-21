@@ -8,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/moby/sys/mountinfo"
+	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
@@ -68,7 +68,7 @@ func (m *deviceMounter) Load(devRegexes []*regexp.Regexp) error {
 	return m.load(devRegexes, deviceFindMountPoint)
 }
 
-func deviceFindMountPoint(info *mountinfo.Info, destination *regexp.Regexp, infos []*mountinfo.Info) (bool, string, string) {
+func deviceFindMountPoint(info *mount.Info, destination *regexp.Regexp, infos []*mount.Info) (bool, string, string) {
 	if destination.MatchString(info.Source) {
 		return true, info.Source, info.Source
 	}

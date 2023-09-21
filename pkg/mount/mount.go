@@ -18,7 +18,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moby/sys/mountinfo"
+	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/chattr"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
@@ -151,7 +151,7 @@ type Mounter struct {
 	trashLocation string
 }
 
-type findMountPoint func(source *mountinfo.Info, destination *regexp.Regexp, mountInfo []*mountinfo.Info) (bool, string, string)
+type findMountPoint func(source *mount.Info, destination *regexp.Regexp, mountInfo []*mount.Info) (bool, string, string)
 
 // DefaultMounter defaults to syscall implementation.
 type DefaultMounter struct {
@@ -398,7 +398,7 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 			if !ok {
 				mount = &Info{
 					Device:     deviceSourcePath,
-					Fs:         v.FSType,
+					Fs:         v.Fstype,
 					Minor:      v.Minor,
 					Mountpoint: make([]*PathInfo, 0),
 				}
@@ -833,7 +833,7 @@ func New(
 
 // GetMounts is a wrapper over mount.GetMounts(). It is mainly used to add a switch
 // to enable device mounter tests.
-func GetMounts() ([]*mountinfo.Info, error) {
+func GetMounts() ([]*mount.Info, error) {
 	if os.Getenv(testDeviceEnv) != "" {
 		return testGetMounts()
 	}
@@ -842,12 +842,12 @@ func GetMounts() ([]*mountinfo.Info, error) {
 
 var (
 	// testMounts is a global test list of mount table entries
-	testMounts []*mountinfo.Info
+	testMounts []*mount.Info
 )
 
 // testGetMounts is only used in tests to get the test list of mount table
 // entries
-func testGetMounts() ([]*mountinfo.Info, error) {
+func testGetMounts() ([]*mount.Info, error) {
 	var err error
 	if len(testMounts) == 0 {
 		testMounts, err = parseMountTable()

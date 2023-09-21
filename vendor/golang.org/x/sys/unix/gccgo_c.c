@@ -3,7 +3,6 @@
 // license that can be found in the LICENSE file.
 
 // +build gccgo
-// +build !aix
 
 #include <errno.h>
 #include <stdint.h>
@@ -21,9 +20,6 @@ struct ret {
 	uintptr_t err;
 };
 
-struct ret gccgoRealSyscall(uintptr_t trap, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
-  __asm__(GOSYM_PREFIX GOPKGPATH ".realSyscall");
-
 struct ret
 gccgoRealSyscall(uintptr_t trap, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
 {
@@ -35,11 +31,17 @@ gccgoRealSyscall(uintptr_t trap, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintp
 	return r;
 }
 
-uintptr_t gccgoRealSyscallNoError(uintptr_t trap, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
-  __asm__(GOSYM_PREFIX GOPKGPATH ".realSyscallNoError");
-
 uintptr_t
 gccgoRealSyscallNoError(uintptr_t trap, uintptr_t a1, uintptr_t a2, uintptr_t a3, uintptr_t a4, uintptr_t a5, uintptr_t a6, uintptr_t a7, uintptr_t a8, uintptr_t a9)
 {
 	return syscall(trap, a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+
+// Define the use function in C so that it is not inlined.
+
+extern void use(void *) __asm__ (GOSYM_PREFIX GOPKGPATH ".use") __attribute__((noinline));
+
+void
+use(void *p __attribute__ ((unused)))
+{
 }
