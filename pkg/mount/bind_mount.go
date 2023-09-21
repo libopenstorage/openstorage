@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/moby/sys/mountinfo"
+	"github.com/docker/docker/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
@@ -60,7 +60,7 @@ func (b *bindMounter) Load(rootSubstrings []*regexp.Regexp) error {
 	return b.load(rootSubstrings, bindFindMountPoint)
 }
 
-func bindFindMountPoint(sInfo *mountinfo.Info, destination *regexp.Regexp, infos []*mountinfo.Info) (bool, string, string) {
+func bindFindMountPoint(sInfo *mount.Info, destination *regexp.Regexp, infos []*mount.Info) (bool, string, string) {
 	for _, dInfo := range infos {
 		if !destination.MatchString(dInfo.Mountpoint) {
 			continue
