@@ -101,6 +101,9 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// GetCapacity
 		csi.ControllerServiceCapability_RPC_GET_CAPACITY,
+
+		// SINGLE_NODE_MULTI_WRITER Capability for RWOP access mode
+		csi.ControllerServiceCapability_RPC_SINGLE_NODE_MULTI_WRITER,
 	}
 
 	var serviceCapabilities []*csi.ControllerServiceCapability

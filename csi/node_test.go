@@ -1047,7 +1047,7 @@ func TestNodeGetCapabilities(t *testing.T) {
 		context.Background(),
 		&csi.NodeGetCapabilitiesRequest{})
 	assert.NoError(t, err)
-	assert.Len(t, r.GetCapabilities(), 2)
+	assert.Len(t, r.GetCapabilities(), 3)
 	assert.Equal(
 		t,
 		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
@@ -1056,6 +1056,10 @@ func TestNodeGetCapabilities(t *testing.T) {
 		t,
 		csi.NodeServiceCapability_RPC_VOLUME_CONDITION,
 		r.GetCapabilities()[1].GetRpc().GetType())
+	assert.Equal(
+		t,
+		csi.NodeServiceCapability_RPC_SINGLE_NODE_MULTI_WRITER,
+		r.GetCapabilities()[2].GetRpc().GetType())
 }
 
 func TestNodeGetVolumeStats(t *testing.T) {

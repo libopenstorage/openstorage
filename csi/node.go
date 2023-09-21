@@ -73,7 +73,6 @@ func (s *OsdCsiServer) NodeGetInfo(
 // target path on the node.
 //
 // TODO: Support READ ONLY Mounts
-//
 func (s *OsdCsiServer) NodePublishVolume(
 	ctx context.Context,
 	req *csi.NodePublishVolumeRequest,
@@ -297,6 +296,7 @@ func (s *OsdCsiServer) NodeGetCapabilities(
 		csi.NodeServiceCapability_RPC_GET_VOLUME_STATS,
 		// Indicates that the Node service can report volume conditions.
 		csi.NodeServiceCapability_RPC_VOLUME_CONDITION,
+		csi.NodeServiceCapability_RPC_SINGLE_NODE_MULTI_WRITER,
 	}
 
 	var serviceCapabilities []*csi.NodeServiceCapability
