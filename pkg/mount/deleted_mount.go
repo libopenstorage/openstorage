@@ -84,7 +84,7 @@ func (m *deletedMounter) Unmount(
 		for _, p := range v.Mountpoint {
 			logrus.Warnf("Unmounting deleted mount path %v->%v", k, p)
 			if err := m.mountImpl.Unmount(p.Path, flags, timeout); err != nil {
-				logrus.Warnf("Failed to unmount mount path %v->%v", k, p)
+				logrus.Warnf("Failed to unmount mount path %v->%v, error[%v]", k, p, err)
 				addMountpoint(failedUnmounts, k, p)
 			}
 		}
