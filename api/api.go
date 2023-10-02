@@ -241,6 +241,8 @@ type Node struct {
 	SchedulerNodeName string
 	// Cpu usage of the node.
 	Cpu float64 // percentage.
+	// Number of CPU cores
+	CpuCores int
 	// Total Memory of the node
 	MemTotal uint64
 	// Used Memory of the node
@@ -336,7 +338,8 @@ type CredUpdateRequest struct {
 
 // StatPoint represents the basic structure of a single Stat reported
 // TODO: This is the first step to introduce stats in openstorage.
-//       Follow up task is to introduce an API for logging stats
+//
+//	Follow up task is to introduce an API for logging stats
 type StatPoint struct {
 	// Name of the Stat
 	Name string
@@ -746,7 +749,6 @@ type CapacityUsageResponse struct {
 	Error error
 }
 
-//
 // DriverTypeSimpleValueOf returns the string format of DriverType
 func DriverTypeSimpleValueOf(s string) (DriverType, error) {
 	obj, err := simpleValueOf("driver_type", DriverType_value, s)
@@ -1016,6 +1018,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		Id:                s.Id,
 		SchedulerNodeName: s.SchedulerNodeName,
 		Cpu:               s.Cpu,
+		CpuCores:          int64(s.CpuCores),
 		MemTotal:          s.MemTotal,
 		MemUsed:           s.MemUsed,
 		MemFree:           s.MemFree,
