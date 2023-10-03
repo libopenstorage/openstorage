@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.167.0 - (09/14/2023)
+* Add new field verbose to fastpath configuration
+
 ### v0.166.0 - (09/01/2023)
 
 * Add pool rebalance schedule related APIs
