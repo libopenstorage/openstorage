@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -409,6 +410,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
+	c.selfNode.CpuCores = runtime.NumCPU()
 	c.selfNode.MemTotal, c.selfNode.MemUsed, c.selfNode.MemFree = c.system.MemUsage()
 	if c.selfNode.HWType == api.HardwareType_UnknownMachine {
 		c.selfNode.HWType = c.config.HWType
@@ -2180,13 +2182,13 @@ func (c *ClusterManager) CreateRebalanceSchedule(
 	return c.storagePoolProvider.CreateRebalanceSchedule(context, request)
 }
 
-func (c *ClusterManager)  GetRebalanceSchedule(
+func (c *ClusterManager) GetRebalanceSchedule(
 	context context.Context, request *api.SdkGetRebalanceScheduleRequest) (
 	*api.SdkGetRebalanceScheduleResponse, error) {
 	return c.storagePoolProvider.GetRebalanceSchedule(context, request)
 }
 
-func (c *ClusterManager)  DeleteRebalanceSchedule(
+func (c *ClusterManager) DeleteRebalanceSchedule(
 	context context.Context, request *api.SdkDeleteRebalanceScheduleRequest) (
 	*api.SdkDeleteRebalanceScheduleResponse, error) {
 	return c.storagePoolProvider.DeleteRebalanceSchedule(context, request)

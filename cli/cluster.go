@@ -65,7 +65,7 @@ func (c *clusterClient) status(context *cli.Context) {
 			}
 
 			fmt.Fprintln(w, n.Id, "\t", n.MgmtIp, "\t", status, "\t",
-				n.Cpu, "\t", humanize.Bytes(n.MemTotal), "\t",
+				n.Cpu, "\t", n.CpuCores, "\t", humanize.Bytes(n.MemTotal), "\t",
 				humanize.Bytes(n.MemFree))
 		}
 

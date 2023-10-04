@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.168.0 - (09/14/2023)
+* Add new field cpu cores to api Node
+
 ### v0.167.0 - (09/14/2023)
 * Add new field verbose to fastpath configuration
 
