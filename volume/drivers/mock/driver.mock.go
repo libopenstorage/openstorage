@@ -577,6 +577,51 @@ func (mr *MockVolumeDriverMockRecorder) Enumerate(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockVolumeDriver)(nil).Enumerate), arg0, arg1)
 }
 
+// FilesystemCheckDeleteSnapshots mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckDeleteSnapshots(arg0 *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckDeleteSnapshots", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckDeleteSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckDeleteSnapshots indicates an expected call of FilesystemCheckDeleteSnapshots.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckDeleteSnapshots(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckDeleteSnapshots", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckDeleteSnapshots), arg0)
+}
+
+// FilesystemCheckListSnapshots mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckListSnapshots(arg0 *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckListSnapshots", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckListSnapshots indicates an expected call of FilesystemCheckListSnapshots.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckListSnapshots(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckListSnapshots", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckListSnapshots), arg0)
+}
+
+// FilesystemCheckListVolumes mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckListVolumes(arg0 *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckListVolumes", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListVolumesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckListVolumes indicates an expected call of FilesystemCheckListVolumes.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckListVolumes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckListVolumes", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckListVolumes), arg0)
+}
+
 // FilesystemCheckStart mocks base method.
 func (m *MockVolumeDriver) FilesystemCheckStart(arg0 *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	m.ctrl.T.Helper()

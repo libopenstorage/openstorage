@@ -93,3 +93,48 @@ func (s *FilesystemCheckServer) Stop(
 
 	return r, err
 }
+
+// List snapshots created by fsck on volume, if any
+func (s *FilesystemCheckServer) ListSnapshots(
+	ctx context.Context,
+	req *api.SdkFilesystemCheckListSnapshotsRequest,
+) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+
+	r, err := s.driver(ctx).FilesystemCheckListSnapshots(req)
+
+	return r, err
+}
+
+// Delete snapshots created by fsck on volume, if any
+func (s *FilesystemCheckServer) DeleteSnapshots(
+	ctx context.Context,
+	req *api.SdkFilesystemCheckDeleteSnapshotsRequest,
+) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+
+	r, err := s.driver(ctx).FilesystemCheckDeleteSnapshots(req)
+
+	return r, err
+}
+
+// List volumes needing fsck check/fix, if any
+func (s *FilesystemCheckServer) ListVolumes(
+	ctx context.Context,
+	req *api.SdkFilesystemCheckListVolumesRequest,
+) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+
+	r, err := s.driver(ctx).FilesystemCheckListVolumes(req)
+
+	return r, err
+}

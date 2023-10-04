@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.171.0 - (11/02/2023)
+
+* Add new CLI for filesystem check
+
 ### v0.170.0 - (10/26/2023)
 
 * Add new CLI to trigger checksum validation

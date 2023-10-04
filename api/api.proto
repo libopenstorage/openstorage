@@ -1834,6 +1834,15 @@ service OpenStorageFilesystemTrim {
   //    `OpenStorageFilesystemCheckClient.Start(Mode='fix_safe')`
   //    Status of this operation can be polled in the way mentioned in step 3
   //    This operation can be stopped a Stop request as mentioned in step 6
+  // 8. To list all snapshots in the filesystem that are created by fsck, issue a
+  //	grpc call to
+  //	`OpenStorageFilesystemCheckClient.ListSnapshots()`
+  // 9. To delete all snapshots in the filesystem that are created by fsck, issue a
+  //	grpc call to
+  //	`OpenStorageFilesystemCheckClient.DeleteSnapshots()`
+  // 10. To list all volumes in the filesystem that need fsck check/fix, issue a
+  //	grpc call to
+  //	`OpenStorageFilesystemCheckClient.ListVolumes()`
 
 service OpenStorageFilesystemCheck {
 
@@ -1863,7 +1872,32 @@ service OpenStorageFilesystemCheck {
         body: "*"
       };
     }
-  }
+
+  // List all fsck created snapshots on volume
+  rpc ListSnapshots(SdkFilesystemCheckListSnapshotsRequest)
+    returns (SdkFilesystemCheckListSnapshotsResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-check/list-snapshots"
+      };
+    }
+
+  // Delete all fsck created snapshots on volume
+  rpc DeleteSnapshots(SdkFilesystemCheckDeleteSnapshotsRequest)
+    returns (SdkFilesystemCheckDeleteSnapshotsResponse){
+      option(google.api.http) = {
+        post: "/v1/filesystem-check/delete-snapshots"
+        body: "*"
+      };
+    }
+
+  // List of all volumes which require fsck check/fix to be run
+  rpc ListVolumes(SdkFilesystemCheckListVolumesRequest)
+    returns (SdkFilesystemCheckListVolumesResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-check/list-volumes"
+      };
+    }
+}
 
 // OpenStorageIdentity service provides methods to obtain information
 // about the cluster
@@ -5345,7 +5379,7 @@ message SdkAutoFSTrimPopResponse {
 }
 
 message FilesystemCheck {
-  // FilesystemChecktatus represents the status codes returned from
+  // FilesystemCheckStatus represents the status codes returned from
   // OpenStorageFilesystemCheck service APIs()
   enum FilesystemCheckStatus {
     // Filesystem Check operation is an unknown state
@@ -5363,8 +5397,26 @@ message FilesystemCheck {
     // FilesystemCheck operation failed due to internal error
     FS_CHECK_FAILED = 6;
   }
-
 }
+
+// FilesystemCheckSnapInfo contains the volume snapshot info for
+// filesystem check list snapshots operation
+message FilesystemCheckSnapInfo {
+  // Name of the snapshot
+  string volume_snapshot_name = 1;
+}
+
+// FilesystemCheckVolInfo contains the volume info for
+// filesystem check list volumes operation
+message FilesystemCheckVolInfo {
+	// Name of the volume
+	string volume_name = 1;
+	// Health status of volume
+	FilesystemHealthStatus health_status = 2;
+	// FS status detailed message
+	string fs_status_msg = 3;
+}
+
 // SdkFilesystemCheckStartRequest defines a request to start a background
 // filesystem consistency check operation
 message SdkFilesystemCheckStartRequest {
@@ -5413,6 +5465,50 @@ message SdkFilesystemCheckStopRequest {
 
 // Empty response
 message SdkFilesystemCheckStopResponse{
+}
+
+// SdkFilesystemCheckListSnapshotsRequest defines a request to list
+// snapshots created by fsck for a volume
+message SdkFilesystemCheckListSnapshotsRequest{
+  // Id of the volume
+  string volume_id = 1;
+  // Node Id of the volume
+  string node_id = 2;
+}
+
+// SdkFilesystemCheckListSnapshotsResponse defines a response to list
+// snapshots created by fsck for a volume
+message SdkFilesystemCheckListSnapshotsResponse{
+  // Map of volume snapshot ids and snapshot info
+  map<string, FilesystemCheckSnapInfo> snapshots = 1;
+}
+
+// SdkFilesystemCheckDeleteSnapshotsRequest defines a request to delete
+// snapshots created by fsck for a volume
+message SdkFilesystemCheckDeleteSnapshotsRequest{
+  // Id of the volume
+  string volume_id = 1;
+  // Node Id filter
+  string node_id = 2;
+}
+
+// SdkFilesystemCheckDeleteSnapshotsResponse defines a respone to delete
+// snapshots created by fsck for a volume
+message SdkFilesystemCheckDeleteSnapshotsResponse{
+}
+
+// SdkFilesystemCheckListVolumesRequest defines a request to list
+// all volumes needing fsck check/fix
+message SdkFilesystemCheckListVolumesRequest{
+  // Node Id filter
+  string node_id = 1;
+}
+
+// SdkFilesystemCheckListVolumesResponse defines a response to list
+// all volumes needing fsck check/fix
+message SdkFilesystemCheckListVolumesResponse{
+  // Map of volume ids and volume info
+  map<string, FilesystemCheckVolInfo> volumes = 1;
 }
 
 // Empty request
@@ -5501,7 +5597,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 170;
+    Minor = 171;
     // SDK version patch value of this specification
     Patch = 0;
   }
