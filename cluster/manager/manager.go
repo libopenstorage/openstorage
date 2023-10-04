@@ -13,6 +13,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -409,6 +410,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
+	c.selfNode.CpuCores = runtime.NumCPU()
 	c.selfNode.MemTotal, c.selfNode.MemUsed, c.selfNode.MemFree = c.system.MemUsage()
 	if c.selfNode.HWType == api.HardwareType_UnknownMachine {
 		c.selfNode.HWType = c.config.HWType

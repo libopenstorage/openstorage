@@ -4779,6 +4779,11 @@
             "title": "Cpu usage of the node",
             "type": "number"
           },
+          "cpu_cores": {
+            "format": "int64",
+            "title": "Number of Cpu Cores",
+            "type": "string"
+          },
           "data_ip": {
             "title": "Data IP",
             "type": "string"
@@ -6077,7 +6082,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.42"
+    "version": "0.101.43"
   },
   "openapi": "3.0.0",
   "paths": {
