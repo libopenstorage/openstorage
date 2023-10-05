@@ -146,6 +146,7 @@ github.com/coreos/go-systemd/v22/dbus
 github.com/davecgh/go-spew/spew
 # github.com/dgrijalva/jwt-go v3.2.1-0.20180719211823-0b96aaa70776+incompatible
 ## explicit
+github.com/dgrijalva/jwt-go
 # github.com/docker/distribution v2.7.1+incompatible
 ## explicit
 github.com/docker/distribution/registry/api/errcode
@@ -228,16 +229,12 @@ github.com/gogo/protobuf/gogoproto
 github.com/gogo/protobuf/proto
 github.com/gogo/protobuf/protoc-gen-gogo/descriptor
 github.com/gogo/protobuf/sortkeys
-# github.com/golang-jwt/jwt/v4 v4.3.0
-## explicit; go 1.15
-github.com/golang-jwt/jwt/v4
 # github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e
 ## explicit
 github.com/golang/groupcache/lru
 # github.com/golang/mock v1.6.0
 ## explicit; go 1.11
 github.com/golang/mock/gomock
-github.com/golang/mock/mockgen/model
 # github.com/golang/protobuf v1.5.2
 ## explicit; go 1.9
 github.com/golang/protobuf/descriptor
@@ -903,9 +900,6 @@ k8s.io/kube-openapi/pkg/util/proto
 # k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 ## explicit; go 1.12
 k8s.io/utils/integer
-# sigs.k8s.io/container-object-storage-interface-spec v0.0.0-20220211001052-50e143052de8
-## explicit; go 1.15
-sigs.k8s.io/container-object-storage-interface-spec
 # sigs.k8s.io/structured-merge-diff/v4 v4.0.2
 ## explicit; go 1.13
 sigs.k8s.io/structured-merge-diff/v4/value
