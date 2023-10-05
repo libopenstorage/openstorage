@@ -1563,6 +1563,8 @@ message StorageNode {
   string id = 1;
   // Cpu usage of the node
   double cpu = 2;
+  // Number of Cpu Cores
+  int64 cpu_cores = 21;
   // Total memory of the node
   uint64 mem_total = 3;
   // Used memory of the node
@@ -5386,7 +5388,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 42;
+    Patch = 43;
   }
 
   // The following cannot be set to use the enum Version because the REST

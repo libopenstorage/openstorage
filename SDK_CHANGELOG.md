@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.43 - (10/04/2023)
+
+* Add cpu cores field in api Node
+
 ### v0.101.42 - (09/19/2023)
 
 * Add new Watch endpoint
