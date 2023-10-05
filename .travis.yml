@@ -5,7 +5,7 @@ language: go
 go:
   - 1.18.x
 install:
-  - go install github.com/vbatts/git-validation@v1.1.0
+  - GO111MODULE=off go get -u github.com/vbatts/git-validation
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
   - chmod +x kubectl
   - mv kubectl ${GOPATH}/bin
