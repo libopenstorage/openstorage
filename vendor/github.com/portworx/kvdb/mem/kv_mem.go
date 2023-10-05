@@ -630,24 +630,19 @@ func (kv *memKV) LockWithID(
 
 func (kv *memKV) IsKeyLocked(key string) (bool, string, error) {
 	key = kv.domain + key
-
-	// First check if such a key exists
-	var lockerID string
-	value, err := kv.Get(key)
-	if err == kvdb.ErrNotFound {
-		return false, "", nil
-	} else if err != nil {
-		return false, "", err
-	}
-	lockerID = string(value.Value)
-
-	// If a key exists, next check if it's a valid lock
 	kv.mutex.Lock()
 	if _, ok := kv.locks[key]; !ok {
 		kv.mutex.Unlock()
 		return false, "", kvdb.ErrInvalidLock
 	}
 	kv.mutex.Unlock()
+	var lockerID string
+	_, err := kv.GetVal(key, &lockerID)
+	if err == kvdb.ErrNotFound {
+		return false, "", nil
+	} else if err != nil {
+		return false, "", err
+	}
 	return true, lockerID, nil
 }
 

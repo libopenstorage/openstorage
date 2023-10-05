@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -33,5 +34,5 @@ func GetStorageClassForPVC(client v1.StorageV1Interface, pvc *corev1.PersistentV
 		return nil, fmt.Errorf("PVC: %s does not have a storage class", pvc.Name)
 	}
 
-	return client.StorageClasses().Get(scName, metav1.GetOptions{})
+	return client.StorageClasses().Get(context.TODO(), scName, metav1.GetOptions{})
 }

@@ -146,3 +146,15 @@ type ErrFailedToValidateCustomSpec struct {
 func (e ErrFailedToValidateCustomSpec) Error() string {
 	return fmt.Sprintf("Failed to validate custom spec : %v of type %v due to err: %v", e.Name, reflect.TypeOf(e.Type), e.Cause)
 }
+
+// ErrFailedToExecCronJob error type when cron job is not executed
+type ErrFailedToExecCronJob struct {
+	// Name of CronJob object
+	Name string
+	// Cause is the underlying cause of the error
+	Cause string
+}
+
+func (e ErrFailedToExecCronJob) Error() string {
+	return fmt.Sprintf("Failed to execute cron job : %v  due to err: %v", e.Name, e.Cause)
+}
