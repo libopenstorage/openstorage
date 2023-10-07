@@ -318,8 +318,8 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
-func (d *driver) mountpath(name string) string {
-	return path.Join(volume.MountBase, name)
+func (d *driver) mountpath(nameWithID string) string {
+	return path.Join(volume.MountBase, nameWithID)
 }
 
 func (d *driver) getConn() (*grpc.ClientConn, error) {
@@ -651,6 +651,8 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// get spec and name from request
 	_, spec, _, _, name := d.SpecFromString(request.Name)
+	_, _, _, _, volID := d.SpecFromString(request.ID)
+	nameWithID := name + volID
 	attachOptions := d.attachOptionsFromSpec(spec)
 
 	// attach token in context metadata
@@ -686,7 +688,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// If a scaled volume is already mounted, check if it can be unmounted and
 	// detached. If not return an error.
-	mountpoint := d.mountpath(name)
+	mountpoint := d.mountpath(nameWithID)
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(ctx, mountpoint)
 		if len(id) != 0 {
@@ -857,6 +859,8 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _, _, _, name := d.SpecFromString(request.Name)
+	_, _, _, _, volID := d.SpecFromString(request.ID)
+	nameWithID := name + volID
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
@@ -864,7 +868,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mountpoint := d.mountpath(name)
+	mountpoint := d.mountpath(nameWithID)
 	id := vol.Id
 	if vol.Spec.Scale > 1 {
 		id = v.MountedAt(ctx, mountpoint)
