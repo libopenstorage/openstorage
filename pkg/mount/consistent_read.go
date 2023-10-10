@@ -65,7 +65,7 @@ func parseMountTable() ([]*mountinfo.Info, error) {
 		return nil, err
 	}
 
-	return parseInfoFile(bytes.NewReader(mountInfoBytes))
+	return ParseInfoFile(bytes.NewReader(mountInfoBytes))
 }
 
 // consistentRead repeatedly reads a file until it gets the same content twice.
@@ -91,7 +91,7 @@ func consistentRead(filename string, attempts int) ([]byte, error) {
 	return nil, fmt.Errorf("could not get consistent content of mount table after %d attempts", attempts)
 }
 
-func parseInfoFile(r io.Reader) ([]*mountinfo.Info, error) {
+func ParseInfoFile(r io.Reader) ([]*mountinfo.Info, error) {
 	var (
 		s   = bufio.NewScanner(r)
 		out = []*mountinfo.Info{}
