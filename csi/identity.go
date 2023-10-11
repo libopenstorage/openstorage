@@ -24,8 +24,8 @@ import (
 )
 
 const (
-	// CSI 1.4 compatible
-	csiDriverVersion = "1.4.0"
+	// CSI 1.7 compatible
+	csiDriverVersion = "1.7.0"
 
 	// https://tools.ietf.org/html/rfc1035#section-2.3.1
 	csiDriverNameFormat = "%s.openstorage.org"
