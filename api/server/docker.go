@@ -869,6 +869,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	mountpoint := d.mountpath(nameWithID)
+	mountpointWithoutID := d.mountpath(name)
 	id := vol.Id
 	if vol.Spec.Scale > 1 {
 		id = v.MountedAt(ctx, mountpoint)
@@ -885,6 +886,15 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
+
+	errWithoutID := v.Unmount(correlation.TODO(), id, mountpointWithoutID, opts)
+	if errWithoutID != nil {
+		d.logRequest(method, request.Name).Warnf(
+			"Cannot unmount volume %v, %v",
+			mountpointWithoutID, err)
+		d.errorResponse(method, w, err)
+		return
+	}
 
 	err = v.Unmount(correlation.TODO(), id, mountpoint, opts)
 	if err != nil {
