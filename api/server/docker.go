@@ -651,8 +651,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// get spec and name from request
 	_, spec, _, _, name := d.SpecFromString(request.Name)
-	_, _, _, _, volID := d.SpecFromString(request.ID)
-	nameWithID := name + volID
+	nameWithID := name + request.ID
 	attachOptions := d.attachOptionsFromSpec(spec)
 
 	// attach token in context metadata
@@ -859,8 +858,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _, _, _, name := d.SpecFromString(request.Name)
-	_, _, _, _, volID := d.SpecFromString(request.ID)
-	nameWithID := name + volID
+	nameWithID := name + request.ID
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
@@ -887,6 +885,9 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
 
+	// Unmount volume mounted at old paths without the ID attached to the path
+	// The Unmount() function is called twice so that the volume that has been mounted before this version upgrade can be unmounted
+	// If volume is already unmounted, this is a no-op
 	errWithoutID := v.Unmount(correlation.TODO(), id, mountpointWithoutID, opts)
 	if errWithoutID != nil {
 		d.logRequest(method, request.Name).Warnf(
