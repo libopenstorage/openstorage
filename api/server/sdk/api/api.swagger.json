@@ -5586,6 +5586,10 @@
             "description": "Cascaded is true if this volume can be populated on any node from an external source.",
             "type": "boolean"
           },
+          "checksum": {
+            "title": "Checksum indicates that data for the volume will be checksumed",
+            "type": "boolean"
+          },
           "compressed": {
             "description": "Compressed is true if this volume is to be compressed.",
             "type": "boolean"
@@ -5770,6 +5774,9 @@
             "type": "integer"
           },
           "auto_fstrim": {
+            "type": "boolean"
+          },
+          "checksum": {
             "type": "boolean"
           },
           "cos": {
@@ -6181,7 +6188,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.169.0"
+    "version": "0.170.0"
   },
   "openapi": "3.0.0",
   "paths": {

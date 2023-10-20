@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.170.0 - (10/31/2023)
+
+* Update volume spec for integrity
+
 ### v0.169.0 - (10/24/2023)
 
 * Add quorum member flag to StorageNode

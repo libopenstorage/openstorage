@@ -714,6 +714,8 @@ message VolumeSpec {
   bool near_sync = 51;
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   NearSyncReplicationStrategy near_sync_replication_strategy = 52;
+  // Checksum indicates that data for the volume will be checksumed
+  bool checksum = 53;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -882,6 +884,8 @@ message VolumeSpecPolicy {
   oneof readahead_opt { bool readahead  = 67; }
   // winshare is true if this volume can be accessed from windows.
   oneof winshare_opt { bool winshare = 68; }
+  // Checksum is true if data for the volume will be checksumed
+  oneof checksum_opt { bool checksum = 69;  }
 }
 
 // ReplicaSet set of machine IDs (nodes) to which part of this volume is erasure
@@ -5499,7 +5503,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 169;
+    Minor = 170;
     // SDK version patch value of this specification
     Patch = 0;
   }
