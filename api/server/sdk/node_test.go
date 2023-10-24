@@ -22,10 +22,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 func TestSdkNodeEnumerateNoNodes(t *testing.T) {
@@ -153,6 +154,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 						"foo": "bar",
 					},
 				},
+				NonQuorumMember: true,
 			},
 		},
 	}
@@ -170,6 +172,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+		NonQuorumMember: true,
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
@@ -240,7 +243,8 @@ func TestSdkNodeInspect(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
-		HWType: api.HardwareType_VirtualMachine,
+		HWType:          api.HardwareType_VirtualMachine,
+		NonQuorumMember: true,
 	}
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
 
@@ -265,6 +269,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
+	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 2)
@@ -354,6 +359,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+		NonQuorumMember: true,
 	}
 
 	cluster := api.Cluster{
@@ -385,6 +391,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
+	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)

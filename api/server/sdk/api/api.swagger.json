@@ -4885,6 +4885,10 @@
             "title": "User defined labels for the node",
             "type": "object"
           },
+          "non_quorum_member": {
+            "description": "Flag indicating whether the node is a quorum member or not. Using inverse value\nto handle intialization and upgrades. Node will always be counted as a quorum member\nwhen initializing until it reaches a point where we can definitely determine whether\nit is a quorum member or not.",
+            "type": "boolean"
+          },
           "pools": {
             "items": {
               "$ref": "#/components/schemas/apiStoragePool"
@@ -6177,7 +6181,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.168.0"
+    "version": "0.169.0"
   },
   "openapi": "3.0.0",
   "paths": {
