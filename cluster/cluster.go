@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/libopenstorage/openstorage/pkg/diags"
+	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -13,11 +13,11 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
-	"github.com/portworx/kvdb"
 )
 
 const (

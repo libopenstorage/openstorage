@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.44 - (10/24/2023)
+
+* Add quorum member flag to StorageNode
+
 ### v0.101.43 - (10/04/2023)
 
 * Add cpu cores field in api Node

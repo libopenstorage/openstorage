@@ -1596,6 +1596,11 @@ message StorageNode {
   SecurityStatus security_status = 19;
   // Topology information of the node in scheduler context
   SchedulerTopology scheduler_topology = 20;
+  // Flag indicating whether the node is a quorum member or not. Using inverse value
+  // to handle intialization and upgrades. Node will always be counted as a quorum member
+  // when initializing until it reaches a point where we can definitely determine whether
+  // it is a quorum member or not.
+  bool non_quorum_member = 22;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -5388,7 +5393,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 43;
+    Patch = 44;
   }
 
   // The following cannot be set to use the enum Version because the REST

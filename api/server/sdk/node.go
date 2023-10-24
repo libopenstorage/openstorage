@@ -20,15 +20,16 @@ import (
 	"context"
 	"net"
 
+	"github.com/portworx/kvdb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/portworx/kvdb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // NodeServer is an implementation of the gRPC OpenStorageNodeServer interface
@@ -227,73 +228,72 @@ func (s *NodeServer) proxyVolumeUsageByNode(
 }
 
 func (s *NodeServer) VolumeBytesUsedByNode(
-   ctx context.Context,
-   req *api.SdkVolumeBytesUsedRequest,
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
 ) (*api.SdkVolumeBytesUsedResponse, error) {
 
-   useProxy, host, err := s.needsProxyRequest(ctx, req.GetNodeId())
-   if err != nil {
-       return nil, err
-   }
-   if useProxy {
-       return s.proxyVolumeBytesUsedByNode(ctx, req, host)
-   }
-   // Get the info locally
-   if s.server.driver(ctx) == nil {
-       return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
-   }
-   resp, err := s.server.driver(ctx).VolumeBytesUsedByNode(req.GetNodeId(), req.GetIds())
-   if err != nil {
-       return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
-   }
-   sdkResp := &api.SdkVolumeBytesUsedResponse{
-       VolUtilInfo: resp,
-   }
-   return sdkResp, nil
+	useProxy, host, err := s.needsProxyRequest(ctx, req.GetNodeId())
+	if err != nil {
+		return nil, err
+	}
+	if useProxy {
+		return s.proxyVolumeBytesUsedByNode(ctx, req, host)
+	}
+	// Get the info locally
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	resp, err := s.server.driver(ctx).VolumeBytesUsedByNode(req.GetNodeId(), req.GetIds())
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
+	}
+	sdkResp := &api.SdkVolumeBytesUsedResponse{
+		VolUtilInfo: resp,
+	}
+	return sdkResp, nil
 }
 
 func (s *NodeServer) proxyVolumeBytesUsedByNode(
-   ctx context.Context,
-   req *api.SdkVolumeBytesUsedRequest,
-   host string,
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
+	host string,
 ) (*api.SdkVolumeBytesUsedResponse, error) {
 
-   proxyClient, err := s.getProxyClient(host)
-   if err != nil {
-       return nil, err
-   }
-   return proxyClient.VolumeBytesUsedByNode(ctx, req)
+	proxyClient, err := s.getProxyClient(host)
+	if err != nil {
+		return nil, err
+	}
+	return proxyClient.VolumeBytesUsedByNode(ctx, req)
 }
 
 func (s *NodeServer) getProxyClient(
-   host string,
+	host string,
 ) (api.OpenStorageNodeClient, error) {
-   endpoint := net.JoinHostPort(host, s.server.port())
-   // TODO TLS
-   dialOpts := []grpc.DialOption{
-       grpc.WithInsecure(),
-       grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
-   }
-   conn, err := grpcserver.Connect(endpoint, dialOpts)
-   if err != nil {
-       return nil, status.Errorf(codes.Internal, "Node usage from remote node failed with :%v", err.Error())
-   }
-   return api.NewOpenStorageNodeClient(conn), nil
+	endpoint := net.JoinHostPort(host, s.server.port())
+	// TODO TLS
+	dialOpts := []grpc.DialOption{
+		grpc.WithInsecure(),
+		grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
+	}
+	conn, err := grpcserver.Connect(endpoint, dialOpts)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Node usage from remote node failed with :%v", err.Error())
+	}
+	return api.NewOpenStorageNodeClient(conn), nil
 }
 
 func (s *NodeServer) needsProxyRequest(
-   ctx context.Context,
-   NodeID string,
+	ctx context.Context,
+	NodeID string,
 ) (bool, string, error) {
-   // If not a local request, proxy to the approriate node
-   nodeInspectData, err := s.Inspect(ctx, &api.SdkNodeInspectRequest{NodeId: NodeID})
-   if err != nil {
-       return false, "", err
-   }
-   curNodedata, err := s.InspectCurrent(ctx, &api.SdkNodeInspectCurrentRequest{})
-   if err != nil {
-       return false, "", err
-   }
-   return (curNodedata.Node.Id != nodeInspectData.Node.Id), nodeInspectData.Node.MgmtIp, nil
+	// If not a local request, proxy to the approriate node
+	nodeInspectData, err := s.Inspect(ctx, &api.SdkNodeInspectRequest{NodeId: NodeID})
+	if err != nil {
+		return false, "", err
+	}
+	curNodedata, err := s.InspectCurrent(ctx, &api.SdkNodeInspectCurrentRequest{})
+	if err != nil {
+		return false, "", err
+	}
+	return (curNodedata.Node.Id != nodeInspectData.Node.Id), nodeInspectData.Node.MgmtIp, nil
 }
-
