@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/mohae/deepcopy"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+
+	"github.com/libopenstorage/openstorage/pkg/auth"
 )
 
 // Strings for VolumeSpec
@@ -281,6 +282,8 @@ type Node struct {
 	SecurityStatus StorageNode_SecurityStatus
 	// SchedulerTopology topology information of the node in scheduler context
 	SchedulerTopology *SchedulerTopology
+	// Flag indicating whether the node is a quorum member or not
+	NonQuorumMember bool
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -1030,6 +1033,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		HWType:            s.HWType,
 		SecurityStatus:    s.SecurityStatus,
 		SchedulerTopology: s.SchedulerTopology,
+		NonQuorumMember:   s.NonQuorumMember,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
