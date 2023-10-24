@@ -19,6 +19,9 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
+
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
 	"github.com/libopenstorage/openstorage/api"
@@ -36,8 +39,6 @@ import (
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
-	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -287,6 +288,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			n.NodeLabels = v.NodeLabels
 			n.HWType = v.HWType
 			n.SecurityStatus = v.SecurityStatus
+			n.NonQuorumMember = v.NonQuorumMember
 		} else {
 			logrus.Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
@@ -746,6 +748,7 @@ func (c *ClusterManager) joinCluster(
 	selfNodeEntry.NonQuorumMember =
 		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
 			!c.quorumMember()
+	c.selfNode.NonQuorumMember = selfNodeEntry.NonQuorumMember
 	if selfNodeEntry.NonQuorumMember != prevNonQuorumMemberState {
 		if !selfNodeEntry.NonQuorumMember {
 			logrus.Infof("This node now participates in quorum decisions")
@@ -1251,6 +1254,7 @@ func (c *ClusterManager) initListeners(
 	selfNodeEntry.NonQuorumMember =
 		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
 			!c.quorumMember()
+	c.selfNode.NonQuorumMember = selfNodeEntry.NonQuorumMember
 	if !selfNodeEntry.NonQuorumMember {
 		logrus.Infof("This node participates in quorum decisions")
 	} else {
@@ -1638,6 +1642,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []*api.Node {
 			node.Hostname = n.Hostname
 			node.NodeLabels = n.NodeLabels
 			node.SecurityStatus = n.SecurityStatus
+			node.NonQuorumMember = n.NonQuorumMember
 		}
 		nodes = append(nodes, &node)
 	}
