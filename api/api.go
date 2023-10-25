@@ -1307,6 +1307,9 @@ func (v *VolumeSpec) IsPureVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBackend()
 }
 
+func (v *VolumeSpec) IsPureBlockVolume() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlockBackend()
+}
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
@@ -1439,6 +1442,14 @@ func ParseProxyEndpoint(proxyEndpoint string) (ProxyProtocol, string) {
 func (s *ProxySpec) IsPureBackend() bool {
 	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK ||
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
+func (s *ProxySpec) IsPureBlockBackend() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK
+}
+
+func (s *ProxySpec) IsPureFileBackend() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
 }
 
 func (s *ProxySpec) IsPureImport() bool {
