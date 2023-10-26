@@ -18,12 +18,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moby/sys/mountinfo"
 	"github.com/libopenstorage/openstorage/pkg/chattr"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/moby/sys/mountinfo"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -669,6 +669,10 @@ func (m *Mounter) removeMountPath(path string) error {
 	}
 	if devicePath, mounted := bindMounter.HasTarget(path); mounted {
 		bindMountPath, err = bindMounter.GetRootPath(path)
+		if err != nil {
+			logrus.Warnf("Failed to get root path for %q. Err: %v", path, err)
+			return err
+		}
 		if err := m.mountImpl.Unmount(path, 0, 0); err != nil {
 			return fmt.Errorf("failed to unmount bind mount %v. Err: %v", devicePath, err)
 		}
