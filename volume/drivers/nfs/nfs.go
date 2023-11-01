@@ -52,6 +52,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
@@ -96,6 +97,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 	}
 
 	//make directory for each nfs server

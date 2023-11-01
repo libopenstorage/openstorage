@@ -39,6 +39,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 }
 
 // Init Driver intialization.
@@ -54,6 +55,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		volume.CloudMigrateNotSupported,
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
+		volume.VerifyChecksumNotSupported,
 	}, nil
 }
 
