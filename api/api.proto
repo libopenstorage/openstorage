@@ -716,6 +716,8 @@ message VolumeSpec {
   NearSyncReplicationStrategy near_sync_replication_strategy = 52;
   // clone created to trigger checksum verification
   string checksum_clone_id = 53;
+  // Checksummed indicates if volumed data is checksummed to provide data integrity
+  bool checksummed = 54;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -791,6 +793,8 @@ message VolumeSpecUpdate {
   oneof winshare_opt { bool winshare = 42; }
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 43;}
+  // Checksummed indicates if volumed data is checksummed to provide data integrity
+  oneof checksummed_opt { bool checksummed = 44; }
 }
 
 // VolumeSpecPolicy provides a method to set volume storage policy
@@ -5597,7 +5601,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 171;
+    Minor = 172;
     // SDK version patch value of this specification
     Patch = 0;
   }

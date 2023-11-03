@@ -5731,6 +5731,10 @@
             "title": "clone created to trigger checksum verification",
             "type": "string"
           },
+          "checksummed": {
+            "title": "Checksummed indicates if volumed data is checksummed to provide data integrity",
+            "type": "boolean"
+          },
           "compressed": {
             "description": "Compressed is true if this volume is to be compressed.",
             "type": "boolean"
@@ -6043,6 +6047,9 @@
           "auto_fstrim": {
             "type": "boolean"
           },
+          "checksummed": {
+            "type": "boolean"
+          },
           "cos": {
             "$ref": "#/components/schemas/apiCosType"
           },
@@ -6326,7 +6333,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.171.0"
+    "version": "0.172.0"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.172.0 - (11/07/2023)
+
+* Add new checksum flag to volume spec
+
 ### v0.171.0 - (11/02/2023)
 
 * Add new CLI for filesystem check
