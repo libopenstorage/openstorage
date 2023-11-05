@@ -250,6 +250,12 @@ type FilesystemCheckDriver interface {
 	// FilesystemCheckStop stops the filesystem check background operation on
 	// the filesystem of a specified volume, if any.
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
+	// FilesystemCheckListSnapshots lists snapshots created by fsck for a specified volume
+	FilesystemCheckListSnapshots(request *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error)
+	// FilesystemCheckDeleteSnapshots deletes snapshots created by fsck for a specified volume
+	FilesystemCheckDeleteSnapshots(request *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error)
+	// FilesystemCheckListVolumes lists volumes that require fsck check/fixes
+	FilesystemCheckListVolumes(request *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error)
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the

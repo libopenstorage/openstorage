@@ -328,6 +328,15 @@ func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFil
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
 	return nil, ErrNotSupported
 }
+func (cl *filesystemCheckNotSupported) FilesystemCheckListSnapshots(request *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *filesystemCheckNotSupported) FilesystemCheckDeleteSnapshots(request *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *filesystemCheckNotSupported) FilesystemCheckListVolumes(request *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	return nil, ErrNotSupported
+}
 
 type verifyChecksumNotSupported struct{}
 

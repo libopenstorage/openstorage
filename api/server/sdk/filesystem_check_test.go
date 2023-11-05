@@ -254,3 +254,103 @@ func TestSdkFilesystemCheckStop(t *testing.T) {
 	_, err := c.Stop(context.Background(), req)
 	assert.NoError(t, err)
 }
+
+func TestSdkFilesystemCheckListSnapshots(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	testVolumeId := "myvol"
+	testNodeId := "mynode"
+	var testMap = make(map[string]*api.FilesystemCheckSnapInfo)
+	testMap["1"] = &api.FilesystemCheckSnapInfo{
+		VolumeSnapshotName: "s1",
+	}
+	req := &api.SdkFilesystemCheckListSnapshotsRequest{
+		VolumeId: testVolumeId,
+		NodeId:   testNodeId,
+	}
+
+	testMockResp := &api.SdkFilesystemCheckListSnapshotsResponse{
+		Snapshots: testMap,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckListSnapshots(gomock.Any()).
+		Return(testMockResp, nil).
+		Times(1)
+
+		// Setup client
+	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
+
+	// Get info
+	_, err := c.ListSnapshots(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkFilesystemCheckDeleteSnapshots(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	testVolumeId := "myvol"
+	testNodeId := "mynode"
+	req := &api.SdkFilesystemCheckDeleteSnapshotsRequest{
+		VolumeId: testVolumeId,
+		NodeId:   testNodeId,
+	}
+
+	testMockResp := &api.SdkFilesystemCheckDeleteSnapshotsResponse{}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckDeleteSnapshots(gomock.Any()).
+		Return(testMockResp, nil).
+		Times(1)
+
+		// Setup client
+	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
+
+	// Get info
+	_, err := c.DeleteSnapshots(context.Background(), req)
+	assert.NoError(t, err)
+}
+
+func TestSdkFilesystemCheckListVolumes(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	var testMap = make(map[string]*api.FilesystemCheckVolInfo)
+	testMap["1"] = &api.FilesystemCheckVolInfo{
+		VolumeName:   "myvol",
+		HealthStatus: 1,
+		FsStatusMsg:  "test",
+	}
+
+	testMockResp := &api.SdkFilesystemCheckListVolumesResponse{
+		Volumes: testMap,
+	}
+
+	testNodeId := "mynode"
+	req := &api.SdkFilesystemCheckListVolumesRequest{
+		NodeId: testNodeId,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		FilesystemCheckListVolumes(gomock.Any()).
+		Return(testMockResp, nil).
+		Times(1)
+
+		// Setup client
+	c := api.NewOpenStorageFilesystemCheckClient(s.Conn())
+
+	// Get info
+	_, err := c.ListVolumes(context.Background(), req)
+	assert.NoError(t, err)
+}
