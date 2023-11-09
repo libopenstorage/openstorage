@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.172.0 - (11/09/2023)
+
+* Add new param to pool expand request structure
+
 ### v0.171.0 - (11/02/2023)
 
 * Add new CLI for filesystem check

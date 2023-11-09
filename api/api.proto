@@ -4297,6 +4297,8 @@ message SdkStoragePoolResizeRequest {
   SdkStoragePool.ResizeOperationType operation_type = 3;
   // SkipWaitForCleanVolumes would skip the wait for all volumes on the pool to be clean before doing a resize
   bool skip_wait_for_clean_volumes = 4;
+  // SkipKernelVersionCheck would allow online pool resize with add disk without requiring maintenance mode for PX-StoreV2
+  bool skip_kernel_version_check = 5;
 }
 
 message StorageRebalanceTriggerThreshold {
@@ -5597,7 +5599,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 171;
+    Minor = 172;
     // SDK version patch value of this specification
     Patch = 0;
   }
