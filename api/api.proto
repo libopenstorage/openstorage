@@ -3997,6 +3997,8 @@ message Job {
         CLOUD_DRIVE_TRANSFER = 3;
         // Job for collecting diags from the cluster nodes
         COLLECT_DIAGS = 4;
+        // Job for storage defragmentation on cluster nodes
+        DEFRAG = 5;
     }
     // State is an enum for state of a node drain operation
     enum State {
@@ -4032,7 +4034,8 @@ message Job {
         CloudDriveTransferJob clouddrive_transfer = 401;
         // CollectDiagsJob if selected describes the task to collect diagnostics for the cluster
         CollectDiagsJob collect_diags = 402;
-
+        // DefragJob if selected describes the task to run storage defragmentation on cluster nodes
+        DefragJob defrag = 403;
     }
     // CreateTime is the time the job was created
     google.protobuf.Timestamp create_time = 5;
@@ -4104,6 +4107,16 @@ message CollectDiagsJob {
   SdkDiagsCollectRequest request = 1;
   // Statuses is a list of statuses for diags collection for each node that is part of the request
   repeated DiagsCollectionStatus statuses = 2;
+}
+
+message DefragJob {
+  double max_duration_hours = 1;
+  uint32 max_nodes_in_parallel = 2;
+  repeated string nodes_select = 3;
+  repeated string nodes_exclude = 4;
+  repeated string node_selector = 5;
+  repeated string running_nodes = 6;
+  string schedule_id = 7;
 }
 
 message DiagsCollectionStatus {
