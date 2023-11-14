@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.173.0 - (11/13/2023)
+
+* Add DefragJob data structure
+
 ### v0.172.0 - (11/07/2023)
 
 * Add new checksum flag to volume spec
