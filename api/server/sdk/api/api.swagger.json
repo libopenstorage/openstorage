@@ -818,42 +818,50 @@
       },
       "apiDefragJob": {
         "properties": {
+          "exclude_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExcludeNodes is a list of node UUID: if provided, the job will skip these nodes;\nif not provided, will run on all nodes\ncannot coexist with IncludeNodes",
+            "type": "array"
+          },
+          "include_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;\nif not provided, will run on all nodes\ncannot coexist with ExcludeNodes and NodeSelector",
+            "type": "array"
+          },
           "max_duration_hours": {
             "format": "double",
+            "title": "MaxDurationHours defines the time limit in hours",
             "type": "number"
           },
           "max_nodes_in_parallel": {
             "format": "int64",
+            "title": "MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel",
             "type": "integer"
           },
           "node_selector": {
             "items": {
               "type": "string"
             },
-            "type": "array"
-          },
-          "nodes_exclude": {
-            "items": {
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "nodes_select": {
-            "items": {
-              "type": "string"
-            },
+            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
             "type": "array"
           },
           "running_nodes": {
             "items": {
               "type": "string"
             },
+            "title": "RunningNodes stores the nodes on which the job is currently running",
             "type": "array"
           },
           "schedule_id": {
+            "title": "ScheduleId is the ID of the schedule which started this job",
             "type": "string"
           }
         },
+        "title": "DefragJob describes a job to run defragmentation on cluster nodes",
         "type": "object"
       },
       "apiDiagsCollectionStatus": {
