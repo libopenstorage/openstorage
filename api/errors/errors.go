@@ -55,7 +55,7 @@ func (e *ErrStoragePoolResizeInProgress) Error() string {
 	if e.Pool.LastOperation != nil {
 		op := e.Pool.LastOperation
 		if op.Type == api.SdkStoragePool_OPERATION_RESIZE {
-			errMsg = fmt.Sprintf("%s %s %s", errMsg, op.Msg)
+			errMsg = fmt.Sprintf("%s %s", errMsg, op.Msg)
 		}
 	}
 
