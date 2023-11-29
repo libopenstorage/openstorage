@@ -4127,8 +4127,8 @@ message DefragJob {
   // which selects the nodes to be run on for the job
   // can coexist with ExcludeNodes but cannot coexist with IncludeNodes
   repeated string node_selector = 5;
-  // RunningNodes stores the nodes on which the job is currently running
-  repeated string running_nodes = 6;
+  // CurrentRunningNodes stores the nodes on which the job is currently running
+  repeated string current_running_nodes = 6;
   // ScheduleId is the ID of the schedule which started this job
   string schedule_id = 7;
 }

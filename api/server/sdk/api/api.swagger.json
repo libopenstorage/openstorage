@@ -818,6 +818,13 @@
       },
       "apiDefragJob": {
         "properties": {
+          "current_running_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "CurrentRunningNodes stores the nodes on which the job is currently running",
+            "type": "array"
+          },
           "exclude_nodes": {
             "items": {
               "type": "string"
@@ -847,13 +854,6 @@
               "type": "string"
             },
             "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
-            "type": "array"
-          },
-          "running_nodes": {
-            "items": {
-              "type": "string"
-            },
-            "title": "RunningNodes stores the nodes on which the job is currently running",
             "type": "array"
           },
           "schedule_id": {
