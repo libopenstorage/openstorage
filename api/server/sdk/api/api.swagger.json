@@ -816,6 +816,54 @@
         ],
         "type": "string"
       },
+      "apiDefragJob": {
+        "properties": {
+          "current_running_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "CurrentRunningNodes stores the nodes on which the job is currently running",
+            "type": "array"
+          },
+          "exclude_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExcludeNodes is a list of node UUID: if provided, the job will skip these nodes;\nif not provided, will run on all nodes\ncannot coexist with IncludeNodes",
+            "type": "array"
+          },
+          "include_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;\nif not provided, will run on all nodes\ncannot coexist with ExcludeNodes and NodeSelector",
+            "type": "array"
+          },
+          "max_duration_hours": {
+            "format": "double",
+            "title": "MaxDurationHours defines the time limit in hours",
+            "type": "number"
+          },
+          "max_nodes_in_parallel": {
+            "format": "int64",
+            "title": "MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel",
+            "type": "integer"
+          },
+          "node_selector": {
+            "items": {
+              "type": "string"
+            },
+            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
+            "type": "array"
+          },
+          "schedule_id": {
+            "title": "ScheduleId is the ID of the schedule which started this job",
+            "type": "string"
+          }
+        },
+        "title": "DefragJob describes a job to run defragmentation on cluster nodes",
+        "type": "object"
+      },
       "apiDiagsCollectionStatus": {
         "properties": {
           "message": {
@@ -1224,6 +1272,9 @@
             "title": "CreateTime is the time the job was created",
             "type": "string"
           },
+          "defrag": {
+            "$ref": "#/components/schemas/apiDefragJob"
+          },
           "drain_attachments": {
             "$ref": "#/components/schemas/apiNodeDrainAttachmentsJob"
           },
@@ -1285,13 +1336,14 @@
       },
       "apiJobType": {
         "default": "UNSPECIFIED_TYPE",
-        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
         "enum": [
           "UNSPECIFIED_TYPE",
           "NONE",
           "DRAIN_ATTACHMENTS",
           "CLOUD_DRIVE_TRANSFER",
-          "COLLECT_DIAGS"
+          "COLLECT_DIAGS",
+          "DEFRAG"
         ],
         "title": "Type are the supported job types",
         "type": "string"
@@ -6333,7 +6385,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.172.0"
+    "version": "0.173.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -8626,7 +8678,7 @@
         "operationId": "OpenStorageJob_Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -8637,7 +8689,8 @@
                 "NONE",
                 "DRAIN_ATTACHMENTS",
                 "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS"
+                "COLLECT_DIAGS",
+                "DEFRAG"
               ],
               "type": "string"
             }
@@ -8685,7 +8738,7 @@
             }
           },
           {
-            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -8696,7 +8749,8 @@
                 "NONE",
                 "DRAIN_ATTACHMENTS",
                 "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS"
+                "COLLECT_DIAGS",
+                "DEFRAG"
               ],
               "type": "string"
             }

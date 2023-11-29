@@ -3997,6 +3997,8 @@ message Job {
         CLOUD_DRIVE_TRANSFER = 3;
         // Job for collecting diags from the cluster nodes
         COLLECT_DIAGS = 4;
+        // Job for storage defragmentation on cluster nodes
+        DEFRAG = 5;
     }
     // State is an enum for state of a node drain operation
     enum State {
@@ -4032,7 +4034,8 @@ message Job {
         CloudDriveTransferJob clouddrive_transfer = 401;
         // CollectDiagsJob if selected describes the task to collect diagnostics for the cluster
         CollectDiagsJob collect_diags = 402;
-
+        // DefragJob if selected describes the task to run storage defragmentation on cluster nodes
+        DefragJob defrag = 403;
     }
     // CreateTime is the time the job was created
     google.protobuf.Timestamp create_time = 5;
@@ -4104,6 +4107,30 @@ message CollectDiagsJob {
   SdkDiagsCollectRequest request = 1;
   // Statuses is a list of statuses for diags collection for each node that is part of the request
   repeated DiagsCollectionStatus statuses = 2;
+}
+
+// DefragJob describes a job to run defragmentation on cluster nodes
+message DefragJob {
+  // MaxDurationHours defines the time limit in hours 
+  double max_duration_hours = 1;
+  // MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel
+  uint32 max_nodes_in_parallel = 2;
+  // IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;
+  // if not provided, will run on all nodes
+  // cannot coexist with ExcludeNodes and NodeSelector
+  repeated string include_nodes = 3;
+  // ExcludeNodes is a list of node UUID: if provided, the job will skip these nodes;
+  // if not provided, will run on all nodes
+  // cannot coexist with IncludeNodes
+  repeated string exclude_nodes = 4;
+  // NodeSelector is a list of node label `key=value` pairs separated by comma, 
+  // which selects the nodes to be run on for the job
+  // can coexist with ExcludeNodes but cannot coexist with IncludeNodes
+  repeated string node_selector = 5;
+  // CurrentRunningNodes stores the nodes on which the job is currently running
+  repeated string current_running_nodes = 6;
+  // ScheduleId is the ID of the schedule which started this job
+  string schedule_id = 7;
 }
 
 message DiagsCollectionStatus {
@@ -5601,7 +5628,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 172;
+    Minor = 173;
     // SDK version patch value of this specification
     Patch = 0;
   }
