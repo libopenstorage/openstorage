@@ -4156,6 +4156,8 @@ message DefragJob {
   repeated string current_running_nodes = 6;
   // ScheduleId is the ID of the schedule which started this job
   string schedule_id = 7;
+  // ScheduleOneIterationOnly is true when the defragJob is run by a one-iteration-only schedule
+  bool schedule_one_iteration_only = 8;
 }
 
 // DefragNodeStatus describes the defragmentation status of a node
