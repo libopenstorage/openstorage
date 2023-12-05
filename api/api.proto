@@ -4164,6 +4164,8 @@ message DefragNodeStatus {
   map<string, DefragPoolStatus> pool_status = 1;
   // RunningSchedule is the defrag schedule being run on the node
   string running_schedule = 2;
+  // LastUpdateTime is the time when DefragNodeStatus or any DefragPoolStatus was last updated on this node
+	google.protobuf.Timestamp last_update_time = 3;
 }
 
 // DefragNodeStatus describes the defragmentation status of a pool
