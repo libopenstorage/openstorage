@@ -32,6 +32,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
@@ -92,6 +93,7 @@ type ClusterManager struct {
 	jobProvider          job.Provider
 	nodeDrainProvider    nodedrain.Provider
 	diagsProvider        diags.Provider
+	defragProvider 		 defrag.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1418,6 +1420,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
 	} else {
 		c.storagePoolProvider = config.ConfigStoragePoolProvider
+	}
+
+	if config.ConfigDefragProvider == nil {
+		c.defragProvider = defrag.NewDefaultDefragProvider()
+	} else {
+		c.defragProvider = config.ConfigDefragProvider
 	}
 }
 

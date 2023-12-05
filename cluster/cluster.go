@@ -13,6 +13,7 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
@@ -59,6 +60,8 @@ type ClusterServerConfiguration struct {
 	ConfigNodeDrainProvider nodedrain.Provider
 	// holds the actual implementation to the SDK OpenStorageDiags interface
 	ConfigDiagsProvider diags.Provider
+	// holds the implementation to the SDK OpenStorageDefrag interface
+	ConfigDefragProvider defrag.Provider
 }
 
 // NodeEntry is used to discover other nodes in the cluster
@@ -403,6 +406,7 @@ type Cluster interface {
 	job.Provider
 	nodedrain.Provider
 	diags.Provider
+	defrag.Provider
 }
 
 // NullClusterListener is a NULL implementation of ClusterListener functions
