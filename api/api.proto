@@ -4047,6 +4047,27 @@ message Job {
     google.protobuf.Timestamp last_update_time = 6;
 }
 
+message Schedule {
+  // ID of the schedule
+  string id = 1;
+  // StartTime is the scheduled time to start a run
+  // Valid formats: 
+  // daily=HH:mm  e.g. daily=19:15
+  // weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+  // monthly=dd@HH:mm  e.g. monthly=22@19:15
+  string start_time = 2;
+  // MaxDurationHours defines the time limit of one run in hours 
+  double max_duration_hours = 3;
+  // Type is the type of job to run
+  Job.Type type = 4;
+  // Tasks is the tasks to be run in this schedule (must be of same job type)
+  repeated Job tasks = 5;
+  // CreateTime is the time the schedule was created
+  google.protobuf.Timestamp create_time = 6;
+  // LastUpdateTime is the time the schedule was updated
+  google.protobuf.Timestamp last_update_time = 7;
+}
+
 // Defines a response for an SDK request that spins up a new job
 // to perform the request
 message SdkJobResponse {
