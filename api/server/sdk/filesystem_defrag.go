@@ -19,7 +19,10 @@ package sdk
 import (
 	"context"
 
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 // FilesystemDefragServer is an implementation of the gRPC OpenStorageFilesystemDefrag interface
@@ -30,3 +33,19 @@ type FilesystemDefragServer struct {
 func (s *FilesystemDefragServer) driver(ctx context.Context) volume.VolumeDriver {
 	return s.server.driver(ctx)
 }
+
+// Create a schedule to run defragmentation tasks periodically
+func (s *FilesystemDefragServer) CreateSchedule(
+	ctx context.Context,
+	req *api.SdkCreateDefragScheduleRequest,
+) (*api.SdkCreateDefragScheduleResponse, error) {
+
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+	r, err := s.server.cluster().CreateDefragSchedule(ctx, req)
+
+	return r, err
+}
+

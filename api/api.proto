@@ -1916,6 +1916,14 @@ service OpenStorageFilesystemCheck {
 // defraged with increasing offset and a configured chunk size.
 // When the task on a node is finished, it proceeds to the next node.
 service OpenStorageFilesystemDefrag {
+  // Create a schedule to run defragmentation tasks periodically
+  rpc CreateSchedule(SdkCreateDefragScheduleRequest)
+    returns (SdkCreateDefragScheduleResponse){
+      option(google.api.http) = {
+        post: "/v1/filesystem-defrag/schedule"
+        body: "*"
+      };
+    }
 }
 
 // OpenStorageIdentity service provides methods to obtain information
@@ -4204,6 +4212,15 @@ message DefragPoolStatus {
   // ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool
   // percentage = bytes completed / sum of file sizes
   int32 progress_percentage = 8;
+}
+
+message SdkCreateDefragScheduleRequest {
+  DefragJob defrag_task = 1;
+  string start_time = 2;
+}
+
+message SdkCreateDefragScheduleResponse {
+  Schedule schedule = 1;
 }
 
 message DiagsCollectionStatus {

@@ -2248,3 +2248,9 @@ func (c *ClusterManager) EnumerateJobs(
 ) (*api.SdkEnumerateJobsResponse, error) {
 	return c.jobProvider.EnumerateJobs(ctx, req)
 }
+
+func (c *ClusterManager) CreateDefragSchedule(
+	ctx context.Context, req *api.SdkCreateDefragScheduleRequest,
+) (*api.SdkCreateDefragScheduleResponse, error) {
+	return c.defragProvider.CreateDefragSchedule(ctx, req)
+}

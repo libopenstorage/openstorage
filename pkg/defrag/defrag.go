@@ -1,12 +1,19 @@
 package defrag
 
 import (
+	"context"
 
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/errors"
 )
 
 // Provider is a collection of APIs for performing different kinds of defrag
 // operations on a node
 type Provider interface {
+	// Create a schedule to run defragmentation tasks periodically
+	CreateDefragSchedule(ctx context.Context, req *api.SdkCreateDefragScheduleRequest) (
+		*api.SdkCreateDefragScheduleResponse, error,
+	)
 }
 
 // NewDefaultNodeDrainProvider does not any defrag related operations
@@ -16,4 +23,10 @@ func NewDefaultDefragProvider() Provider {
 
 // UnsupportedDefragProvider unsupported implementation of defrag.
 type UnsupportedDefragProvider struct {
+}
+
+func (u *UnsupportedDefragProvider) CreateDefragSchedule(
+	ctx context.Context, req *api.SdkCreateDefragScheduleRequest,
+) (*api.SdkCreateDefragScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
 }
