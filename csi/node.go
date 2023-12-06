@@ -73,7 +73,6 @@ func (s *OsdCsiServer) NodeGetInfo(
 // target path on the node.
 //
 // TODO: Support READ ONLY Mounts
-//
 func (s *OsdCsiServer) NodePublishVolume(
 	ctx context.Context,
 	req *csi.NodePublishVolumeRequest,
@@ -236,14 +235,14 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	vols, err := s.driver.Enumerate(&api.VolumeLocator{VolumeIds: []string{req.GetVolumeId()}}, nil)
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
+			clogger.WithContext(ctx).Tracef("Volume %s was deleted or cannot be found: %s", req.GetVolumeId(), err.Error())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
 		} else if err != nil {
 			return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 				req.GetVolumeId(),
 				err.Error())
 		} else {
-			clogger.WithContext(ctx).Infof("Volume %s was deleted or cannot be found", req.GetVolumeId())
+			clogger.WithContext(ctx).Tracef("Volume %s was deleted or cannot be found", req.GetVolumeId())
 			return &csi.NodeUnpublishVolumeResponse{}, nil
 		}
 	}
