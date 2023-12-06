@@ -27,6 +27,10 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+const (
+	authorizationKey = "authorization"
+)
+
 // Start a volume migration
 func (s *VolumeServer) Start(
 	ctx context.Context,
@@ -43,6 +47,11 @@ func (s *VolumeServer) Start(
 		// Forward the request to some other node and set the context metadata so that
 		// the request is terminated at the receiving node.
 		rctx := metadata.AppendToOutgoingContext(ctx, ContextRoundRobinTerminateKey, "true")
+		// append auth
+		auth := md.Get(authorizationKey)
+		if len(auth) > 0 {
+			rctx = metadata.AppendToOutgoingContext(rctx, authorizationKey, auth[0])
+		}
 		remoteConn, remote, err := s.balancer().GetRemoteNodeConnection(rctx)
 		if err == nil && remote {
 			return api.NewOpenStorageMigrateClient(remoteConn).Start(rctx, req)
