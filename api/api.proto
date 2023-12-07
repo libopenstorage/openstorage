@@ -4277,12 +4277,21 @@ message DefragPoolStatus {
   int32 progress_percentage = 8;
 }
 
+// Defines a request to create a defrag schedule
 message SdkCreateDefragScheduleRequest {
+  // DefragTask is the defragmentation task run by the schedule
   DefragJob defrag_task = 1;
+  // StartTime is the scheduled time to start a run
+  // Valid formats: 
+  // daily=HH:mm  e.g. daily=19:15
+  // weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+  // monthly=dd@HH:mm  e.g. monthly=22@19:15
   string start_time = 2;
 }
 
+// Defines a response of defrag schedule creation
 message SdkCreateDefragScheduleResponse {
+  // Schedule is the newly created schedule
   Schedule schedule = 1;
 }
 
