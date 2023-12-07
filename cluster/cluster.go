@@ -17,6 +17,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -56,6 +57,8 @@ type ClusterServerConfiguration struct {
 	ConfigStoragePoolProvider api.OpenStoragePoolServer
 	// holds implementation to the JobProvider interface
 	ConfigJobProvider job.Provider
+	// holds the implementation to the SDK OpenStorageSchedule interface
+	ConfigScheduleProvider schedule.Provider
 	// holds implementation to the NodeDrainProvider interface
 	ConfigNodeDrainProvider nodedrain.Provider
 	// holds the actual implementation to the SDK OpenStorageDiags interface
@@ -404,6 +407,7 @@ type Cluster interface {
 	objectstore.ObjectStore
 	api.OpenStoragePoolServer
 	job.Provider
+	schedule.Provider
 	nodedrain.Provider
 	diags.Provider
 	defrag.Provider

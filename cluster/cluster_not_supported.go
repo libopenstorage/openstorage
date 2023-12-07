@@ -11,6 +11,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	"github.com/libopenstorage/openstorage/schedpolicy"
@@ -33,6 +34,7 @@ type NullClusterManager struct {
 	clusterdomain.NullClusterDomainManager
 	storagepool.UnsupportedPoolProvider
 	job.UnsupportedJobProvider
+	schedule.UnsupportedScheduleProvider
 	nodedrain.UnsupportedNodeDrainProvider
 	diags.UnsupportedDiagsProvider
 	defrag.UnsupportedDefragProvider

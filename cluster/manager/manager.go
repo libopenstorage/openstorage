@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -91,6 +92,7 @@ type ClusterManager struct {
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	storagePoolProvider  api.OpenStoragePoolServer
 	jobProvider          job.Provider
+	scheduleProvider 	 schedule.Provider
 	nodeDrainProvider    nodedrain.Provider
 	diagsProvider        diags.Provider
 	defragProvider 		 defrag.Provider
@@ -1404,6 +1406,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.jobProvider = config.ConfigJobProvider
 	}
 
+	if config.ConfigScheduleProvider == nil {
+		c.scheduleProvider = schedule.NewDefaultScheduleProvider()
+	} else {
+		c.scheduleProvider = config.ConfigScheduleProvider
+	}
+
 	if config.ConfigNodeDrainProvider == nil {
 		c.nodeDrainProvider = nodedrain.NewDefaultNodeDrainProvider()
 	} else {
@@ -2247,6 +2255,27 @@ func (c *ClusterManager) EnumerateJobs(
 	req *api.SdkEnumerateJobsRequest,
 ) (*api.SdkEnumerateJobsResponse, error) {
 	return c.jobProvider.EnumerateJobs(ctx, req)
+}
+
+func (c *ClusterManager) InspectSchedule(
+	ctx context.Context,
+	req *api.SdkInspectScheduleRequest,
+) (*api.SdkInspectScheduleResponse, error) {
+	return c.scheduleProvider.InspectSchedule(ctx, req)
+}
+
+func (c *ClusterManager) EnumerateSchedules(
+	ctx context.Context,
+	req *api.SdkEnumerateSchedulesRequest,
+) (*api.SdkEnumerateSchedulesResponse, error) {
+	return c.scheduleProvider.EnumerateSchedules(ctx, req)
+}
+
+func (c *ClusterManager) DeleteSchedule(
+	ctx context.Context,
+	req *api.SdkDeleteScheduleRequest,
+) (*api.SdkDeleteScheduleResponse, error) {
+	return c.scheduleProvider.DeleteSchedule(ctx, req)
 }
 
 func (c *ClusterManager) CreateDefragSchedule(

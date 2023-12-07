@@ -206,6 +206,7 @@ type sdkGrpcServer struct {
 	storagePoolServer     api.OpenStoragePoolServer
 	diagsServer           api.OpenStorageDiagsServer
 	jobServer             api.OpenStorageJobServer
+	scheduleServer        api.OpenStorageScheduleServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
 	filesystemDefragServer api.OpenStorageFilesystemDefragServer
@@ -470,6 +471,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.jobServer = &JobServer{
 		server: s,
 	}
+	s.scheduleServer = &ScheduleServer{
+		server: s,
+	}
 	s.bucketServer = &BucketServer{
 		server: s,
 	}
@@ -587,6 +591,9 @@ func (s *sdkGrpcServer) Start() error {
 		}
 		if s.jobServer != nil {
 			api.RegisterOpenStorageJobServer(grpcServer, s.jobServer)
+		}
+		if s.scheduleServer != nil {
+			api.RegisterOpenStorageScheduleServer(grpcServer, s.scheduleServer)
 		}
 
 		// Register stats for all the services
