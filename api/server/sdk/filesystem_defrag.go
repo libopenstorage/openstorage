@@ -39,7 +39,6 @@ func (s *FilesystemDefragServer) CreateSchedule(
 	ctx context.Context,
 	req *api.SdkCreateDefragScheduleRequest,
 ) (*api.SdkCreateDefragScheduleResponse, error) {
-
 	if s.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
@@ -49,3 +48,30 @@ func (s *FilesystemDefragServer) CreateSchedule(
 	return r, err
 }
 
+// Get defrag status of a node
+func (s *FilesystemDefragServer) GetNodeStatus(
+	ctx context.Context,
+	req *api.SdkGetDefragNodeStatusRequest,
+) (*api.SdkGetDefragNodeStatusResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+	r, err := s.server.cluster().GetDefragNodeStatus(ctx, req)
+
+	return r, err
+}
+
+// Enumerate all nodes, returning defrag status of the entire cluster
+func (s *FilesystemDefragServer) EnumerateNodeStatus(
+	ctx context.Context,
+	req *api.SdkEnumerateDefragStatusRequest,
+) (*api.SdkEnumerateDefragStatusResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+	r, err := s.server.cluster().EnumerateDefragStatus(ctx, req)
+
+	return r, err
+}

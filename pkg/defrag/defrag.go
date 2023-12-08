@@ -14,6 +14,14 @@ type Provider interface {
 	CreateDefragSchedule(ctx context.Context, req *api.SdkCreateDefragScheduleRequest) (
 		*api.SdkCreateDefragScheduleResponse, error,
 	)
+	// Get defrag status of a node
+	GetDefragNodeStatus(ctx context.Context, req *api.SdkGetDefragNodeStatusRequest) (
+		*api.SdkGetDefragNodeStatusResponse, error,
+	)
+	// Enumerate all nodes, returning defrag status of the entire cluster
+	EnumerateDefragStatus(ctx context.Context, req *api.SdkEnumerateDefragStatusRequest) (
+		*api.SdkEnumerateDefragStatusResponse, error,
+	)
 }
 
 // NewDefaultNodeDrainProvider does not any defrag related operations
@@ -28,5 +36,17 @@ type UnsupportedDefragProvider struct {
 func (u *UnsupportedDefragProvider) CreateDefragSchedule(
 	ctx context.Context, req *api.SdkCreateDefragScheduleRequest,
 ) (*api.SdkCreateDefragScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
+func (u *UnsupportedDefragProvider) GetDefragNodeStatus(
+	ctx context.Context, req *api.SdkGetDefragNodeStatusRequest,
+) (*api.SdkGetDefragNodeStatusResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
+func (u *UnsupportedDefragProvider) EnumerateDefragStatus(
+	ctx context.Context, req *api.SdkEnumerateDefragStatusRequest,
+) (*api.SdkEnumerateDefragStatusResponse, error) {
 	return nil, &errors.ErrNotSupported{}
 }

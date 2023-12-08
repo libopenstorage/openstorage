@@ -1924,6 +1924,22 @@ service OpenStorageFilesystemDefrag {
         body: "*"
       };
     }
+
+  // Get defrag status of a node
+  rpc GetNodeStatus(SdkGetDefragNodeStatusRequest)
+    returns (SdkGetDefragNodeStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-defrag/status/{node_id}"
+      };
+    }
+
+  // Enumerate all nodes, returning defrag status of the entire cluster
+  rpc EnumerateNodeStatus(SdkEnumerateDefragStatusRequest)
+    returns (SdkEnumerateDefragStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-defrag/status"
+      };
+    }
 }
 
 // OpenStorageIdentity service provides methods to obtain information
@@ -4293,6 +4309,27 @@ message SdkCreateDefragScheduleRequest {
 message SdkCreateDefragScheduleResponse {
   // Schedule is the newly created schedule
   Schedule schedule = 1;
+}
+
+// Defines a request to query defrag status of a node
+message SdkGetDefragNodeStatusRequest {
+  // NodeId is uuid of the node
+  string node_id = 1;
+}
+
+// Defines a response of defrag node status
+message SdkGetDefragNodeStatusResponse {
+  DefragNodeStatus node_status = 1;
+}
+
+// Defines a request to get defrag status of the entire cluster
+message SdkEnumerateDefragStatusRequest {
+}
+
+// Defines a response of defrag status of the entire cluster
+message SdkEnumerateDefragStatusResponse {
+  // Status is a map with node uuid as the key and defrag node status as the value
+  map<string, DefragNodeStatus> status = 1;
 }
 
 message DiagsCollectionStatus {

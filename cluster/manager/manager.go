@@ -2283,3 +2283,15 @@ func (c *ClusterManager) CreateDefragSchedule(
 ) (*api.SdkCreateDefragScheduleResponse, error) {
 	return c.defragProvider.CreateDefragSchedule(ctx, req)
 }
+
+func (c *ClusterManager) GetDefragNodeStatus(
+	ctx context.Context, req *api.SdkGetDefragNodeStatusRequest,
+) (*api.SdkGetDefragNodeStatusResponse, error) {
+	return c.defragProvider.GetDefragNodeStatus(ctx, req)
+}
+
+func (c *ClusterManager) EnumerateDefragStatus(
+	ctx context.Context, req *api.SdkEnumerateDefragStatusRequest,
+) (*api.SdkEnumerateDefragStatusResponse, error) {
+	return c.defragProvider.EnumerateDefragStatus(ctx, req)
+}

@@ -75,3 +75,99 @@ func TestSdkCreateDefragSchedule(t *testing.T) {
 	assert.NotNil(t, r.Schedule.Tasks[0].GetDefrag())
 	assert.Equal(t, resp.Schedule.Tasks[0].GetDefrag().MaxNodesInParallel, r.Schedule.Tasks[0].GetDefrag().MaxNodesInParallel)
 }
+
+func TestSdkGetDefragNodeStatus(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	resp := &api.SdkGetDefragNodeStatusResponse{
+		NodeStatus: &api.DefragNodeStatus{
+			PoolStatus: make(map[string]*api.DefragPoolStatus),
+			RunningSchedule: "12345",
+			RunningJob: "123475",
+		},
+	}
+	poolStatus := &api.DefragPoolStatus{
+		NumIterations: 1,
+		Running: true,
+		LastSuccess: true,
+		LastVolumeId: "2",
+		LastOffset: 200000,
+		ProgressPercentage: 35,
+	}
+	resp.NodeStatus.PoolStatus["pool-1"] = poolStatus
+
+	s.MockCluster().
+		EXPECT().
+		GetDefragNodeStatus(gomock.Any(), gomock.Any()).
+		Return(resp, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageFilesystemDefragClient(s.Conn())
+
+	// make the call and verify response
+	r, err := c.GetNodeStatus(context.Background(), &api.SdkGetDefragNodeStatusRequest{
+		NodeId: "node-1",
+	})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.NodeStatus)
+	assert.Equal(t, resp.NodeStatus.RunningSchedule, r.NodeStatus.RunningSchedule)
+	assert.Equal(t, resp.NodeStatus.RunningJob, r.NodeStatus.RunningJob)
+	assert.Equal(t, 1, len(r.NodeStatus.PoolStatus))
+	assert.NotNil(t, r.NodeStatus.PoolStatus["pool-1"])
+	assert.Equal(t, poolStatus.NumIterations, r.NodeStatus.PoolStatus["pool-1"].NumIterations)
+	assert.Equal(t, poolStatus.Running, r.NodeStatus.PoolStatus["pool-1"].Running)
+	assert.Equal(t, poolStatus.LastOffset, r.NodeStatus.PoolStatus["pool-1"].LastOffset)
+}
+
+func TestSdkEnumerateDefragStatus(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Create response
+	resp := &api.SdkEnumerateDefragStatusResponse{
+		Status: make(map[string]*api.DefragNodeStatus),
+	}
+	poolStatus := &api.DefragPoolStatus{
+		NumIterations: 1,
+		Running: true,
+		LastSuccess: true,
+		LastVolumeId: "2",
+		LastOffset: 200000,
+		ProgressPercentage: 35,
+	}
+	nodeStatus := &api.DefragNodeStatus{
+		PoolStatus: make(map[string]*api.DefragPoolStatus),
+		RunningSchedule: "12345",
+		RunningJob: "123475",
+	}
+	nodeStatus.PoolStatus["pool-1"] = poolStatus
+	resp.Status["node-1"] = nodeStatus
+
+	s.MockCluster().
+		EXPECT().
+		EnumerateDefragStatus(gomock.Any(), gomock.Any()).
+		Return(resp, nil).
+		Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageFilesystemDefragClient(s.Conn())
+
+	// make the call and verify response
+	r, err := c.EnumerateNodeStatus(context.Background(), &api.SdkEnumerateDefragStatusRequest{})
+	assert.NoError(t, err)
+	assert.NotNil(t, r.Status)
+	assert.Equal(t, 1, len(r.Status))
+	assert.NotNil(t, r.Status["node-1"])
+	assert.Equal(t, nodeStatus.RunningSchedule, r.Status["node-1"].RunningSchedule)
+	assert.Equal(t, nodeStatus.RunningJob, r.Status["node-1"].RunningJob)
+	assert.Equal(t, 1, len(r.Status["node-1"].PoolStatus))
+	assert.NotNil(t, r.Status["node-1"].PoolStatus["pool-1"])
+	assert.Equal(t, poolStatus.NumIterations, r.Status["node-1"].PoolStatus["pool-1"].NumIterations)
+	assert.Equal(t, poolStatus.Running, r.Status["node-1"].PoolStatus["pool-1"].Running)
+	assert.Equal(t, poolStatus.LastOffset, r.Status["node-1"].PoolStatus["pool-1"].LastOffset)
+}
