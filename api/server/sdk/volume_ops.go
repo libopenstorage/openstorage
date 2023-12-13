@@ -65,7 +65,7 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 
 			// The volume has entered a state of that might not recover from hence the status might be down and will be in pending state forever.
 			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_DOWN && v.GetState() != api.VolumeState_VOLUME_STATE_PENDING {
-				return false, status.Errorf(codes.Internal, "Volume id %s got created but is in down state, please recreate the PVC", v.GetId())
+				return false, status.Errorf(codes.Internal, "Volume id %s got created but due to Internal issues is in Down State. The Volume creation needs to be retried.", v.GetId())
 			}
 
 			// Continue waiting
