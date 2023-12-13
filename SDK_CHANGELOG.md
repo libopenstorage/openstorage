@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.174.0 - (12/12/2023)
+
+* Fix spec handler and internal naming for fs format options
+
 ### v0.173.0 - (11/13/2023)
 
 * Add DefragJob data structure
