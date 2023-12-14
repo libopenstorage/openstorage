@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.174.0 - (12/14/2023)
+
+* Add defrag status data structure
+
 ### v0.173.0 - (11/13/2023)
 
 * Add DefragJob data structure
