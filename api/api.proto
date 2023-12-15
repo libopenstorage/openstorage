@@ -4139,8 +4139,6 @@ message DefragNodeStatus {
   map<string, DefragPoolStatus> pool_status = 1;
   // RunningSchedule is the defrag schedule being run on the node
   string running_schedule = 2;
-  // RunningJob is the defrag job being run on the node
-  string running_job = 3;
 }
 
 // DefragNodeStatus describes the defragmentation status of a pool 
