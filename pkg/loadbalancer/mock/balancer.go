@@ -35,6 +35,22 @@ func (m *MockBalancer) EXPECT() *MockBalancerMockRecorder {
 	return m.recorder
 }
 
+// GetRemoteNode mocks base method.
+func (m *MockBalancer) GetRemoteNode() (string, bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRemoteNode")
+	ret0, _ := ret[0].(string)
+	ret1, _ := ret[1].(bool)
+	ret2, _ := ret[2].(error)
+	return ret0, ret1, ret2
+}
+
+// GetRemoteNode indicates an expected call of GetRemoteNode.
+func (mr *MockBalancerMockRecorder) GetRemoteNode() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRemoteNode", reflect.TypeOf((*MockBalancer)(nil).GetRemoteNode))
+}
+
 // GetRemoteNodeConnection mocks base method.
 func (m *MockBalancer) GetRemoteNodeConnection(arg0 context.Context) (*grpc.ClientConn, bool, error) {
 	m.ctrl.T.Helper()

@@ -284,6 +284,8 @@ type Node struct {
 	SchedulerTopology *SchedulerTopology
 	// Flag indicating whether the node is a quorum member or not
 	NonQuorumMember bool
+	// DomainID is the ID of the cluster domain to which this node belongs to.
+	DomainID string
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -1321,6 +1323,7 @@ func (v *VolumeSpec) IsPureVolume() bool {
 func (v *VolumeSpec) IsPureBlockVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlockBackend()
 }
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
