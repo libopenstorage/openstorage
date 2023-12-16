@@ -2,9 +2,13 @@
 
 ## Releases
 
-### v0.174.0 - (12/14/2023)
+### v0.175.0 - (12/15/2023)
 
 * Add defrag status data structure
+
+### v0.174.0 - (12/12/2023)
+
+* Fix spec handler and internal naming for fs format options
 
 ### v0.173.0 - (11/13/2023)
 
