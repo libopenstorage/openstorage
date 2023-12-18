@@ -146,6 +146,7 @@ var (
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
 	SpecIoThrottleRdBWRegex       = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
 	SpecIoThrottleWrBWRegex       = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
+	SpecFsFormatOptionsRegex      = regexp.MustCompile(api.SpecFsFormatOptions + "=([0-9A-Za-z_@:./#&+-=]+),?")
 )
 
 type specHandler struct {
@@ -509,6 +510,8 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
 			}
 			spec.MountOptions.Options = options
+		case api.SpecFsFormatOptions:
+			spec.FaCreateOptions = v
 		case api.SpecSharedv4MountOptions:
 			if spec.Sharedv4MountOptions == nil {
 				spec.Sharedv4MountOptions = &api.MountOptions{
@@ -871,6 +874,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, ioThrottleBW := d.getVal(SpecIoThrottleWrBWRegex, str); ok {
 		opts[api.SpecIoThrottleWrBW] = ioThrottleBW
+	}
+	if ok, fsFormatOptions := d.getVal(SpecFsFormatOptionsRegex, str); ok {
+		opts[api.SpecFsFormatOptions] = fsFormatOptions
 	}
 	return true, opts, name
 }
