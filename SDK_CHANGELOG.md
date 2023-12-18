@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.45 - (12/18/2023)
+
+* Fix spec handler and internal naming for fs format options
+
 ### v0.101.44 - (10/24/2023)
 
 * Add quorum member flag to StorageNode

@@ -66,13 +66,15 @@ const (
 	SpecMountOptions                = "mount_options"
 	SpecCSIMountOptions             = "csi_mount_options"
 	SpecSharedv4MountOptions        = "sharedv4_mount_options"
-	SpecProxyProtocolS3             = "s3"
-	SpecProxyProtocolPXD            = "pxd"
-	SpecProxyProtocolNFS            = "nfs"
-	SpecProxyEndpoint               = "proxy_endpoint"
-	SpecProxyNFSSubPath             = "proxy_nfs_subpath"
-	SpecProxyNFSExportPath          = "proxy_nfs_exportpath"
-	SpecProxyS3Bucket               = "proxy_s3_bucket"
+	// spec key cannot change due to parity with existing PSO storageclasses
+	SpecFsFormatOptions    = "createoptions"
+	SpecProxyProtocolS3    = "s3"
+	SpecProxyProtocolPXD   = "pxd"
+	SpecProxyProtocolNFS   = "nfs"
+	SpecProxyEndpoint      = "proxy_endpoint"
+	SpecProxyNFSSubPath    = "proxy_nfs_subpath"
+	SpecProxyNFSExportPath = "proxy_nfs_exportpath"
+	SpecProxyS3Bucket      = "proxy_s3_bucket"
 	// SpecBestEffortLocationProvisioning default is false. If set provisioning request will succeed
 	// even if specified data location parameters could not be satisfied.
 	SpecBestEffortLocationProvisioning = "best_effort_location_provisioning"
@@ -1316,6 +1318,7 @@ func (v *VolumeSpec) IsPureVolume() bool {
 func (v *VolumeSpec) IsPureBlockVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlockBackend()
 }
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
