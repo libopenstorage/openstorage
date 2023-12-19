@@ -18,12 +18,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/moby/sys/mountinfo"
 	"github.com/libopenstorage/openstorage/pkg/chattr"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/moby/sys/mountinfo"
 	"github.com/pborman/uuid"
 	"github.com/sirupsen/logrus"
 )
@@ -134,10 +134,13 @@ type PathInfo struct {
 // Info per device
 type Info struct {
 	sync.Mutex
-	Device     string
-	Minor      int
+	Device string
+	Minor  int
+	// Guarded using the above lock.
 	Mountpoint []*PathInfo
 	Fs         string
+	// Guarded using Mounter.Lock()
+	MountsInProgress int
 }
 
 // Mounter implements Ops and keeps track of active mounts for volume drivers.
@@ -323,8 +326,8 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	m.Lock()
 	defer m.Unlock()
 	if info, ok := m.mounts[device]; ok {
-		// If the device has no more mountpoints, remove it from the map
-		if len(info.Mountpoint) == 0 {
+		// If the device has no more mountpoints and no mounts in progress, remove it from the map
+		if len(info.Mountpoint) == 0 && info.MountsInProgress == 0 {
 			delete(m.mounts, device)
 		}
 	}
@@ -478,10 +481,18 @@ func (m *Mounter) Mount(
 			Fs:         fs,
 		}
 	}
+	// This variable in Info Structure is guarded using m.Lock()
+	info.MountsInProgress++
 	m.mounts[device] = info
 	m.Unlock()
 	info.Lock()
-	defer info.Unlock()
+	defer func() {
+		info.Unlock()
+		m.Lock()
+		// Info is not destroyed, even when we don't hold the lock.
+		info.MountsInProgress--
+		m.Unlock()
+	}()
 
 	// Validate input params
 	// FS check is not needed if it is a bind mount
