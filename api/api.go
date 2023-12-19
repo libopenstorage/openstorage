@@ -66,7 +66,7 @@ const (
 	SpecExportOptionsEmpty          = "empty_export_options"
 	SpecMountOptions                = "mount_options"
 	// spec key cannot change due to parity with existing PSO storageclasses
-	SpecFaCreateOptions      = "createoptions"
+	SpecFsFormatOptions      = "createoptions"
 	SpecCSIMountOptions      = "csi_mount_options"
 	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	SpecProxyProtocolS3      = "s3"
