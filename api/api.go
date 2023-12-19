@@ -281,6 +281,8 @@ type Node struct {
 	SchedulerTopology *SchedulerTopology
 	// Flag indicating whether the node is a quorum member or not
 	NonQuorumMember bool
+	// DomainID is the ID of the cluster domain to which this node belongs to.
+	DomainID string
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
