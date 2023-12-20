@@ -64,23 +64,49 @@ func NewRoundRobinBalancer(
 	return rr, nil
 }
 
-func (rr *roundRobin) GetRemoteNodeConnection(ctx context.Context) (*grpc.ClientConn, bool, error) {
+func (rr *roundRobin) GetRemoteNode() (string, bool, error) {
 	// Get all nodes and sort them
 	cluster, err := rr.cluster.Enumerate()
 	if err != nil {
-		return nil, false, err
+		return "", false, err
 	}
 	if len(cluster.Nodes) < 1 {
-		return nil, false, errors.New("cluster nodes for remote connection not found")
+		return "", false, errors.New("cluster nodes for remote connection not found")
 	}
-	sort.Slice(cluster.Nodes, func(i, j int) bool {
-		return cluster.Nodes[i].Id < cluster.Nodes[j].Id
+	// Get our node object
+	selfNode, err := rr.cluster.Inspect(cluster.NodeId)
+	if err != nil {
+		return "", false, err
+	}
+	var filteredNodes []*api.Node
+
+	if selfNode.DomainID != "" {
+		// Filter out nodes from a different cluster domain.
+		for _, node := range cluster.Nodes {
+			if selfNode.DomainID == node.DomainID {
+				filteredNodes = append(filteredNodes, node)
+			}
+		}
+	} else {
+		filteredNodes = cluster.Nodes
+	}
+
+	sort.Slice(filteredNodes, func(i, j int) bool {
+		return filteredNodes[i].Id < filteredNodes[j].Id
 	})
 
 	// Get target node info and set next round robbin node.
 	// nextNode is always lastNode + 1 mod (numOfNodes), to loop back to zero
-	targetNodeEndpoint, isRemoteConn := rr.getTargetAndIncrement(&cluster)
+	targetNodeEndpoint, isRemoteConn := rr.getTargetAndIncrement(filteredNodes, selfNode.Id)
 
+	return targetNodeEndpoint, isRemoteConn, nil
+}
+
+func (rr *roundRobin) GetRemoteNodeConnection(ctx context.Context) (*grpc.ClientConn, bool, error) {
+	targetNodeEndpoint, isRemoteConn, err := rr.GetRemoteNode()
+	if err != nil {
+		return nil, false, err
+	}
 	// Get conn for this node, otherwise create new conn
 	timedSDKConn, ok := rr.getNodeConnection(targetNodeEndpoint)
 	if !ok {
@@ -109,7 +135,7 @@ func (rr *roundRobin) GetRemoteNodeConnection(ctx context.Context) (*grpc.Client
 
 }
 
-func (rr *roundRobin) getTargetAndIncrement(cluster *api.Cluster) (string, bool) {
+func (rr *roundRobin) getTargetAndIncrement(filteredNodes []*api.Node, selfNodeID string) (string, bool) {
 	rr.mu.Lock()
 	defer rr.mu.Unlock()
 	var (
@@ -119,14 +145,14 @@ func (rr *roundRobin) getTargetAndIncrement(cluster *api.Cluster) (string, bool)
 	if rr.nextCreateNodeNumber != 0 {
 		targetNodeNumber = rr.nextCreateNodeNumber
 	}
-	targetNode := cluster.Nodes[targetNodeNumber]
-	if targetNode.Id != cluster.NodeId {
+	targetNode := filteredNodes[targetNodeNumber]
+	if targetNode.Id != selfNodeID {
 		// NodeID set on the cluster object is this node's ID.
 		// Target NodeID does not match with our NodeID, so this will be a remote connection.
 		isRemoteConn = true
 	}
 	targetNodeEndpoint := targetNode.MgmtIp
-	rr.nextCreateNodeNumber = (targetNodeNumber + 1) % len(cluster.Nodes)
+	rr.nextCreateNodeNumber = (targetNodeNumber + 1) % len(filteredNodes)
 
 	return targetNodeEndpoint, isRemoteConn
 }
