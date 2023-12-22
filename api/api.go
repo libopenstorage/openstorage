@@ -1321,6 +1321,11 @@ func (v *VolumeSpec) IsPureBlockVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlockBackend()
 }
 
+// IsNFSProxyVolume returns true if this is a nfs reflection volume
+func (v *VolumeSpec) IsNFSProxyVolume() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().NfsSpec != nil
+}
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
