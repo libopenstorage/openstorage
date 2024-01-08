@@ -5784,7 +5784,7 @@
             "type": "string"
           },
           "checksummed": {
-            "title": "Checksummed indicates if volumed data is checksummed to provide data integrity",
+            "title": "Checksummed indicates if volume data is checksummed to provide data integrity",
             "type": "boolean"
           },
           "compressed": {

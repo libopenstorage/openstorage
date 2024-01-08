@@ -89,6 +89,7 @@ const (
 	SpecMatchSrcVolProvision                = "match_src_vol_provision"
 	SpecNodiscard                           = "nodiscard"
 	StoragePolicy                           = "storagepolicy"
+	SpecChecksumData                        = "checksum_data"
 	SpecCowOnDemand                         = "cow_ondemand"
 	SpecDirectIo                            = "direct_io"
 	SpecScanPolicyTrigger                   = "scan_policy_trigger"

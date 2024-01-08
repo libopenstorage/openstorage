@@ -5584,7 +5584,7 @@ type VolumeSpec struct {
 	NearSyncReplicationStrategy NearSyncReplicationStrategy `protobuf:"varint,52,opt,name=near_sync_replication_strategy,json=nearSyncReplicationStrategy,proto3,enum=openstorage.api.NearSyncReplicationStrategy" json:"near_sync_replication_strategy,omitempty"`
 	// clone created to trigger checksum verification
 	ChecksumCloneId string `protobuf:"bytes,53,opt,name=checksum_clone_id,json=checksumCloneId,proto3" json:"checksum_clone_id,omitempty"`
-	// Checksummed indicates if volumed data is checksummed to provide data integrity
+	// Checksummed indicates if volume data is checksummed to provide data integrity
 	Checksummed bool `protobuf:"varint,54,opt,name=checksummed,proto3" json:"checksummed,omitempty"`
 }
 
@@ -6154,7 +6154,7 @@ type VolumeSpecUpdate struct {
 	// Types that are assignable to NearSyncReplicationStrategyOpt:
 	//	*VolumeSpecUpdate_NearSyncReplicationStrategy
 	NearSyncReplicationStrategyOpt isVolumeSpecUpdate_NearSyncReplicationStrategyOpt `protobuf_oneof:"near_sync_replication_strategy_opt"`
-	// Checksummed indicates if volumed data is checksummed to provide data integrity
+	// Checksummed indicates if volume data is checksummed to provide data integrity
 	//
 	// Types that are assignable to ChecksummedOpt:
 	//	*VolumeSpecUpdate_Checksummed
