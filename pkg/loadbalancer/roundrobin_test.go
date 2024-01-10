@@ -93,3 +93,31 @@ func TestGetRemoteNodeWithDomains(t *testing.T) {
 		}
 	}
 }
+
+// TestGetTargetAndIncrementNullPointer tests the case when getTargetAndIncrement
+// causes null pointer. This happens when the round robin index is not checked against node array
+// length before accessing it.
+//
+// https://portworx.atlassian.net/browse/PWX-35601
+func TestGetTargetAndIncrementNullPointer(t *testing.T) {
+	filteredNodes := []*api.Node{
+		{
+			Id:     "1",
+			MgmtIp: "1",
+		},
+		{
+			Id:     "2",
+			MgmtIp: "2",
+		},
+	}
+	rr := &roundRobin{nextCreateNodeNumber: len(filteredNodes)}
+	endpoint, isRemote := rr.getTargetAndIncrement(filteredNodes, "")
+	require.True(t, isRemote, "isRemote is not as expected")
+	require.Equal(t, "1", endpoint, "target endpoint is not as expected")
+
+	filteredNodes = []*api.Node{}
+	rr.nextCreateNodeNumber = 0
+	endpoint, isRemote = rr.getTargetAndIncrement(filteredNodes, "")
+	require.False(t, isRemote, "isRemote is not as expected")
+	require.Equal(t, "", endpoint, "target endpoint is not as expected")
+}
