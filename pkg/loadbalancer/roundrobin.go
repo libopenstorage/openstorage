@@ -98,6 +98,9 @@ func (rr *roundRobin) GetRemoteNode() (string, bool, error) {
 	// Get target node info and set next round robbin node.
 	// nextNode is always lastNode + 1 mod (numOfNodes), to loop back to zero
 	targetNodeEndpoint, isRemoteConn := rr.getTargetAndIncrement(filteredNodes, selfNode.Id)
+	if targetNodeEndpoint == "" {
+		return "", false, errors.New("target node not found")
+	}
 
 	return targetNodeEndpoint, isRemoteConn, nil
 }

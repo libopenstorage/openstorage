@@ -94,12 +94,10 @@ func TestGetRemoteNodeWithDomains(t *testing.T) {
 	}
 }
 
-// TestGetTargetAndIncrementNullPointer tests the case when getTargetAndIncrement
-// causes null pointer. This happens when the round robin index is not checked against node array
-// length before accessing it.
-//
-// https://portworx.atlassian.net/browse/PWX-35601
-func TestGetTargetAndIncrementNullPointer(t *testing.T) {
+// TestGetTargetAndIncrementIndexOutOfBound tests the case when getTargetAndIncrement
+// causes index out of bound error. This happens when the round robin index is not
+// checked against node array length before accessing it.
+func TestGetTargetAndIncrementIndexOutOfBound(t *testing.T) {
 	filteredNodes := []*api.Node{
 		{
 			Id:     "1",
