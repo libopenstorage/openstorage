@@ -13,10 +13,14 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"runtime"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/gossip"
 	"github.com/libopenstorage/gossip/types"
@@ -35,8 +39,6 @@ import (
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 	"github.com/libopenstorage/systemutils"
-	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -264,7 +266,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 
 	n, ok := c.nodeCache[nodeID]
 	if !ok {
-		return api.Node{}, errors.New("Unable to locate node with provided UUID.")
+		return api.Node{}, fmt.Errorf("Unable to locate node with provided UUID '%s'.", nodeID)
 	}
 
 	if n.Status == api.Status_STATUS_OFFLINE &&
@@ -286,6 +288,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			n.NodeLabels = v.NodeLabels
 			n.HWType = v.HWType
 			n.SecurityStatus = v.SecurityStatus
+			n.NonQuorumMember = v.NonQuorumMember
 		} else {
 			logrus.Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
@@ -409,6 +412,7 @@ func (c *ClusterManager) getCurrentState() *api.Node {
 	c.selfNode.Timestamp = time.Now()
 
 	c.selfNode.Cpu, _, _ = c.system.CpuUsage()
+	c.selfNode.CpuCores = runtime.NumCPU()
 	c.selfNode.MemTotal, c.selfNode.MemUsed, c.selfNode.MemFree = c.system.MemUsage()
 	if c.selfNode.HWType == api.HardwareType_UnknownMachine {
 		c.selfNode.HWType = c.config.HWType
@@ -700,7 +704,7 @@ func (c *ClusterManager) joinCluster(
 		clusterLockKey,
 		lockKey,
 		lockTryDuration,
-		kvdb.Instance().GetLockTimeout(),
+		kvdb.Instance().GetLockHoldDuration(),
 	)
 	if err != nil {
 		logrus.Warnln("Unable to obtain cluster lock before creating snapshot: ",
@@ -744,6 +748,7 @@ func (c *ClusterManager) joinCluster(
 	selfNodeEntry.NonQuorumMember =
 		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
 			!c.quorumMember()
+	c.selfNode.NonQuorumMember = selfNodeEntry.NonQuorumMember
 	if selfNodeEntry.NonQuorumMember != prevNonQuorumMemberState {
 		if !selfNodeEntry.NonQuorumMember {
 			logrus.Infof("This node now participates in quorum decisions")
@@ -1249,6 +1254,7 @@ func (c *ClusterManager) initListeners(
 	selfNodeEntry.NonQuorumMember =
 		selfNodeEntry.Status == api.Status_STATUS_DECOMMISSION ||
 			!c.quorumMember()
+	c.selfNode.NonQuorumMember = selfNodeEntry.NonQuorumMember
 	if !selfNodeEntry.NonQuorumMember {
 		logrus.Infof("This node participates in quorum decisions")
 	} else {
@@ -1636,6 +1642,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []*api.Node {
 			node.Hostname = n.Hostname
 			node.NodeLabels = n.NodeLabels
 			node.SecurityStatus = n.SecurityStatus
+			node.NonQuorumMember = n.NonQuorumMember
 		}
 		nodes = append(nodes, &node)
 	}
@@ -2172,6 +2179,24 @@ func (c *ClusterManager) GetRebalanceJobStatus(
 func (c *ClusterManager) EnumerateRebalanceJobs(
 	context context.Context, request *api.SdkEnumerateRebalanceJobsRequest) (*api.SdkEnumerateRebalanceJobsResponse, error) {
 	return c.storagePoolProvider.EnumerateRebalanceJobs(context, request)
+}
+
+func (c *ClusterManager) CreateRebalanceSchedule(
+	context context.Context, request *api.SdkCreateRebalanceScheduleRequest) (
+	*api.SdkCreateRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.CreateRebalanceSchedule(context, request)
+}
+
+func (c *ClusterManager) GetRebalanceSchedule(
+	context context.Context, request *api.SdkGetRebalanceScheduleRequest) (
+	*api.SdkGetRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.GetRebalanceSchedule(context, request)
+}
+
+func (c *ClusterManager) DeleteRebalanceSchedule(
+	context context.Context, request *api.SdkDeleteRebalanceScheduleRequest) (
+	*api.SdkDeleteRebalanceScheduleResponse, error) {
+	return c.storagePoolProvider.DeleteRebalanceSchedule(context, request)
 }
 
 func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {

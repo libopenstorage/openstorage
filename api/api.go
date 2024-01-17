@@ -9,61 +9,64 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
-	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/mohae/deepcopy"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+
+	"github.com/libopenstorage/openstorage/pkg/auth"
 )
 
 // Strings for VolumeSpec
 const (
-	Name                     = "name"
-	Token                    = "token"
-	TokenSecret              = "token_secret"
-	TokenSecretNamespace     = "token_secret_namespace"
-	SpecNodes                = "nodes"
-	SpecParent               = "parent"
-	SpecEphemeral            = "ephemeral"
-	SpecShared               = "shared"
-	SpecJournal              = "journal"
-	SpecSharedv4             = "sharedv4"
-	SpecCascaded             = "cascaded"
-	SpecSticky               = "sticky"
-	SpecSecure               = "secure"
-	SpecCompressed           = "compressed"
-	SpecSize                 = "size"
-	SpecScale                = "scale"
-	SpecFilesystem           = "fs"
-	SpecBlockSize            = "block_size"
-	SpecQueueDepth           = "queue_depth"
-	SpecHaLevel              = "repl"
-	SpecPriority             = "io_priority"
-	SpecSnapshotInterval     = "snap_interval"
-	SpecSnapshotSchedule     = "snap_schedule"
-	SpecAggregationLevel     = "aggregation_level"
-	SpecDedupe               = "dedupe"
-	SpecPassphrase           = "secret_key"
-	SpecAutoAggregationValue = "auto"
-	SpecGroup                = "group"
-	SpecGroupEnforce         = "fg"
-	SpecZones                = "zones"
-	SpecRacks                = "racks"
-	SpecRack                 = "rack"
-	SpecRegions              = "regions"
-	SpecLabels               = "labels"
-	SpecPriorityAlias        = "priority_io"
-	SpecIoProfile            = "io_profile"
-	SpecAsyncIo              = "async_io"
-	SpecEarlyAck             = "early_ack"
-	SpecExportProtocol       = "export"
-	SpecExportProtocolISCSI  = "iscsi"
-	SpecExportProtocolPXD    = "pxd"
-	SpecExportProtocolNFS    = "nfs"
-	SpecExportProtocolCustom = "custom"
-	SpecExportOptions        = "export_options"
-	SpecExportOptionsEmpty   = "empty_export_options"
-	SpecMountOptions         = "mount_options"
+	Name                            = "name"
+	Token                           = "token"
+	TokenSecret                     = "token_secret"
+	TokenSecretNamespace            = "token_secret_namespace"
+	SpecNodes                       = "nodes"
+	SpecParent                      = "parent"
+	SpecEphemeral                   = "ephemeral"
+	SpecShared                      = "shared"
+	SpecJournal                     = "journal"
+	SpecSharedv4                    = "sharedv4"
+	SpecCascaded                    = "cascaded"
+	SpecSticky                      = "sticky"
+	SpecSecure                      = "secure"
+	SpecCompressed                  = "compressed"
+	SpecSize                        = "size"
+	SpecScale                       = "scale"
+	SpecFilesystem                  = "fs"
+	SpecBlockSize                   = "block_size"
+	SpecQueueDepth                  = "queue_depth"
+	SpecHaLevel                     = "repl"
+	SpecPriority                    = "io_priority"
+	SpecSnapshotInterval            = "snap_interval"
+	SpecSnapshotSchedule            = "snap_schedule"
+	SpecAggregationLevel            = "aggregation_level"
+	SpecDedupe                      = "dedupe"
+	SpecPassphrase                  = "secret_key"
+	SpecAutoAggregationValue        = "auto"
+	SpecGroup                       = "group"
+	SpecGroupEnforce                = "fg"
+	SpecZones                       = "zones"
+	SpecRacks                       = "racks"
+	SpecRack                        = "rack"
+	SpecRegions                     = "regions"
+	SpecLabels                      = "labels"
+	SpecPriorityAlias               = "priority_io"
+	SpecIoProfile                   = "io_profile"
+	SpecNearSync                    = "nearsync"
+	SpecNearSyncReplicationStrategy = "nearsync_replication_strategy"
+	SpecAsyncIo                     = "async_io"
+	SpecEarlyAck                    = "early_ack"
+	SpecExportProtocol              = "export"
+	SpecExportProtocolISCSI         = "iscsi"
+	SpecExportProtocolPXD           = "pxd"
+	SpecExportProtocolNFS           = "nfs"
+	SpecExportProtocolCustom        = "custom"
+	SpecExportOptions               = "export_options"
+	SpecExportOptionsEmpty          = "empty_export_options"
+	SpecMountOptions                = "mount_options"
 	// spec key cannot change due to parity with existing PSO storageclasses
-	SpecFaCreateOptions      = "createoptions"
+	SpecFsFormatOptions      = "createoptions"
 	SpecCSIMountOptions      = "csi_mount_options"
 	SpecSharedv4MountOptions = "sharedv4_mount_options"
 	SpecProxyProtocolS3      = "s3"
@@ -110,6 +113,7 @@ const (
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
 	SpecReadahead                           = "readahead"
+	SpecWinshare                            = "winshare"
 )
 
 // OptionKey specifies a set of recognized query params.
@@ -155,6 +159,8 @@ const (
 	OptCredSecretKey = "CredSecretKey"
 	// OptCredBucket is the optional bucket name
 	OptCredBucket = "CredBucket"
+	// OptCredSSE for s3 sse flag
+	OptCredSSE = "CredSSE"
 	// OptCredGoogleProjectID projectID for google cloud
 	OptCredGoogleProjectID = "CredProjectID"
 	// OptCredGoogleJsonKey for google cloud
@@ -236,6 +242,8 @@ type Node struct {
 	SchedulerNodeName string
 	// Cpu usage of the node.
 	Cpu float64 // percentage.
+	// Number of CPU cores
+	CpuCores int
 	// Total Memory of the node
 	MemTotal uint64
 	// Used Memory of the node
@@ -274,6 +282,10 @@ type Node struct {
 	SecurityStatus StorageNode_SecurityStatus
 	// SchedulerTopology topology information of the node in scheduler context
 	SchedulerTopology *SchedulerTopology
+	// Flag indicating whether the node is a quorum member or not
+	NonQuorumMember bool
+	// DomainID is the ID of the cluster domain to which this node belongs to.
+	DomainID string
 }
 
 // FluentDConfig describes ip and port of a fluentdhost.
@@ -331,7 +343,8 @@ type CredUpdateRequest struct {
 
 // StatPoint represents the basic structure of a single Stat reported
 // TODO: This is the first step to introduce stats in openstorage.
-//       Follow up task is to introduce an API for logging stats
+//
+//	Follow up task is to introduce an API for logging stats
 type StatPoint struct {
 	// Name of the Stat
 	Name string
@@ -364,6 +377,8 @@ type CloudBackupCreateRequest struct {
 	// DeleteLocal indicates if local snap must be deleted after the
 	// backup is complete
 	DeleteLocal bool
+	// Indicates if this is a nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupCreateResponse struct {
@@ -511,6 +526,8 @@ type CloudBackupStatusRequest struct {
 	// ignored. This could be GroupCloudBackupId too, and in that case multiple
 	// statuses belonging to the groupCloudBackupID is returned.
 	ID string
+	// Indicates if this is for nearsync migration
+	NearSyncMigrate bool
 }
 
 type CloudBackupStatusRequestOld struct {
@@ -525,6 +542,10 @@ type CloudBackupOpType string
 const (
 	CloudBackupOp  = CloudBackupOpType("Backup")
 	CloudRestoreOp = CloudBackupOpType("Restore")
+
+	NearSyncCloneOp   = CloudBackupOpType("NsClone")
+	NearSyncReplAddOp = CloudBackupOpType("NsReplAdd")
+	NearSyncRestoreOp = CloudBackupOpType("NsRestore")
 )
 
 // Allowed storage classes s3
@@ -550,9 +571,22 @@ const (
 )
 
 const (
+	NearSyncStatusNotStarted = CloudBackupStatusType("NsNotStarted")
+	NearSyncStatusDone       = CloudBackupStatusType("NsDone")
+	NearSyncStatusPaused     = CloudBackupStatusType("NsPaused")
+	NearSyncStatusStopped    = CloudBackupStatusType("NsStopped")
+	NearSyncStatusActive     = CloudBackupStatusType("NsActive")
+	NearSyncStatusFailed     = CloudBackupStatusType("NsFailed")
+	NearSyncStatusInvalid    = CloudBackupStatusType("NsInvalid")
+)
+
+const (
 	CloudBackupRequestedStatePause  = "pause"
 	CloudBackupRequestedStateResume = "resume"
 	CloudBackupRequestedStateStop   = "stop"
+	NearSyncRequestedStatePause     = "ns_pause"
+	NearSyncRequestedStateResume    = "ns_resume"
+	NearSyncRequestedStateStop      = "ns_stop"
 )
 
 type CloudBackupStatus struct {
@@ -720,7 +754,6 @@ type CapacityUsageResponse struct {
 	Error error
 }
 
-//
 // DriverTypeSimpleValueOf returns the string format of DriverType
 func DriverTypeSimpleValueOf(s string) (DriverType, error) {
 	obj, err := simpleValueOf("driver_type", DriverType_value, s)
@@ -805,6 +838,12 @@ func (x VolumeStatus) SimpleString() string {
 func IoProfileSimpleValueOf(s string) (IoProfile, error) {
 	obj, err := simpleValueOf("io_profile", IoProfile_value, s)
 	return IoProfile(obj), err
+}
+
+// NearSyncReplicationStrategySimpleValueOf returns the string format of NearSyncReplicationStrategy
+func NearSyncReplicationStrategySimpleValueOf(s string) (NearSyncReplicationStrategy, error) {
+	obj, err := simpleValueOf("near_sync_strategy", NearSyncReplicationStrategy_value, s)
+	return NearSyncReplicationStrategy(obj), err
 }
 
 // SimpleString returns the string format of IoProfile
@@ -984,6 +1023,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		Id:                s.Id,
 		SchedulerNodeName: s.SchedulerNodeName,
 		Cpu:               s.Cpu,
+		CpuCores:          int64(s.CpuCores),
 		MemTotal:          s.MemTotal,
 		MemUsed:           s.MemUsed,
 		MemFree:           s.MemFree,
@@ -995,6 +1035,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		HWType:            s.HWType,
 		SecurityStatus:    s.SecurityStatus,
 		SchedulerTopology: s.SchedulerTopology,
+		NonQuorumMember:   s.NonQuorumMember,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
@@ -1056,6 +1097,20 @@ func CloudBackupStatusTypeToSdkCloudBackupStatusType(
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued
 	case CloudBackupStatusInvalid:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid
+	case NearSyncStatusNotStarted:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted
+	case NearSyncStatusDone:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone
+	case NearSyncStatusPaused:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused
+	case NearSyncStatusStopped:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped
+	case NearSyncStatusActive:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive
+	case NearSyncStatusFailed:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed
+	case NearSyncStatusInvalid:
+		return SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid
 	default:
 		return SdkCloudBackupStatusType_SdkCloudBackupStatusTypeUnknown
 	}
@@ -1083,6 +1138,20 @@ func SdkCloudBackupStatusTypeToCloudBackupStatusString(
 		return string(CloudBackupStatusQueued)
 	case SdkCloudBackupStatusType_SdkCloudBackupStatusTypeInvalid:
 		return string(CloudBackupStatusInvalid)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeNotStarted:
+		return string(NearSyncStatusNotStarted)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeDone:
+		return string(NearSyncStatusDone)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypePaused:
+		return string(NearSyncStatusPaused)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeStopped:
+		return string(NearSyncStatusStopped)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeActive:
+		return string(NearSyncStatusActive)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeFailed:
+		return string(NearSyncStatusFailed)
+	case SdkCloudBackupStatusType_SdkNearSyncStatusTypeInvalid:
+		return string(NearSyncStatusInvalid)
 	default:
 		return string(CloudBackupStatusFailed)
 	}
@@ -1126,6 +1195,12 @@ func CloudBackupOpTypeToSdkCloudBackupOpType(t CloudBackupOpType) SdkCloudBackup
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeBackupOp
 	case CloudRestoreOp:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp
+	case NearSyncCloneOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp
+	case NearSyncReplAddOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp
+	case NearSyncRestoreOp: // for internal state transition
+		return SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp
 	default:
 		return SdkCloudBackupOpType_SdkCloudBackupOpTypeUnknown
 	}
@@ -1141,6 +1216,12 @@ func SdkCloudBackupOpTypeToCloudBackupOpType(t SdkCloudBackupOpType) CloudBackup
 		return CloudBackupOp
 	case SdkCloudBackupOpType_SdkCloudBackupOpTypeRestoreOp:
 		return CloudRestoreOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeCloneOp: // for internal state transition
+		return NearSyncCloneOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeReplAddOp: // for internal state transition
+		return NearSyncReplAddOp
+	case SdkCloudBackupOpType_SdkNearSyncOpTypeRestoreOp: // for internal state transition
+		return NearSyncRestoreOp
 	default:
 		return CloudBackupOpType("Unknown")
 	}
@@ -1239,6 +1320,15 @@ func (v *VolumeSpec) IsPureVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBackend()
 }
 
+func (v *VolumeSpec) IsPureBlockVolume() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().IsPureBlockBackend()
+}
+
+// IsNFSProxyVolume returns true if this is a nfs reflection volume
+func (v *VolumeSpec) IsNFSProxyVolume() bool {
+	return v.GetProxySpec() != nil && v.GetProxySpec().NfsSpec != nil
+}
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
@@ -1302,6 +1392,12 @@ func CloudBackupRequestedStateToSdkCloudBackupRequestedState(
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStatePause
 	case CloudBackupRequestedStateResume:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateResume
+	case NearSyncRequestedStateStop:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateStop
+	case NearSyncRequestedStatePause:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStatePause
+	case NearSyncRequestedStateResume:
+		return SdkCloudBackupRequestedState_SdkNearSyncRequestedStateResume
 	default:
 		return SdkCloudBackupRequestedState_SdkCloudBackupRequestedStateUnknown
 	}
@@ -1367,6 +1463,14 @@ func (s *ProxySpec) IsPureBackend() bool {
 		s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
 }
 
+func (s *ProxySpec) IsPureBlockBackend() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_BLOCK
+}
+
+func (s *ProxySpec) IsPureFileBackend() bool {
+	return s.ProxyProtocol == ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+}
+
 func (s *ProxySpec) IsPureImport() bool {
 	if !s.IsPureBackend() {
 		return false
@@ -1395,3 +1499,21 @@ func (s *ProxySpec) GetPureFullVolumeName() string {
 func GetAllEnumInfo() []protoimpl.EnumInfo {
 	return file_api_api_proto_enumTypes
 }
+
+// Constants defined for proxy mounts
+const (
+	// OptProxyCaller is an option to pass NodeID of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCaller = "caller"
+	// OptProxyCallerIP is an option to pass NodeIP of the client requesting a sharedv4
+	// mount from the server
+	OptProxyCallerIP = "caller_ip"
+	// OptMountID is an option to pass mount path of the client requesting a sharedv4
+	// mount from the server
+	OptMountID = "mountID"
+)
+
+const (
+	// SharedVolExportPrefix is the export path where shared volumes are mounted
+	SharedVolExportPrefix = "/var/lib/osd/pxns"
+)

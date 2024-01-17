@@ -131,6 +131,8 @@ var (
 	compressedRegex               = regexp.MustCompile(api.SpecCompressed + "=([A-Za-z]+),?")
 	snapScheduleRegex             = regexp.MustCompile(api.SpecSnapshotSchedule + `=([A-Za-z0-9:;@=#]+),?`)
 	ioProfileRegex                = regexp.MustCompile(api.SpecIoProfile + "=([0-9A-Za-z_-]+),?")
+	nearSyncRegex                 = regexp.MustCompile(api.SpecNearSync + "=([A-Za-z]+),?")
+	nearSyncReplStrategyRegex     = regexp.MustCompile(api.SpecNearSyncReplicationStrategy + "=([A-Za-z]+),?")
 	asyncIoRegex                  = regexp.MustCompile(api.SpecAsyncIo + "=([A-Za-z]+),?")
 	earlyAckRegex                 = regexp.MustCompile(api.SpecEarlyAck + "=([A-Za-z]+),?")
 	forceUnsupportedFsTypeRegex   = regexp.MustCompile(api.SpecForceUnsupportedFsType + "=([A-Za-z]+),?")
@@ -152,12 +154,14 @@ var (
 	sharedv4ExternalAccessRegex   = regexp.MustCompile(api.SpecSharedv4ExternalAccess + "=([A-Za-z]+),?")
 	Sharedv4FailoverStrategyRegex = regexp.MustCompile(api.SpecSharedv4FailoverStrategy + "=([A-Za-z]+),?")
 	fastpathRegex                 = regexp.MustCompile(api.SpecFastpath + "=([A-Za-z]+),?")
+	winshareRegex                 = regexp.MustCompile(api.SpecWinshare + "=([A-Za-z]+),?")
 	AutoFstrimRegex               = regexp.MustCompile(api.SpecAutoFstrim + "=([A-Za-z]+),?")
 	SpecIoThrottleRdIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleRdIOPS + "=([0-9]+),?")
 	SpecIoThrottleWrIOPSRegex     = regexp.MustCompile(api.SpecIoThrottleWrIOPS + "=([0-9]+),?")
 	SpecIoThrottleRdBWRegex       = regexp.MustCompile(api.SpecIoThrottleRdBW + "=([0-9]+),?")
 	SpecIoThrottleWrBWRegex       = regexp.MustCompile(api.SpecIoThrottleWrBW + "=([0-9]+),?")
 	ReadaheadRegex                = regexp.MustCompile(api.SpecReadahead + "=([A-Za-z]+),?")
+	SpecFsFormatOptionsRegex      = regexp.MustCompile(api.SpecFsFormatOptions + "=([0-9A-Za-z_@:./#&+-=]+),?")
 )
 
 type specHandler struct {
@@ -198,10 +202,11 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
-		Format:    api.FSType_FS_TYPE_EXT4,
-		HaLevel:   1,
-		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
-		Xattr:     api.Xattr_COW_ON_DEMAND,
+		Format:       api.FSType_FS_TYPE_EXT4,
+		HaLevel:      1,
+		IoProfile:    api.IoProfile_IO_PROFILE_AUTO,
+		Xattr:        api.Xattr_COW_ON_DEMAND,
+		FpPreference: true,
 	}
 }
 
@@ -227,6 +232,9 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 	// a variable outside the loop and then set it in the proper field at the end
 	var pureBackendVolName *string
 
+	// Set Fp preference to true by default
+	// If user has set the option it will get overridden
+	spec.FpPreference = true
 	for k, v := range opts {
 		switch k {
 		case api.SpecNodes:
@@ -374,6 +382,18 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.IoProfile = ioProfile
+			}
+		case api.SpecNearSync:
+			if nearSync, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.NearSync = nearSync
+			}
+		case api.SpecNearSyncReplicationStrategy:
+			if nearSyncReplicationStrategy, err := api.NearSyncReplicationStrategySimpleValueOf(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.NearSyncReplicationStrategy = nearSyncReplicationStrategy
 			}
 		case api.SpecEarlyAck:
 			if earlyAck, err := strconv.ParseBool(v); err != nil {
@@ -526,7 +546,7 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, fmt.Errorf("invalid mount options format %v", v)
 			}
 			spec.MountOptions.Options = options
-		case api.SpecFaCreateOptions:
+		case api.SpecFsFormatOptions:
 			spec.FaCreateOptions = v
 		case api.SpecSharedv4MountOptions:
 			if spec.Sharedv4MountOptions == nil {
@@ -587,6 +607,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				return nil, nil, nil, err
 			} else {
 				spec.FpPreference = fastpath
+			}
+		case api.SpecWinshare:
+			if winshare, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Winshare = winshare
 			}
 		case api.SpecAutoFstrim:
 			if autoFstrim, err := strconv.ParseBool(v); err != nil {
@@ -807,6 +833,12 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, ioProfile := d.getVal(ioProfileRegex, str); ok {
 		opts[api.SpecIoProfile] = ioProfile
 	}
+	if ok, nearSync := d.getVal(nearSyncRegex, str); ok {
+		opts[api.SpecNearSync] = nearSync
+	}
+	if ok, nearSyncReplStrategy := d.getVal(nearSyncReplStrategyRegex, str); ok {
+		opts[api.SpecNearSyncReplicationStrategy] = nearSyncReplStrategy
+	}
 	if ok, asyncIo := d.getVal(asyncIoRegex, str); ok {
 		opts[api.SpecAsyncIo] = asyncIo
 	}
@@ -879,6 +911,9 @@ func (d *specHandler) SpecOptsFromString(
 	if ok, fastpath := d.getVal(fastpathRegex, str); ok {
 		opts[api.SpecFastpath] = fastpath
 	}
+	if ok, winshare := d.getVal(winshareRegex, str); ok {
+		opts[api.SpecWinshare] = winshare
+	}
 	if ok, autoFstrim := d.getVal(AutoFstrimRegex, str); ok {
 		opts[api.SpecAutoFstrim] = autoFstrim
 	}
@@ -896,6 +931,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, ioThrottleBW := d.getVal(SpecIoThrottleWrBWRegex, str); ok {
 		opts[api.SpecIoThrottleWrBW] = ioThrottleBW
+	}
+	if ok, fsFormatOptions := d.getVal(SpecFsFormatOptionsRegex, str); ok {
+		opts[api.SpecFsFormatOptions] = fsFormatOptions
 	}
 	return true, opts, name
 }

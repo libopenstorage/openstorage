@@ -675,6 +675,11 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume, isSchedulerReque
 			Readahead: spec.Readahead,
 		}
 	}
+	if spec.NearSyncReplicationStrategy != vol.Spec.NearSyncReplicationStrategy {
+		newSpec.NearSyncReplicationStrategyOpt = &api.VolumeSpecUpdate_NearSyncReplicationStrategy{
+			NearSyncReplicationStrategy: spec.NearSyncReplicationStrategy,
+		}
+	}
 
 	return newSpec
 }
@@ -1230,7 +1235,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if volumeID, err = vd.parseID(r); err != nil {
-		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		e := fmt.Errorf("failed to parse volumeID: %s", err.Error())
 		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
@@ -1238,10 +1243,9 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	// By default always report /proc/diskstats style stats.
 	cumulative := true
-	if opt, ok := params[string(api.OptCumulative)]; ok {
+	if opt, ok := params[api.OptCumulative]; ok {
 		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
-			e := fmt.Errorf("Failed to parse %s option: %s",
-				api.OptCumulative, err.Error())
+			e := fmt.Errorf("failed to parse %s option: %s", api.OptCumulative, err.Error())
 			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		} else {
@@ -1255,7 +1259,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := d.Stats(volumeID, cumulative)
+	stats, err := d.Stats(context.TODO(), volumeID, cumulative)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1464,6 +1468,35 @@ func (vd *volAPI) volumeusage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	json.NewEncoder(w).Encode(capacityInfo)
+}
+
+func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	method := "volumeBytesUsedByNode"
+	var req api.SdkVolumeBytesUsedRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	volUtilInfo, err := d.VolumeBytesUsedByNode(req.NodeId, req.Ids)
+	if err != nil {
+		var e error
+		if err != nil {
+			e = fmt.Errorf("Failed to get volumeBytesUsedByNode: %s", err.Error())
+		}
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	var result api.SdkVolumeBytesUsedResponse
+	result.VolUtilInfo = volUtilInfo
+	json.NewEncoder(w).Encode(&result)
 }
 
 // swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
@@ -1842,6 +1875,7 @@ func (vd *volAPI) otherVolumeRoutes() []*Route {
 		{verb: "POST", path: volPath("/unquiesce/{id}", volume.APIVersion), fn: vd.unquiesce},
 		{verb: "GET", path: volPath("/catalog/{id}", volume.APIVersion), fn: vd.catalog},
 		{verb: "POST", path: volPath("/volservice/{id}", volume.APIVersion), fn: vd.VolService},
+		{verb: "POST", path: volPath("/bytesused", volume.APIVersion), fn: vd.volumeBytesUsedByNode},
 	}
 }
 

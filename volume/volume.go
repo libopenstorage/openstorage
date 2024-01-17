@@ -3,7 +3,6 @@ package volume
 import (
 	"context"
 	"errors"
-
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -28,11 +27,11 @@ var (
 	ErrAttachedHostSpecNotFound = errors.New("Spec of the attached host is not found")
 	// ErrVolAttached returned when volume is in attached state
 	ErrVolAttached = errors.New("Volume is attached")
-        // ErrVolAttachedOnRemoteNode returned when volume is attached on different node
-        ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
-        // ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
-        ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
-                " Non-shared volumes can only be attached on one node at a time.")
+	// ErrVolAttachedOnRemoteNode returned when volume is attached on different node
+	ErrVolAttachedOnRemoteNode = errors.New("Volume is attached on another node")
+	// ErrNonSharedVolAttachedOnRemoteNode returned when a non-shared volume is attached on different node
+	ErrNonSharedVolAttachedOnRemoteNode = errors.New("Non-shared volume is already attached on another node." +
+		" Non-shared volumes can only be attached on one node at a time.")
 	// ErrVolAttachedScale returned when volume is attached and can be scaled
 	ErrVolAttachedScale = errors.New("Volume is attached on another node." +
 		" Increase scale factor to create more instances")
@@ -99,6 +98,7 @@ type VolumeDriver interface {
 	ProtoDriver
 	BlockDriver
 	Enumerator
+	Watcher
 }
 
 // IODriver interfaces applicable to object store interfaces.
@@ -135,7 +135,7 @@ type StatsDriver interface {
 	// cumulative stats are /proc/diskstats style stats.
 	// nonCumulative stats are stats for specific duration.
 	// Errors ErrEnoEnt may be returned
-	Stats(volumeID string, cumulative bool) (*api.Stats, error)
+	Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error)
 	// UsedSize returns currently used volume size.
 	// Errors ErrEnoEnt may be returned.
 	UsedSize(volumeID string) (uint64, error)
@@ -146,10 +146,13 @@ type StatsDriver interface {
 	CapacityUsage(ID string) (*api.CapacityUsageResponse, error)
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
-	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error)
 	// RelaxedReclaimPurge triggers the purge of RelaxedReclaim queue for a
 	// given node
 	RelaxedReclaimPurge(nodeID string) (*api.RelaxedReclaimPurge, error)
+	// VolumeBytesUsedByNode returns currently used volume util of multiple volumes
+	// on a given node
+	VolumeBytesUsedByNode(nodeID string, ids []uint64) (*api.VolumeBytesUsedByNode, error)
 }
 
 type QuiesceDriver interface {
@@ -246,6 +249,12 @@ type FilesystemCheckDriver interface {
 	// FilesystemCheckStop stops the filesystem check background operation on
 	// the filesystem of a specified volume, if any.
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
+	// FilesystemCheckListSnapshots lists snapshots created by fsck for a specified volume
+	FilesystemCheckListSnapshots(request *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error)
+	// FilesystemCheckDeleteSnapshots deletes snapshots created by fsck for a specified volume
+	FilesystemCheckDeleteSnapshots(request *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error)
+	// FilesystemCheckListVolumes lists volumes that require fsck check/fixes
+	FilesystemCheckListVolumes(request *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error)
 }
 
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
@@ -259,6 +268,7 @@ type ProtoDriver interface {
 	CloudMigrateDriver
 	FilesystemTrimDriver
 	FilesystemCheckDriver
+	VerifyChecksumDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
@@ -297,12 +307,22 @@ type ProtoDriver interface {
 type Enumerator interface {
 	// Inspect specified volumes.
 	// Returns slice of volumes that were found.
-	Inspect(volumeIDs []string) ([]*api.Volume, error)
+	Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error)
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)
 	// Enumerate snaps for specified volumes
 	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
+}
+
+// Water provides a set of function to get volume
+type Watcher interface {
+	// Stop Volume notifier
+	StartVolumeWatcher()
+	// Gets Volume notifier
+	GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error)
+	// Stop Volume notifier
+	StopVolumeWatcher()
 }
 
 // StoreEnumerator combines Store and Enumerator capabilities
@@ -360,6 +380,17 @@ type VolumeDriverRegistry interface {
 
 	// Removes driver from registry. Does nothing if driver name does not exist.
 	Remove(name string)
+}
+
+// VerifyChecksumDriver interface exposes APIs to manage checksum validation
+// on a volume
+type VerifyChecksumDriver interface {
+	// VerifyChecksumStart starts a checksum validation on a specified volume
+	VerifyChecksumStart(request *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error)
+	// VerifyChecksumStatus returns the status of checksum validation task
+	VerifyChecksumStatus(request *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error)
+	// VerifyChecksumStop stops the checksum validation task
+	VerifyChecksumStop(request *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error)
 }
 
 // NewVolumeDriverRegistry constructs a new VolumeDriverRegistry.

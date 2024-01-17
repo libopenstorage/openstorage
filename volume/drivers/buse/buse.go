@@ -44,6 +44,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	buseDevices map[string]*buseDev
 	cl          cluster.ClusterListener
 }
@@ -109,6 +110,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {
@@ -145,6 +147,18 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 //
 // These functions below implement the volume driver interface.
 //
+
+func (d *driver) StartVolumeWatcher() {
+	return
+}
+
+func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
+}
+
+func (d *driver) StopVolumeWatcher() {
+	return
+}
 
 func (d *driver) String() string {
 	return Name
@@ -313,7 +327,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -335,7 +349,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 

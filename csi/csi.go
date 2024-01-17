@@ -17,9 +17,8 @@ limitations under the License.
 package csi
 
 import (
-	"errors"
 	"fmt"
-	"sort"
+	"os"
 	"sync"
 	"time"
 
@@ -27,6 +26,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/csi/sched/k8s"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -46,12 +46,8 @@ import (
 )
 
 var (
-	clogger *logrus.Logger
-)
-
-const (
-	connCleanupInterval = 15 * time.Minute
-	connIdleConnLength  = 30 * time.Minute
+	clogger                *logrus.Logger
+	csiSocketCheckInterval = 30 * time.Second
 )
 
 func init() {
@@ -61,13 +57,14 @@ func init() {
 // OsdCsiServerConfig provides the configuration to the
 // the gRPC CSI server created by NewOsdCsiServer()
 type OsdCsiServerConfig struct {
-	Net           string
-	Address       string
-	DriverName    string
-	Cluster       cluster.Cluster
-	SdkUds        string
-	SdkPort       string
-	SchedulerName string
+	Net                string
+	Address            string
+	DriverName         string
+	Cluster            cluster.Cluster
+	RoundRobinBalancer loadbalancer.Balancer
+	SdkUds             string
+	SdkPort            string
+	SchedulerName      string
 
 	// Name to be reported back to the CO. If not provided,
 	// the name will be in the format of <driver>.openstorage.org
@@ -78,12 +75,6 @@ type OsdCsiServerConfig struct {
 	EnableInlineVolumes bool
 }
 
-// TimedSDKConn represents a gRPC connection and the last time it was used
-type TimedSDKConn struct {
-	Conn      *grpc.ClientConn
-	LastUsage time.Time
-}
-
 // OsdCsiServer is a OSD CSI compliant server which
 // proxies CSI requests for a single specific driver
 type OsdCsiServer struct {
@@ -92,18 +83,19 @@ type OsdCsiServer struct {
 	csi.IdentityServer
 
 	*grpcserver.GrpcServer
-	specHandler          spec.SpecHandler
-	driver               volume.VolumeDriver
-	cluster              cluster.Cluster
-	sdkUds               string
-	sdkPort              string
-	conn                 *grpc.ClientConn
-	connMap              map[string]*TimedSDKConn
-	nextCreateNodeNumber int
-	mu                   sync.Mutex
-	csiDriverName        string
-	allowInlineVolumes   bool
-	stopCleanupCh        chan bool
+	cloudBackupClient  func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
+	specHandler        spec.SpecHandler
+	driver             volume.VolumeDriver
+	cluster            cluster.Cluster
+	sdkUds             string
+	sdkPort            string
+	conn               *grpc.ClientConn
+	mu                 sync.Mutex
+	csiDriverName      string
+	allowInlineVolumes bool
+	roundRobinBalancer loadbalancer.Balancer
+	config             *OsdCsiServerConfig
+	autoRecoverStopCh  chan struct{}
 }
 
 // NewOsdCsiServer creates a gRPC CSI complient server on the
@@ -127,37 +119,9 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, fmt.Errorf("Unable to get driver %s info: %s", config.DriverName, err.Error())
 	}
 
-	// create correlation interceptor
-	var unaryInterceptors []grpc.UnaryServerInterceptor
-	correlationInterceptor := correlation.ContextInterceptor{
-		Origin: correlation.ComponentCSIDriver,
-	}
-	opts := make([]grpc.ServerOption, 0)
-	unaryInterceptors = append(unaryInterceptors, correlationInterceptor.ContextUnaryServerInterceptor)
-
-	// create scheduler interceptor
-	switch config.SchedulerName {
-	case "kubernetes":
-		logrus.Infof("CSI K8s filter being added for %s scheduler", config.SchedulerName)
-		ki := k8s.NewInterceptor()
-		unaryInterceptors = append(unaryInterceptors, ki.SchedUnaryInterceptor)
-
-	default:
-		logrus.Infof("No CSI filter being added for %s scheduler", config.SchedulerName)
-	}
-
-	// Add interceptors
-	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)))
-
-	// Create server
-	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
-		Name:    "CSI 1.7",
-		Net:     config.Net,
-		Address: config.Address,
-		Opts:    opts,
-	})
+	gServer, err := createGrpcServer(config)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
+		return nil, err
 	}
 
 	return &OsdCsiServer{
@@ -169,6 +133,10 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		sdkPort:            config.SdkPort,
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
+		roundRobinBalancer: config.RoundRobinBalancer,
+		cloudBackupClient:  api.NewOpenStorageCloudBackupClient,
+		config:             config,
+		autoRecoverStopCh:  make(chan struct{}),
 	}, nil
 }
 
@@ -193,66 +161,15 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 }
 
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	// Get all nodes and sort them
-	nodesResp, err := s.cluster.Enumerate()
-	if err != nil {
-		return nil, err
-	}
-	if len(nodesResp.Nodes) < 1 {
-		return nil, errors.New("cluster nodes for remote connection not found")
-	}
-	sort.Slice(nodesResp.Nodes, func(i, j int) bool {
-		return nodesResp.Nodes[i].Id < nodesResp.Nodes[j].Id
-	})
-
-	// Clean up connections for missing nodes
-	s.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
-
-	// Get target node info and set next round robbin node.
-	// nextNode is always lastNode + 1 mod (numOfNodes), to loop back to zero
-	var targetNodeNumber int
-	if s.nextCreateNodeNumber != 0 {
-		targetNodeNumber = s.nextCreateNodeNumber
-	}
-	targetNodeEndpoint := nodesResp.Nodes[targetNodeNumber].MgmtIp
-	s.nextCreateNodeNumber = (targetNodeNumber + 1) % len(nodesResp.Nodes)
-
-	// Get conn for this node, otherwise create new conn
-	if len(s.connMap) == 0 {
-		s.connMap = make(map[string]*TimedSDKConn)
-	}
-	if s.connMap[targetNodeEndpoint] == nil {
-		var err error
-		clogger.WithContext(ctx).Infof("Round-robin connecting to node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
-		remoteConn, err := grpcserver.ConnectWithTimeout(
-			fmt.Sprintf("%s:%s", targetNodeEndpoint, s.sdkPort),
-			[]grpc.DialOption{
-				grpc.WithInsecure(),
-				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
-			}, 10*time.Second)
-		if err != nil {
-			return nil, err
-		}
-
-		s.connMap[targetNodeEndpoint] = &TimedSDKConn{
-			Conn: remoteConn,
-		}
-	}
-
-	// Keep track of when this conn was last accessed
-	clogger.WithContext(ctx).Infof("Using remote connection to SDK node %v - %s:%s", targetNodeNumber, targetNodeEndpoint, s.sdkPort)
-	s.connMap[targetNodeEndpoint].LastUsage = time.Now()
-	return s.connMap[targetNodeEndpoint].Conn, nil
+	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
+	return remoteConn, err
 }
 
 // driverGetVolume returns a volume for a given ID. This function skips
 // PX security authentication and should be used only when a CSI request
 // does not support secrets as a field
 func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Volume, error) {
-	vols, err := s.driver.Inspect([]string{id})
+	vols, err := s.driver.Inspect(correlation.TODO(), []string{id})
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
 			clogger.WithContext(ctx).Infof("Volume %s cannot be found: %s", id, err.Error())
@@ -314,93 +231,107 @@ func (s *OsdCsiServer) addEncryptionInfoToLabels(labels, csiSecrets map[string]s
 // Start is used to start the server.
 // It will return an error if the server is already running.
 func (s *OsdCsiServer) Start() error {
-	return s.GrpcServer.Start(func(grpcServer *grpc.Server) {
-		go s.cleanupConnections()
-
+	if err := s.GrpcServer.Start(func(grpcServer *grpc.Server) {
 		csi.RegisterIdentityServer(grpcServer, s)
 		csi.RegisterControllerServer(grpcServer, s)
 		csi.RegisterNodeServer(grpcServer, s)
-	})
+	}); err != nil {
+		return err
+	}
+
+	if s.config.Net == "unix" {
+		go func() {
+			err := autoSocketRecover(s, s.autoRecoverStopCh)
+			if err != nil {
+				logrus.Errorf("failed to start CSI driver socket auto-recover watcher: %v", err)
+			}
+		}()
+	}
+
+	return nil
 }
 
 // Start is used to stop the server.
 func (s *OsdCsiServer) Stop() {
-	if s.stopCleanupCh != nil {
-		close(s.stopCleanupCh)
-	}
+	close(s.autoRecoverStopCh)
 	s.GrpcServer.Stop()
 }
 
-func (s *OsdCsiServer) cleanupConnections() {
-	s.stopCleanupCh = make(chan bool)
-	ticker := time.NewTicker(connCleanupInterval)
-
-	// Check every so often and delete/close connections
-	for {
-		select {
-		case <-s.stopCleanupCh:
-			ticker.Stop()
-			return
-
-		case _ = <-ticker.C:
-			ctx := correlation.WithCorrelationContext(context.Background(), correlation.ComponentCSIDriver)
-
-			// Anonymous function for using defer to unlock mutex
-			func() {
-				s.mu.Lock()
-				defer s.mu.Unlock()
-				clogger.Tracef("Cleaning up open gRPC connections for CSI distributed provisioning")
-
-				// Clean all expired connections
-				numConnsClosed := 0
-				for ip, timedConn := range s.connMap {
-					expiryTime := timedConn.LastUsage.Add(connIdleConnLength)
-
-					// Connection has expired after 1hr of no usage.
-					// Close connection and remove from connMap
-					if expiryTime.Before(time.Now()) {
-						clogger.Infof("SDK gRPC connection to %s is has expired after %v minutes of no usage. Closing this connection", ip, connIdleConnLength.Minutes())
-						if err := timedConn.Conn.Close(); err != nil {
-							clogger.Errorf("failed to close connection to %s: %v", ip, timedConn.Conn)
-						}
-						delete(s.connMap, ip)
-						numConnsClosed++
-					}
-				}
-
-				// Get all nodes and cleanup conns for missing/deprovisioned nodes
-				nodesResp, err := s.cluster.Enumerate()
-				if err != nil {
-					clogger.Errorf("failed to get all nodes for connection cleanup: %v", err)
-					return
-				}
-				if len(nodesResp.Nodes) < 1 {
-					clogger.Errorf("no nodes available to cleanup: %v", err)
-					return
-				}
-				s.cleanupMissingNodeConnections(ctx, nodesResp.Nodes)
-
-				if numConnsClosed > 0 {
-					clogger.Infof("Cleaned up %v connections for CSI distributed provisioning. %v connections remaining", numConnsClosed, len(s.connMap))
-				}
-			}()
-		}
+func createGrpcServer(config *OsdCsiServerConfig) (*grpcserver.GrpcServer, error) {
+	// create correlation interceptor
+	var unaryInterceptors []grpc.UnaryServerInterceptor
+	correlationInterceptor := correlation.ContextInterceptor{
+		Origin: correlation.ComponentCSIDriver,
 	}
+	opts := make([]grpc.ServerOption, 0)
+	unaryInterceptors = append(unaryInterceptors, correlationInterceptor.ContextUnaryServerInterceptor)
+
+	// create scheduler interceptor
+	switch config.SchedulerName {
+	case "kubernetes":
+		logrus.Infof("CSI K8s filter being added for %s scheduler", config.SchedulerName)
+		ki := k8s.NewInterceptor()
+		unaryInterceptors = append(unaryInterceptors, ki.SchedUnaryInterceptor)
+
+	default:
+		logrus.Infof("No CSI filter being added for %s scheduler", config.SchedulerName)
+	}
+
+	// Add interceptors
+	opts = append(opts, grpc.UnaryInterceptor(grpc_middleware.ChainUnaryServer(unaryInterceptors...)))
+
+	// Create server
+	gServer, err := grpcserver.New(&grpcserver.GrpcServerConfig{
+		Name:    "CSI 1.7",
+		Net:     config.Net,
+		Address: config.Address,
+		Opts:    opts,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Failed to create CSI server: %v", err)
+	}
+
+	return gServer, nil
 }
 
-func (s *OsdCsiServer) cleanupMissingNodeConnections(ctx context.Context, nodes []*api.Node) {
-	nodesMap := make(map[string]bool)
-	for _, node := range nodes {
-		nodesMap[node.MgmtIp] = true
-	}
-	for ip, timedConn := range s.connMap {
-		if ok := nodesMap[ip]; !ok {
-			// If key in connmap is not in current nodes, close and remove it
-			if err := timedConn.Conn.Close(); err != nil {
-				clogger.WithContext(ctx).Errorf("failed to close conn to %s: %v", ip, err)
-			}
-			delete(s.connMap, ip)
+func autoSocketRecover(s *OsdCsiServer, stopCh chan struct{}) error {
+	socketPath := s.Address()
+	ticker := time.NewTicker(csiSocketCheckInterval)
+
+	// Start checking for CSI socket delete
+	for {
+		select {
+		case <-stopCh:
+			return nil
+		case <-ticker.C:
 		}
+
+		// Check if socket deleted
+		_, err := os.Stat(socketPath)
+		if err == nil {
+			continue
+		}
+
+		logrus.Infof("Detected CSI socket deleted at path %s. Stopping CSI gRPC server", socketPath)
+		s.GrpcServer.Stop()
+
+		// Re-create gRPC server
+		gServer, err := createGrpcServer(s.config)
+		if err != nil {
+			logrus.Errorf("failed to re-create gRPC server: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
+		}
+		s.GrpcServer = gServer
+
+		// Start server
+		logrus.Infof("Restarting CSI gRPC server at %s", socketPath)
+		if err := s.Start(); err != nil {
+			logrus.Errorf("CSI server failed to auto-recover after socket deletion: %v. Retrying in %s...", err, csiSocketCheckInterval)
+			continue
+		}
+
+		// Exit for next process to start
+		return nil
 	}
 }
 

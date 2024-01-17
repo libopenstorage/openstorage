@@ -36,6 +36,51 @@ func (m *MockOpenStorageFilesystemCheckServer) EXPECT() *MockOpenStorageFilesyst
 	return m.recorder
 }
 
+// DeleteSnapshots mocks base method.
+func (m *MockOpenStorageFilesystemCheckServer) DeleteSnapshots(arg0 context.Context, arg1 *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSnapshots", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckDeleteSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSnapshots indicates an expected call of DeleteSnapshots.
+func (mr *MockOpenStorageFilesystemCheckServerMockRecorder) DeleteSnapshots(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSnapshots", reflect.TypeOf((*MockOpenStorageFilesystemCheckServer)(nil).DeleteSnapshots), arg0, arg1)
+}
+
+// ListSnapshots mocks base method.
+func (m *MockOpenStorageFilesystemCheckServer) ListSnapshots(arg0 context.Context, arg1 *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListSnapshots", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSnapshots indicates an expected call of ListSnapshots.
+func (mr *MockOpenStorageFilesystemCheckServerMockRecorder) ListSnapshots(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSnapshots", reflect.TypeOf((*MockOpenStorageFilesystemCheckServer)(nil).ListSnapshots), arg0, arg1)
+}
+
+// ListVolumes mocks base method.
+func (m *MockOpenStorageFilesystemCheckServer) ListVolumes(arg0 context.Context, arg1 *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListVolumes", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListVolumesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListVolumes indicates an expected call of ListVolumes.
+func (mr *MockOpenStorageFilesystemCheckServerMockRecorder) ListVolumes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockOpenStorageFilesystemCheckServer)(nil).ListVolumes), arg0, arg1)
+}
+
 // Start mocks base method.
 func (m *MockOpenStorageFilesystemCheckServer) Start(arg0 context.Context, arg1 *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	m.ctrl.T.Helper()
@@ -102,6 +147,66 @@ func NewMockOpenStorageFilesystemCheckClient(ctrl *gomock.Controller) *MockOpenS
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStorageFilesystemCheckClient) EXPECT() *MockOpenStorageFilesystemCheckClientMockRecorder {
 	return m.recorder
+}
+
+// DeleteSnapshots mocks base method.
+func (m *MockOpenStorageFilesystemCheckClient) DeleteSnapshots(arg0 context.Context, arg1 *api.SdkFilesystemCheckDeleteSnapshotsRequest, arg2 ...grpc.CallOption) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "DeleteSnapshots", varargs...)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckDeleteSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSnapshots indicates an expected call of DeleteSnapshots.
+func (mr *MockOpenStorageFilesystemCheckClientMockRecorder) DeleteSnapshots(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSnapshots", reflect.TypeOf((*MockOpenStorageFilesystemCheckClient)(nil).DeleteSnapshots), varargs...)
+}
+
+// ListSnapshots mocks base method.
+func (m *MockOpenStorageFilesystemCheckClient) ListSnapshots(arg0 context.Context, arg1 *api.SdkFilesystemCheckListSnapshotsRequest, arg2 ...grpc.CallOption) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListSnapshots", varargs...)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListSnapshots indicates an expected call of ListSnapshots.
+func (mr *MockOpenStorageFilesystemCheckClientMockRecorder) ListSnapshots(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListSnapshots", reflect.TypeOf((*MockOpenStorageFilesystemCheckClient)(nil).ListSnapshots), varargs...)
+}
+
+// ListVolumes mocks base method.
+func (m *MockOpenStorageFilesystemCheckClient) ListVolumes(arg0 context.Context, arg1 *api.SdkFilesystemCheckListVolumesRequest, arg2 ...grpc.CallOption) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ListVolumes", varargs...)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListVolumesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListVolumes indicates an expected call of ListVolumes.
+func (mr *MockOpenStorageFilesystemCheckClientMockRecorder) ListVolumes(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListVolumes", reflect.TypeOf((*MockOpenStorageFilesystemCheckClient)(nil).ListVolumes), varargs...)
 }
 
 // Start mocks base method.

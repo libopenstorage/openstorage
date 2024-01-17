@@ -17,13 +17,32 @@ const (
 )
 
 func AddImmutable(path string) error {
+	return ForceAddImmutable(path, false)
+}
+
+func ForceAddImmutable(path string, force bool) error {
 	chattrBin := which(chattrCmd)
 	if _, err := os.Stat(path); err == nil {
-		cmd := exec.Command(chattrBin, "+i", path)
+		var cmd *exec.Cmd
+		if force {
+			cmd = exec.Command(chattrBin, "+i", "-f", path)
+		} else {
+			cmd = exec.Command(chattrBin, "+i", path)
+		}
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
-		if err = cmd.Run(); err != nil {
+		err = cmd.Run()
+		if err != nil {
+			// chattr exits with status 1 for files that are not permitted without force flag
+			// this will happen for files that throws the error
+			//  "Operation not supported while reading flags"
+			if force && cmd.ProcessState.ExitCode() == 1 {
+				return nil
+			}
+			if force {
+				return fmt.Errorf("%s +i -f failed: %s. Err: %v", chattrBin, stderr.String(), err)
+			}
 			return fmt.Errorf("%s +i failed: %s. Err: %v", chattrBin, stderr.String(), err)
 		}
 	}
@@ -32,13 +51,31 @@ func AddImmutable(path string) error {
 }
 
 func RemoveImmutable(path string) error {
+	return ForceRemoveImmutable(path, false)
+}
+func ForceRemoveImmutable(path string, force bool) error {
 	chattrBin := which(chattrCmd)
 	if _, err := os.Stat(path); err == nil {
-		cmd := exec.Command(chattrBin, "-i", path)
+		var cmd *exec.Cmd
+		if force {
+			cmd = exec.Command(chattrBin, "-i", "-f", path)
+		} else {
+			cmd = exec.Command(chattrBin, "-i", path)
+		}
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
-		if err = cmd.Run(); err != nil {
+		err = cmd.Run()
+		if err != nil {
+			// chattr exits with status 1 for files that are not permitted without force flag
+			// this will happen for files that throws the error
+			//  "Operation not supported while reading flags"
+			if force && cmd.ProcessState.ExitCode() == 1 {
+				return nil
+			}
+			if force {
+				return fmt.Errorf("%s -i -f failed: %s. Err: %v", chattrBin, stderr.String(), err)
+			}
 			return fmt.Errorf("%s -i failed: %s. Err: %v", chattrBin, stderr.String(), err)
 		}
 	}

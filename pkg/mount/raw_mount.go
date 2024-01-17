@@ -1,3 +1,4 @@
+//go:build linux
 // +build linux
 
 package mount
@@ -7,7 +8,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/docker/docker/pkg/mount"
+	"github.com/moby/sys/mountinfo"
 	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
@@ -74,9 +75,9 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 	}
 
 	// try to find all bind mounts of raw volumes
-	if len(rawVolumeDevicesPaths) == 0 {
-		mountPointsByMajMin := make(map[string]*[]mount.Info)
-		mountPointsByTarget := make(map[string]*mount.Info)
+	if len(rawVolumeDevicesPaths) == 0 || rawVolumeDevicesPaths[0].String() == "" {
+		mountPointsByMajMin := make(map[string]*[]mountinfo.Info)
+		mountPointsByTarget := make(map[string]*mountinfo.Info)
 
 		for _, mp := range mountPoints {
 			// skip proc mount points
@@ -87,7 +88,7 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 
 			mountPointsForNumber, exists := mountPointsByMajMin[majMin]
 			if !exists {
-				mountPointsForNumber = &[]mount.Info{}
+				mountPointsForNumber = &[]mountinfo.Info{}
 				mountPointsByMajMin[majMin] = mountPointsForNumber
 			}
 
@@ -106,7 +107,7 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 		mountPointsForNumber := mountPointsByMajMin[devMajMin]
 
 		mps := *mountPointsForNumber
-		filteredMPs := []mount.Info{}
+		filteredMPs := []mountinfo.Info{}
 		for i := range mps {
 			if mps[i].Mountpoint != "/dev" {
 				filteredMPs = append(filteredMPs, mps[i])
@@ -135,9 +136,9 @@ func (rm *rawMounter) Load(rawVolumeDevicesPaths []*regexp.Regexp) error {
 
 	// find raw volume bind mounts
 	for _, rawVolumeDevicePath := range rawVolumeDevicesPaths {
-		var mountPointForRoot *mount.Info
+		var mountPointForRoot *mountinfo.Info
 		for _, mp := range mountPoints {
-			if rawVolumeDevicePath.MatchString(mp.Root) {
+			if strings.HasSuffix(rawVolumeDevicePath.String(), mp.Root) || rawVolumeDevicePath.MatchString(mp.Root) {
 				mountPointForRoot = mp
 				break
 			}

@@ -95,6 +95,7 @@ func (s *CredentialServer) awsCreate(
 	params[api.OptCredEndpoint] = aws.GetEndpoint()
 	params[api.OptCredAccessKey] = aws.GetAccessKey()
 	params[api.OptCredSecretKey] = aws.GetSecretKey()
+	params[api.OptCredSSE] = fmt.Sprintf("%v", aws.GetServerSideEncryption())
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
 	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
 	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
@@ -498,14 +499,19 @@ func (s *CredentialServer) Inspect(
 			// older format creds
 			disablePathStyle = "false"
 		}
+		sse, ok := info[api.OptCredSSE].(string)
+		if !ok {
+			sse = ""
+		}
 		resp.CredentialType = &api.SdkCredentialInspectResponse_AwsCredential{
 			AwsCredential: &api.SdkAwsCredentialResponse{
-				AccessKey:        accessKey,
-				Endpoint:         endpoint,
-				Region:           region,
-				DisableSsl:       disableSsl == "true",
-				DisablePathStyle: disablePathStyle == "true",
-				S3StorageClass:   storageClass,
+				AccessKey:            accessKey,
+				Endpoint:             endpoint,
+				Region:               region,
+				DisableSsl:           disableSsl == "true",
+				DisablePathStyle:     disablePathStyle == "true",
+				S3StorageClass:       storageClass,
+				ServerSideEncryption: sse,
 			},
 		}
 	case "azure":
@@ -712,7 +718,7 @@ func (s *CredentialServer) awsUpdate(
 	}
 	// Users have to provide correct values, whether they want to change it or not
 	params[api.OptCredDisableSSL] = fmt.Sprintf("%v", aws.GetDisableSsl())
-
+	params[api.OptCredSSE] = fmt.Sprintf("%v", aws.GetServerSideEncryption())
 	params[api.OptCredDisablePathStyle] = fmt.Sprintf("%v", aws.GetDisablePathStyle())
 	params[api.OptCredProxy] = fmt.Sprintf("%v", req.GetUseProxy())
 	params[api.OptCredIAMPolicy] = fmt.Sprintf("%v", req.GetIamPolicy())

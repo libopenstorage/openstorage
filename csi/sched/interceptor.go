@@ -7,8 +7,10 @@ import (
 
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
+)
+
+const (
+	csiPVCNameKey = "csi.storage.k8s.io/pvc/name"
 )
 
 // FilterInterceptor is a wrapper for the filter
@@ -29,14 +31,19 @@ func (fi *FilterInterceptor) SchedUnaryInterceptor(
 	switch req.(type) {
 	case *csi.CreateVolumeRequest:
 		csiReq := req.(*csi.CreateVolumeRequest)
+
+		// Skip this check for non-k8s clients
+		if _, ok := csiReq.Parameters[csiPVCNameKey]; !ok {
+			return handler(ctx, req)
+		}
+
 		req, err = fi.Filter.PreVolumeCreate(csiReq)
 		if err != nil {
-			logrus.WithContext(ctx).Errorf("CSI pre-create filter failed: %v", err)
+			logrus.WithContext(ctx).Warnf("CSI pre-create filter failed: %v", err)
 
-			// Return an aborted code to retry from the csi-provisioner.
-			// We cannot ignore this error or else a volume will be created w/
-			// incorrect locator.VolumeLabels.
-			return nil, status.Error(codes.Aborted, "pre-create filter failed: %v")
+			// Log warning and continue with handler. This is backwards
+			// compatible with the previous behavior of continuing create.
+			return handler(ctx, req)
 		} else {
 			logrus.WithContext(ctx).Tracef("K8s-CSI filter: Filter applied successfully for request %T", req)
 		}

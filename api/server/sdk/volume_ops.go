@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -60,6 +61,11 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 			// Check if the volume is ready
 			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_UP && v.GetState() != api.VolumeState_VOLUME_STATE_ATTACHED {
 				return false, nil
+			}
+
+			// The volume has entered a state of that might not recover from hence the status might be down and will be in pending state forever.
+			if v.GetStatus() == api.VolumeStatus_VOLUME_STATUS_DOWN && v.GetState() != api.VolumeState_VOLUME_STATE_PENDING {
+				return false, status.Errorf(codes.Internal, "Volume id %s got created but due to Internal issues is in Down State. The Volume creation needs to be retried.", v.GetId())
 			}
 
 			// Continue waiting
@@ -495,7 +501,7 @@ func (s *VolumeServer) Inspect(
 		}
 		v = vols[0]
 	} else {
-		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
+		vols, err := s.driver(ctx).Inspect(correlation.TODO(), []string{req.GetVolumeId()})
 		if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 			return nil, status.Errorf(
 				codes.NotFound,
@@ -587,6 +593,78 @@ func (s *VolumeServer) EnumerateWithFilters(
 	}, nil
 }
 
+// mask all unmodified attributes of the spec before calling Set/Update
+func maskUnModified(spec *api.VolumeSpec, req *api.VolumeSpecUpdate) {
+	// spec has been updated fully for all attributes inclusive of requested attr.
+	// But it is possible for the current state to be stale and so requesting update with
+	// all attributes may have a side affect.
+	// For ex: a size update of the volume, could result in a ha-update
+	// So clear other attributes, so as not to cause side effect while applying
+	// the update.
+	// All state based conditionals are set only for requested attribs.
+	// boolean based state can still be stale, but the chances are low, because
+	// they are immediately handled within px, unlike HA updates which needs acknowledgement
+	// from px-storage to complete processing.
+
+	// ScanPolicy
+	if req.GetScanPolicy() == nil {
+		spec.ScanPolicy = nil
+	}
+
+	if req.GetSnapshotIntervalOpt() == nil {
+		spec.SnapshotInterval = math.MaxUint32
+	}
+
+	if req.GetSnapshotScheduleOpt() == nil {
+		spec.SnapshotSchedule = ""
+	}
+
+	// HA Level
+	if req.GetHaLevelOpt() == nil {
+		spec.HaLevel = 0
+	}
+
+	/*
+	 * immediately applied, hence never stale.
+	 * can carry part of the spec always safely.
+	 */
+	// if req.GetSizeOpt() == nil {
+	//   spec.Size = 0
+	// }
+
+	if req.GetCosOpt() == nil {
+		spec.Cos = api.CosType_NONE
+	}
+
+	if req.GetExportSpec() == nil {
+		spec.ExportSpec = nil
+	}
+
+	if req.GetMountOptSpec() == nil {
+		spec.MountOptions = nil
+	}
+
+	if req.GetSharedv4MountOptSpec() == nil {
+		spec.Sharedv4MountOptions = nil
+	}
+
+	if req.GetSharedv4ServiceSpec() == nil {
+		spec.Sharedv4ServiceSpec = nil
+	}
+
+	if req.GetSharedv4Spec() == nil {
+		spec.Sharedv4Spec = nil
+	}
+
+	if req.GetGroupOpt() == nil {
+		spec.Group = nil
+	}
+
+	if req.GetIoStrategy() == nil {
+		spec.IoStrategy = nil
+	}
+}
+
 // Update allows the caller to change values in the volume specification
 func (s *VolumeServer) Update(
 	ctx context.Context,
@@ -644,6 +722,11 @@ func (s *VolumeServer) Update(
 	if err != nil {
 		return nil, err
 	}
+
+	// avoid side effect while applying with stale config by masking
+	// other parts of the spec.
+	maskUnModified(updatedSpec, req.GetSpec())
+
 	// Send to driver
 	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
@@ -671,7 +754,7 @@ func (s *VolumeServer) Stats(
 		return nil, err
 	}
 
-	stats, err := s.driver(ctx).Stats(req.GetVolumeId(), !req.GetNotCumulative())
+	stats, err := s.driver(ctx).Stats(ctx, req.GetVolumeId(), !req.GetNotCumulative())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -683,6 +766,17 @@ func (s *VolumeServer) Stats(
 	return &api.SdkVolumeStatsResponse{
 		Stats: stats,
 	}, nil
+}
+
+func (s *VolumeServer) VolumeBytesUsedByNode(
+	ctx context.Context,
+	req *api.SdkVolumeBytesUsedRequest,
+) (*api.SdkVolumeBytesUsedResponse, error) {
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"Failed to obtain volume utilization on node %s: %v",
+		req.GetNodeId(),
+		volume.ErrNotSupported.Error())
 }
 
 func (s *VolumeServer) CapacityUsage(
@@ -898,6 +992,13 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.IoThrottle = req.GetIoThrottle()
 	} else {
 		spec.IoThrottle = vol.GetIoThrottle()
+	}
+
+	// NearSyncReplicationStrategy
+	if req.GetNearSyncReplicationStrategyOpt() != nil {
+		spec.NearSyncReplicationStrategy = req.GetNearSyncReplicationStrategy()
+	} else {
+		spec.NearSyncReplicationStrategy = vol.GetNearSyncReplicationStrategy()
 	}
 
 	return spec
@@ -1246,6 +1347,14 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 			return vol, errMsg
 		}
 		spec.Sharedv4Spec = req.GetSharedv4Spec()
+	}
+
+	//Winshare
+	if req.GetWinshareOpt() != nil {
+		if isValidate && vol.GetWinshare() != req.GetWinshare() {
+			return vol, errMsg
+		}
+		spec.Winshare = req.GetWinshare()
 	}
 
 	logrus.Debugf("Updated VolumeSpecs %v", spec)

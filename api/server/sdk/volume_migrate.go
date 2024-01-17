@@ -23,7 +23,12 @@ import (
 	ost_errors "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/status"
+)
+
+const (
+	authorizationKey = "authorization"
 )
 
 // Start a volume migration
@@ -31,9 +36,27 @@ func (s *VolumeServer) Start(
 	ctx context.Context,
 	req *api.SdkCloudMigrateStartRequest,
 ) (*api.SdkCloudMigrateStartResponse, error) {
-	if s.cluster() == nil || s.driver(ctx) == nil {
+	if s.cluster() == nil || s.driver(ctx) == nil || s.balancer() == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
+
+	md, _ := metadata.FromIncomingContext(ctx)
+	ctxMetadata := md.Get(ContextRoundRobinTerminateKey)
+	if len(ctxMetadata) == 0 || ctxMetadata[0] != "true" {
+		// Context metadata key was not found OR termination of the request was not set.
+		// Forward the request to some other node and set the context metadata so that
+		// the request is terminated at the receiving node.
+		rctx := metadata.AppendToOutgoingContext(ctx, ContextRoundRobinTerminateKey, "true")
+		// append auth
+		auth := md.Get(authorizationKey)
+		if len(auth) > 0 {
+			rctx = metadata.AppendToOutgoingContext(rctx, authorizationKey, auth[0])
+		}
+		remoteConn, remote, err := s.balancer().GetRemoteNodeConnection(rctx)
+		if err == nil && remote {
+			return api.NewOpenStorageMigrateClient(remoteConn).Start(rctx, req)
+		} // else continue with processing of the request on this node.
+	} // else continue with processing of the request on this node.
 
 	if volume := req.GetVolume(); volume != nil {
 		// Check ownership

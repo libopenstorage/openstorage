@@ -318,8 +318,8 @@ func (d *driver) status(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, fmt.Sprintln("osd plugin", d.version))
 }
 
-func (d *driver) mountpath(name string) string {
-	return path.Join(volume.MountBase, name)
+func (d *driver) mountpath(nameWithID string) string {
+	return path.Join(volume.MountBase, nameWithID)
 }
 
 func (d *driver) getConn() (*grpc.ClientConn, error) {
@@ -651,6 +651,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// get spec and name from request
 	_, spec, _, _, name := d.SpecFromString(request.Name)
+	nameWithID := name + request.ID
 	attachOptions := d.attachOptionsFromSpec(spec)
 
 	// attach token in context metadata
@@ -686,7 +687,7 @@ func (d *driver) mount(w http.ResponseWriter, r *http.Request) {
 
 	// If a scaled volume is already mounted, check if it can be unmounted and
 	// detached. If not return an error.
-	mountpoint := d.mountpath(name)
+	mountpoint := d.mountpath(nameWithID)
 	if vol.Spec.Scale > 1 {
 		id := v.MountedAt(ctx, mountpoint)
 		if len(id) != 0 {
@@ -857,6 +858,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _, _, _, name := d.SpecFromString(request.Name)
+	nameWithID := name + request.ID
 	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
@@ -864,7 +866,8 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	mountpoint := d.mountpath(name)
+	mountpoint := d.mountpath(nameWithID)
+	mountpointWithoutID := d.mountpath(name)
 	id := vol.Id
 	if vol.Spec.Scale > 1 {
 		id = v.MountedAt(ctx, mountpoint)
@@ -881,6 +884,18 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	opts := make(map[string]string)
 	opts[options.OptionsDeleteAfterUnmount] = "true"
+
+	// Unmount volume mounted at old paths without the ID attached to the path
+	// The Unmount() function is called twice so that the volume that has been mounted before this version upgrade can be unmounted
+	// If volume is already unmounted, this is a no-op
+	errWithoutID := v.Unmount(correlation.TODO(), id, mountpointWithoutID, opts)
+	if errWithoutID != nil {
+		d.logRequest(method, request.Name).Warnf(
+			"Cannot unmount volume %v, %v",
+			mountpointWithoutID, err)
+		d.errorResponse(method, w, err)
+		return
+	}
 
 	err = v.Unmount(correlation.TODO(), id, mountpoint, opts)
 	if err != nil {

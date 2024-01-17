@@ -28,6 +28,7 @@ type volumeClient struct {
 	volume.IODriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	c *client.Client
 }
 
@@ -36,6 +37,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 		c:                     c}
 }
 
@@ -73,6 +75,18 @@ func (v *volumeClient) GraphDriverRemove(id string) error {
 		return fmt.Errorf("Invalid response: %s", response)
 	}
 	return nil
+}
+
+func (v *volumeClient) StartVolumeWatcher() {
+	return
+}
+
+func (v *volumeClient) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
+}
+
+func (v *volumeClient) StopVolumeWatcher() {
+	return
 }
 
 func (v *volumeClient) GraphDriverGet(id string, mountLabel string) (string, error) {
@@ -155,13 +169,13 @@ func (v *volumeClient) Status() [][2]string {
 
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
-func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
-	if len(ids) == 0 {
+func (v *volumeClient) Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error) {
+	if len(volumeIDs) == 0 {
 		return nil, nil
 	}
 	var volumes []*api.Volume
 	request := v.c.Get().Resource(volumePath)
-	for _, id := range ids {
+	for _, id := range volumeIDs {
 		request.QueryOption(api.OptVolumeID, id)
 	}
 	if err := request.Do().Unmarshal(&volumes); err != nil {
@@ -232,10 +246,7 @@ func (v *volumeClient) Restore(volumeID string, snapID string) error {
 
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Stats(
-	volumeID string,
-	cumulative bool,
-) (*api.Stats, error) {
+func (v *volumeClient) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
 	stats := &api.Stats{}
 	req := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID)
 	req.QueryOption(api.OptCumulative, strconv.FormatBool(cumulative))
@@ -292,12 +303,29 @@ func (v *volumeClient) CapacityUsage(
 	return requests, nil
 }
 
-func (v *volumeClient) VolumeUsageByNode(
-	nodeID string,
-) (*api.VolumeUsageByNode, error) {
+func (v *volumeClient) VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error) {
 
 	return nil, volume.ErrNotSupported
 
+}
+
+func (v *volumeClient) VolumeBytesUsedByNode(
+	nodeID string,
+	IDs []uint64,
+) (*api.VolumeBytesUsedByNode, error) {
+	result := &api.SdkVolumeBytesUsedResponse{}
+	req := &api.SdkVolumeBytesUsedRequest{NodeId: nodeID, Ids: IDs}
+	resp := v.c.Post().Resource(volumePath + "/bytesused").Body(req).Do()
+
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
+
+	if err := resp.Unmarshal(result); err != nil {
+		return nil, err
+	}
+
+	return result.VolUtilInfo, nil
 }
 
 func (v *volumeClient) RelaxedReclaimPurge(

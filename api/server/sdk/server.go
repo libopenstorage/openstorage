@@ -36,6 +36,7 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
@@ -113,6 +114,8 @@ type ServerConfig struct {
 	AlertsFilterDeleter alerts.FilterDeleter
 	// StoragePolicy Manager
 	StoragePolicy policy.PolicyManager
+	// gRPC round robin load balancer
+	RoundRobinBalancer loadbalancer.Balancer
 	// Security configuration
 	Security *SecurityConfig
 	// ServerExtensions allows you to extend the SDK gRPC server
@@ -139,10 +142,12 @@ type ServerConfig struct {
 
 // Server is an implementation of the gRPC SDK interface
 type Server struct {
-	config      ServerConfig
-	netServer   *sdkGrpcServer
-	udsServer   *sdkGrpcServer
-	restGateway *sdkRestGateway
+	watcherCtx       context.Context
+	watcherCtxCancel context.CancelFunc
+	config           ServerConfig
+	netServer        *sdkGrpcServer
+	udsServer        *sdkGrpcServer
+	restGateway      *sdkRestGateway
 
 	accessLog *os.File
 	auditLog  *os.File
@@ -153,6 +158,7 @@ type serverAccessor interface {
 	cluster() cluster.Cluster
 	driver(ctx context.Context) volume.VolumeDriver
 	bucketDriver(ctx context.Context) bucket.BucketDriver
+	balancer() loadbalancer.Balancer
 	auditLogWriter() io.Writer
 	port() string
 }
@@ -173,6 +179,9 @@ type sdkGrpcServer struct {
 	log             *logrus.Entry
 	auditLogOutput  io.Writer
 	accessLogOutput io.Writer
+
+	// gRPC request balancer
+	grpcBalancer loadbalancer.Balancer
 
 	// Interface implementations
 	clusterHandler       cluster.Cluster
@@ -199,7 +208,9 @@ type sdkGrpcServer struct {
 	jobServer             api.OpenStorageJobServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
+	verifyChecksumServer  api.OpenStorageVerifyChecksumServer
 	bucketServer          *BucketServer
+	watcherServer         *WatcherServer
 }
 
 // Interface check
@@ -271,19 +282,24 @@ func New(config *ServerConfig) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-
+	ctx, cancel := context.WithCancel(context.Background())
 	return &Server{
-		config:      *config,
-		netServer:   netServer,
-		udsServer:   udsServer,
-		restGateway: restGateway,
-		auditLog:    auditLog,
-		accessLog:   accessLog,
+		watcherCtx:       ctx,
+		watcherCtxCancel: cancel,
+		config:           *config,
+		netServer:        netServer,
+		udsServer:        udsServer,
+		restGateway:      restGateway,
+		auditLog:         auditLog,
+		accessLog:        accessLog,
 	}, nil
 }
 
 // Start all servers
 func (s *Server) Start() error {
+	// watcherServer should only be called once, since netServer an udsServer both implments grpcServer,
+	// we are starting the watch server here
+	go s.netServer.watcherServer.startWatcher(s.watcherCtx)
 	if err := s.netServer.Start(); err != nil {
 		return err
 	} else if err := s.udsServer.Start(); err != nil {
@@ -299,6 +315,8 @@ func (s *Server) Stop() {
 	s.netServer.Stop()
 	s.udsServer.Stop()
 	s.restGateway.Stop()
+	s.netServer.watcherServer.stopWatcher(s.watcherCtx)
+	s.watcherCtxCancel()
 
 	if s.accessLog != nil {
 		s.accessLog.Close()
@@ -360,7 +378,7 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	}
 
 	// Setup authentication
-	for issuer, _ := range config.Security.Authenticators {
+	for issuer := range config.Security.Authenticators {
 		log.Infof("Authentication enabled for issuer: %s", issuer)
 
 		// Check the necessary security config options are set
@@ -451,9 +469,17 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.bucketServer = &BucketServer{
 		server: s,
 	}
+	s.watcherServer = &WatcherServer{
+		volumeServer: s.volumeServer,
+	}
+	s.verifyChecksumServer = &VerifyChecksumServer{
+		server: s,
+	}
 
 	s.roleServer = config.Security.Role
 	s.policyServer = config.StoragePolicy
+	// For the SDK server set the grpc balancer to the provided round robin balancer
+	s.grpcBalancer = config.RoundRobinBalancer
 
 	return s, nil
 }
@@ -537,6 +563,8 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
 		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
+		api.RegisterOpenStorageVerifyChecksumServer(grpcServer, s.verifyChecksumServer)
+		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
@@ -566,7 +594,6 @@ func (s *sdkGrpcServer) Start() error {
 	if err != nil {
 		return err
 	}
-
 	return nil
 }
 
@@ -641,6 +668,10 @@ func (s *sdkGrpcServer) bucketDriver(ctx context.Context) bucket.BucketDriver {
 
 func (s *sdkGrpcServer) cluster() cluster.Cluster {
 	return s.clusterHandler
+}
+
+func (s *sdkGrpcServer) balancer() loadbalancer.Balancer {
+	return s.grpcBalancer
 }
 
 func (s *sdkGrpcServer) alert() alerts.FilterDeleter {

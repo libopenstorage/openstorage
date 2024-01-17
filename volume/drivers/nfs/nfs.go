@@ -52,6 +52,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
@@ -96,6 +97,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 	}
 
 	//make directory for each nfs server
@@ -183,6 +185,18 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	return inst, nil
 }
 
+func (d *driver) StartVolumeWatcher() {
+	return
+}
+
+func (d *driver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
+}
+
+func (d *driver) StopVolumeWatcher() {
+	return
+}
+
 func (d *driver) Name() string {
 	return Name
 }
@@ -203,9 +217,7 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-//
-//Utility functions
-//
+// Utility functions
 func (d *driver) getNewVolumeServer() (string, error) {
 	//randomly select one
 	if d.nfsServers != nil && len(d.nfsServers) > 0 {
@@ -215,7 +227,7 @@ func (d *driver) getNewVolumeServer() (string, error) {
 	return "", errors.New("No NFS servers found")
 }
 
-//get nfsPath for specified volume
+// get nfsPath for specified volume
 func (d *driver) getNFSPath(v *api.Volume) (string, error) {
 	locator := v.GetLocator()
 	server, ok := locator.VolumeLabels["server"]
@@ -227,7 +239,7 @@ func (d *driver) getNFSPath(v *api.Volume) (string, error) {
 	return path.Join(nfsMountPath, server), nil
 }
 
-//get nfsPath for specified volume
+// get nfsPath for specified volume
 func (d *driver) getNFSPathById(volumeID string) (string, error) {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
@@ -237,7 +249,7 @@ func (d *driver) getNFSPathById(volumeID string) (string, error) {
 	return d.getNFSPath(v)
 }
 
-//get nfsPath plus volume name for specified volume
+// get nfsPath plus volume name for specified volume
 func (d *driver) getNFSVolumePath(v *api.Volume) (string, error) {
 	parentPath, err := d.getNFSPath(v)
 	if err != nil {
@@ -247,7 +259,7 @@ func (d *driver) getNFSVolumePath(v *api.Volume) (string, error) {
 	return path.Join(parentPath, v.Id), nil
 }
 
-//get nfsPath plus volume name for specified volume
+// get nfsPath plus volume name for specified volume
 func (d *driver) getNFSVolumePathById(volumeID string) (string, error) {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
@@ -257,7 +269,7 @@ func (d *driver) getNFSVolumePathById(volumeID string) (string, error) {
 	return d.getNFSVolumePath(v)
 }
 
-//append unix time to volumeID
+// append unix time to volumeID
 func (d *driver) getNewSnapVolName(volumeID string) string {
 	return volumeID + "-" + strconv.FormatUint(uint64(time.Now().Unix()), 10)
 }
@@ -663,7 +675,7 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := []string{volumeID}
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -673,7 +685,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 
