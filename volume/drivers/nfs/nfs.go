@@ -22,6 +22,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+    "github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -675,7 +676,7 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := []string{volumeID}
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -685,7 +686,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 

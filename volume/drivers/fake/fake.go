@@ -30,6 +30,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
 	"github.com/pborman/uuid"
@@ -183,8 +184,8 @@ func (d *driver) Status() [][2]string {
 	return [][2]string{}
 }
 
-func (d *driver) Inspect(volumeIDs []string) ([]*api.Volume, error) {
-	volumes, err := d.StoreEnumerator.Inspect(volumeIDs)
+func (d *driver) Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error) {
+	volumes, err := d.StoreEnumerator.Inspect(nil, volumeIDs)
 	if err != nil {
 		return nil, err
 	} else if err == nil && len(volumes) == 0 {
@@ -283,7 +284,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 	}
 
 	volIDs := []string{volumeID}
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -298,7 +299,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 
@@ -394,7 +395,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 func (d *driver) Shutdown() {}
 
 func (d *driver) UsedSize(volumeID string) (uint64, error) {
-	vols, err := d.Inspect([]string{volumeID})
+	vols, err := d.Inspect(correlation.TODO(), []string{volumeID})
 	if err == kvdb.ErrNotFound {
 		return 0, fmt.Errorf("Volume not found")
 	} else if err != nil {
@@ -416,10 +417,8 @@ func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.V
 		VolUsage: volusage,
 	}, nil
 }
-
-func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
-
-	vols, err := d.Inspect([]string{volumeID})
+func (d *driver) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
+	vols, err := d.Inspect(correlation.TODO(), []string{volumeID})
 	if err == kvdb.ErrNotFound {
 		return nil, fmt.Errorf("Volume not found")
 	} else if err != nil {
@@ -445,7 +444,7 @@ func (d *driver) Stats(volumeID string, cumulative bool) (*api.Stats, error) {
 func (d *driver) CapacityUsage(
 	volumeID string,
 ) (*api.CapacityUsageResponse, error) {
-	vols, err := d.Inspect([]string{volumeID})
+	vols, err := d.Inspect(correlation.TODO(), []string{volumeID})
 	if err == kvdb.ErrNotFound {
 		return nil, fmt.Errorf("Volume not found")
 	} else if err != nil {
@@ -540,7 +539,7 @@ func (d *driver) cloudBackupCreate(input *api.CloudBackupCreateRequest) (string,
 	}
 
 	// Get volume info
-	vols, err := d.Inspect([]string{input.VolumeID})
+	vols, err := d.Inspect(correlation.TODO(), []string{input.VolumeID})
 	if err != nil {
 		return "", "", fmt.Errorf("Volume id not found")
 	}
@@ -636,7 +635,7 @@ func (d *driver) CloudBackupRestore(
 	if err != nil {
 		return nil, err
 	}
-	vols, err := d.Inspect([]string{volid})
+	vols, err := d.Inspect(correlation.TODO(), []string{volid})
 	if err != nil {
 		return nil, fmt.Errorf("Volume id not found")
 	}
@@ -740,7 +739,7 @@ func (d *driver) CloudBackupDeleteAll(input *api.CloudBackupDeleteAllRequest) er
 
 	// Get volume info
 	if len(input.SrcVolumeID) != 0 {
-		vols, err := d.Inspect([]string{input.SrcVolumeID})
+		vols, err := d.Inspect(correlation.TODO(), []string{input.SrcVolumeID})
 		if err != nil {
 			return fmt.Errorf("Volume id not found")
 		}
@@ -940,7 +939,7 @@ func (d *driver) CloudBackupSchedCreate(
 	}
 
 	// Check volume
-	vols, err := d.Inspect([]string{input.SrcVolumeID})
+	vols, err := d.Inspect(correlation.TODO(), []string{input.SrcVolumeID})
 	if err != nil {
 		return nil, fmt.Errorf("Volume id not found")
 	}

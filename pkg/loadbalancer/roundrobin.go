@@ -149,6 +149,9 @@ func (rr *roundRobin) getTargetAndIncrement(filteredNodes []*api.Node, selfNodeI
 		return "", false
 	}
 	targetNodeNumber = rr.nextCreateNodeNumber % len(filteredNodes)
+	if rr.nextCreateNodeNumber != 0 {
+		targetNodeNumber = rr.nextCreateNodeNumber
+	}
 	targetNode := filteredNodes[targetNodeNumber]
 	if targetNode.Id != selfNodeID {
 		// NodeID set on the cluster object is this node's ID.

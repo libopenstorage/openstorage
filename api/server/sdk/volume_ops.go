@@ -28,6 +28,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
+    "github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/portworx/kvdb"
@@ -501,7 +502,7 @@ func (s *VolumeServer) Inspect(
 		}
 		v = vols[0]
 	} else {
-		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
+		vols, err := s.driver(ctx).Inspect(correlation.TODO(), []string{req.GetVolumeId()})
 		if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 			return nil, status.Errorf(
 				codes.NotFound,
@@ -754,7 +755,7 @@ func (s *VolumeServer) Stats(
 		return nil, err
 	}
 
-	stats, err := s.driver(ctx).Stats(req.GetVolumeId(), !req.GetNotCumulative())
+	stats, err := s.driver(ctx).Stats(ctx, req.GetVolumeId(), !req.GetNotCumulative())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

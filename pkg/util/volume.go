@@ -19,6 +19,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
@@ -26,7 +27,7 @@ import (
 
 // VolumeFromName returns the volume object associated with the specified name.
 func VolumeFromName(v volume.VolumeDriver, name string) (*api.Volume, error) {
-	vols, err := v.Inspect([]string{name})
+	vols, err := v.Inspect(correlation.TODO(), []string{name})
 	if err == nil && len(vols) == 1 {
 		return vols[0], nil
 	}

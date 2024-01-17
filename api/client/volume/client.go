@@ -169,13 +169,13 @@ func (v *volumeClient) Status() [][2]string {
 
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
-func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
-	if len(ids) == 0 {
+func (v *volumeClient) Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error) {
+	if len(volumeIDs) == 0 {
 		return nil, nil
 	}
 	var volumes []*api.Volume
 	request := v.c.Get().Resource(volumePath)
-	for _, id := range ids {
+	for _, id := range volumeIDs {
 		request.QueryOption(api.OptVolumeID, id)
 	}
 	if err := request.Do().Unmarshal(&volumes); err != nil {
@@ -246,10 +246,7 @@ func (v *volumeClient) Restore(volumeID string, snapID string) error {
 
 // Stats for specified volume.
 // Errors ErrEnoEnt may be returned
-func (v *volumeClient) Stats(
-	volumeID string,
-	cumulative bool,
-) (*api.Stats, error) {
+func (v *volumeClient) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
 	stats := &api.Stats{}
 	req := v.c.Get().Resource(volumePath + "/stats").Instance(volumeID)
 	req.QueryOption(api.OptCumulative, strconv.FormatBool(cumulative))
@@ -306,9 +303,7 @@ func (v *volumeClient) CapacityUsage(
 	return requests, nil
 }
 
-func (v *volumeClient) VolumeUsageByNode(
-	nodeID string,
-) (*api.VolumeUsageByNode, error) {
+func (v *volumeClient) VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error) {
 
 	return nil, volume.ErrNotSupported
 
