@@ -577,6 +577,51 @@ func (mr *MockVolumeDriverMockRecorder) Enumerate(arg0, arg1 interface{}) *gomoc
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockVolumeDriver)(nil).Enumerate), arg0, arg1)
 }
 
+// FilesystemCheckDeleteSnapshots mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckDeleteSnapshots(arg0 *api.SdkFilesystemCheckDeleteSnapshotsRequest) (*api.SdkFilesystemCheckDeleteSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckDeleteSnapshots", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckDeleteSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckDeleteSnapshots indicates an expected call of FilesystemCheckDeleteSnapshots.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckDeleteSnapshots(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckDeleteSnapshots", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckDeleteSnapshots), arg0)
+}
+
+// FilesystemCheckListSnapshots mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckListSnapshots(arg0 *api.SdkFilesystemCheckListSnapshotsRequest) (*api.SdkFilesystemCheckListSnapshotsResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckListSnapshots", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListSnapshotsResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckListSnapshots indicates an expected call of FilesystemCheckListSnapshots.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckListSnapshots(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckListSnapshots", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckListSnapshots), arg0)
+}
+
+// FilesystemCheckListVolumes mocks base method.
+func (m *MockVolumeDriver) FilesystemCheckListVolumes(arg0 *api.SdkFilesystemCheckListVolumesRequest) (*api.SdkFilesystemCheckListVolumesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilesystemCheckListVolumes", arg0)
+	ret0, _ := ret[0].(*api.SdkFilesystemCheckListVolumesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilesystemCheckListVolumes indicates an expected call of FilesystemCheckListVolumes.
+func (mr *MockVolumeDriverMockRecorder) FilesystemCheckListVolumes(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemCheckListVolumes", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemCheckListVolumes), arg0)
+}
+
 // FilesystemCheckStart mocks base method.
 func (m *MockVolumeDriver) FilesystemCheckStart(arg0 *api.SdkFilesystemCheckStartRequest) (*api.SdkFilesystemCheckStartResponse, error) {
 	m.ctrl.T.Helper()
@@ -694,6 +739,21 @@ func (m *MockVolumeDriver) GetActiveRequests() (*api.ActiveRequests, error) {
 func (mr *MockVolumeDriverMockRecorder) GetActiveRequests() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetActiveRequests", reflect.TypeOf((*MockVolumeDriver)(nil).GetActiveRequests))
+}
+
+// GetVolumeWatcher mocks base method.
+func (m *MockVolumeDriver) GetVolumeWatcher(arg0 *api.VolumeLocator, arg1 map[string]string) (chan *api.Volume, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetVolumeWatcher", arg0, arg1)
+	ret0, _ := ret[0].(chan *api.Volume)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetVolumeWatcher indicates an expected call of GetVolumeWatcher.
+func (mr *MockVolumeDriverMockRecorder) GetVolumeWatcher(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).GetVolumeWatcher), arg0, arg1)
 }
 
 // Inspect mocks base method.
@@ -882,6 +942,18 @@ func (mr *MockVolumeDriverMockRecorder) SnapshotGroup(arg0, arg1, arg2, arg3 int
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SnapshotGroup", reflect.TypeOf((*MockVolumeDriver)(nil).SnapshotGroup), arg0, arg1, arg2, arg3)
 }
 
+// StartVolumeWatcher mocks base method.
+func (m *MockVolumeDriver) StartVolumeWatcher() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StartVolumeWatcher")
+}
+
+// StartVolumeWatcher indicates an expected call of StartVolumeWatcher.
+func (mr *MockVolumeDriverMockRecorder) StartVolumeWatcher() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).StartVolumeWatcher))
+}
+
 // Stats mocks base method.
 func (m *MockVolumeDriver) Stats(arg0 string, arg1 bool) (*api.Stats, error) {
 	m.ctrl.T.Helper()
@@ -909,6 +981,18 @@ func (m *MockVolumeDriver) Status() [][2]string {
 func (mr *MockVolumeDriverMockRecorder) Status() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Status", reflect.TypeOf((*MockVolumeDriver)(nil).Status))
+}
+
+// StopVolumeWatcher mocks base method.
+func (m *MockVolumeDriver) StopVolumeWatcher() {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "StopVolumeWatcher")
+}
+
+// StopVolumeWatcher indicates an expected call of StopVolumeWatcher.
+func (mr *MockVolumeDriverMockRecorder) StopVolumeWatcher() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StopVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).StopVolumeWatcher))
 }
 
 // Type mocks base method.
@@ -968,6 +1052,51 @@ func (mr *MockVolumeDriverMockRecorder) UsedSize(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsedSize", reflect.TypeOf((*MockVolumeDriver)(nil).UsedSize), arg0)
 }
 
+// VerifyChecksumStart mocks base method.
+func (m *MockVolumeDriver) VerifyChecksumStart(arg0 *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyChecksumStart", arg0)
+	ret0, _ := ret[0].(*api.SdkVerifyChecksumStartResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyChecksumStart indicates an expected call of VerifyChecksumStart.
+func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStart(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStart", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStart), arg0)
+}
+
+// VerifyChecksumStatus mocks base method.
+func (m *MockVolumeDriver) VerifyChecksumStatus(arg0 *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyChecksumStatus", arg0)
+	ret0, _ := ret[0].(*api.SdkVerifyChecksumStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyChecksumStatus indicates an expected call of VerifyChecksumStatus.
+func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStatus(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStatus", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStatus), arg0)
+}
+
+// VerifyChecksumStop mocks base method.
+func (m *MockVolumeDriver) VerifyChecksumStop(arg0 *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VerifyChecksumStop", arg0)
+	ret0, _ := ret[0].(*api.SdkVerifyChecksumStopResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VerifyChecksumStop indicates an expected call of VerifyChecksumStop.
+func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStop(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStop", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStop), arg0)
+}
+
 // Version mocks base method.
 func (m *MockVolumeDriver) Version() (*api.StorageVersion, error) {
 	m.ctrl.T.Helper()
@@ -996,6 +1125,21 @@ func (m *MockVolumeDriver) VolService(arg0 string, arg1 *api.VolumeServiceReques
 func (mr *MockVolumeDriverMockRecorder) VolService(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolService", reflect.TypeOf((*MockVolumeDriver)(nil).VolService), arg0, arg1)
+}
+
+// VolumeBytesUsedByNode mocks base method.
+func (m *MockVolumeDriver) VolumeBytesUsedByNode(arg0 string, arg1 []uint64) (*api.VolumeBytesUsedByNode, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "VolumeBytesUsedByNode", arg0, arg1)
+	ret0, _ := ret[0].(*api.VolumeBytesUsedByNode)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// VolumeBytesUsedByNode indicates an expected call of VolumeBytesUsedByNode.
+func (mr *MockVolumeDriverMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockVolumeDriver)(nil).VolumeBytesUsedByNode), arg0, arg1)
 }
 
 // VolumeUsageByNode mocks base method.

@@ -29,6 +29,7 @@ type volumeDriver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.VerifyChecksumDriver
 	name        string
 	baseDirPath string
 	provider    Provider
@@ -54,10 +55,22 @@ func newVolumeDriver(
 		volume.CloudMigrateNotSupported,
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
+		volume.VerifyChecksumNotSupported,
 		name,
 		baseDirPath,
 		provider,
 	}
+}
+func (v *volumeDriver) StartVolumeWatcher() {
+	return
+}
+
+func (v *volumeDriver) GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error) {
+	return nil, nil
+}
+
+func (v *volumeDriver) StopVolumeWatcher() {
+	return
 }
 
 func (v *volumeDriver) Name() string {

@@ -1498,7 +1498,7 @@ func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) 
 	result.VolUtilInfo = volUtilInfo
 	json.NewEncoder(w).Encode(&result)
 }
-
+g
 // swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
 //
 // Quiesce volume with specified id.

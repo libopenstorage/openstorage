@@ -2,13 +2,100 @@
 
 ## Releases
 
+### v0.175.0 - (12/15/2023)
+
+* Add defrag status data structure
+
+### v0.174.0 - (12/12/2023)
+
+* Fix spec handler and internal naming for fs format options
+
+### v0.173.0 - (11/13/2023)
+
+* Add DefragJob data structure
+
+### v0.172.0 - (11/07/2023)
+
+* Add new checksum flag to volume spec
+
+### v0.171.0 - (11/02/2023)
+
+* Add new CLI for filesystem check
+
+### v0.170.0 - (10/26/2023)
+
+* Add new CLI to trigger checksum validation
+
+### v0.169.0 - (10/24/2023)
+
+* Add quorum member flag to StorageNode
+
+### v0.168.0 - (09/14/2023)
+
+* Add new field cpu cores to api Node
+
+### v0.167.0 - (09/14/2023)
+
+* Add new field verbose to fastpath configuration
+
+### v0.166.0 - (09/01/2023)
+
+* Add pool rebalance schedule related APIs
+
+### v0.165.0 - (08/30/2023)
+
+* Add CloudDriveType field to StorageResource
+
+### v0.164.0 - (07/17/2023)
+
+* Add serverSideEncryption field to aws credentials
+
+### v0.163.0 - (07/13/2023)
+
+* Add mode field to SdkStorageRebalanceRequest
+
+### v0.162.0 - (07/11/2023)
+
+* Add new Watch endpoint
+
+### v0.161.0 - (06/12/2023)
+
+* Add auto-journal IO profile
+
+### v0.160.0 - (06/12/2023)
+
+* Add journal IO profile
+
+### v0.159.0 - (04/06/2023)
+
+* Add 3 new fields to the CloudBackupSize API:
+  * total_download_bytes
+  * compressed_object_bytes
+  * capacity_required_for_restore
+
+### v0.158.0 - (03/31/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
+### v0.157.0 - (03/23/2023)
+
+* Update stats for new VolumeBytesUsedByNode api
+
+### v0.156.0 - (02/21/2023)
+
+* Update NearSync clone state related fields
+
+### v0.155.0 - (01/11/2023)
+
+* Add NearSync related fields
+
 ### v0.154.0 - (12/21/2022)
 
 * Adds additionalLabels field in SDK Clone request to pass additional labels to be added post-clone
 
 ### v0.153.0 - (11/09/2022)
 
-* Add api for autofstrim push and pop 
+* Add api for autofstrim push and pop
 
 ### v0.152.0 - (10/26/2022)
 
@@ -24,11 +111,11 @@
 
 ### v0.149.0 - (8/4/2022)
 
-* Add NFS Credential support 
+* Add NFS Credential support
 
 ### v0.148.0 - (8/2/2022)
 
-* Update SDK cloudBackup delete API 
+* Update SDK cloudBackup delete API
 
 ### v0.147.0 - (7/29/2022)
 

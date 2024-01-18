@@ -1,0 +1,22 @@
+name: Message Slack for stale PRs
+
+on:
+  pull_request_target:
+    types: [labeled]
+
+jobs:
+  build:
+    if: contains(github.event.pull_request.labels.*.name, 'stage/in-review-stale')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send custom JSON data to Slack workflow
+        id: slack
+        uses: slackapi/slack-github-action@v1.23.0
+        with:
+          payload: |
+            {
+              "pr_name": "${{ github.event.pull_request.title }}",
+              "pr_link": "${{ github.event.pull_request.html_url }}"
+            }
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

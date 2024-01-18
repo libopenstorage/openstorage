@@ -94,6 +94,87 @@ func TestNodiscard(t *testing.T) {
 	require.False(t, spec.Nodiscard, "failed to parse nodiscard option into spec")
 }
 
+func TestNearSync(t *testing.T) {
+	s := NewSpecHandler()
+
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "true",
+	})
+	require.NoError(t, err)
+	require.True(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "false",
+	})
+	require.NoError(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSync: "foo",
+	})
+	require.Error(t, err)
+	require.False(t, spec.GetNearSync())
+
+	spec = testSpecFromString(t, api.SpecNearSync, "true")
+	require.True(t, spec.GetNearSync())
+
+	spec = testSpecFromString(t, api.SpecNearSync, "false")
+	require.False(t, spec.GetNearSync())
+}
+
+func TestNearSyncReplicationStrategy(t *testing.T) {
+	var (
+		none       = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_NONE
+		aggressive = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_AGGRESSIVE
+		optimized  = api.NearSyncReplicationStrategy_NEAR_SYNC_STRATEGY_OPTIMIZED
+	)
+
+	s := NewSpecHandler()
+
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "aggressive",
+	})
+	require.NoError(t, err)
+	require.Equal(t, aggressive, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "optimized",
+	})
+	require.NoError(t, err)
+	require.Equal(t, optimized, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "none",
+	})
+	require.NoError(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{})
+	require.NoError(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecNearSyncReplicationStrategy: "foobar",
+	})
+	require.Error(t, err)
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "aggressive")
+	require.Equal(t, aggressive, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "optimized")
+	require.Equal(t, optimized, spec.GetNearSyncReplicationStrategy())
+
+	spec = testSpecFromString(t, api.SpecNearSyncReplicationStrategy, "none")
+	require.Equal(t, none, spec.GetNearSyncReplicationStrategy())
+
+	testSpecFromStringErr(t, api.SpecNearSyncReplicationStrategy, "foobar")
+}
+
 func TestEarlyAck(t *testing.T) {
 	s := NewSpecHandler()
 	spec, _, _, err := s.SpecFromOpts(map[string]string{
@@ -493,6 +574,16 @@ func TestOptFastpath(t *testing.T) {
 
 	spec = testSpecFromString(t, api.SpecFastpath, "false")
 	require.False(t, spec.FpPreference, "Failed to parse faspath option into spec")
+}
+
+func TestOptWinshare(t *testing.T) {
+	testSpecOptString(t, api.SpecWinshare, "true")
+
+	spec := testSpecFromString(t, api.SpecWinshare, "true")
+	require.True(t, spec.Winshare, "Failed to parse winshare option into spec")
+
+	spec = testSpecFromString(t, api.SpecWinshare, "false")
+	require.False(t, spec.Winshare, "Failed to parse winshare option into spec")
 }
 
 func TestOptAutoFstrim(t *testing.T) {

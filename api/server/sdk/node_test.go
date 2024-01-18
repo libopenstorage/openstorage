@@ -22,10 +22,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/libopenstorage/openstorage/api"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+
+	"github.com/libopenstorage/openstorage/api"
 )
 
 func TestSdkNodeEnumerateNoNodes(t *testing.T) {
@@ -153,6 +154,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 						"foo": "bar",
 					},
 				},
+				NonQuorumMember: true,
 			},
 		},
 	}
@@ -170,6 +172,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+		NonQuorumMember: true,
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
@@ -240,7 +243,8 @@ func TestSdkNodeInspect(t *testing.T) {
 		NodeLabels: map[string]string{
 			"hello": "world",
 		},
-		HWType: api.HardwareType_VirtualMachine,
+		HWType:          api.HardwareType_VirtualMachine,
+		NonQuorumMember: true,
 	}
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
 
@@ -265,6 +269,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
+	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 2)
@@ -354,6 +359,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 				"foo": "bar",
 			},
 		},
+		NonQuorumMember: true,
 	}
 
 	cluster := api.Cluster{
@@ -385,6 +391,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Equal(t, rn.GetAvgLoad(), int64(node.Avgload))
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
+	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)
@@ -470,6 +477,75 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 		assert.Equal(t, volUsage.GetExclusiveBytes(), volumeUsageInfo.VolumeUsage[i].ExclusiveBytes)
 		assert.Equal(t, volUsage.GetTotalBytes(), volumeUsageInfo.VolumeUsage[i].TotalBytes)
 		assert.Equal(t, volUsage.GetLocalCloudSnapshot(), volumeUsageInfo.VolumeUsage[i].LocalCloudSnapshot)
+	}
+}
+
+func TestSdkVolumeBytesUsedByNode(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	nodeid := "nodeid"
+	// Create response
+	node := api.Node{
+		Id:                nodeid,
+		SchedulerNodeName: "nodename",
+		Cpu:               1.414,
+		MemTotal:          112,
+		MemUsed:           41,
+		MemFree:           93,
+		Avgload:           834,
+		Status:            api.Status_STATUS_MAX,
+		Disks: map[string]api.StorageResource{
+			"disk1": {
+				Id:     "12345",
+				Path:   "mymount",
+				Medium: api.StorageMedium_STORAGE_MEDIUM_SSD,
+				Online: true,
+			},
+		},
+		Timestamp: time.Now(),
+		StartTime: time.Now(),
+		NodeLabels: map[string]string{
+			"hello": "world",
+		},
+		HWType: api.HardwareType_BareMetalMachine,
+		MgmtIp: "127.0.0.1",
+		DataIp: "127.0.0.1",
+	}
+	// Create response
+	volumeBytesUsedInfo := api.VolumeBytesUsedByNode{
+		NodeId: nodeid,
+		VolUsage: []*api.VolumeBytesUsed{{
+			VolumeId:   "123456",
+			TotalBytes: 12345678,
+		}},
+	}
+
+	cluster := api.Cluster{
+		Id:     "someclusterid",
+		NodeId: nodeid,
+		Status: api.Status_STATUS_NOT_IN_QUORUM,
+		Nodes:  []*api.Node{&node},
+	}
+
+	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
+	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
+	s.MockDriver().EXPECT().VolumeBytesUsedByNode(nodeid, nil).Return(&volumeBytesUsedInfo, nil).Times(1)
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// Get info
+	resp, err := c.VolumeBytesUsedByNode(context.Background(), &api.SdkVolumeBytesUsedRequest{NodeId: nodeid, Ids: nil})
+	assert.NoError(t, err)
+
+	// Verify
+	assert.Equal(t, resp.VolUtilInfo.NodeId, volumeBytesUsedInfo.NodeId)
+	for i, volUsage := range resp.VolUtilInfo.VolUsage {
+		assert.Equal(t, volUsage.GetVolumeId(), volumeBytesUsedInfo.VolUsage[i].VolumeId)
+		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolUsage[i].TotalBytes)
 	}
 }
 

@@ -26,7 +26,7 @@ import (
 	"time"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
@@ -37,6 +37,7 @@ import (
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/role"
 	"github.com/libopenstorage/openstorage/pkg/storagepolicy"
@@ -51,9 +52,10 @@ import (
 )
 
 const (
-	mockDriverName   = "mock"
-	testSharedSecret = "mysecret"
-	fakeWithSched    = "fake-sched"
+	mockDriverName     = "mock"
+	testSharedSecret   = "mysecret"
+	fakeWithSched      = "fake-sched"
+	testSocketLocation = "/tmp/csi-ut.sock"
 )
 
 var (
@@ -140,6 +142,15 @@ func newTestServer(t *testing.T) *testServer {
 	})
 }
 
+func newUDSTestServer(t *testing.T) *testServer {
+	os.Remove(testSocketLocation)
+	return newTestServerWithConfig(t, &OsdCsiServerConfig{
+		DriverName: mockDriverName,
+		Address:    testSocketLocation,
+		Net:        "unix",
+	})
+}
+
 func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServer {
 	tester := &testServer{}
 	tester.setPorts()
@@ -152,6 +163,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	if config.Cluster == nil {
 		config.Cluster = tester.c
 	}
+	config.RoundRobinBalancer = loadbalancer.NewNullBalancer()
 
 	setupMockDriver(tester, t)
 
@@ -203,8 +215,13 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	})
 
 	// Setup CSI simple driver
-	config.Net = "tcp"
-	config.Address = "127.0.0.1:0"
+	// Allow for net and address to be overwritten
+	if config.Net == "" {
+		config.Net = "tcp"
+	}
+	if config.Address == "" {
+		config.Address = "127.0.0.1:0"
+	}
 	config.SdkUds = tester.uds
 	config.SdkPort = tester.port
 	tester.server, err = NewOsdCsiServer(config)
@@ -268,6 +285,7 @@ func (s *testServer) Stop() {
 
 	// Shutdown servers
 	s.conn.Close()
+	s.m.EXPECT().StopVolumeWatcher().Return().AnyTimes()
 	s.server.Stop()
 	s.sdk.Stop()
 
@@ -442,4 +460,35 @@ func TestCSIServerStartContextInterceptor(t *testing.T) {
 
 	expectedInfoLog = "csi-driver"
 	assert.Contains(t, logStr, expectedInfoLog)
+}
+
+func TestCSISocketAutoRecover(t *testing.T) {
+	csiSocketCheckInterval = 1 * time.Second
+
+	// Start server and wait for socket to be up and running
+	s := newUDSTestServer(t)
+	assert.True(t, s.Server().IsRunning())
+	defer func() {
+		s.Stop()
+	}()
+	assert.Eventually(t, s.server.IsRunning, 30*time.Second, time.Second)
+	assert.Eventually(t, func() bool {
+		_, err := os.Stat(testSocketLocation)
+		return err == nil
+	}, 30*time.Second, time.Second)
+	_, err := os.Stat(testSocketLocation)
+	assert.NoError(t, err, "UDS should exist after startup")
+
+	// Delete socket and wait for it to be gone
+	err = os.Remove(testSocketLocation)
+	assert.NoError(t, err)
+
+	// Wait for auto-recover
+	assert.Eventually(t, func() bool {
+		_, err := os.Stat(testSocketLocation)
+		return err == nil
+	}, 30*time.Second, time.Second)
+	assert.True(t, s.server.IsRunning(), "Server should be running after autorecover")
+	_, err = os.Stat(testSocketLocation)
+	assert.NoError(t, err, "UDS should exist after autorecover")
 }

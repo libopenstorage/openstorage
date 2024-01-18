@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -197,6 +197,51 @@ func TestSdkCloudBackupCreateBadArguments(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "credential name or uuid to use")
+}
+
+func TestSdkCloudBackupCreateNearSync(t *testing.T) {
+
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	id := "myvol"
+	uuid := ""
+	taskId := "backup-task"
+	full := false
+	labels := map[string]string{"foo": "bar"}
+	req := &api.SdkCloudBackupCreateRequest{
+		VolumeId:        id,
+		CredentialId:    uuid,
+		Full:            full,
+		TaskId:          taskId,
+		Labels:          labels,
+		DeleteLocal:     true,
+		NearSyncMigrate: true,
+	}
+
+	// Create response
+	s.MockDriver().
+		EXPECT().
+		CloudBackupCreate(&api.CloudBackupCreateRequest{
+			VolumeID:        id,
+			CredentialUUID:  uuid,
+			Full:            false,
+			Name:            taskId,
+			Labels:          labels,
+			DeleteLocal:     true,
+			NearSyncMigrate: true,
+		}).
+		Return(&api.CloudBackupCreateResponse{Name: "good-backup-name"}, nil).
+		Times(1)
+	// setupExpectedCredentialsNotPassing(s)
+
+	// Setup client
+	c := api.NewOpenStorageCloudBackupClient(s.Conn())
+
+	// Get info
+	_, err := c.Create(context.Background(), req)
+	assert.NoError(t, err)
 }
 
 func TestSdkCloudRestoreCreate(t *testing.T) {
@@ -1147,9 +1192,14 @@ func TestSdkCloudBackupSize(t *testing.T) {
 
 	id := "pxbackup"
 	creds := "creds"
-	backupSize := uint64(176433)
+	totalDownloadSize := uint64(1764330)
+	compressedSize := uint64(214535)
+	capacityForRestore := uint64(523046)
 	resp := &api.SdkCloudBackupSizeResponse{
-		Size: backupSize,
+		Size:                       totalDownloadSize,
+		TotalDownloadBytes:         totalDownloadSize,
+		CompressedObjectBytes:      compressedSize,
+		CapacityRequiredForRestore: capacityForRestore,
 	}
 
 	// Create response
@@ -1166,5 +1216,8 @@ func TestSdkCloudBackupSize(t *testing.T) {
 	r, err := c.Size(context.Background(), &api.SdkCloudBackupSizeRequest{BackupId: id, CredentialId: creds})
 	assert.NoError(t, err)
 	assert.NotNil(t, r.GetSize())
-	assert.Equal(t, r.GetSize(), backupSize)
+	assert.Equal(t, r.GetSize(), totalDownloadSize)
+	assert.Equal(t, r.GetTotalDownloadBytes(), totalDownloadSize)
+	assert.Equal(t, r.GetCompressedObjectBytes(), compressedSize)
+	assert.Equal(t, r.GetCapacityRequiredForRestore(), capacityForRestore)
 }

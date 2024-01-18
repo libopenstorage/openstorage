@@ -422,20 +422,24 @@ sdk-check-version:
 	go run tools/sdkver/sdkver.go --check-major=0 --check-patch=0
 
 mockgen:
-	GO111MODULE=off go get github.com/golang/mock/gomock
-	GO111MODULE=off go get github.com/golang/mock/mockgen
+	go install github.com/golang/mock/gomock
+	go install github.com/golang/mock/mockgen@v1.6.0
 	mockgen -destination=api/mock/mock_storagepool.go -package=mock github.com/libopenstorage/openstorage/api OpenStoragePoolServer,OpenStoragePoolClient
 	mockgen -destination=api/mock/mock_cluster.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageClusterServer,OpenStorageClusterClient
 	mockgen -destination=api/mock/mock_node.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageNodeServer,OpenStorageNodeClient
 	mockgen -destination=api/mock/mock_diags.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageDiagsServer,OpenStorageDiagsClient
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
+	mockgen -destination=api/mock/mock_watch.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageWatchServer,OpenStorageWatchClient,OpenStorageWatch_WatchClient,OpenStorageWatch_WatchServer
 	mockgen -destination=api/mock/mock_bucket.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageBucketServer,OpenStorageBucketClient
+	mockgen -destination=api/mock/mock_cloud_backup.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageCloudBackupServer,OpenStorageCloudBackupClient
 	mockgen -destination=cluster/mock/cluster.mock.go -package=mock github.com/libopenstorage/openstorage/cluster Cluster
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
 	mockgen -destination=api/mock/mock_fscheck.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemCheckServer,OpenStorageFilesystemCheckClient
 	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
 	mockgen -destination=volume/drivers/mock/driver.mock.go -package=mock github.com/libopenstorage/openstorage/volume VolumeDriver
 	mockgen -destination=bucket/drivers/mock/bucket_driver.mock.go -package=mock github.com/libopenstorage/openstorage/bucket BucketDriver
+	mockgen -destination=pkg/loadbalancer/mock/balancer.go -package=mock github.com/libopenstorage/openstorage/pkg/loadbalancer Balancer
+
 
 osd-tests: install
 	./hack/csi-sanity-test.sh
@@ -452,5 +456,6 @@ pr-verify: vet fmt sdk-check-version
 	git diff $(find . -name "*.pb.*go" -o -name "api.swagger.json" | grep -v vendor) | wc -l | grep "^0"
 	hack/check-api-version.sh
 	git grep -rw GPL vendor | grep LICENSE | egrep -v "yaml.v2" | wc -l | grep "^0"
-
+	hack/check-registered-rest.sh
+	
 pr-test: osd-tests docker-test e2e

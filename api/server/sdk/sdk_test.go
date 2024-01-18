@@ -27,7 +27,7 @@ import (
 	"testing"
 	"time"
 
-	jwt "github.com/dgrijalva/jwt-go"
+	jwt "github.com/golang-jwt/jwt/v4"
 	bucket "github.com/libopenstorage/openstorage/bucket"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/role"
@@ -42,6 +42,7 @@ import (
 	mockcluster "github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
+	"github.com/libopenstorage/openstorage/pkg/loadbalancer"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/volume"
 	volumedrivers "github.com/libopenstorage/openstorage/volume/drivers"
@@ -141,9 +142,18 @@ func newTestServer(t *testing.T) *testServer {
 				KeyFile:  "test_certs/server.key",
 			},
 		},
+		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 	})
 
 	assert.Nil(t, err)
+
+	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
+	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
+		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
+		return ch, nil
+	}).Times(1)
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
@@ -224,6 +234,13 @@ func newTestServerAuth(t *testing.T) *testServer {
 		},
 	})
 	assert.Nil(t, err)
+	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
+	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
+		ch := make(chan *api.Volume, 1)
+		tester.server.watcherCtxCancel()
+		return ch, nil
+	}).Times(1)
+
 	err = tester.server.Start()
 	assert.Nil(t, err)
 
@@ -278,6 +295,7 @@ func (s *testServer) Stop() {
 
 	// Shutdown servers
 	s.conn.Close()
+	s.m.EXPECT().StopVolumeWatcher().Return().AnyTimes()
 	s.server.Stop()
 	s.gw.Close()
 
@@ -433,6 +451,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		},
 	})
 	assert.Nil(t, err)
+
 	err = server.Start()
 	assert.Nil(t, err)
 	defer func() {
@@ -466,6 +485,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 		"/openstorage.api.OpenStorageVolume/SnapshotEnumerate",
 		"/openstorage.api.OpenStorageVolume/SnapshotEnumerateWithFilters",
 		"/openstorage.api.OpenStorageVolume/SnapshotScheduleUpdate",
+		"/openstorage.api.OpenStorageWatch/Watch",
 		"/openstorage.api.OpenStorageMountAttach/Attach",
 		"/openstorage.api.OpenStorageMountAttach/Detach",
 		"/openstorage.api.OpenStorageMountAttach/Mount",

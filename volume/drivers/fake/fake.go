@@ -419,7 +419,6 @@ func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.V
 }
 
 func (d *driver) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
-
 	vols, err := d.Inspect(correlation.TODO(), []string{volumeID})
 	if err == kvdb.ErrNotFound {
 		return nil, fmt.Errorf("Volume not found")

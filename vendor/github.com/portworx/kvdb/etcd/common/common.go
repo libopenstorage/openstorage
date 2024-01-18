@@ -43,6 +43,9 @@ type EtcdCommon interface {
 
 	// GetRetryCount
 	GetRetryCount() int
+
+	// IsTLSEnabled returns TRUE if SSL is enabled in options
+	IsTLSEnabled() bool
 }
 
 // EtcdLock combines Mutex and channel
@@ -86,6 +89,14 @@ func (ec *etcdCommon) GetRetryCount() int {
 		return DefaultRetryCount
 	}
 	return int(retry)
+}
+
+func (ec *etcdCommon) IsTLSEnabled() bool {
+	// use `TransportScheme` hint if available
+	if ts, has := ec.options[kvdb.TransportScheme]; has {
+		return ts == "https"
+	}
+	return ec.options[kvdb.CertFileKey] != "" && ec.options[kvdb.CertKeyFileKey] != ""
 }
 
 func (ec *etcdCommon) GetAuthInfoFromOptions() (transport.TLSInfo, string, string, error) {

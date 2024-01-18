@@ -6,7 +6,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+	http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -19,6 +19,7 @@ package sdk
 import (
 	"context"
 	"fmt"
+	"math"
 	"reflect"
 	"testing"
 
@@ -188,7 +189,7 @@ func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 		EXPECT().
 		Inspect([]string{name}).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id:     id,
 				Status: api.VolumeStatus_VOLUME_STATUS_UP,
 				Locator: &api.VolumeLocator{
@@ -352,7 +353,7 @@ func TestSdkVolumeDelete(t *testing.T) {
 				VolumeIds: []string{id},
 			}, nil).
 			Return([]*api.Volume{
-				&api.Volume{},
+				{},
 			}, nil).
 			Times(1),
 
@@ -437,7 +438,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -457,7 +458,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 		EXPECT().
 		Inspect([]string{id}).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -563,7 +564,7 @@ func TestSdkVolumeEnumerate(t *testing.T) {
 		EXPECT().
 		Enumerate(nil, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -599,7 +600,7 @@ func TestSdkVolumeEnumerateWithFilters(t *testing.T) {
 		EXPECT().
 		Enumerate(locator, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -642,11 +643,11 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{id},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: &api.VolumeSpec{}}}, nil).
+		Return([]*api.Volume{{Spec: &api.VolumeSpec{}}}, nil).
 		AnyTimes()
 	s.MockDriver().
 		EXPECT().
-		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{}).
+		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 
@@ -667,7 +668,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Set(id, nil, &api.VolumeSpec{Size: 1234}).
+		Set(id, nil, &api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 	_, err = c.Update(context.Background(), req)
@@ -689,7 +690,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		Set(
 			id,
 			&api.VolumeLocator{VolumeLabels: newlabels},
-			&api.VolumeSpec{Size: 1234},
+			&api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32},
 		).
 		Return(nil).
 		Times(1)
@@ -712,7 +713,7 @@ func TestSdkVolumeStats(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -779,7 +780,7 @@ func TestSdkVolumeCapacityUsage(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -822,7 +823,7 @@ func TestSdkVolumeCapacityUsageAbortedResult(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -867,7 +868,7 @@ func TestSdkVolumeCapacityUsageUnimplementedResult(t *testing.T) {
 			VolumeIds: []string{id},
 		}, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: id,
 			},
 		}, nil).
@@ -1160,6 +1161,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 				Ownership: &api.Ownership{
 					Owner: user2,
 				},
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
@@ -1286,6 +1288,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 				Ownership: &api.Ownership{
 					Owner: user2,
 				},
+				SnapshotInterval: math.MaxUint32,
 			}).
 			Return(nil).
 			Times(1),
@@ -1735,8 +1738,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 	volReq := &api.SdkVolumeCreateRequest{
 		Name: name,
 		Spec: &api.VolumeSpec{
-			Size:    size,
-			HaLevel: 1,
+			Size:             size,
+			HaLevel:          1,
+			SnapshotInterval: math.MaxUint32,
 		},
 	}
 
@@ -1750,8 +1754,9 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 		Shared:  volSpec.GetShared(),
 		HaLevel: volSpec.GetHaLevel(),
 		// since volume is created as per default policy
-		StoragePolicy: "testpolicyA",
-		Ownership:     owner,
+		StoragePolicy:    "testpolicyA",
+		Ownership:        owner,
+		SnapshotInterval: math.MaxUint32,
 	}
 
 	// Create response
@@ -1794,7 +1799,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 		Enumerate(&api.VolumeLocator{
 			VolumeIds: []string{id},
 		}, nil).
-		Return([]*api.Volume{&api.Volume{Spec: volPolSpec}}, nil).
+		Return([]*api.Volume{{Spec: volPolSpec}}, nil).
 		AnyTimes()
 	mv.
 		EXPECT().
@@ -1828,7 +1833,7 @@ func TestSdkInspectWithFilters(t *testing.T) {
 		EXPECT().
 		Enumerate(locator, nil).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Spec: &api.VolumeSpec{
 					Size: size,
 				},
