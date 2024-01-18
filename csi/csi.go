@@ -169,7 +169,7 @@ func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, err
 // PX security authentication and should be used only when a CSI request
 // does not support secrets as a field
 func (s *OsdCsiServer) driverGetVolume(ctx context.Context, id string) (*api.Volume, error) {
-	vols, err := s.driver.Inspect([]string{id})
+	vols, err := s.driver.Inspect(correlation.TODO(), []string{id})
 	if err != nil || len(vols) < 1 {
 		if err == kvdb.ErrNotFound {
 			clogger.WithContext(ctx).Infof("Volume %s cannot be found: %s", id, err.Error())

@@ -191,7 +191,7 @@ func (s *NodeServer) VolumeUsageByNode(
 	if s.server.driver(ctx) == nil {
 		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
 	}
-	resp, err := s.server.driver(ctx).VolumeUsageByNode(req.GetNodeId())
+	resp, err := s.server.driver(ctx).VolumeUsageByNode(ctx, req.GetNodeId())
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, " Failed to get VolumeUsageByNode :%v", err.Error())
 	}

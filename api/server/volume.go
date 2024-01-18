@@ -1235,7 +1235,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	var err error
 
 	if volumeID, err = vd.parseID(r); err != nil {
-		e := fmt.Errorf("Failed to parse volumeID: %s", err.Error())
+		e := fmt.Errorf("failed to parse volumeID: %s", err.Error())
 		http.Error(w, e.Error(), http.StatusBadRequest)
 		return
 	}
@@ -1243,10 +1243,9 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query()
 	// By default always report /proc/diskstats style stats.
 	cumulative := true
-	if opt, ok := params[string(api.OptCumulative)]; ok {
+	if opt, ok := params[api.OptCumulative]; ok {
 		if boolValue, err := strconv.ParseBool(strings.Join(opt[:], "")); !ok {
-			e := fmt.Errorf("Failed to parse %s option: %s",
-				api.OptCumulative, err.Error())
+			e := fmt.Errorf("failed to parse %s option: %s", api.OptCumulative, err.Error())
 			http.Error(w, e.Error(), http.StatusBadRequest)
 			return
 		} else {
@@ -1260,7 +1259,7 @@ func (vd *volAPI) stats(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	stats, err := d.Stats(volumeID, cumulative)
+	stats, err := d.Stats(context.TODO(), volumeID, cumulative)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -1499,8 +1498,7 @@ func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) 
 	result.VolUtilInfo = volUtilInfo
 	json.NewEncoder(w).Encode(&result)
 }
-
-
+g
 // swagger:operation GET /osd-volumes/quiesce/{id} volume quiesceVolume
 //
 // Quiesce volume with specified id.

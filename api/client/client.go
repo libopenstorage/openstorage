@@ -30,6 +30,8 @@ func NewClient(host, version, userAgent string) (*Client, error) {
 		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
 	}
 	c := &Client{
+		host:        host,
+		tlsConfig:   nil,
 		base:        baseURL,
 		version:     version,
 		httpClient:  hClient,
@@ -37,6 +39,8 @@ func NewClient(host, version, userAgent string) (*Client, error) {
 		accesstoken: "",
 		userAgent:   fmt.Sprintf("%v/%v", userAgent, version),
 	}
+	c.transport = hClient.Transport
+	hClient.Transport = c
 	return c, nil
 }
 
@@ -55,6 +59,8 @@ func NewAuthClient(host, version, authstring, accesstoken, userAgent string) (*C
 		return nil, fmt.Errorf("Unable to parse provided url: %v", host)
 	}
 	c := &Client{
+		host:        host,
+		tlsConfig:   nil,
 		base:        baseURL,
 		version:     version,
 		httpClient:  hClient,
@@ -62,6 +68,8 @@ func NewAuthClient(host, version, authstring, accesstoken, userAgent string) (*C
 		accesstoken: accesstoken,
 		userAgent:   fmt.Sprintf("%v/%v", userAgent, version),
 	}
+	c.transport = hClient.Transport
+	hClient.Transport = c
 	return c, nil
 }
 
@@ -79,6 +87,9 @@ func GetUnixServerPath(socketName string, paths ...string) string {
 // Client is an HTTP REST wrapper. Use one of Get/Post/Put/Delete to get a request
 // object.
 type Client struct {
+	host        string
+	tlsConfig   *tls.Config
+	transport   http.RoundTripper
 	base        *url.URL
 	version     string
 	httpClient  *http.Client
@@ -92,9 +103,16 @@ func (c *Client) BaseURL() string {
 }
 
 func (c *Client) SetTLS(tlsConfig *tls.Config) {
+	transport := &http.Transport{TLSClientConfig: c.tlsConfig}
+
+	// re-assign transport layer defaults
+	c.tlsConfig = tlsConfig
+	c.transport = transport
+
 	c.httpClient = &http.Client{
-		Transport: &http.Transport{TLSClientConfig: tlsConfig},
+		Transport: c,
 	}
+
 }
 
 // Versions send a request at the /versions REST endpoint.
@@ -111,7 +129,8 @@ func (c *Client) Get() *Request {
 
 // Post returns a Request object setup for POST call.
 func (c *Client) Post() *Request {
-	return NewRequest(c.httpClient, c.base, http.MethodPost, c.version, c.authstring, c.userAgent)
+	r := NewRequest(c.httpClient, c.base, http.MethodPost, c.version, c.authstring, c.userAgent)
+	return r
 }
 
 // Put returns a Request object setup for PUT call.
@@ -136,6 +155,41 @@ func unix2HTTP(u *url.URL) {
 		u.Host = "unix.sock"
 		u.Path = ""
 	}
+}
+
+// shouldRoundTripRetry
+func (c *Client) shouldRoundTripRetry(res *http.Response, err error) bool {
+	if http.ErrHandlerTimeout == err || res == nil {
+		return true
+	}
+	return res.StatusCode == http.StatusRequestTimeout ||
+		res.StatusCode == http.StatusGatewayTimeout
+}
+
+// RoundTrip
+// When creating the http client we cache the client against the host without any expiration
+// when picking the client from cache for any further request
+// The cached client resolves the IP that was assigned to the node prior to DHCP update
+// A custom round tripper in the transport layer which can invalidate the cache and
+// build a new http client in case of a timeout.
+// Rebuilding the cache on timeout and retrying will resolve the new IP for that host.
+func (c *Client) RoundTrip(req *http.Request) (res *http.Response, err error) {
+	res, err = c.transport.RoundTrip(req)
+
+	if c.shouldRoundTripRetry(res, err) {
+		retireHTTPClient(c.host)
+		c.httpClient = getHTTPClient(c.host)
+		if c.tlsConfig != nil {
+			c.SetTLS(c.tlsConfig)
+		} else {
+			c.transport = c.httpClient.Transport
+			c.httpClient.Transport = c
+		}
+
+		res, err = c.transport.RoundTrip(req)
+	}
+
+	return
 }
 
 func newHTTPClient(
@@ -164,6 +218,14 @@ func newHTTPClient(
 	}
 
 	return &http.Client{Transport: httpTransport, Timeout: responseTimeout}
+}
+
+func retireHTTPClient(host string) {
+	cacheLock.Lock()
+	defer cacheLock.Unlock()
+	if _, ok := httpCache[host]; ok {
+		delete(httpCache, host)
+	}
 }
 
 func getHTTPClient(host string) *http.Client {
