@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 //go:build zos && s390x
+// +build zos,s390x
 
 // Hand edited based on ztypes_linux_s390x.go
 // TODO: auto-generate.
@@ -338,21 +339,12 @@ type Statfs_t struct {
 	Flags   uint64
 }
 
-type direntLE struct {
+type Dirent struct {
 	Reclen uint16
 	Namlen uint16
 	Ino    uint32
 	Extra  uintptr
 	Name   [256]byte
-}
-
-type Dirent struct {
-	Ino    uint64
-	Off    int64
-	Reclen uint16
-	Type   uint8
-	Name   [256]uint8
-	_      [5]byte
 }
 
 type FdSet struct {

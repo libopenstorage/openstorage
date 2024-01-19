@@ -3,6 +3,7 @@
 // license that can be found in the LICENSE file.
 
 //go:build dragonfly || netbsd || openbsd
+// +build dragonfly netbsd openbsd
 
 package ipv6
 

@@ -129,7 +129,7 @@ func (vd *volAPI) annotateContext(r *http.Request) (context.Context, context.Can
 	return ctx, cancel, nil
 }
 func (vd *volAPI) getVolDriver(r *http.Request) (volume.VolumeDriver, error) {
-	// Check if the driver has registered by it's user agent name
+	// Check if the driver has registered by its user agent name
 	userAgent := r.Header.Get("User-Agent")
 	if len(userAgent) > 0 {
 		clientName := strings.Split(userAgent, "/")

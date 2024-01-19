@@ -22,7 +22,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
-    "github.com/libopenstorage/openstorage/pkg/correlation"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -721,7 +721,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 	blockFile := path.Join(nfsPath, volumeID+nfsBlockFile)
 
 	// Check if it is block
-	v, err := util.VolumeFromName(d, volumeID)
+	v, err := util.VolumeFromName(ctx, d, volumeID)
 	if err != nil {
 		return "", err
 	}
@@ -754,7 +754,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 func (d *driver) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 
 	// Get volume info
-	v, err := util.VolumeFromName(d, volumeID)
+	v, err := util.VolumeFromName(ctx, d, volumeID)
 	if err != nil {
 		return err
 	}
