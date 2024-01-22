@@ -3,7 +3,6 @@ package volume
 import (
 	"context"
 	"errors"
-
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -136,7 +135,7 @@ type StatsDriver interface {
 	// cumulative stats are /proc/diskstats style stats.
 	// nonCumulative stats are stats for specific duration.
 	// Errors ErrEnoEnt may be returned
-	Stats(volumeID string, cumulative bool) (*api.Stats, error)
+	Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error)
 	// UsedSize returns currently used volume size.
 	// Errors ErrEnoEnt may be returned.
 	UsedSize(volumeID string) (uint64, error)
@@ -147,7 +146,7 @@ type StatsDriver interface {
 	CapacityUsage(ID string) (*api.CapacityUsageResponse, error)
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
-	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error)
 	// VolumeBytesUsedByNode returns currently used volume util of multiple volumes
 	// on a given node
 	VolumeBytesUsedByNode(nodeID string, ids []uint64) (*api.VolumeBytesUsedByNode, error)
@@ -298,7 +297,7 @@ type ProtoDriver interface {
 type Enumerator interface {
 	// Inspect specified volumes.
 	// Returns slice of volumes that were found.
-	Inspect(volumeIDs []string) ([]*api.Volume, error)
+	Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error)
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)
