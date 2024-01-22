@@ -23,6 +23,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+    "github.com/golang/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -460,7 +461,7 @@ func TestSdkVolumeUsageByNode(t *testing.T) {
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(2)
-	s.MockDriver().EXPECT().VolumeUsageByNode(nodeid).Return(&volumeUsageInfo, nil).Times(1)
+	s.MockDriver().EXPECT().VolumeUsageByNode(gomock.Any(), nodeid).Return(&volumeUsageInfo, nil).Times(1)
 
 	// Setup client
 	c := api.NewOpenStorageNodeClient(s.Conn())
