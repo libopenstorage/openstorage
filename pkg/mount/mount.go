@@ -4,12 +4,14 @@
 package mount
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -25,7 +27,6 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/moby/sys/mountinfo"
 	"github.com/pborman/uuid"
-	pexec "github.com/portworx/porx/pkg/exec"
 	"github.com/sirupsen/logrus"
 )
 
@@ -103,7 +104,7 @@ const (
 	mountPathRemoveDelay = 30 * time.Second
 	testDeviceEnv        = "Test_Device_Mounter"
 	bindMountPrefix      = "readonly"
-	statTimeout          = 60 // Timeout in seconds
+	statTimeout          = 30 * time.Second
 )
 
 var (
@@ -710,12 +711,10 @@ func (m *Mounter) removeMountPath(path string) error {
 
 // RemoveMountPath makes the path writeable and removes it after a fixed delay
 func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) error {
-	statCmd := pexec.Command("stat", mountPath)
-	statCmdGroup, err := pexec.NewRemoteCommandGroup("stat-mount-path")
-	if err != nil {
-		return err
-	}
-	_, err = statCmdGroup.Run(statCmd, statTimeout)
+	ctx, cancel := context.WithTimeout(context.Background(), statTimeout)
+	defer cancel()
+	cmd := exec.CommandContext(ctx, "stat", mountPath)
+	_, err := cmd.CombinedOutput()
 	if err == nil {
 		if options.IsBoolOptionSet(opts, options.OptionsWaitBeforeDelete) {
 			hasher := md5.New()
