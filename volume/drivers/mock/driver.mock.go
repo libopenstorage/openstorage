@@ -810,18 +810,18 @@ func (mr *MockVolumeDriverMockRecorder) Restore(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Restore", reflect.TypeOf((*MockVolumeDriver)(nil).Restore), arg0, arg1)
 }
 
-// Set mocks base method
-func (m *MockVolumeDriver) Set(arg0 string, arg1 *api.VolumeLocator, arg2 *api.VolumeSpec) error {
+// Set mocks base method.
+func (m *MockVolumeDriver) Set(arg0 context.Context, arg1 string, arg2 *api.VolumeLocator, arg3 *api.VolumeSpec) error {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Set", arg0, arg1, arg2)
+	ret := m.ctrl.Call(m, "Set", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(error)
 	return ret0
 }
 
-// Set indicates an expected call of Set
-func (mr *MockVolumeDriverMockRecorder) Set(arg0, arg1, arg2 interface{}) *gomock.Call {
+// Set indicates an expected call of Set.
+func (mr *MockVolumeDriverMockRecorder) Set(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockVolumeDriver)(nil).Set), arg0, arg1, arg2)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockVolumeDriver)(nil).Set), arg0, arg1, arg2, arg3)
 }
 
 // Shutdown mocks base method

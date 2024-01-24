@@ -715,7 +715,7 @@ func TestFakeSet(t *testing.T) {
 	assert.NotEmpty(t, volid)
 
 	// Set values
-	err = d.Set(volid, &api.VolumeLocator{
+	err = d.Set(context.TODO(), volid, &api.VolumeLocator{
 		Name: "newname",
 		VolumeLabels: map[string]string{
 			"hello": "world",

@@ -335,7 +335,7 @@ func (d *driver) CloudMigrateStatus(request *api.CloudMigrateStatusRequest) (*ap
 	}, nil
 }
 
-func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	v, err := d.GetVol(volumeID)
 	if err != nil {
 		return err

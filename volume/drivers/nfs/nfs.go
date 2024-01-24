@@ -787,7 +787,7 @@ func (d *driver) Detach(ctx context.Context, volumeID string, options map[string
 	return nil
 }
 
-func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}
