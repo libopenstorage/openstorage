@@ -460,8 +460,7 @@ func (v *volumeClient) Unmount(ctx context.Context, volumeID string, mountPath s
 }
 
 // Update volume
-func (v *volumeClient) Set(volumeID string, locator *api.VolumeLocator,
-	spec *api.VolumeSpec) error {
+func (v *volumeClient) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return v.doVolumeSet(correlation.TODO(),
 		volumeID,
 		&api.VolumeSetRequest{

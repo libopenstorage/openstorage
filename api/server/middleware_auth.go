@@ -205,7 +205,7 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 
 	if req.Spec != nil && req.Spec.Size > 0 {
 		isOpDone = true
-		err = d.Set(volumeID, req.Locator, req.Spec)
+		err = d.Set(ctx, volumeID, req.Locator, req.Spec)
 	}
 
 	for err == nil && req.Action != nil {
