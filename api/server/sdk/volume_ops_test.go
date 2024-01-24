@@ -687,7 +687,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Set(
+		Set(gomock.Any(),
 			id,
 			&api.VolumeLocator{VolumeLabels: newlabels},
 			&api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32},

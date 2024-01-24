@@ -1955,7 +1955,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(nil).
 			Times(1),
 
@@ -2092,7 +2092,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Set(gomock.Any(), gomock.Any(), gomock.Any()).
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(nil).
 			Times(1),
 		// final inspect
@@ -2750,7 +2750,7 @@ func TestControllerExpandVolume(t *testing.T) {
 			AnyTimes(),
 		s.MockDriver().
 			EXPECT().
-			Set(gomock.Any(), gomock.Any(), &api.VolumeSpec{
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), &api.VolumeSpec{
 				Size:             46 * units.GiB, // Round up from 45.5 to 46
 				SnapshotInterval: math.MaxUint32,
 			}).
