@@ -123,7 +123,7 @@ func TestVolumeNoAuth(t *testing.T) {
 
 	newspec := req.GetSpec()
 	newspec.Size = newsize
-	resp := driverclient.Set(id, req.GetLocator(), newspec)
+	resp := driverclient.Set(context.TODO(), id, req.GetLocator(), newspec)
 	assert.Nil(t, resp)
 
 	// INSPECT
@@ -792,7 +792,7 @@ func TestVolumeSetSuccess(t *testing.T) {
 		Spec: &api.VolumeSpec{Size: newsize},
 	}
 
-	res := driverclient.Set(id, req.GetLocator(), req2.GetSpec())
+	res := driverclient.Set(context.TODO(), id, req.GetLocator(), req2.GetSpec())
 	assert.Nil(t, res)
 
 	// Assert volume information is correct
@@ -807,13 +807,11 @@ func TestVolumeSetSuccess(t *testing.T) {
 	assert.Equal(t, newsize, r.GetVolume().GetSpec().GetSize())
 
 	// Send HA request
-	res = driverclient.Set(id,
-		nil,
-		&api.VolumeSpec{
-			HaLevel:          2,
-			ReplicaSet:       &api.ReplicaSet{Nodes: []string{}},
-			SnapshotInterval: math.MaxUint32,
-		})
+	res = driverclient.Set(context.TODO(), id, nil, &api.VolumeSpec{
+		HaLevel:          2,
+		ReplicaSet:       &api.ReplicaSet{Nodes: []string{}},
+		SnapshotInterval: math.MaxUint32,
+	})
 	assert.Nil(t, res, fmt.Sprintf("Error: %v", res))
 
 	// Assert volume information is correct
@@ -883,7 +881,7 @@ func TestVolumeSetFailed(t *testing.T) {
 		Spec:    &api.VolumeSpec{Size: size, HaLevel: halevel},
 	}
 	// Cannot get this to fail....
-	err = driverclient.Set("doesnotexist", req2.GetLocator(), req2.GetSpec())
+	err = driverclient.Set(context.TODO(), "doesnotexist", req2.GetLocator(), req2.GetSpec())
 	//	assert.NotNil(t, err)
 
 	// Assert volume information is correct
@@ -928,7 +926,7 @@ func TestMiddlewareVolumeSetSizeSuccess(t *testing.T) {
 
 	// Not setting mock secrets
 
-	err = driverclient.Set(id, nil, req.GetSpec())
+	err = driverclient.Set(context.TODO(), id, nil, req.GetSpec())
 	assert.NoError(t, err, "Unexpected error on Set")
 
 	// Assert volume information is correct
@@ -975,7 +973,7 @@ func TestMiddlewareVolumeSetFailure(t *testing.T) {
 
 	// Not setting mock secrets
 
-	err = driverclient.Set(id, &api.VolumeLocator{Name: "myvol"}, req.GetSpec())
+	err = driverclient.Set(context.TODO(), id, &api.VolumeLocator{Name: "myvol"}, req.GetSpec())
 	assert.Error(t, err, "Unexpected error on Set")
 
 }

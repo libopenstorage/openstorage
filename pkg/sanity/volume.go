@@ -617,7 +617,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			err = volumedriver.Set(volumeID, set.GetLocator(), set.GetSpec())
+			err = volumedriver.Set(context.TODO(), volumeID, set.GetLocator(), set.GetSpec())
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Inspecting the volume for new updates")
@@ -679,7 +679,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 				},
 			}
 
-			err = volumedriver.Set(volumeID, set.Locator, set.Spec)
+			err = volumedriver.Set(context.TODO(), volumeID, set.Locator, set.Spec)
 			Expect(err).NotTo(HaveOccurred())
 
 			By("Inspecting the volume for new updates")

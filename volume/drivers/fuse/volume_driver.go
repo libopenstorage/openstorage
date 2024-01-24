@@ -178,7 +178,7 @@ func (v *volumeDriver) Unmount(ctx context.Context, volumeID string, mountpath s
 	return v.UpdateVol(volume)
 }
 
-func (v *volumeDriver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (v *volumeDriver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	return volume.ErrNotSupported
 
 }

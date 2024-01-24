@@ -149,7 +149,7 @@ func set(t *testing.T, ctx *Context) {
 	require.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
 	vols[0].Locator.VolumeLabels["UpdateTest"] = "Success"
-	err = ctx.Set(ctx.volID, vols[0].Locator, nil)
+	err = ctx.Set(correlation.TODO(), ctx.volID, vols[0].Locator, nil)
 	if err != volume.ErrNotSupported {
 		require.NoError(t, err, "Failed in Update")
 		vols, err = ctx.Inspect(correlation.TODO(), []string{ctx.volID})
