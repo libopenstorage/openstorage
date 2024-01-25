@@ -160,7 +160,7 @@ func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLo
 }
 
 // Snapshot create new subvolume from volume
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		return "", err
