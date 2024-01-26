@@ -672,7 +672,7 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 	return nil
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := []string{volumeID}
 	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
