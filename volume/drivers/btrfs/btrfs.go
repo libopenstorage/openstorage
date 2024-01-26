@@ -145,7 +145,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string)
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}
@@ -160,7 +160,7 @@ func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.Volu
 }
 
 // Snapshot create new subvolume from volume
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	vols, err := d.Inspect([]string{volumeID})
 	if err != nil {
 		return "", err
