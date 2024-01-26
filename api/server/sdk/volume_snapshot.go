@@ -47,7 +47,7 @@ func (s *VolumeServer) SnapshotCreate(
 	}
 
 	readonly := true
-	snapshotID, err := s.driver(ctx).Snapshot(req.GetVolumeId(), readonly, &api.VolumeLocator{
+	snapshotID, err := s.driver(ctx).Snapshot(ctx, req.GetVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: req.GetLabels(),
 	}, false)

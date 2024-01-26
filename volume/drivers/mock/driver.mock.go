@@ -710,7 +710,7 @@ func (mr *MockVolumeDriverMockRecorder) GetVolumeWatcher(arg0, arg1 interface{})
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).GetVolumeWatcher), arg0, arg1)
 }
 
-// Inspect mocks base method.
+// Inspect mocks base method
 func (m *MockVolumeDriver) Inspect(arg0 context.Context, arg1 []string) ([]*api.Volume, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Inspect", arg0, arg1)
@@ -719,7 +719,7 @@ func (m *MockVolumeDriver) Inspect(arg0 context.Context, arg1 []string) ([]*api.
 	return ret0, ret1
 }
 
-// Inspect indicates an expected call of Inspect.
+// Inspect indicates an expected call of Inspect
 func (mr *MockVolumeDriverMockRecorder) Inspect(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockVolumeDriver)(nil).Inspect), arg0, arg1)
@@ -810,7 +810,7 @@ func (mr *MockVolumeDriverMockRecorder) Restore(arg0, arg1 interface{}) *gomock.
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Restore", reflect.TypeOf((*MockVolumeDriver)(nil).Restore), arg0, arg1)
 }
 
-// Set mocks base method.
+// Set mocks base method
 func (m *MockVolumeDriver) Set(arg0 context.Context, arg1 string, arg2 *api.VolumeLocator, arg3 *api.VolumeSpec) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Set", arg0, arg1, arg2, arg3)
@@ -818,7 +818,7 @@ func (m *MockVolumeDriver) Set(arg0 context.Context, arg1 string, arg2 *api.Volu
 	return ret0
 }
 
-// Set indicates an expected call of Set.
+// Set indicates an expected call of Set
 func (mr *MockVolumeDriverMockRecorder) Set(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Set", reflect.TypeOf((*MockVolumeDriver)(nil).Set), arg0, arg1, arg2, arg3)
@@ -852,18 +852,18 @@ func (mr *MockVolumeDriverMockRecorder) SnapEnumerate(arg0, arg1 interface{}) *g
 }
 
 // Snapshot mocks base method
-func (m *MockVolumeDriver) Snapshot(arg0 string, arg1 bool, arg2 *api.VolumeLocator, arg3 bool) (string, error) {
+func (m *MockVolumeDriver) Snapshot(arg0 context.Context, arg1 string, arg2 bool, arg3 *api.VolumeLocator, arg4 bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Snapshot", arg0, arg1, arg2, arg3)
+	ret := m.ctrl.Call(m, "Snapshot", arg0, arg1, arg2, arg3, arg4)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Snapshot indicates an expected call of Snapshot
-func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
+func (mr *MockVolumeDriverMockRecorder) Snapshot(arg0, arg1, arg2, arg3, arg4 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snapshot", reflect.TypeOf((*MockVolumeDriver)(nil).Snapshot), arg0, arg1, arg2, arg3)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Snapshot", reflect.TypeOf((*MockVolumeDriver)(nil).Snapshot), arg0, arg1, arg2, arg3, arg4)
 }
 
 // SnapshotGroup mocks base method
@@ -893,7 +893,7 @@ func (mr *MockVolumeDriverMockRecorder) StartVolumeWatcher() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartVolumeWatcher", reflect.TypeOf((*MockVolumeDriver)(nil).StartVolumeWatcher))
 }
 
-// Stats mocks base method.
+// Stats mocks base method
 func (m *MockVolumeDriver) Stats(arg0 context.Context, arg1 string, arg2 bool) (*api.Stats, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Stats", arg0, arg1, arg2)
@@ -902,7 +902,7 @@ func (m *MockVolumeDriver) Stats(arg0 context.Context, arg1 string, arg2 bool) (
 	return ret0, ret1
 }
 
-// Stats indicates an expected call of Stats.
+// Stats indicates an expected call of Stats
 func (mr *MockVolumeDriverMockRecorder) Stats(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Stats", reflect.TypeOf((*MockVolumeDriver)(nil).Stats), arg0, arg1, arg2)
@@ -1036,7 +1036,7 @@ func (mr *MockVolumeDriverMockRecorder) VolumeBytesUsedByNode(arg0, arg1 interfa
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeBytesUsedByNode", reflect.TypeOf((*MockVolumeDriver)(nil).VolumeBytesUsedByNode), arg0, arg1)
 }
 
-// VolumeUsageByNode mocks base method.
+// VolumeUsageByNode mocks base method
 func (m *MockVolumeDriver) VolumeUsageByNode(arg0 context.Context, arg1 string) (*api.VolumeUsageByNode, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "VolumeUsageByNode", arg0, arg1)
@@ -1045,7 +1045,7 @@ func (m *MockVolumeDriver) VolumeUsageByNode(arg0 context.Context, arg1 string) 
 	return ret0, ret1
 }
 
-// VolumeUsageByNode indicates an expected call of VolumeUsageByNode.
+// VolumeUsageByNode indicates an expected call of VolumeUsageByNode
 func (mr *MockVolumeDriverMockRecorder) VolumeUsageByNode(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VolumeUsageByNode", reflect.TypeOf((*MockVolumeDriver)(nil).VolumeUsageByNode), arg0, arg1)

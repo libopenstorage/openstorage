@@ -322,7 +322,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
 	vols, err := d.Inspect(nil, volIDs)

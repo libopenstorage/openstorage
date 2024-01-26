@@ -672,7 +672,7 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 	return nil
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := []string{volumeID}
 	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
@@ -719,7 +719,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 	blockFile := path.Join(nfsPath, volumeID+nfsBlockFile)
 
 	// Check if it is block
-	v, err := util.VolumeFromName(ctx, d, volumeID)
+	v, err := util.VolumeFromName(correlation.TODO(), d, volumeID)
 	if err != nil {
 		return "", err
 	}
@@ -752,7 +752,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 func (d *driver) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 
 	// Get volume info
-	v, err := util.VolumeFromName(ctx, d, volumeID)
+	v, err := util.VolumeFromName(correlation.TODO(), d, volumeID)
 	if err != nil {
 		return err
 	}

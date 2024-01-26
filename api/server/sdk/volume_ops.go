@@ -109,7 +109,7 @@ func (s *VolumeServer) create(
 
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
-	v, err := util.VolumeFromName(ctx, s.driver(ctx), volName)
+	v, err := util.VolumeFromName(correlation.TODO(), s.driver(ctx), volName)
 	// If the volume is still there but it is being delete, then wait until it is removed
 	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
 		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
@@ -171,7 +171,7 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver(ctx).Snapshot(parent.GetId(), false, &api.VolumeLocator{
+		id, err = s.driver(ctx).Snapshot(ctx, parent.GetId(), false, &api.VolumeLocator{
 			Name: volName,
 		}, false)
 		if err != nil {

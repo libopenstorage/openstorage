@@ -149,7 +149,7 @@ func set(t *testing.T, ctx *Context) {
 	require.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
 	vols[0].Locator.VolumeLabels["UpdateTest"] = "Success"
-	err = ctx.Set(correlation.TODO(), ctx.volID, vols[0].Locator, nil)
+	err = ctx.Set(context.TODO(), ctx.volID, vols[0].Locator, nil)
 	if err != volume.ErrNotSupported {
 		require.NoError(t, err, "Failed in Update")
 		vols, err = ctx.Inspect(correlation.TODO(), []string{ctx.volID})
@@ -321,9 +321,7 @@ func snap(t *testing.T, ctx *Context) {
 	attach(t, ctx)
 	labels := map[string]string{"oh": "snap"}
 	require.NotEqual(t, ctx.volID, "", "invalid volume ID")
-	id, err := ctx.Snapshot(ctx.volID, false,
-		&api.VolumeLocator{Name: "snappy", VolumeLabels: labels},
-		false)
+	id, err := ctx.Snapshot(context.TODO(), ctx.volID, false, &api.VolumeLocator{Name: "snappy", VolumeLabels: labels}, false)
 	require.NoError(t, err, "Failed in creating a snapshot")
 	ctx.snapID = id
 }

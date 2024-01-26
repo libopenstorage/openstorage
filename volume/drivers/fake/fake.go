@@ -276,7 +276,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 
 	if len(locator.GetName()) == 0 {
 		return "", fmt.Errorf("Name for snapshot must be provided")
@@ -406,16 +406,6 @@ func (d *driver) UsedSize(volumeID string) (uint64, error) {
 	return uint64(12345), nil
 }
 
-func (d *driver) VolumeBytesUsedByNode(nodeMID string, volumes []uint64) (*api.VolumeBytesUsedByNode, error) {
-	volusage := []*api.VolumeBytesUsed{}
-	for _, id := range volumes {
-		volusage = append(volusage, &api.VolumeBytesUsed{VolumeId: strconv.FormatUint(id, 10), TotalBytes: 12345})
-	}
-	return &api.VolumeBytesUsedByNode{
-		NodeId:   nodeMID,
-		VolUsage: volusage,
-	}, nil
-}
 func (d *driver) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
 	vols, err := d.Inspect(correlation.TODO(), []string{volumeID})
 	if err == kvdb.ErrNotFound {

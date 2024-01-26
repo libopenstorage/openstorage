@@ -1324,7 +1324,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// Return an error from snapshot
 		s.MockDriver().
 			EXPECT().
-			Snapshot(parent, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(gomock.Any(), parent, false, &api.VolumeLocator{Name: name}, false).
 			Return("", fmt.Errorf("snapshoterr")).
 			Times(1),
 	)
@@ -1929,7 +1929,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 		// create
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(snapID, nil).
 			Times(1),
 		s.MockDriver().
@@ -2036,7 +2036,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// create snap
 		s.MockDriver().
 			EXPECT().
-			Snapshot(mockParentID, false, &api.VolumeLocator{
+			Snapshot(gomock.Any(), mockParentID, false, &api.VolumeLocator{
 				Name: name,
 			},
 				false).
@@ -2925,7 +2925,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 		// snapshot
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
 			Return(snapId, nil).
 			Times(1),
 
