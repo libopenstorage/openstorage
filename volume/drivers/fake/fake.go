@@ -277,7 +277,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 
 	if len(locator.GetName()) == 0 {
 		return "", fmt.Errorf("Name for snapshot must be provided")
