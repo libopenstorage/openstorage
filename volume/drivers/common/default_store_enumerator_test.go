@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"testing"
 
 	"github.com/sirupsen/logrus"
@@ -32,7 +33,7 @@ func TestInspect(t *testing.T) {
 	volume := newTestVolume("TestVolume")
 	err := testEnumerator.CreateVol(volume)
 	assert.NoError(t, err, "Failed in CreateVol")
-	volumes, err := testEnumerator.Inspect([]string{volume.Id})
+	volumes, err := testEnumerator.Inspect(context.TODO(), []string{volume.Id})
 	assert.NoError(t, err, "Failed in Inspect")
 	assert.Equal(t, len(volumes), 1, "Number of volumes returned in inspect should be 1")
 	if len(volumes) == 1 {
@@ -40,7 +41,7 @@ func TestInspect(t *testing.T) {
 	}
 	err = testEnumerator.DeleteVol(volume.Id)
 	assert.NoError(t, err, "Failed in Delete")
-	volumes, err = testEnumerator.Inspect([]string{volume.Id})
+	volumes, err = testEnumerator.Inspect(context.TODO(), []string{volume.Id})
 	assert.NotNil(t, volumes, "Inspect returned nil volumes")
 	assert.Equal(t, len(volumes), 0, "Number of volumes returned in inspect should be 0")
 }

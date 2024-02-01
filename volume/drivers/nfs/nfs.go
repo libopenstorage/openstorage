@@ -22,6 +22,7 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/mount"
 	"github.com/libopenstorage/openstorage/pkg/seed"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -673,9 +674,9 @@ func (d *driver) clone(newVolumeID, volumeID string) error {
 	return nil
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := []string{volumeID}
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -685,7 +686,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 
@@ -720,7 +721,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 	blockFile := path.Join(nfsPath, volumeID+nfsBlockFile)
 
 	// Check if it is block
-	v, err := util.VolumeFromName(d, volumeID)
+	v, err := util.VolumeFromName(ctx, d, volumeID)
 	if err != nil {
 		return "", err
 	}
@@ -753,7 +754,7 @@ func (d *driver) Attach(ctx context.Context, volumeID string, attachOptions map[
 func (d *driver) Detach(ctx context.Context, volumeID string, options map[string]string) error {
 
 	// Get volume info
-	v, err := util.VolumeFromName(d, volumeID)
+	v, err := util.VolumeFromName(ctx, d, volumeID)
 	if err != nil {
 		return err
 	}
@@ -788,7 +789,7 @@ func (d *driver) Detach(ctx context.Context, volumeID string, options map[string
 	return nil
 }
 
-func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}
