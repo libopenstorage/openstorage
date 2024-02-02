@@ -313,7 +313,7 @@ func TestSdkVolumeClone(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
 			Times(1),
 
@@ -1087,7 +1087,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Snapshot(gomock.Any(), parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
 			Times(1),
 
@@ -1134,7 +1134,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Snapshot(gomock.Any(), parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
 			Times(1),
 
@@ -1205,7 +1205,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Snapshot(gomock.Any(), parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
 			Times(1),
 
@@ -1261,7 +1261,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Snapshot(gomock.Any(), parentid, false, &api.VolumeLocator{Name: name}, false).
+			Snapshot(parentid, false, &api.VolumeLocator{Name: name}, false).
 			Return(id, nil).
 			Times(1),
 

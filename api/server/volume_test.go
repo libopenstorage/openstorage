@@ -471,7 +471,7 @@ func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 		Readonly: true,
 	}
 
-	_, err = driverclient.Snapshot(context.TODO(), id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	_, err = driverclient.Snapshot(id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Nil(t, err)
 
 	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
@@ -529,7 +529,7 @@ func TestVolumeSnapshotCreateFailed(t *testing.T) {
 		Readonly: true,
 	}
 
-	res, _ := driverclient.Snapshot(context.TODO(), "doesnotexist", req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	res, _ := driverclient.Snapshot("doesnotexist", req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Equal(t, "", res)
 
 	_, err = volumes.Delete(ctx, &api.SdkVolumeDeleteRequest{
@@ -696,7 +696,7 @@ func TestVolumeSnapshotList(t *testing.T) {
 		Readonly: true,
 	}
 
-	_, err = driverclient.Snapshot(context.TODO(), id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	_, err = driverclient.Snapshot(id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Nil(t, err)
 
 	res, err := driverclient.SnapEnumerate([]string{id}, nil)
@@ -704,7 +704,7 @@ func TestVolumeSnapshotList(t *testing.T) {
 	assert.NotNil(t, res)
 	assert.Len(t, res, 1)
 
-	_, err = driverclient.Snapshot(context.TODO(), id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	_, err = driverclient.Snapshot(id, req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Nil(t, err)
 
 	res, err = driverclient.SnapEnumerate([]string{id}, nil)
@@ -1650,7 +1650,7 @@ func TestVolumeRestoreSuccess(t *testing.T) {
 		Readonly: true,
 	}
 
-	res, err := driverclient.Snapshot(context.TODO(), req2.GetId(), req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	res, err := driverclient.Snapshot(req2.GetId(), req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Nil(t, err)
 
 	// create client
@@ -1711,7 +1711,7 @@ func TestVolumeRestoreFailed(t *testing.T) {
 		Readonly: true,
 	}
 
-	_, err = driverclient.Snapshot(context.TODO(), req2.GetId(), req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
+	_, err = driverclient.Snapshot(req2.GetId(), req2.GetReadonly(), req2.GetLocator(), req2.GetNoRetry())
 	assert.Nil(t, err)
 
 	// create client

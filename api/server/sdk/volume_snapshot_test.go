@@ -78,7 +78,7 @@ func TestSdkVolumeSnapshotCreate(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Snapshot(gomock.Any(), req.GetVolumeId(), true, &api.VolumeLocator{
+		Snapshot(req.GetVolumeId(), true, &api.VolumeLocator{
 			Name: snapName,
 		}, false).
 		Return(snapid, nil).

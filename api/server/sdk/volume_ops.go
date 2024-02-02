@@ -171,7 +171,7 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver(ctx).Snapshot(ctx, parent.GetId(), false, &api.VolumeLocator{
+		id, err = s.driver(ctx).Snapshot(parent.GetId(), false, &api.VolumeLocator{
 			Name: volName,
 		}, false)
 		if err != nil {

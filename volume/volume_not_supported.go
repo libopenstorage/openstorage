@@ -49,7 +49,7 @@ func (b *blockNotSupported) Detach(ctx context.Context, volumeID string, options
 
 type snapshotNotSupported struct{}
 
-func (s *snapshotNotSupported) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (s *snapshotNotSupported) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	return "", ErrNotSupported
 }
 
