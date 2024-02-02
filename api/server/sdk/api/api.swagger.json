@@ -12,16 +12,6 @@
         ],
         "type": "string"
       },
-      "ClusterPairModeMode": {
-        "default": "Default",
-        "enum": [
-          "Default",
-          "DisasterRecovery",
-          "OneTimeMigration"
-        ],
-        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery\n - OneTimeMigration: Paired for one-time migration",
-        "type": "string"
-      },
       "FilesystemCheckFilesystemCheckStatus": {
         "default": "FS_CHECK_UNKNOWN",
         "description": "- FS_CHECK_UNKNOWN: Filesystem Check operation is an unknown state\n - FS_CHECK_NOT_RUNNING: FilesystemCheck operation not running for the specified volume\n - FS_CHECK_STARTED: FilesystemCheck operation started for the specified volume\n - FS_CHECK_INPROGRESS: FilesystemCheck operation is in progress\n - FS_CHECK_STOPPED: FilesystemCheck operation was stopped by the user\n - FS_CHECK_COMPLETED: FilesystemCheck operation completed successfully\n - FS_CHECK_FAILED: FilesystemCheck operation failed due to internal error",
@@ -662,7 +652,7 @@
             "type": "string"
           },
           "mode": {
-            "$ref": "#/components/schemas/ClusterPairModeMode"
+            "$ref": "#/components/schemas/apiClusterPairModeMode"
           },
           "remote_cluster_ip": {
             "title": "IP of the remote cluster",
@@ -727,7 +717,7 @@
             "type": "string"
           },
           "mode": {
-            "$ref": "#/components/schemas/ClusterPairModeMode"
+            "$ref": "#/components/schemas/apiClusterPairModeMode"
           },
           "name": {
             "title": "Name of the cluster",
@@ -752,6 +742,16 @@
         },
         "title": "Information about a cluster pair",
         "type": "object"
+      },
+      "apiClusterPairModeMode": {
+        "default": "Default",
+        "enum": [
+          "Default",
+          "DisasterRecovery",
+          "OneTimeMigration"
+        ],
+        "title": "- Default: Default pairing mode\n - DisasterRecovery: Paired for DisasterRecovery\n - OneTimeMigration: Paired for one-time migration",
+        "type": "string"
       },
       "apiClusterPairTokenGetResponse": {
         "properties": {
@@ -3910,6 +3910,9 @@
             "title": "MaxDurationMinutes defines how long operation should run when started at schedule.\n0 values means no limit on duration",
             "type": "string"
           },
+          "mode": {
+            "$ref": "#/components/schemas/apiSdkStorageRebalanceRequestMode"
+          },
           "remove_repl_1_snapshots": {
             "format": "boolean",
             "title": "RemoveRepl1Snapshots if true will instruct rebalance job to remove repl-1 snapshots",
@@ -3943,6 +3946,16 @@
           }
         },
         "type": "object"
+      },
+      "apiSdkStorageRebalanceRequestMode": {
+        "default": "STORAGE_REBALANCE",
+        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them",
+        "enum": [
+          "STORAGE_REBALANCE",
+          "VOLUME_PLACEMENT_FIX"
+        ],
+        "title": "Mode is an enum that defines the mode of the volume reorg job",
+        "type": "string"
       },
       "apiSdkStorageRebalanceResponse": {
         "properties": {
@@ -6087,7 +6100,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.45"
+    "version": "0.101.46"
   },
   "openapi": "3.0.0",
   "paths": {

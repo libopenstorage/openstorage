@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.46 - (02/01/2024)
+
+* Add mode field to SdkStorageRebalanceRequest
+
 ### v0.101.45 - (12/18/2023)
 
 * Fix spec handler and internal naming for fs format options
