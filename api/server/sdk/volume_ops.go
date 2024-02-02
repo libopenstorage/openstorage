@@ -30,7 +30,6 @@ import (
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/auth"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	policy "github.com/libopenstorage/openstorage/pkg/storagepolicy"
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
@@ -54,7 +53,7 @@ func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.
 		func() (bool, error) {
 			var err error
 			// Get the latest status from the volume
-			v, err = util.VolumeFromName(correlation.TODO(), s.driver(ctx), id)
+			v, err = util.VolumeFromName(s.driver(ctx), id)
 			if err != nil {
 				return false, status.Errorf(codes.Internal, err.Error())
 			}
@@ -89,7 +88,7 @@ func (s *VolumeServer) waitForVolumeRemoved(ctx context.Context, id string) erro
 		250*time.Millisecond, // period
 		func() (bool, error) {
 			// Get the latest status from the volume
-			if _, err := util.VolumeFromName(correlation.TODO(), s.driver(ctx), id); err != nil {
+			if _, err := util.VolumeFromName(s.driver(ctx), id); err != nil {
 				// Removed
 				return false, nil
 			}
@@ -109,7 +108,7 @@ func (s *VolumeServer) create(
 
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
-	v, err := util.VolumeFromName(ctx, s.driver(ctx), volName)
+	v, err := util.VolumeFromName(s.driver(ctx), volName)
 	// If the volume is still there but it is being delete, then wait until it is removed
 	if err == nil && v.GetState() == api.VolumeState_VOLUME_STATE_DELETED {
 		if err = s.waitForVolumeRemoved(ctx, volName); err != nil {
@@ -156,7 +155,7 @@ func (s *VolumeServer) create(
 	var id string
 	if len(source.GetParent()) != 0 {
 		// Get parent volume information
-		parent, err := util.VolumeFromName(correlation.TODO(), s.driver(ctx), source.Parent)
+		parent, err := util.VolumeFromName(s.driver(ctx), source.Parent)
 		if err != nil {
 			return "", status.Errorf(
 				codes.NotFound,
@@ -502,7 +501,7 @@ func (s *VolumeServer) Inspect(
 		}
 		v = vols[0]
 	} else {
-		vols, err := s.driver(ctx).Inspect(correlation.TODO(), []string{req.GetVolumeId()})
+		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()})
 		if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 			return nil, status.Errorf(
 				codes.NotFound,
@@ -755,7 +754,7 @@ func (s *VolumeServer) Stats(
 		return nil, err
 	}
 
-	stats, err := s.driver(ctx).Stats(ctx, req.GetVolumeId(), !req.GetNotCumulative())
+	stats, err := s.driver(ctx).Stats(req.GetVolumeId(), !req.GetNotCumulative())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,

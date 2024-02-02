@@ -17,7 +17,6 @@ limitations under the License.
 package sanity
 
 import (
-	"context"
 	"math/rand"
 	"time"
 
@@ -54,7 +53,7 @@ func testIfVolumeCreatedSuccessfully(
 	By("Inspecting the created volume")
 
 	inspectVolumes := []string{volumeID}
-	volumesList, err := volumedriver.Inspect(context.TODO(), inspectVolumes)
+	volumesList, err := volumedriver.Inspect(inspectVolumes)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(volumesList).NotTo(BeEmpty())
 	Expect(len(volumesList)).Should(BeEquivalentTo(1))
@@ -89,7 +88,7 @@ func testIfVolumeCreatedSuccessfully(
 	Expect(volumesList[0].GetSpec().GetIoThrottle()).To(BeEquivalentTo(vr.GetSpec().GetIoThrottle()))
 }
 
-// Returns an in between min and max. Min - included, Max excluded. So mathematically [min, max)
+//Returns an in between min and max. Min - included, Max excluded. So mathematically [min, max)
 func random(min, max int) int {
 	if max == min {
 		return max

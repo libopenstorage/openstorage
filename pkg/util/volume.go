@@ -19,23 +19,24 @@ package util
 import (
 	"context"
 	"fmt"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 // VolumeFromName returns the volume object associated with the specified name.
-func VolumeFromName(ctx context.Context, v volume.VolumeDriver, name string) (*api.Volume, error) {
-	vols, err := v.Inspect(ctx, []string{name})
+func VolumeFromName(v volume.VolumeDriver, name string) (*api.Volume, error) {
+	vols, err := v.Inspect([]string{name})
 	if err == nil && len(vols) == 1 {
 		return vols[0], nil
 	}
 	vols, err = v.Enumerate(&api.VolumeLocator{Name: name}, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to locate volume %s. Error: %s", name, err.Error())
+		return nil, fmt.Errorf("Failed to locate volume %s. Error: %s", name, err.Error())
 	} else if err == nil && len(vols) == 1 {
 		return vols[0], nil
 	}
-	return nil, fmt.Errorf("cannot locate volume with name %s", name)
+	return nil, fmt.Errorf("Cannot locate volume with name %s", name)
 }
 
 // VolumeFromIdSdk uses the SDK to fetch the volume object associated with the specified id.

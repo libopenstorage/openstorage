@@ -3,7 +3,6 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"os"
 	"strings"
 	"time"
@@ -214,7 +213,7 @@ func (v *volDriver) volumeInspect(cliContext *cli.Context) {
 		d[i] = string(v)
 	}
 
-	volumes, err := v.volDriver.Inspect(correlation.TODO(), d)
+	volumes, err := v.volDriver.Inspect(d)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return
@@ -231,7 +230,7 @@ func (v *volDriver) volumeStats(cliContext *cli.Context) {
 		return
 	}
 
-	stats, err := v.volDriver.Stats(correlation.TODO(), string(cliContext.Args()[0]), true)
+	stats, err := v.volDriver.Stats(string(cliContext.Args()[0]), true)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return

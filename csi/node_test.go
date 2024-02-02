@@ -690,7 +690,7 @@ func TestNodePublishVolumeEphemeralEnabled(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect([]string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		s.MockDriver().
@@ -1082,7 +1082,7 @@ func TestNodeGetVolumeStats(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{id}).
+			Inspect([]string{id}).
 			Return([]*api.Volume{
 				vol,
 			}, nil).
@@ -1153,7 +1153,7 @@ func TestNodeGetVolumeStats_NotFound(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{id}).
+			Inspect([]string{id}).
 			Return([]*api.Volume{}, nil).
 			Times(1),
 	)
@@ -1169,7 +1169,7 @@ func TestNodeGetVolumeStats_NotFound(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{id}).
+			Inspect([]string{id}).
 			Return([]*api.Volume{}, kvdb.ErrNotFound).
 			Times(1),
 	)
@@ -1185,7 +1185,7 @@ func TestNodeGetVolumeStats_NotFound(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{id}).
+			Inspect([]string{id}).
 			Return([]*api.Volume{{
 				Id:         id,
 				AttachPath: []string{"bad-test", "test-2"},

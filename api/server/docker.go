@@ -141,12 +141,12 @@ func (d *driver) errorResponse(method string, w http.ResponseWriter, err error) 
 	}
 }
 
-func (d *driver) volFromName(ctx context.Context, name string) (*api.Volume, error) {
+func (d *driver) volFromName(name string) (*api.Volume, error) {
 	v, err := volumedrivers.Get(d.name)
 	if err != nil {
-		return nil, fmt.Errorf("cannot locate volume driver for %s: %s", d.name, err.Error())
+		return nil, fmt.Errorf("Cannot locate volume driver for %s: %s", d.name, err.Error())
 	}
-	return util.VolumeFromName(ctx, v, name)
+	return util.VolumeFromName(v, name)
 }
 
 func (d *driver) volFromNameOrIDSdk(ctx context.Context, volumes api.OpenStorageVolumeClient, name string) (*api.Volume, error) {
@@ -254,10 +254,10 @@ func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) (c
 
 // parseTokenInput reads token input from the given name and opts.
 // The following is the order of precedence for token in types:
-//  1. token=<token> in name
-//  2. token in opts
-//  3. token_secret=<secret> in name
-//  4. token_secret in opts
+//   1. token=<token> in name
+//   2. token in opts
+//   3. token_secret=<secret> in name
+//   4. token_secret in opts
 func (d *driver) parseTokenInput(name string, opts map[string]string) (string, error) {
 	// get token from name
 	tokenFromName, tokenInName := d.GetTokenFromString(name)
@@ -484,7 +484,7 @@ func (d *driver) scaleUp(
 			return nil, err
 		}
 		id := resp.GetVolumeId()
-		if outVol, err = d.volFromName(ctx, id); err != nil {
+		if outVol, err = d.volFromName(id); err != nil {
 			return nil, err
 		}
 		_, err = mountClient.Attach(ctx, &api.SdkVolumeAttachRequest{
@@ -571,7 +571,7 @@ func (d *driver) attachScale(
 			return d.scaleUp(ctx, conn, method, vd, inSpec, inVol, allVols, attachOptions)
 		}
 		id := resp.GetVolumeId()
-		outVol, err := d.volFromName(ctx, id)
+		outVol, err := d.volFromName(id)
 		if err != nil {
 			return nil, err
 		}
@@ -791,7 +791,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_, _, _, _, name := d.SpecFromString(request.Name)
-	vol, err := d.volFromName(r.Context(), name)
+	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
@@ -824,7 +824,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	} else {
 		returnName = name
 	}
-	vol, err := d.volFromName(correlation.TODO(), name)
+	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, request.Name, err, w)
 		d.errorResponse(method, w, e)
@@ -859,7 +859,7 @@ func (d *driver) unmount(w http.ResponseWriter, r *http.Request) {
 
 	_, _, _, _, name := d.SpecFromString(request.Name)
 	nameWithID := name + request.ID
-	vol, err := d.volFromName(ctx, name)
+	vol, err := d.volFromName(name)
 	if err != nil {
 		e := d.volNotFound(method, name, err, w)
 		d.errorResponse(method, w, e)
