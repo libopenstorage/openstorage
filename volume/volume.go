@@ -281,7 +281,7 @@ type ProtoDriver interface {
 	Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
-	Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
+	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
 	// Status returns a set of key-value pairs which give low
 	// level diagnostic status about this driver.
 	Status() [][2]string

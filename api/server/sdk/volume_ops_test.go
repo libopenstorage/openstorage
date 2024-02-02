@@ -647,7 +647,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 		AnyTimes()
 	s.MockDriver().
 		EXPECT().
-		Set(gomock.Any(), id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{SnapshotInterval: math.MaxUint32}).
+		Set(id, &api.VolumeLocator{VolumeLabels: newlabels}, &api.VolumeSpec{SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 
@@ -668,7 +668,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Set(gomock.Any(), id, nil, &api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32}).
+		Set(id, nil, &api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32}).
 		Return(nil).
 		Times(1)
 	_, err = c.Update(context.Background(), req)
@@ -687,7 +687,7 @@ func TestSdkVolumeUpdate(t *testing.T) {
 
 	s.MockDriver().
 		EXPECT().
-		Set(gomock.Any(),
+		Set(
 			id,
 			&api.VolumeLocator{VolumeLabels: newlabels},
 			&api.VolumeSpec{Size: 1234, SnapshotInterval: math.MaxUint32},
@@ -1156,7 +1156,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 			Times(1),
 		mv.
 			EXPECT().
-			Set(gomock.Any(), id, nil, &api.VolumeSpec{
+			Set(id, nil, &api.VolumeSpec{
 				Size: 1234,
 				Ownership: &api.Ownership{
 					Owner: user2,
@@ -1283,7 +1283,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 			Times(1),
 		mv.
 			EXPECT().
-			Set(gomock.Any(), id, nil, &api.VolumeSpec{
+			Set(id, nil, &api.VolumeSpec{
 				Size: 1234,
 				Ownership: &api.Ownership{
 					Owner: user2,
@@ -1803,7 +1803,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 		AnyTimes()
 	mv.
 		EXPECT().
-		Set(gomock.Any(), id, nil, volPolSpec).
+		Set(id, nil, volPolSpec).
 		Return(nil).
 		Times(1)
 

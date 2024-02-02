@@ -360,7 +360,7 @@ func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeI
 	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}

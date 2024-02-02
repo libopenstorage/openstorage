@@ -729,7 +729,7 @@ func (s *VolumeServer) Update(
 	maskUnModified(updatedSpec, req.GetSpec())
 
 	// Send to driver
-	if err := s.driver(ctx).Set(ctx, req.GetVolumeId(), locator, updatedSpec); err != nil {
+	if err := s.driver(ctx).Set(req.GetVolumeId(), locator, updatedSpec); err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to update volume: %v", err)
 	}
 
