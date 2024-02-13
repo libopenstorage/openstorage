@@ -4427,6 +4427,8 @@ message SdkStorageRebalanceRequest {
     STORAGE_REBALANCE = 0;
     // VolumePlacementFix mode: scan all volumes for incorrect placement and fix them
     VOLUME_PLACEMENT_FIX = 1;
+    // PoolDrain mode: drain all volumes & snapshots on the source pools (optionally to target pools)
+    POOL_DRAIN = 2;
   }
 }
 

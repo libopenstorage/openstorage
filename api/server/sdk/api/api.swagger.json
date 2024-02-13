@@ -4115,10 +4115,11 @@
       },
       "apiSdkStorageRebalanceRequestMode": {
         "default": "STORAGE_REBALANCE",
-        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them",
+        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them\n - POOL_DRAIN: PoolDrain mode: drain all volumes \u0026 snapshots on the source pools (optionally to target pools)",
         "enum": [
           "STORAGE_REBALANCE",
-          "VOLUME_PLACEMENT_FIX"
+          "VOLUME_PLACEMENT_FIX",
+          "POOL_DRAIN"
         ],
         "title": "Mode is an enum that defines the mode of the volume reorg job",
         "type": "string"
