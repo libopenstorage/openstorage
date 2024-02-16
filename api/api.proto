@@ -1601,6 +1601,8 @@ message StorageNode {
   // when initializing until it reaches a point where we can definitely determine whether
   // it is a quorum member or not.
   bool non_quorum_member = 22;
+  // Name of the cluster domain where the node belongs.
+  string cluster_domain = 23;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -5403,7 +5405,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 46;
+    Patch = 47;
   }
 
   // The following cannot be set to use the enum Version because the REST

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.47 - (02/15/2024)
+
+* Add cluster domain field to StorageNode
+
 ### v0.101.46 - (02/01/2024)
 
 * Add mode field to SdkStorageRebalanceRequest

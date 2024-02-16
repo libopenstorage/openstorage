@@ -289,6 +289,7 @@ func (c *ClusterManager) getNodeEntry(nodeID string, clustDBRef *cluster.Cluster
 			n.HWType = v.HWType
 			n.SecurityStatus = v.SecurityStatus
 			n.NonQuorumMember = v.NonQuorumMember
+			n.DomainID = v.ClusterDomain
 		} else {
 			logrus.Warnf("Could not query NodeID %v", nodeID)
 			// Node entry won't be refreshed form DB, will use the "offline" original
@@ -1157,7 +1158,7 @@ func (c *ClusterManager) waitForQuorum(exist bool) error {
 	return nil
 }
 
-func (c *ClusterManager) initializeCluster(db kvdb.Kvdb, selfClusterDomain string) (
+func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 	*cluster.ClusterInfo,
 	error,
 ) {
@@ -1220,10 +1221,9 @@ func (c *ClusterManager) initListeners(
 	db kvdb.Kvdb,
 	nodeExists *bool,
 	nodeInitialized bool,
-	selfClusterDomain string,
 ) (uint64, *cluster.ClusterInfo, error) {
 	// Initialize the cluster if required
-	clusterInfo, err := c.initializeCluster(db, selfClusterDomain)
+	clusterInfo, err := c.initializeCluster(db)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -1328,13 +1328,11 @@ func (c *ClusterManager) initializeAndStartHeartbeat(
 	kvdb kvdb.Kvdb,
 	exist *bool,
 	nodeInitialized bool,
-	selfClusterDomain string,
 ) (uint64, *cluster.ClusterInfo, error) {
 	lastIndex, clusterInfo, err := c.initListeners(
 		kvdb,
 		exist,
 		nodeInitialized,
-		selfClusterDomain,
 	)
 	if err != nil {
 		return 0, nil, err
@@ -1475,6 +1473,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	c.gossipPort = gossipPort
 	c.selfNode.GossipPort = gossipPort
 	c.selfClusterDomain = selfClusterDomain
+	c.selfNode.DomainID = selfClusterDomain
 	if err != nil {
 		logrus.Errorf("Failed to get external IP address for mgt/data interfaces: %s.",
 			err)
@@ -1527,7 +1526,6 @@ func (c *ClusterManager) StartWithConfiguration(
 		kv,
 		&exist,
 		nodeInitialized,
-		selfClusterDomain,
 	)
 	if err != nil {
 		return err
@@ -1643,6 +1641,7 @@ func (c *ClusterManager) nodes(clusterDB *cluster.ClusterInfo) []*api.Node {
 			node.NodeLabels = n.NodeLabels
 			node.SecurityStatus = n.SecurityStatus
 			node.NonQuorumMember = n.NonQuorumMember
+			node.DomainID = n.ClusterDomain
 		}
 		nodes = append(nodes, &node)
 	}

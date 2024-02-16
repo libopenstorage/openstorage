@@ -4787,6 +4787,10 @@
             "title": "Average load (percentage)",
             "type": "string"
           },
+          "cluster_domain": {
+            "description": "Name of the cluster domain where the node belongs.",
+            "type": "string"
+          },
           "cpu": {
             "format": "double",
             "title": "Cpu usage of the node",
@@ -6100,7 +6104,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.46"
+    "version": "0.101.47"
   },
   "openapi": "3.0.0",
   "paths": {
