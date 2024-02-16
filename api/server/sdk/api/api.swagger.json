@@ -853,7 +853,7 @@
             "items": {
               "type": "string"
             },
-            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
+            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma,\nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
             "type": "array"
           },
           "schedule_id": {
@@ -5022,6 +5022,10 @@
           "avg_load": {
             "format": "int64",
             "title": "Average load (percentage)",
+            "type": "string"
+          },
+          "cluster_domain": {
+            "description": "Name of the cluster domain where the node belongs.",
             "type": "string"
           },
           "cpu": {

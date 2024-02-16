@@ -2,9 +2,13 @@
 
 ## Releases
 
-### v0.176.0 - (12/15/2023)
+### v0.177.0 - (12/15/2023)
 
 * Add volume spec to drive resource
+
+### v0.176.0 - (02/15/2024)
+
+* Add cluster domain field to StorageNode
 
 ### v0.175.0 - (12/15/2023)
 
