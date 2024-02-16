@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.176.0 - (02/15/2024)
+
+* Add new mode for rebalance request
+
 ### v0.175.0 - (12/15/2023)
 
 * Add defrag status data structure
