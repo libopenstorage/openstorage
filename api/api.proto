@@ -1633,6 +1633,8 @@ message StorageNode {
   // when initializing until it reaches a point where we can definitely determine whether
   // it is a quorum member or not.
   bool non_quorum_member = 22;
+  // Name of the cluster domain where the node belongs.
+  string cluster_domain = 23;
 }
 
 // StorageCluster represents the state and information about the cluster
@@ -4111,7 +4113,7 @@ message CollectDiagsJob {
 
 // DefragJob describes a job to run defragmentation on cluster nodes
 message DefragJob {
-  // MaxDurationHours defines the time limit in hours 
+  // MaxDurationHours defines the time limit in hours
   double max_duration_hours = 1;
   // MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel
   uint32 max_nodes_in_parallel = 2;
@@ -4123,7 +4125,7 @@ message DefragJob {
   // if not provided, will run on all nodes
   // cannot coexist with IncludeNodes
   repeated string exclude_nodes = 4;
-  // NodeSelector is a list of node label `key=value` pairs separated by comma, 
+  // NodeSelector is a list of node label `key=value` pairs separated by comma,
   // which selects the nodes to be run on for the job
   // can coexist with ExcludeNodes but cannot coexist with IncludeNodes
   repeated string node_selector = 5;
@@ -4141,7 +4143,7 @@ message DefragNodeStatus {
   string running_schedule = 2;
 }
 
-// DefragNodeStatus describes the defragmentation status of a pool 
+// DefragNodeStatus describes the defragmentation status of a pool
 message DefragPoolStatus {
   // NumIterations counts the number of times the pool gets defraged
   uint32 num_iterations = 1;
@@ -5659,7 +5661,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 175;
+    Minor = 176;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -6340,7 +6342,7 @@ message SdkVerifyChecksumStartRequest {
 // SdkVerifyChecksumStartResponse defines the response for a
 // SdkVerifyChecksumStartRequest.
 message SdkVerifyChecksumStartResponse {
-  // Status code representing the state of the verify checksum operation 
+  // Status code representing the state of the verify checksum operation
   VerifyChecksum.VerifyChecksumStatus status = 1;
   // Text blob containing ASCII text providing details of the operation
   string message = 2;
@@ -6375,6 +6377,3 @@ message SdkVerifyChecksumStopResponse {
   // Text blob containing ASCII text providing details of the operation
   string message = 1;
 }
-
-
-  

@@ -22,8 +22,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/assert"
-    "github.com/golang/mock/gomock"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -156,6 +156,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 					},
 				},
 				NonQuorumMember: true,
+				DomainID:        "blue",
 			},
 		},
 	}
@@ -174,6 +175,7 @@ func TestSdkNodeEnumerateWithFilters(t *testing.T) {
 			},
 		},
 		NonQuorumMember: true,
+		ClusterDomain:   "blue",
 	}
 
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
@@ -246,6 +248,7 @@ func TestSdkNodeInspect(t *testing.T) {
 		},
 		HWType:          api.HardwareType_VirtualMachine,
 		NonQuorumMember: true,
+		DomainID:        "blue",
 	}
 	s.MockCluster().EXPECT().Inspect(nodeid).Return(node, nil).Times(1)
 
@@ -271,6 +274,7 @@ func TestSdkNodeInspect(t *testing.T) {
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
 	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
+	assert.Equal(t, node.DomainID, rn.ClusterDomain)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 2)
@@ -361,6 +365,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 			},
 		},
 		NonQuorumMember: true,
+		DomainID:        "blue",
 	}
 
 	cluster := api.Cluster{
@@ -393,6 +398,7 @@ func TestSdkNodeInspectCurrent(t *testing.T) {
 	assert.Equal(t, rn.GetStatus(), node.Status)
 	assert.Equal(t, rn.GetHWType(), node.HWType)
 	assert.Equal(t, node.NonQuorumMember, rn.NonQuorumMember)
+	assert.Equal(t, node.DomainID, rn.ClusterDomain)
 
 	// Check Disk
 	assert.Len(t, rn.GetDisks(), 1)
