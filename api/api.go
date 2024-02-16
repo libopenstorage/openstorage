@@ -1036,6 +1036,7 @@ func (s *Node) ToStorageNode() *StorageNode {
 		SecurityStatus:    s.SecurityStatus,
 		SchedulerTopology: s.SchedulerTopology,
 		NonQuorumMember:   s.NonQuorumMember,
+		ClusterDomain:     s.DomainID,
 	}
 
 	node.Disks = make(map[string]*StorageResource)
