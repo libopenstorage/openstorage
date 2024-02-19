@@ -22,10 +22,12 @@ import (
 	"fmt"
 	"math"
 	"reflect"
+	"strings"
 	"sync"
 	"testing"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/gogo/protobuf/proto"
 	"github.com/golang/mock/gomock"
 	"github.com/golang/protobuf/ptypes"
 	"github.com/golang/protobuf/ptypes/timestamp"
@@ -3412,7 +3414,7 @@ type fakeOsdCsiServer struct {
 func (f *fakeOsdCsiServer) getCloudBackupClient(ctx context.Context) (api.OpenStorageCloudBackupClient, error) {
 	return f.mockCloudBackupClient, nil
 }
-func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
+func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 
@@ -3422,6 +3424,8 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 
 	mockErr := errors.New("MOCK ERROR")
 	creationTime := timestamppb.Now()
+
+	mockSourceVolumeID := "mock-volume-id"
 
 	mockCloudBackupClient.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupCreateRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupCreateResponse, error) {
@@ -3433,64 +3437,57 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 				return nil, status.Errorf(codes.NotFound, "Volume id not found")
 			}
 
-			return &api.SdkCloudBackupCreateResponse{
-				TaskId: req.TaskId,
-			}, nil
+			if req.TaskId == "new-ok" {
+				return &api.SdkCloudBackupCreateResponse{
+					TaskId: req.TaskId,
+				}, nil
+			}
+
+			return nil, mockErr
 
 		}).AnyTimes()
 
+	newFirstPass := true
 	mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
 		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
 			if req.TaskId == "status-error" {
 				return nil, mockErr
 			}
 
-			// if req.TaskId == "status-failed" ||
-			if req.TaskId == "delete-error" {
+			if req.TaskId == "already-ok" {
 				return &api.SdkCloudBackupStatusResponse{
 					Statuses: map[string]*api.SdkCloudBackupStatus{
 						req.TaskId: {
-							Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeFailed,
-							StartTime: creationTime,
+							BackupId:    req.TaskId,
+							Status:      api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
+							StartTime:   creationTime,
+							SrcVolumeId: mockSourceVolumeID,
+							BytesDone:   defaultCSIVolumeSize,
 						},
 					},
 				}, nil
 			}
 
-			return &api.SdkCloudBackupStatusResponse{
-				Statuses: map[string]*api.SdkCloudBackupStatus{
-					req.TaskId: {
-						Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
-						StartTime: creationTime,
+			if req.TaskId == "new-ok" && !newFirstPass {
+				return &api.SdkCloudBackupStatusResponse{
+					Statuses: map[string]*api.SdkCloudBackupStatus{
+						req.TaskId: {
+							BackupId:    req.TaskId,
+							Status:      api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued,
+							StartTime:   creationTime,
+							SrcVolumeId: mockSourceVolumeID,
+							BytesDone:   0,
+						},
 					},
-				},
-			}, nil
-
-		}).AnyTimes()
-
-	mockCloudBackupClient.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupDeleteRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupDeleteResponse, error) {
-			if req.BackupId == "delete-error" {
-				return nil, mockErr
+				}, nil
+			}
+			if req.TaskId == "new-ok" && newFirstPass {
+				newFirstPass = false
 			}
 
-			return &api.SdkCloudBackupDeleteResponse{}, nil
+			return nil, mockErr
 
 		}).AnyTimes()
-
-	mockCloudBackupClient.EXPECT().Size(gomock.Any(), gomock.Any(), gomock.Any()).
-		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupSizeRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupSizeResponse, error) {
-			if req.BackupId == "size-error" {
-				return nil, mockErr
-			}
-
-			return &api.SdkCloudBackupSizeResponse{
-				TotalDownloadBytes: defaultCSIVolumeSize,
-			}, nil
-
-		}).AnyTimes()
-
-	mockSourceVolumeID := "mock-volume-id"
 
 	tests := []struct {
 		name         string
@@ -3501,6 +3498,12 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 		{
 			"remote client connection failed",
 			"remote-client-error",
+			nil,
+			true,
+		},
+		{
+			"failed to get parameters",
+			"param-error",
 			nil,
 			true,
 		},
@@ -3523,18 +3526,26 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 			true,
 		},
 		{
-			"fail to get snapshot size",
-			"size-error",
-			nil,
-			true,
+			"creation scheduled",
+			"new-ok",
+			&csi.CreateSnapshotResponse{
+				Snapshot: &csi.Snapshot{
+					SizeBytes:      0,
+					SnapshotId:     "new-ok",
+					SourceVolumeId: mockSourceVolumeID,
+					CreationTime:   creationTime,
+					ReadyToUse:     false,
+				},
+			},
+			false,
 		},
 		{
 			"creation completes without any error",
-			"ok",
+			"already-ok",
 			&csi.CreateSnapshotResponse{
 				Snapshot: &csi.Snapshot{
 					SizeBytes:      int64(defaultCSIVolumeSize),
-					SnapshotId:     "ok",
+					SnapshotId:     "already-ok",
 					SourceVolumeId: mockSourceVolumeID,
 					CreationTime:   creationTime,
 					ReadyToUse:     true,
@@ -3556,11 +3567,19 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+
+			specLabels := []string{
+				osdSnapshotLabelsTypeKey + "=cloud",
+			}
+			if tt.SnapshotName != "param-error" {
+				specLabels = append(specLabels, osdSnapshotCredentialIDKey+"=mockcredid")
+			}
+
 			req := &csi.CreateSnapshotRequest{
 				Name:           tt.SnapshotName,
 				SourceVolumeId: mockSourceVolumeID,
 				Parameters: map[string]string{
-					api.SpecLabels: osdSnapshotLabelsTypeKey + "=cloud",
+					api.SpecLabels: strings.Join(specLabels, ","),
 				},
 			}
 
@@ -3584,6 +3603,130 @@ func TestOsdCsiServer_CreateSnapshot(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("OsdCsiServer.CreateSnapshot() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+
+	ctx := context.Background()
+
+	mockErr := errors.New("MOCK ERROR")
+	creationTime := timestamppb.Now()
+
+	mockCloudBackupClient.EXPECT().Delete(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupDeleteRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupDeleteResponse, error) {
+			if req.BackupId == "delete-error" {
+				return nil, mockErr
+			}
+
+			if req.BackupId == "delete-notfound" {
+				return nil, status.Errorf(codes.NotFound, "Volume id not found")
+			}
+
+			return &api.SdkCloudBackupDeleteResponse{}, nil
+
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+			if req.TaskId == "status-error" {
+				return nil, mockErr
+			}
+
+			return &api.SdkCloudBackupStatusResponse{
+				Statuses: map[string]*api.SdkCloudBackupStatus{
+					req.TaskId: {
+						BackupId:  req.TaskId,
+						Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
+						StartTime: creationTime,
+					},
+				},
+			}, nil
+
+		}).AnyTimes()
+
+	tests := []struct {
+		name         string
+		SnapshotName string
+		Cred         string
+		want         *csi.DeleteSnapshotRequest
+		wantErr      bool
+	}{
+		{
+			"remote client connection failed",
+			"remote-client-error",
+			"",
+			nil,
+			true,
+		},
+		{
+			"fail to get cloud snap status",
+			"status-error",
+			"",
+			nil,
+			true,
+		},
+		{
+			"fail snapshot delete",
+			"delete-error",
+			"",
+			nil,
+			true,
+		},
+		{
+			"deletion completes without any error",
+			"ok",
+			"",
+			&csi.DeleteSnapshotRequest{},
+			false,
+		},
+	}
+	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
+	// nil, false, nil
+	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
+		func(ctx context.Context) (*grpc.ClientConn, bool, error) {
+			var err error
+			if ctx.Value("remote-client-error").(bool) {
+				err = mockErr
+			}
+			return nil, false, err
+		}).AnyTimes()
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := &csi.DeleteSnapshotRequest{
+				SnapshotId: tt.SnapshotName,
+				Secrets: map[string]string{
+					api.SpecLabels: osdSnapshotCredentialIDKey + "=" + tt.Cred,
+				},
+			}
+
+			s := &OsdCsiServer{
+				specHandler: spec.NewSpecHandler(),
+				mu:          sync.Mutex{},
+				cloudBackupClient: func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient {
+					return mockCloudBackupClient
+				},
+				roundRobinBalancer: mockRoundRobinBalancer,
+			}
+
+			doClientErr := tt.SnapshotName == "remote-client-error"
+
+			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+
+			got, err := s.DeleteSnapshot(ctx, req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OsdCsiServer.DeleteSnapshot() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if proto.Equal(got, tt.want) {
+				t.Errorf("OsdCsiServer.DeleteSnapshot() = %v, want %v", got, tt.want)
 			}
 		})
 	}
