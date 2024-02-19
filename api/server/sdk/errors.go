@@ -22,6 +22,11 @@ import (
 	"google.golang.org/grpc/status"
 )
 
+// IsErrorUnavailable returns if the given error is due to unavailable
+func IsErrorUnavailable(err error) bool {
+	return FromError(err).Code() == codes.Unavailable
+}
+
 // IsErrorNotFound returns if the given error is due to not found
 func IsErrorNotFound(err error) bool {
 	return FromError(err).Code() == codes.NotFound
