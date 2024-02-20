@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.176.0 - (12/15/2023)
+
+* Add volume spec to drive resource
+
 ### v0.175.0 - (12/15/2023)
 
 * Add defrag status data structure
