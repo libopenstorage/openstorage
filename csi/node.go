@@ -365,7 +365,8 @@ func (s *OsdCsiServer) NodeGetVolumeStats(ctx context.Context, req *csi.NodeGetV
 
 	var attachPathMatch bool
 	for _, attachPath := range vol.AttachPath {
-		if attachPath == path {
+		sharedPath := fmt.Sprintf("%s/%s", api.SharedVolExportPrefix, id)
+		if attachPath == path || attachPath == sharedPath {
 			attachPathMatch = true
 		}
 	}
