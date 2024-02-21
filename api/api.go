@@ -1491,3 +1491,8 @@ func (s *ProxySpec) GetPureFullVolumeName() string {
 
 	return ""
 }
+
+const (
+	// SharedVolExportPrefix is the export path where shared volumes are mounted
+	SharedVolExportPrefix = "/var/lib/osd/pxns"
+)
