@@ -1067,8 +1067,9 @@ func TestNodeGetVolumeStats(t *testing.T) {
 	used := int64(1 * 1024 * 1024)
 	available := size - used
 	id := "myvol123"
+	sharedPath := fmt.Sprintf("%s/%s", api.SharedVolExportPrefix, id) // "/var/lib/osd/pxns/myvol123"
 	vol := &api.Volume{
-		AttachPath: []string{"/test"},
+		AttachPath: []string{"/test", sharedPath},
 		Id:         id,
 		Locator: &api.VolumeLocator{
 			Name: id,
@@ -1096,6 +1097,18 @@ func TestNodeGetVolumeStats(t *testing.T) {
 	resp, err := c.NodeGetVolumeStats(
 		context.Background(),
 		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: "/test"})
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(resp.Usage))
+	assert.Equal(t, size, resp.Usage[0].Total)
+	assert.Equal(t, used, resp.Usage[0].Used)
+	assert.Equal(t, available, resp.Usage[0].Available)
+	assert.Equal(t, false, resp.VolumeCondition.Abnormal)
+	assert.Equal(t, "Volume status is up", resp.VolumeCondition.Message)
+
+	// Get VolumeStats - shared volume
+	resp, err = c.NodeGetVolumeStats(
+		context.Background(),
+		&csi.NodeGetVolumeStatsRequest{VolumeId: id, VolumePath: sharedPath})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(resp.Usage))
 	assert.Equal(t, size, resp.Usage[0].Total)
