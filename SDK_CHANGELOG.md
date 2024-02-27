@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.178.0 - (02/27/2024)
+
+* Add new mode for rebalance request
+
 ### v0.177.0 - (12/15/2023)
 
 * Add volume spec to drive resource
