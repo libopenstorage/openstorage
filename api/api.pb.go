@@ -18779,13 +18779,13 @@ type Schedule struct {
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// StartTime is the scheduled time to start a run
 	// Valid formats:
-	// daily=HH:mm  e.g. daily=19:15
-	// weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
-	// monthly=dd@HH:mm  e.g. monthly=22@19:15
+	//   daily=HH:mm  e.g. daily=19:15
+	//   weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+	//   monthly=dd@HH:mm  e.g. monthly=22@19:15
 	StartTime string `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
 	// MaxDurationHours defines the time limit of one run in hours
 	MaxDurationHours float64 `protobuf:"fixed64,3,opt,name=max_duration_hours,json=maxDurationHours,proto3" json:"max_duration_hours,omitempty"`
-	// Type is the type of job to run
+	// Type is the schedule type (type of scheduled tasks)
 	Type Job_Type `protobuf:"varint,4,opt,name=type,proto3,enum=openstorage.api.Job_Type" json:"type,omitempty"`
 	// Tasks is the tasks to be run in this schedule (must be of same job type)
 	Tasks []*Job `protobuf:"bytes,5,rep,name=tasks,proto3" json:"tasks,omitempty"`
