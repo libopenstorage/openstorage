@@ -15,7 +15,7 @@
 
 ### v0.175.0 - (12/15/2023)
 
-* Add defrag status data structure
+* Add defrag status data structures
 
 ### v0.174.0 - (12/12/2023)
 
