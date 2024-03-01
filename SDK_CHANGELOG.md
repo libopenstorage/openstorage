@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.179.0 - (02/29/2024)
+
+* Add generic schedule data structure
+
 ### v0.178.0 - (02/27/2024)
 
 * Add new mode for rebalance request
