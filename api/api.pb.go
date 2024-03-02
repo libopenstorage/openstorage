@@ -18770,6 +18770,8 @@ func (*Job_CollectDiags) isJob_Job() {}
 
 func (*Job_Defrag) isJob_Job() {}
 
+// Schedule is a generic schedule object that can encapsulate different
+// types of scheduled jobs which follow the schedule framework of APIs
 type Schedule struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
