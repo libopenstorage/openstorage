@@ -108,7 +108,7 @@ $(GOPATH)/bin/errcheck:
 
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
-	GO111MODULE=off go get -u github.com/gobuffalo/packr/...
+	go install github.com/gobuffalo/packr/v2/packr2@v2.8.3
 
 $(GOPATH)/bin/cover:
 	@echo "Installing missing $@ ..."
