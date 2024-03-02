@@ -123,7 +123,7 @@ $(GOPATH)/bin/govendor:
 
 $(GOPATH)/bin/packr2:
 	@echo "Installing missing $@ ..."
-	go get -u github.com/gobuffalo/packr/...
+	go install github.com/gobuffalo/packr/v2/packr2@v2.8.3
 
 $(GOPATH)/bin/cover:
 	@echo "Installing missing $@ ..."
