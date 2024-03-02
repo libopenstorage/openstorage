@@ -21,6 +21,7 @@ import (
 	"os"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
@@ -71,7 +72,6 @@ func (s *OsdCsiServer) NodeGetId(
 // target path on the node.
 //
 // TODO: Support READ ONLY Mounts
-//
 func (s *OsdCsiServer) NodePublishVolume(
 	ctx context.Context,
 	req *csi.NodePublishVolumeRequest,
@@ -91,7 +91,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	}
 
 	// Get volume information
-	v, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	v, err := util.VolumeFromName(correlation.TODO(), s.driver, req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 			req.GetVolumeId(),
@@ -197,7 +197,7 @@ func (s *OsdCsiServer) NodeUnpublishVolume(
 	}
 
 	// Get volume information
-	_, err := util.VolumeFromName(s.driver, req.GetVolumeId())
+	_, err := util.VolumeFromName(correlation.TODO(), s.driver, req.GetVolumeId())
 	if err != nil {
 		return nil, status.Errorf(codes.NotFound, "Volume id %s not found: %s",
 			req.GetVolumeId(),

@@ -119,7 +119,7 @@ type IODriver interface {
 type SnapshotDriver interface {
 	// Snapshot create volume snapshot.
 	// Errors ErrEnoEnt may be returned
-	Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error)
+	Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error)
 	// Restore restores volume to specified snapshot.
 	Restore(volumeID string, snapshotID string) error
 	// SnapshotGroup takes a snapshot of a group of volumes that can be specified with either of the following
@@ -136,7 +136,7 @@ type StatsDriver interface {
 	// cumulative stats are /proc/diskstats style stats.
 	// nonCumulative stats are stats for specific duration.
 	// Errors ErrEnoEnt may be returned
-	Stats(volumeID string, cumulative bool) (*api.Stats, error)
+	Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error)
 	// UsedSize returns currently used volume size.
 	// Errors ErrEnoEnt may be returned.
 	UsedSize(volumeID string) (uint64, error)
@@ -147,7 +147,7 @@ type StatsDriver interface {
 	CapacityUsage(ID string) (*api.CapacityUsageResponse, error)
 	// VolumeUsageByNode returns capacity usage of all volumes and snaps for a
 	// given node
-	VolumeUsageByNode(nodeID string) (*api.VolumeUsageByNode, error)
+	VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error)
 	// VolumeBytesUsedByNode returns currently used volume util of multiple volumes
 	// on a given node
 	VolumeBytesUsedByNode(nodeID string, ids []uint64) (*api.VolumeBytesUsedByNode, error)
@@ -282,7 +282,7 @@ type ProtoDriver interface {
 	Unmount(ctx context.Context, volumeID string, mountPath string, options map[string]string) error
 	// Update not all fields of the spec are supported, ErrNotSupported will be thrown for unsupported
 	// updates.
-	Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
+	Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error
 	// Status returns a set of key-value pairs which give low
 	// level diagnostic status about this driver.
 	Status() [][2]string
@@ -298,7 +298,7 @@ type ProtoDriver interface {
 type Enumerator interface {
 	// Inspect specified volumes.
 	// Returns slice of volumes that were found.
-	Inspect(volumeIDs []string) ([]*api.Volume, error)
+	Inspect(ctx context.Context, volumeIDs []string) ([]*api.Volume, error)
 	// Enumerate volumes that map to the volumeLocator. Locator fields may be regexp.
 	// If locator fields are left blank, this will return all volumes.
 	Enumerate(locator *api.VolumeLocator, labels map[string]string) ([]*api.Volume, error)

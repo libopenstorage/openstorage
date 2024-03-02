@@ -28,6 +28,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -894,7 +895,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 	volumes := api.NewOpenStorageVolumeClient(conn)
 
 	// Check if the snapshot with this name already exists
-	v, err := util.VolumeFromNameSdk(ctx, volumes, req.GetName())
+	v, err := util.VolumeFromNameSdk(correlation.TODO(), volumes, req.GetName())
 	if err == nil {
 		// Verify the parent is the same
 		if req.GetSourceVolumeId() != v.GetSource().GetParent() {

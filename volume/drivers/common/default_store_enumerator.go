@@ -1,6 +1,7 @@
 package common
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 
@@ -86,7 +87,7 @@ func (e *defaultStoreEnumerator) DeleteVol(volumeID string) error {
 
 // Inspect specified volumes.
 // Returns slice of volumes that were found.
-func (e *defaultStoreEnumerator) Inspect(ids []string) ([]*api.Volume, error) {
+func (e *defaultStoreEnumerator) Inspect(ctx context.Context, ids []string) ([]*api.Volume, error) {
 	volumes := make([]*api.Volume, 0, len(ids))
 	for _, id := range ids {
 		volume, err := e.GetVol(id)

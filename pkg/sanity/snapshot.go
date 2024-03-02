@@ -115,13 +115,13 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				Name: "snapshot-of-" + volumeID,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+			snapID, err = volumedriver.Snapshot(context.TODO(), volumeID, true, loc, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect(context.TODO(), []string{loc.GetName()})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
@@ -204,7 +204,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 					Name: "snapshot-" + strconv.Itoa(i) + "-of-" + volumeID,
 				}
 
-				snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+				snapID, err = volumedriver.Snapshot(context.TODO(), volumeID, true, loc, false)
 				Expect(err).NotTo(HaveOccurred())
 				Expect(snapID).To(Not(BeNil()))
 
@@ -213,7 +213,7 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect(snapIDs)
+			volumes, err := volumedriver.Inspect(context.TODO(), snapIDs)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 
@@ -298,13 +298,13 @@ var _ = Describe("Volume [Snapshot Tests]", func() {
 				Name: "snapshot-of-" + volumeID,
 			}
 
-			snapID, err = volumedriver.Snapshot(volumeID, true, loc, false)
+			snapID, err = volumedriver.Snapshot(context.TODO(), volumeID, true, loc, false)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(snapID).To(Not(BeNil()))
 
 			By("Checking the Parent field of the created snapshot")
 
-			volumes, err := volumedriver.Inspect([]string{loc.GetName()})
+			volumes, err := volumedriver.Inspect(context.TODO(), []string{loc.GetName()})
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes).NotTo(BeEmpty())
 

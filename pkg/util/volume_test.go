@@ -17,6 +17,7 @@ limitations under the License.
 package util
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -40,7 +41,7 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 		// Too many
 		driver.
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(context.TODO(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -64,16 +65,16 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	)
 
 	// Expect not found
-	_, err := VolumeFromName(driver, name)
+	_, err := VolumeFromName(context.TODO(), driver, name)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Cannot locate")
+	assert.Contains(t, err.Error(), "cannot locate")
 
 	// Setup calls
 	gomock.InOrder(
 		// Return that it was not found
 		driver.
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(context.TODO(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -99,15 +100,15 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	)
 
 	// Expect not found
-	_, err = VolumeFromName(driver, name)
+	_, err = VolumeFromName(context.TODO(), driver, name)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Cannot locate")
+	assert.Contains(t, err.Error(), "cannot locate")
 
 	// Setup calls
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(context.TODO(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -119,9 +120,9 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	)
 
 	// Expect not found
-	_, err = VolumeFromName(driver, name)
+	_, err = VolumeFromName(context.TODO(), driver, name)
 	assert.NotNil(t, err)
-	assert.Contains(t, err.Error(), "Failed to locate")
+	assert.Contains(t, err.Error(), "failed to locate")
 }
 
 func TestVolumeFromNameFailedToLocate(t *testing.T) {
@@ -136,7 +137,7 @@ func TestVolumeFromNameFailedToLocate(t *testing.T) {
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(context.TODO(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		driver.
@@ -147,7 +148,7 @@ func TestVolumeFromNameFailedToLocate(t *testing.T) {
 	)
 
 	// Expect not found
-	_, err := VolumeFromName(driver, name)
+	_, err := VolumeFromName(context.TODO(), driver, name)
 	assert.NotNil(t, err)
 }
 
@@ -162,9 +163,9 @@ func TestVolumeFromNameFoundFromInspect(t *testing.T) {
 	name := "myvolume"
 	driver.
 		EXPECT().
-		Inspect([]string{name}).
+		Inspect(context.TODO(), []string{name}).
 		Return([]*api.Volume{
-			&api.Volume{
+			{
 				Id: name,
 				Locator: &api.VolumeLocator{
 					Name: "hello",
@@ -174,7 +175,7 @@ func TestVolumeFromNameFoundFromInspect(t *testing.T) {
 		Times(1)
 
 	// Expect not found
-	v, err := VolumeFromName(driver, name)
+	v, err := VolumeFromName(context.TODO(), driver, name)
 	assert.Nil(t, err)
 	assert.NotNil(t, v)
 	assert.Equal(t, v.Id, name)
@@ -193,7 +194,7 @@ func TestVolumeFromNameFoundFromEnumerate(t *testing.T) {
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(context.TODO(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		driver.
@@ -211,7 +212,7 @@ func TestVolumeFromNameFoundFromEnumerate(t *testing.T) {
 	)
 
 	// Expect not found
-	v, err := VolumeFromName(driver, name)
+	v, err := VolumeFromName(context.TODO(), driver, name)
 	assert.Nil(t, err)
 	assert.NotNil(t, v)
 	assert.Equal(t, v.Id, "myid")

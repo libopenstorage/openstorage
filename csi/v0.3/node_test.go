@@ -152,7 +152,7 @@ func TestNodePublishVolumeVolumeNotFound(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -196,7 +196,7 @@ func TestNodePublishVolumeBadAttribute(t *testing.T) {
 		Times(1)
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{name}).
+		Inspect(gomock.Any(), []string{name}).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: name,
@@ -265,7 +265,7 @@ func TestNodePublishVolumeInvalidTargetLocation(t *testing.T) {
 		Times(len(testargs))
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{name}).
+		Inspect(gomock.Any(), []string{name}).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: name,
@@ -307,7 +307,7 @@ func TestNodePublishVolumeFailedToAttach(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -363,7 +363,7 @@ func TestNodePublishVolumeFailedMount(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -430,7 +430,7 @@ func TestNodePublishVolumeBlock(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -497,7 +497,7 @@ func TestNodePublishVolumeMount(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -553,7 +553,7 @@ func TestNodeUnpublishVolumeVolumeNotFound(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -596,7 +596,7 @@ func TestNodeUnpublishVolumeInvalidTargetLocation(t *testing.T) {
 	name := "myvol"
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{name}).
+		Inspect(gomock.Any(), []string{name}).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: name,
@@ -633,7 +633,7 @@ func TestNodeUnpublishVolumeFailedToUnmount(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -681,7 +681,7 @@ func TestNodeUnpublishVolumeFailedDetach(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -739,7 +739,7 @@ func TestNodeUnpublishVolumeUnmount(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect(gomock.Any(), []string{name}).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,

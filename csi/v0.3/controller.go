@@ -22,6 +22,7 @@ import (
 	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/util"
 
 	"github.com/golang/protobuf/ptypes"
@@ -108,7 +109,6 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 // Note: The method used here to return errors is still not part of the spec.
 // See: https://github.com/container-storage-interface/spec/pull/115
 // Discussion:  https://groups.google.com/forum/#!topic/kubernetes-sig-storage-wg-csi/TpTrNFbRa1I
-//
 func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
 	req *csi.ValidateVolumeCapabilitiesRequest,
@@ -133,7 +133,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		attributes)
 
 	// Check ID is valid with the specified volume capabilities
-	volumes, err := s.driver.Inspect([]string{id})
+	volumes, err := s.driver.Inspect(ctx, []string{id})
 	if err != nil || len(volumes) == 0 {
 		return nil, status.Error(codes.NotFound, "ID not found")
 	}
@@ -343,7 +343,7 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 
 	// Check if the volume has already been created or is in process of creation
-	v, err := util.VolumeFromName(s.driver, req.GetName())
+	v, err := util.VolumeFromName(correlation.TODO(), s.driver, req.GetName())
 	if err == nil {
 		// Check the requested arguments match that of the existing volume
 		if spec.Size != v.GetSpec().GetSize() {
@@ -378,7 +378,7 @@ func (s *OsdCsiServer) CreateVolume(
 	var id string
 	if source != nil && len(source.GetParent()) != 0 {
 		// Get parent volume information
-		parent, err := util.VolumeFromName(s.driver, source.Parent)
+		parent, err := util.VolumeFromName(correlation.TODO(), s.driver, source.Parent)
 		if err != nil {
 			e := fmt.Sprintf("unable to get parent volume information: %s\n", err.Error())
 			logrus.Errorln(e)
@@ -386,7 +386,7 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 
 		// Create a snapshot from the parent
-		id, err = s.driver.Snapshot(parent.GetId(), false, &api.VolumeLocator{
+		id, err = s.driver.Snapshot(ctx, parent.GetId(), false, &api.VolumeLocator{
 			Name: req.GetName(),
 		},
 			false)
@@ -415,7 +415,7 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 
 	// id must have been set
-	v, err = util.VolumeFromName(s.driver, id)
+	v, err = util.VolumeFromName(correlation.TODO(), s.driver, id)
 	if err != nil {
 		e := fmt.Sprintf("Unable to find newly created volume: %s", err.Error())
 		logrus.Errorln(e)
@@ -440,7 +440,7 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// If the volume is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
+	volumes, err := s.driver.Inspect(ctx, []string{req.GetVolumeId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == kvdb.ErrNotFound) {
 		return &csi.DeleteVolumeResponse{}, nil
@@ -492,7 +492,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 	}
 
 	// Check if the snapshot with this name already exists
-	v, err := util.VolumeFromName(s.driver, req.GetName())
+	v, err := util.VolumeFromName(correlation.TODO(), s.driver, req.GetName())
 	if err == nil {
 		// Verify the parent is the same
 		if req.GetSourceVolumeId() != v.GetSource().GetParent() {
@@ -526,7 +526,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 
 	// Create snapshot
 	readonly := true
-	snapshotID, err := s.driver.Snapshot(req.GetSourceVolumeId(), readonly, &api.VolumeLocator{
+	snapshotID, err := s.driver.Snapshot(ctx, req.GetSourceVolumeId(), readonly, &api.VolumeLocator{
 		Name:         req.GetName(),
 		VolumeLabels: locator.GetVolumeLabels(),
 	}, false)
@@ -537,7 +537,7 @@ func (s *OsdCsiServer) CreateSnapshot(
 		return nil, status.Errorf(codes.Internal, "Failed to create snapshot: %v", err)
 	}
 
-	snapInfo, err := util.VolumeFromName(s.driver, snapshotID)
+	snapInfo, err := util.VolumeFromName(correlation.TODO(), s.driver, snapshotID)
 	if err != nil {
 		return nil, status.Errorf(codes.Internal, "Failed to get information about the snapshot: %v", err)
 	}
@@ -571,7 +571,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	}
 
 	// If the snapshot is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetSnapshotId()})
+	volumes, err := s.driver.Inspect(ctx, []string{req.GetSnapshotId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == kvdb.ErrNotFound) {
 		return &csi.DeleteSnapshotResponse{}, nil
