@@ -4047,6 +4047,29 @@ message Job {
     google.protobuf.Timestamp last_update_time = 6;
 }
 
+// Schedule is a generic schedule object that can encapsulate different  
+// types of scheduled jobs which follow the schedule framework of APIs
+message Schedule {
+  // ID of the schedule
+  string id = 1;
+  // StartTime is the scheduled time to start a run
+  // Valid formats: 
+  //   daily=HH:mm  e.g. daily=19:15
+  //   weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+  //   monthly=dd@HH:mm  e.g. monthly=22@19:15
+  string start_time = 2;
+  // MaxDurationHours defines the time limit of one run in hours
+  double max_duration_hours = 3;
+  // Type is the schedule type (type of scheduled tasks)
+  Job.Type type = 4;
+  // Tasks is the tasks to be run in this schedule (must be of same job type)
+  repeated Job tasks = 5;
+  // CreateTime is the time the schedule was created
+  google.protobuf.Timestamp create_time = 6;
+  // LastUpdateTime is the time the schedule was updated
+  google.protobuf.Timestamp last_update_time = 7;
+}
+
 // Defines a response for an SDK request that spins up a new job
 // to perform the request
 message SdkJobResponse {
@@ -4135,6 +4158,8 @@ message DefragJob {
   repeated string current_running_nodes = 6;
   // ScheduleId is the ID of the schedule which started this job
   string schedule_id = 7;
+  // ScheduleOneIterationOnly is true when the defragJob is run by a one-iteration-only schedule
+  bool schedule_one_iteration_only = 8;
 }
 
 // DefragNodeStatus describes the defragmentation status of a node
@@ -4143,6 +4168,8 @@ message DefragNodeStatus {
   map<string, DefragPoolStatus> pool_status = 1;
   // RunningSchedule is the defrag schedule being run on the node
   string running_schedule = 2;
+  // LastUpdateTime is the time when DefragNodeStatus or any DefragPoolStatus was last updated on this node
+	google.protobuf.Timestamp last_update_time = 3;
 }
 
 // DefragNodeStatus describes the defragmentation status of a pool
@@ -5665,7 +5692,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 178;
+    Minor = 179;
     // SDK version patch value of this specification
     Patch = 0;
   }
