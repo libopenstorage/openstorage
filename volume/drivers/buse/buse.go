@@ -324,10 +324,10 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 	return d.UpdateVol(v)
 }
 
-func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (d *driver) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
-	vols, err := d.Inspect(volIDs)
+	vols, err := d.Inspect(nil, volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -349,7 +349,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
+	if _, err := d.Inspect(correlation.TODO(), []string{volumeID, snapID}); err != nil {
 		return err
 	}
 
@@ -362,7 +362,7 @@ func (d *driver) SnapshotGroup(groupID string, labels map[string]string, volumeI
 	return nil, volume.ErrNotSupported
 }
 
-func (d *driver) Set(volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
+func (d *driver) Set(ctx context.Context, volumeID string, locator *api.VolumeLocator, spec *api.VolumeSpec) error {
 	if spec != nil {
 		return volume.ErrNotSupported
 	}

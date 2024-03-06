@@ -853,12 +853,16 @@
             "items": {
               "type": "string"
             },
-            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
+            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma,\nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
             "type": "array"
           },
           "schedule_id": {
             "title": "ScheduleId is the ID of the schedule which started this job",
             "type": "string"
+          },
+          "schedule_one_iteration_only": {
+            "title": "ScheduleOneIterationOnly is true when the defragJob is run by a one-iteration-only schedule",
+            "type": "boolean"
           }
         },
         "title": "DefragJob describes a job to run defragmentation on cluster nodes",
@@ -4115,10 +4119,11 @@
       },
       "apiSdkStorageRebalanceRequestMode": {
         "default": "STORAGE_REBALANCE",
-        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them",
+        "description": "- STORAGE_REBALANCE: StorageRebalance mode: rebalance pools based on provisioned/used space (the default mode)\n - VOLUME_PLACEMENT_FIX: VolumePlacementFix mode: scan all volumes for incorrect placement and fix them\n - POOL_DRAIN: PoolDrain mode: drain all volumes \u0026 snapshots on the source pools (optionally to target pools)",
         "enum": [
           "STORAGE_REBALANCE",
-          "VOLUME_PLACEMENT_FIX"
+          "VOLUME_PLACEMENT_FIX",
+          "POOL_DRAIN"
         ],
         "title": "Mode is an enum that defines the mode of the volume reorg job",
         "type": "string"
@@ -5023,6 +5028,10 @@
             "title": "Average load (percentage)",
             "type": "string"
           },
+          "cluster_domain": {
+            "description": "Name of the cluster domain where the node belongs.",
+            "type": "string"
+          },
           "cpu": {
             "format": "double",
             "title": "Cpu usage of the node",
@@ -5417,6 +5426,10 @@
           "used": {
             "description": "Physical Bytes used.",
             "format": "uint64",
+            "type": "string"
+          },
+          "volume_spec": {
+            "title": "volume spec that created this drive",
             "type": "string"
           }
         },
@@ -6385,7 +6398,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.175.0"
+    "version": "0.179.0"
   },
   "openapi": "3.0.0",
   "paths": {

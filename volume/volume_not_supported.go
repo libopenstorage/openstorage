@@ -2,7 +2,6 @@ package volume
 
 import (
 	"context"
-
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -53,7 +52,7 @@ func (b *blockNotSupported) Detach(ctx context.Context, volumeID string, options
 
 type snapshotNotSupported struct{}
 
-func (s *snapshotNotSupported) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
+func (s *snapshotNotSupported) Snapshot(ctx context.Context, volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	return "", ErrNotSupported
 }
 
@@ -82,10 +81,7 @@ func (i *ioNotSupported) Flush(volumeID string) error {
 type statsNotSupported struct{}
 
 // Stats returns stats
-func (s *statsNotSupported) Stats(
-	volumeID string,
-	cumulative bool,
-) (*api.Stats, error) {
+func (s *statsNotSupported) Stats(ctx context.Context, volumeID string, cumulative bool) (*api.Stats, error) {
 	return nil, ErrNotSupported
 }
 
@@ -109,9 +105,7 @@ func (s *statsNotSupported) CapacityUsage(
 
 // VolumeUsageByNode returns capacity usage of all volumes/snaps belonging to
 // a node
-func (s *statsNotSupported) VolumeUsageByNode(
-	nodeID string,
-) (*api.VolumeUsageByNode, error) {
+func (s *statsNotSupported) VolumeUsageByNode(ctx context.Context, nodeID string) (*api.VolumeUsageByNode, error) {
 	return nil, ErrNotSupported
 }
 

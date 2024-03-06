@@ -3,6 +3,7 @@ package test
 import (
 	"context"
 	"fmt"
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"os"
 	"os/exec"
 	"path"
@@ -128,30 +129,30 @@ func create(t *testing.T, ctx *Context) {
 func inspect(t *testing.T, ctx *Context) {
 	fmt.Println("inspect")
 
-	vols, err := ctx.Inspect([]string{ctx.volID})
+	vols, err := ctx.Inspect(correlation.TODO(), []string{ctx.volID})
 	require.NoError(t, err, "Failed in Inspect")
 	require.NotNil(t, vols, "Nil vols")
 	require.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
 	require.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
-	vols, err = ctx.Inspect([]string{string("shouldNotExist")})
+	vols, err = ctx.Inspect(correlation.TODO(), []string{string("shouldNotExist")})
 	require.Equal(t, 0, len(vols), "Expect 0 volume actual %v volumes", len(vols))
 }
 
 func set(t *testing.T, ctx *Context) {
 	fmt.Println("update")
 
-	vols, err := ctx.Inspect([]string{ctx.volID})
+	vols, err := ctx.Inspect(correlation.TODO(), []string{ctx.volID})
 	require.NoError(t, err, "Failed in Inspect")
 	require.NotNil(t, vols, "Nil vols")
 	require.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
 	require.Equal(t, vols[0].Id, ctx.volID, "Expect volID %v actual %v", ctx.volID, vols[0].Id)
 
 	vols[0].Locator.VolumeLabels["UpdateTest"] = "Success"
-	err = ctx.Set(ctx.volID, vols[0].Locator, nil)
+	err = ctx.Set(context.TODO(), ctx.volID, vols[0].Locator, nil)
 	if err != volume.ErrNotSupported {
 		require.NoError(t, err, "Failed in Update")
-		vols, err = ctx.Inspect([]string{ctx.volID})
+		vols, err = ctx.Inspect(correlation.TODO(), []string{ctx.volID})
 		require.NoError(t, err, "Failed in Inspect")
 		require.NotNil(t, vols, "Nil vols")
 		require.Equal(t, len(vols), 1, "Expect 1 volume actual %v volumes", len(vols))
@@ -183,11 +184,11 @@ func waitReady(t *testing.T, ctx *Context) error {
 	total := time.Minute * 5
 	inc := time.Second * 2
 	elapsed := time.Second * 0
-	vols, err := ctx.Inspect([]string{ctx.volID})
+	vols, err := ctx.Inspect(correlation.TODO(), []string{ctx.volID})
 	for err == nil && len(vols) == 1 && vols[0].Status != api.VolumeStatus_VOLUME_STATUS_UP && elapsed < total {
 		time.Sleep(inc)
 		elapsed += inc
-		vols, err = ctx.Inspect([]string{ctx.volID})
+		vols, err = ctx.Inspect(correlation.TODO(), []string{ctx.volID})
 	}
 	if err != nil {
 		return err
@@ -320,9 +321,7 @@ func snap(t *testing.T, ctx *Context) {
 	attach(t, ctx)
 	labels := map[string]string{"oh": "snap"}
 	require.NotEqual(t, ctx.volID, "", "invalid volume ID")
-	id, err := ctx.Snapshot(ctx.volID, false,
-		&api.VolumeLocator{Name: "snappy", VolumeLabels: labels},
-		false)
+	id, err := ctx.Snapshot(context.TODO(), ctx.volID, false, &api.VolumeLocator{Name: "snappy", VolumeLabels: labels}, false)
 	require.NoError(t, err, "Failed in creating a snapshot")
 	ctx.snapID = id
 }
@@ -330,13 +329,13 @@ func snap(t *testing.T, ctx *Context) {
 func snapInspect(t *testing.T, ctx *Context) {
 	fmt.Println("snapInspect")
 
-	snaps, err := ctx.Inspect([]string{ctx.snapID})
+	snaps, err := ctx.Inspect(correlation.TODO(), []string{ctx.snapID})
 	require.NoError(t, err, "Failed in Inspect")
 	require.NotNil(t, snaps, "Nil snaps")
 	require.Equal(t, len(snaps), 1, "Expect 1 snaps actual %v snaps", len(snaps))
 	require.Equal(t, snaps[0].Id, ctx.snapID, "Expect snapID %v actual %v", ctx.snapID, snaps[0].Id)
 
-	snaps, err = ctx.Inspect([]string{string("shouldNotExist")})
+	snaps, err = ctx.Inspect(correlation.TODO(), []string{string("shouldNotExist")})
 	require.Equal(t, 0, len(snaps), "Expect 0 snaps actual %v snaps", len(snaps))
 }
 
