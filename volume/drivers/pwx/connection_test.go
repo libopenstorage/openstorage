@@ -206,8 +206,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_TLS(t *testin
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	require.Equal(t, "https://portworx-service.kube-system.svc.cluster.local:9902", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "https://portworx-service.kube-system:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_NO_TLS(t *testing.T) {
@@ -217,8 +217,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndService_NO_TLS(t *tes
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err)
 
-	require.Equal(t, "http://portworx-service.kube-system.svc.cluster.local:9901", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "http://portworx-service.kube-system:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_NO_TLS(t *testing.T) {
@@ -233,8 +233,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_NO_TLS(t *
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	require.Equal(t, "http://portworx-service.non-default-ns.svc.cluster.local:9901", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.non-default-ns.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "http://portworx-service.non-default-ns:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.non-default-ns:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *testing.T) {
@@ -249,8 +249,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithNonDefaultNsAndService_TLS(t *tes
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 
-	require.Equal(t, "https://portworx-service.non-default-ns.svc.cluster.local:9902", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.non-default-ns.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "https://portworx-service.non-default-ns:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.non-default-ns:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithStaticEndpointAndPorts_NO_TLS(t *testing.T) {
@@ -361,8 +361,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err, "should build endpoints when service and ns is not defined in env variables: %+v", err)
 
-	require.Equal(t, "http://portworx-service.kube-system.svc.cluster.local:9901", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "http://portworx-service.kube-system:9901", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system:9999", sdkEndpoint)
 }
 
 func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStaticRestPort_TLS(t *testing.T) {
@@ -376,8 +376,8 @@ func TestPortworx_buildClientsEndpoints_OK_WithDefaultNsAndServiceWithEmptyStati
 	pxMgmtEndpoint, sdkEndpoint, err := paramsBuilder.BuildClientsEndpoints()
 	require.NoError(t, err, "should build endpoints when service and ns is not defined in env varaibles: %+v", err)
 
-	require.Equal(t, "https://portworx-service.kube-system.svc.cluster.local:9902", pxMgmtEndpoint)
-	require.Equal(t, "portworx-service.kube-system.svc.cluster.local:9999", sdkEndpoint)
+	require.Equal(t, "https://portworx-service.kube-system:9902", pxMgmtEndpoint)
+	require.Equal(t, "portworx-service.kube-system:9999", sdkEndpoint)
 }
 
 func TestPortworx_dialOptions_Error_WhenSecretDoesNotExist(t *testing.T) {
