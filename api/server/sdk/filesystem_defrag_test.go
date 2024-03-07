@@ -86,7 +86,6 @@ func TestSdkGetDefragNodeStatus(t *testing.T) {
 		NodeStatus: &api.DefragNodeStatus{
 			PoolStatus: make(map[string]*api.DefragPoolStatus),
 			RunningSchedule: "12345",
-			RunningJob: "123475",
 		},
 	}
 	poolStatus := &api.DefragPoolStatus{
@@ -115,7 +114,6 @@ func TestSdkGetDefragNodeStatus(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, r.NodeStatus)
 	assert.Equal(t, resp.NodeStatus.RunningSchedule, r.NodeStatus.RunningSchedule)
-	assert.Equal(t, resp.NodeStatus.RunningJob, r.NodeStatus.RunningJob)
 	assert.Equal(t, 1, len(r.NodeStatus.PoolStatus))
 	assert.NotNil(t, r.NodeStatus.PoolStatus["pool-1"])
 	assert.Equal(t, poolStatus.NumIterations, r.NodeStatus.PoolStatus["pool-1"].NumIterations)
@@ -143,7 +141,6 @@ func TestSdkEnumerateDefragStatus(t *testing.T) {
 	nodeStatus := &api.DefragNodeStatus{
 		PoolStatus: make(map[string]*api.DefragPoolStatus),
 		RunningSchedule: "12345",
-		RunningJob: "123475",
 	}
 	nodeStatus.PoolStatus["pool-1"] = poolStatus
 	resp.Status["node-1"] = nodeStatus
@@ -164,7 +161,6 @@ func TestSdkEnumerateDefragStatus(t *testing.T) {
 	assert.Equal(t, 1, len(r.Status))
 	assert.NotNil(t, r.Status["node-1"])
 	assert.Equal(t, nodeStatus.RunningSchedule, r.Status["node-1"].RunningSchedule)
-	assert.Equal(t, nodeStatus.RunningJob, r.Status["node-1"].RunningJob)
 	assert.Equal(t, 1, len(r.Status["node-1"].PoolStatus))
 	assert.NotNil(t, r.Status["node-1"].PoolStatus["pool-1"])
 	assert.Equal(t, poolStatus.NumIterations, r.Status["node-1"].PoolStatus["pool-1"].NumIterations)
