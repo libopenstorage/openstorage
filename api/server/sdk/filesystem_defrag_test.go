@@ -76,6 +76,28 @@ func TestSdkCreateDefragSchedule(t *testing.T) {
 	assert.Equal(t, resp.Schedule.Tasks[0].GetDefrag().MaxNodesInParallel, r.Schedule.Tasks[0].GetDefrag().MaxNodesInParallel)
 }
 
+func TestSdkCleanUpDefragSchedules(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	s.MockCluster().
+		EXPECT().
+		CleanUpDefragSchedules(gomock.Any(), gomock.Any()).
+		Return(&api.SdkCleanUpDefragSchedulesResponse{}, nil)
+
+	// Setup client
+	c := api.NewOpenStorageFilesystemDefragClient(s.Conn())
+
+	// Cleanup schedules
+	resp, err := c.CleanUpSchedules(
+		context.Background(),
+		&api.SdkCleanUpDefragSchedulesRequest{},
+	)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp)
+}
+
 func TestSdkGetDefragNodeStatus(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)

@@ -48,6 +48,20 @@ func (s *FilesystemDefragServer) CreateSchedule(
 	return r, err
 }
 
+// Clean up defrag schedules and stop all defrag operations
+func (s *FilesystemDefragServer) CleanUpSchedules(
+	ctx context.Context,
+	req *api.SdkCleanUpDefragSchedulesRequest,
+) (*api.SdkCleanUpDefragSchedulesResponse, error) {
+	if s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+	var err error
+	r, err := s.server.cluster().CleanUpDefragSchedules(ctx, req)
+
+	return r, err
+}
+
 // Get defrag status of a node
 func (s *FilesystemDefragServer) GetNodeStatus(
 	ctx context.Context,

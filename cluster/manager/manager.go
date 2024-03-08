@@ -2284,6 +2284,12 @@ func (c *ClusterManager) CreateDefragSchedule(
 	return c.defragProvider.CreateDefragSchedule(ctx, req)
 }
 
+func (c *ClusterManager) CleanUpDefragSchedules(
+	ctx context.Context, req *api.SdkCleanUpDefragSchedulesRequest,
+) (*api.SdkCleanUpDefragSchedulesResponse, error) {
+	return c.defragProvider.CleanUpDefragSchedules(ctx, req)
+}
+
 func (c *ClusterManager) GetDefragNodeStatus(
 	ctx context.Context, req *api.SdkGetDefragNodeStatusRequest,
 ) (*api.SdkGetDefragNodeStatusResponse, error) {

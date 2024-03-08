@@ -1940,6 +1940,14 @@ service OpenStorageFilesystemDefrag {
         get: "/v1/filesystem-defrag/status"
       };
     }
+
+  // Clean up all defrag schedules and stop all operations
+  rpc CleanUpSchedules(SdkCleanUpDefragSchedulesRequest)
+    returns (SdkCleanUpDefragSchedulesResponse) {
+      option(google.api.http) = {
+        delete: "/v1/filesystem-defrag/schedules"
+      };
+    }
 }
 
 // OpenStorageIdentity service provides methods to obtain information
@@ -4157,6 +4165,7 @@ message SdkEnumerateSchedulesResponse {
   repeated Schedule schedules = 1;
 }
 
+// Defines a request to delete a schedule
 message SdkDeleteScheduleRequest {
   // ID of the schedule
   string id = 1;
@@ -4309,6 +4318,14 @@ message SdkCreateDefragScheduleRequest {
 message SdkCreateDefragScheduleResponse {
   // Schedule is the newly created schedule
   Schedule schedule = 1;
+}
+
+// Defines a request to clean up defrag schedules
+message SdkCleanUpDefragSchedulesRequest {
+}
+
+// Defines a response of defrag schedules clean-up
+message SdkCleanUpDefragSchedulesResponse {
 }
 
 // Defines a request to query defrag status of a node

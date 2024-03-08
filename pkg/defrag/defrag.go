@@ -14,6 +14,10 @@ type Provider interface {
 	CreateDefragSchedule(ctx context.Context, req *api.SdkCreateDefragScheduleRequest) (
 		*api.SdkCreateDefragScheduleResponse, error,
 	)
+	// Clean up defrag schedules and stop all defrag operations
+	CleanUpDefragSchedules(ctx context.Context, req *api.SdkCleanUpDefragSchedulesRequest) (
+		*api.SdkCleanUpDefragSchedulesResponse, error,
+	)
 	// Get defrag status of a node
 	GetDefragNodeStatus(ctx context.Context, req *api.SdkGetDefragNodeStatusRequest) (
 		*api.SdkGetDefragNodeStatusResponse, error,
@@ -36,6 +40,12 @@ type UnsupportedDefragProvider struct {
 func (u *UnsupportedDefragProvider) CreateDefragSchedule(
 	ctx context.Context, req *api.SdkCreateDefragScheduleRequest,
 ) (*api.SdkCreateDefragScheduleResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}
+
+func (u *UnsupportedDefragProvider) CleanUpDefragSchedules(
+	ctx context.Context, req *api.SdkCleanUpDefragSchedulesRequest,
+) (*api.SdkCleanUpDefragSchedulesResponse, error) {
 	return nil, &errors.ErrNotSupported{}
 }
 
