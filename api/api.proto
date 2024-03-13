@@ -4390,6 +4390,8 @@ message SdkStoragePoolResizeRequest {
   SdkStoragePool.ResizeOperationType operation_type = 3;
   // SkipWaitForCleanVolumes would skip the wait for all volumes on the pool to be clean before doing a resize
   bool skip_wait_for_clean_volumes = 4;
+  // ForceAddDrive would force pool expand with add drive for the storage pool
+  bool force_add_drive = 5;
 }
 
 message StorageRebalanceTriggerThreshold {
@@ -5692,7 +5694,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 179;
+    Minor = 180;
     // SDK version patch value of this specification
     Patch = 0;
   }
