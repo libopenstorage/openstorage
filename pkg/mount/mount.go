@@ -331,7 +331,7 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	if info, ok := m.mounts[device]; ok {
 		// If the device has no more mountpoints and no mounts in progress, remove it from the map
 		if len(info.Mountpoint) == 0 && info.MountsInProgress == 0 {
-			logrus.Infof("No more mount entries for device [%s]. Removing device from MountTable")
+			logrus.Infof("No more mount entries for device [%s]. Removing device from MountTable", device)
 			delete(m.mounts, device)
 		}
 	}
