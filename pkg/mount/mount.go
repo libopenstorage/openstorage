@@ -331,6 +331,7 @@ func (m *Mounter) maybeRemoveDevice(device string) {
 	if info, ok := m.mounts[device]; ok {
 		// If the device has no more mountpoints and no mounts in progress, remove it from the map
 		if len(info.Mountpoint) == 0 && info.MountsInProgress == 0 {
+			logrus.Infof("No more mount entries for device [%s]. Removing device from MountTable", device)
 			delete(m.mounts, device)
 		}
 	}
@@ -343,6 +344,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 
 	// New mountable has no mounts, delete old mounts.
 	if newM == nil {
+		logrus.Infof("Removing Entry for device [%v] from MountTable", device)
 		delete(m.mounts, device)
 		return nil
 	}
@@ -350,6 +352,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	// Old mountable had no mounts, copy over new mounts.
 	oldM, ok := m.mounts[device]
 	if !ok {
+		logrus.Infof("Reload: Adding the tuple to device path[%v:%v]", device, newM.Fs)
 		m.mounts[device] = newM
 		return nil
 	}
@@ -365,6 +368,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	}
 
 	// Purge old mounts.
+	logrus.Infof("Reload: Adding the device tuple {%v:%v] to mount table", device, newM.Fs)
 	m.mounts[device] = newM
 	return nil
 }
@@ -409,6 +413,7 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 					Mountpoint: make([]*PathInfo, 0),
 				}
 				m.mounts[mountSourcePath] = mount
+				logrus.Infof("load: Adding the device[%v:%v] to mount table", deviceSourcePath, v.FSType)
 			}
 			// Allow Load to be called multiple times.
 			for _, p := range mount.Mountpoint {
@@ -423,6 +428,7 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 				Path: normalizeMountPath(v.Mountpoint),
 			}
 			mount.Mountpoint = append(mount.Mountpoint, pi)
+			logrus.Infof("load: Adding path to [%v:%v] to MountTable Entry for device [%v:%v]", v.Root, v.Mountpoint, deviceSourcePath, v.FSType)
 			if updatePaths {
 				m.paths[v.Mountpoint] = mountSourcePath
 			}
@@ -450,6 +456,7 @@ func (m *Mounter) Mount(
 ) error {
 	// device gets overwritten if opts specifies fuse mount with
 	// options.OptionsDeviceFuseMount.
+	logrus.Infof("Attempting to Mount device[%v] onto path [%s]. FsType[%s]", devPath, path, fs)
 	device := devPath
 	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
 		// fuse mounts show-up with this key as device.
@@ -483,6 +490,7 @@ func (m *Mounter) Mount(
 			Minor:      minor,
 			Fs:         fs,
 		}
+		logrus.Infof("Mount: Adding device[%v:%v] to mountable", device, fs)
 	}
 	// This variable in Info Structure is guarded using m.Lock()
 	info.MountsInProgress++
@@ -502,6 +510,7 @@ func (m *Mounter) Mount(
 	if !strings.HasPrefix(info.Fs, fs) && (flags&syscall.MS_BIND) != syscall.MS_BIND {
 		logrus.Warnf("%s Existing mountpoint has fs %q cannot change to %q",
 			device, info.Fs, fs)
+		m.printMountTable()
 		return ErrEinval
 	}
 
@@ -601,6 +610,20 @@ func (m *Mounter) cleanupBindMount(path, bindMountPath string, err error) error 
 	return nil
 }
 
+func (m * Mounter) printMountTable() {
+	logrus.Infof("Found %v mounts in mounter's cache: ", len(m.mounts))
+	logrus.Infof("Mounter has the following mountpoints: ")
+	for dev, info := range m.mounts {
+		logrus.Infof("For Device %v: Info: %v", dev, info)
+		if info == nil {
+			continue
+		}
+		for _, path := range info.Mountpoint {
+			logrus.Infof("\t Mountpath: %v Rootpath: %v", path.Path, path.Root)
+		}
+	}
+}
+
 // Unmount device at mountpoint and from the matrix.
 // ErrEnoent is returned if the device or mountpoint for the device is not found.
 func (m *Mounter) Unmount(
@@ -613,6 +636,7 @@ func (m *Mounter) Unmount(
 	m.Lock()
 	// device gets overwritten if opts specifies fuse mount with
 	// options.OptionsDeviceFuseMount.
+	logrus.Infof("Unmount devPath[%s] from path[%s]", devPath, path)
 	device := devPath
 	path = normalizeMountPath(path)
 	if value, ok := opts[options.OptionsDeviceFuseMount]; ok {
@@ -623,17 +647,7 @@ func (m *Mounter) Unmount(
 	if !ok {
 		logrus.Warnf("Unable to unmount device %q path %q: %v",
 			devPath, path, ErrEnoent.Error())
-		logrus.Infof("Found %v mounts in mounter's cache: ", len(m.mounts))
-		logrus.Infof("Mounter has the following mountpoints: ")
-		for dev, info := range m.mounts {
-			logrus.Infof("For Device %v: Info: %v", dev, info)
-			if info == nil {
-				continue
-			}
-			for _, path := range info.Mountpoint {
-				logrus.Infof("\t Mountpath: %v Rootpath: %v", path.Path, path.Root)
-			}
-		}
+		m.printMountTable()
 		m.Unlock()
 		return ErrEnoent
 	}
