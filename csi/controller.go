@@ -1034,7 +1034,8 @@ func (s *OsdCsiServer) createCloudBackup(
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
 	cloudBackupClient, err := s.getCloudBackupClient(ctx)
-	if err != nil {
+	cloudBackupDriverDisabled := sdk.IsErrorUnavailable(err)
+	if (err != nil && !cloudBackupDriverDisabled) || cloudBackupClient == nil {
 		return nil, err
 	}
 
@@ -1115,8 +1116,9 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	req *csi.DeleteSnapshotRequest,
 ) (resp *csi.DeleteSnapshotResponse, err error) {
 	cloudBackupClient, err := s.getCloudBackupClient(ctx)
-	cloudBackupDriverUnavailable := sdk.IsErrorUnavailable(err)
-	if err != nil && !cloudBackupDriverUnavailable {
+	cloudBackupClientAvailable := cloudBackupClient != nil
+	cloudBackupDriverDisabled := sdk.IsErrorUnavailable(err)
+	if (err != nil && !cloudBackupDriverDisabled) || cloudBackupClient == nil {
 		return nil, err
 	}
 
@@ -1125,11 +1127,19 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
 
-	// Check if snapshot has been created but is in error state
-	backupStatus, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
-		TaskId: csiSnapshotID,
-	})
-	if sdk.IsErrorNotFound(err) || cloudBackupDriverUnavailable {
+	var backupStatus *api.SdkCloudBackupStatusResponse
+	if cloudBackupClientAvailable && !cloudBackupDriverDisabled {
+		// Check if snapshot has been created but is in error state
+		backupStatus, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+			TaskId: csiSnapshotID,
+		})
+	}
+
+	isSnapshotIDPresentInCloud := true
+	if backupStatus != nil {
+		_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
+	}
+	if (sdk.IsErrorNotFound(err) && !cloudBackupDriverDisabled && cloudBackupClientAvailable) || !isSnapshotIDPresentInCloud {
 		resp, err = s.deleteLocalSnapshot(ctx, req)
 		return
 	}

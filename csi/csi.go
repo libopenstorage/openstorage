@@ -66,6 +66,8 @@ type OsdCsiServerConfig struct {
 	SdkPort            string
 	SchedulerName      string
 
+	CloudBackupClient func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
+
 	// Name to be reported back to the CO. If not provided,
 	// the name will be in the format of <driver>.openstorage.org
 	CsiDriverName string
@@ -124,6 +126,14 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		return nil, err
 	}
 
+	var cloudBackupClient func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient
+
+	if config.CloudBackupClient == nil {
+		cloudBackupClient = api.NewOpenStorageCloudBackupClient
+	} else {
+		cloudBackupClient = config.CloudBackupClient
+	}
+
 	return &OsdCsiServer{
 		specHandler:        spec.NewSpecHandler(),
 		GrpcServer:         gServer,
@@ -134,7 +144,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		csiDriverName:      config.CsiDriverName,
 		allowInlineVolumes: config.EnableInlineVolumes,
 		roundRobinBalancer: config.RoundRobinBalancer,
-		cloudBackupClient:  api.NewOpenStorageCloudBackupClient,
+		cloudBackupClient:  cloudBackupClient,
 		config:             config,
 		autoRecoverStopCh:  make(chan struct{}),
 	}, nil
@@ -161,7 +171,16 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 }
 
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
-	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
+	remoteConn, remote, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
+	if !remote {
+		clogger.WithContext(ctx).Infof("Remote connection not supported")
+		conn, err := s.getConn()
+		if nil != err {
+			clogger.WithContext(ctx).Infof("Remote connection not supported")
+			return nil, err
+		}
+		return conn, err
+	}
 	return remoteConn, err
 }
 
