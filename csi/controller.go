@@ -1140,14 +1140,20 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
 
+	var backupStatus *api.SdkCloudBackupStatusResponse
 	// Check if snapshot has been created but is in error state
-	backupStatus, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+	backupStatus, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
-	if sdk.IsErrorNotFound(err) || cloudBackupDriverUnavailable {
-		resp, err = s.deleteLocalSnapshot(ctx, req)
-		return
+
+	isSnapshotIDPresentInCloud := true
+	if backupStatus != nil {
+		_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
 	}
+	if !isSnapshotIDPresentInCloud {
+		resp, err = s.deleteLocalSnapshot(ctx, req)
+	}
+
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot status: %v", err)
 	}

@@ -3528,7 +3528,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 			if ctx.Value("remote-client-error").(bool) {
 				err = mockErr
 			}
-			return nil, false, err
+			return nil, true, err
 		}).AnyTimes()
 
 	for _, tt := range tests {
@@ -3653,10 +3653,12 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
 		func(ctx context.Context) (*grpc.ClientConn, bool, error) {
 			var err error
+			var conn *grpc.ClientConn
 			if ctx.Value("remote-client-error").(bool) {
 				err = mockErr
+				conn = &grpc.ClientConn{}
 			}
-			return nil, false, err
+			return conn, true, err
 		}).AnyTimes()
 
 	for _, tt := range tests {
