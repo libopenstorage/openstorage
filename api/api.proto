@@ -1909,12 +1909,6 @@ service OpenStorageFilesystemCheck {
 
 // ## OpenStorageFilesystemDefrag Service
 // This service provides APIs to manage filesystem defragmentation schedules/jobs on a cluster.
-//
-// The defrag job can run defrag tasks on a single node or on multiple nodes in parallel.
-// On a node, it iterates its data pools. On each pool, it iterates volumes which has 
-// replicas on it. The job only runs defrag on one volume at any time. The volume will be
-// defraged with increasing offset and a configured chunk size.
-// When the task on a node is finished, it proceeds to the next node.
 service OpenStorageFilesystemDefrag {
   // Create a schedule to run defragmentation tasks periodically
   rpc CreateSchedule(SdkCreateDefragScheduleRequest)
