@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.48 - (03/19/2024)
+
+* Add force option to StoragePool api
+
 ### v0.101.47 - (02/15/2024)
 
 * Add cluster domain field to StorageNode
