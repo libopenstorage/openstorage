@@ -574,6 +574,7 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageFilesystemDefragServer(grpcServer, s.filesystemDefragServer)
 		api.RegisterOpenStorageVerifyChecksumServer(grpcServer, s.verifyChecksumServer)
 		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
+		api.RegisterOpenStorageScheduleServer(grpcServer, s.scheduleServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
@@ -591,9 +592,6 @@ func (s *sdkGrpcServer) Start() error {
 		}
 		if s.jobServer != nil {
 			api.RegisterOpenStorageJobServer(grpcServer, s.jobServer)
-		}
-		if s.scheduleServer != nil {
-			api.RegisterOpenStorageScheduleServer(grpcServer, s.scheduleServer)
 		}
 
 		// Register stats for all the services
