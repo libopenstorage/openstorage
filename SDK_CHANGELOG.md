@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.180.0 - (03/19/2024)
+
+* Add force option to StoragePool api
+
 ### v0.179.0 - (02/29/2024)
 
 * Add generic schedule data structure
