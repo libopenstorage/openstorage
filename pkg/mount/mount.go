@@ -368,7 +368,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	}
 
 	// Purge old mounts.
-	logrus.Infof("Reload: Adding the device tuple {%v:%v] to mount table", device, newM.Fs)
+	logrus.Infof("Reload: Adding the device tuple [%v:%v] to mount table", device, newM.Fs)
 	m.mounts[device] = newM
 	return nil
 }
@@ -387,12 +387,15 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 			foundPrefix, sourcePath, devicePath = fmp(v, devPrefix, info)
 			targetDevice = getTargetDevice(devPrefix.String())
 			if !foundPrefix && targetDevice != "" {
-				foundTarget, _, _ = fmp(v, regexp.MustCompile(regexp.QuoteMeta(targetDevice)), info)
-				// We could not find a mountpoint for devPrefix (/dev/mapper/vg-lvm1) but found
-				// one for its target device (/dev/dm-0). Change the sourcePath to devPrefix
-				// as fmp might have returned an incorrect or empty sourcePath
-				sourcePath = devPrefix.String()
-				devicePath = devPrefix.String()
+				// This should be an Exact Match and not a prefix match.
+				if strings.EqualFold(targetDevice, v.Source)  {
+					// We could not find a mountpoint for devPrefix (/dev/mapper/vg-lvm1) but found
+					// one for its target device (/dev/dm-0). Change the sourcePath to devPrefix
+					// as fmp might have returned an incorrect or empty sourcePath
+					sourcePath = devPrefix.String()
+					devicePath = devPrefix.String()
+					foundTarget = true
+				}
 			}
 
 			if foundPrefix || foundTarget {
