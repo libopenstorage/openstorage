@@ -13,9 +13,11 @@ import (
 	"github.com/libopenstorage/openstorage/osdconfig"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
+	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
 )
@@ -55,10 +57,14 @@ type ClusterServerConfiguration struct {
 	ConfigStoragePoolProvider api.OpenStoragePoolServer
 	// holds implementation to the JobProvider interface
 	ConfigJobProvider job.Provider
+	// holds the implementation to the SDK OpenStorageSchedule interface
+	ConfigScheduleProvider schedule.Provider
 	// holds implementation to the NodeDrainProvider interface
 	ConfigNodeDrainProvider nodedrain.Provider
 	// holds the actual implementation to the SDK OpenStorageDiags interface
 	ConfigDiagsProvider diags.Provider
+	// holds the implementation to the SDK OpenStorageDefrag interface
+	ConfigDefragProvider defrag.Provider
 }
 
 // NodeEntry is used to discover other nodes in the cluster
@@ -401,8 +407,10 @@ type Cluster interface {
 	objectstore.ObjectStore
 	api.OpenStoragePoolServer
 	job.Provider
+	schedule.Provider
 	nodedrain.Provider
 	diags.Provider
+	defrag.Provider
 }
 
 // NullClusterListener is a NULL implementation of ClusterListener functions

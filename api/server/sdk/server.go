@@ -206,8 +206,10 @@ type sdkGrpcServer struct {
 	storagePoolServer     api.OpenStoragePoolServer
 	diagsServer           api.OpenStorageDiagsServer
 	jobServer             api.OpenStorageJobServer
+	scheduleServer        api.OpenStorageScheduleServer
 	filesystemTrimServer  api.OpenStorageFilesystemTrimServer
 	filesystemCheckServer api.OpenStorageFilesystemCheckServer
+	filesystemDefragServer api.OpenStorageFilesystemDefragServer
 	verifyChecksumServer  api.OpenStorageVerifyChecksumServer
 	bucketServer          *BucketServer
 	watcherServer         *WatcherServer
@@ -457,6 +459,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 	s.filesystemCheckServer = &FilesystemCheckServer{
 		server: s,
 	}
+	s.filesystemDefragServer = &FilesystemDefragServer{
+		server: s,
+	}
 	s.storagePoolServer = &StoragePoolServer{
 		server: s,
 	}
@@ -464,6 +469,9 @@ func newSdkGrpcServer(config *ServerConfig) (*sdkGrpcServer, error) {
 		server: s,
 	}
 	s.jobServer = &JobServer{
+		server: s,
+	}
+	s.scheduleServer = &ScheduleServer{
 		server: s,
 	}
 	s.bucketServer = &BucketServer{
@@ -563,8 +571,10 @@ func (s *sdkGrpcServer) Start() error {
 		api.RegisterOpenStorageClusterDomainsServer(grpcServer, s.clusterDomainsServer)
 		api.RegisterOpenStorageFilesystemTrimServer(grpcServer, s.filesystemTrimServer)
 		api.RegisterOpenStorageFilesystemCheckServer(grpcServer, s.filesystemCheckServer)
+		api.RegisterOpenStorageFilesystemDefragServer(grpcServer, s.filesystemDefragServer)
 		api.RegisterOpenStorageVerifyChecksumServer(grpcServer, s.verifyChecksumServer)
 		api.RegisterOpenStorageWatchServer(grpcServer, s.watcherServer)
+		api.RegisterOpenStorageScheduleServer(grpcServer, s.scheduleServer)
 		if s.diagsServer != nil {
 			api.RegisterOpenStorageDiagsServer(grpcServer, s.diagsServer)
 		}
