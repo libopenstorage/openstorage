@@ -700,6 +700,10 @@ func (m *Mounter) removeMountPath(path string) error {
 	}
 	if devicePath, mounted := bindMounter.HasTarget(path); mounted {
 		bindMountPath, err = bindMounter.GetRootPath(path)
+		if err != nil {
+			logrus.Warnf("Failed to get root path for %q. Err: %v", path, err)
+			return err
+		}
 		if err := m.mountImpl.Unmount(path, 0, 0); err != nil {
 			return fmt.Errorf("failed to unmount bind mount %v. Err: %v", devicePath, err)
 		}
