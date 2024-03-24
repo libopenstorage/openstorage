@@ -241,7 +241,6 @@ func (l *Layer0) Remove(id string) error {
 	}
 	l.Lock()
 	defer l.Unlock()
-	var err error
 	v, ok := l.volumes[id]
 
 	if ok {
@@ -253,22 +252,30 @@ func (l *Layer0) Remove(id string) error {
 			if err != nil {
 				logrus.Warnf("Failed in rename(%v): %v", id, err)
 			}
-			l.Driver.Remove(l.realID(id))
-
+			err = l.Driver.Remove(l.realID(id))
+			if err != nil {
+				return err
+			}
 			opts := make(map[string]string)
 			opts[options.OptionsDeleteAfterUnmount] = "true"
 
 			err = l.volDriver.Unmount(context.TODO(), v.volumeID, v.path, opts)
+			if err != nil {
+				return err
+			}
 			if l.volDriver.Type() == api.DriverType_DRIVER_TYPE_BLOCK {
 				_ = l.volDriver.Detach(context.TODO(), v.volumeID, nil)
 			}
 			err = os.RemoveAll(v.path)
+			if err != nil {
+				return err
+			}
 			delete(l.volumes, v.id)
 		}
 	} else {
 		logrus.Warnf("Failed to find layer0 vol for id %v", id)
 	}
-	return err
+	return nil
 }
 
 // Get returns the mountpoint for the layered filesystem
