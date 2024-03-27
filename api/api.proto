@@ -409,6 +409,7 @@ message PXDProxySpec {
 message PureBlockSpec {
   string serial_num = 1;
   string full_vol_name = 2;
+  string pod_name = 3;
 }
 
 // PureFileSpec is the spec for proxying a volume on pure_file backends
