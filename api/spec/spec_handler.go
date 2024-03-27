@@ -146,7 +146,8 @@ var (
 	proxyS3BucketRegex            = regexp.MustCompile(api.SpecProxyS3Bucket + "=([A-Za-z]+),?")
 	mountOptionsRegex             = regexp.MustCompile(api.SpecMountOptions + `=([A-Za-z0-9:;@=#]+),?`)
 	sharedv4MountOptionsRegex     = regexp.MustCompile(api.SpecSharedv4MountOptions + `=([A-Za-z0-9:;@=#]+),?`)
-	cowOnDemandRegex              = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z]+),?")
+	cowOnDemandRegex              = regexp.MustCompile(api.SpecCowOnDemand + "=([A-Za-z0-9]+),?")
+	checksumDataRegex             = regexp.MustCompile(api.SpecChecksumData + "=([A-Za-z0-9]+),?")
 	directIoRegex                 = regexp.MustCompile(api.SpecDirectIo + "=([A-Za-z]+),?")
 	ProxyWriteRegex               = regexp.MustCompile(api.SpecProxyWrite + "=([A-Za-z]+),?")
 	sharedv4ServiceTypeRegex      = regexp.MustCompile(api.SpecSharedv4ServiceType + "=([A-Za-z]+),?")
@@ -569,6 +570,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 					spec.Xattr = api.Xattr_UNSPECIFIED
 				}
 			}
+		case api.SpecChecksumData:
+			if checksumData, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.Checksummed = checksumData
+			}
 		case api.SpecDirectIo:
 			if directIo, err := strconv.ParseBool(v); err != nil {
 				return nil, nil, nil, err
@@ -892,6 +899,9 @@ func (d *specHandler) SpecOptsFromString(
 
 	if ok, cowOnDemand := d.getVal(cowOnDemandRegex, str); ok {
 		opts[api.SpecCowOnDemand] = cowOnDemand
+	}
+	if ok, checksumData := d.getVal(checksumDataRegex, str); ok {
+		opts[api.SpecChecksumData] = checksumData
 	}
 	if ok, directIo := d.getVal(directIoRegex, str); ok {
 		opts[api.SpecDirectIo] = directIo
