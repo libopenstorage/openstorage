@@ -3228,6 +3228,39 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkFilterNonOverlappingNodesRequest": {
+        "description": "Defines a request to filter nodes from the input list, such that the filtered nodes can\ndon't have overlapping volume replicas. This can be used to upgrade nodes in parallel.",
+        "properties": {
+          "down_nodes": {
+            "description": "List of IDs of nodes that are down or the caller deems to be down.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "input_nodes": {
+            "description": "List of nodes IDs from which we need to filter the non-overlapping nodes.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilterNonOverlappingNodesResponse": {
+        "description": "Defines a response with a list of non overlapping nodes from the given input list of nodes.",
+        "properties": {
+          "node_ids": {
+            "description": "Filtered list of all the non overlapping nodes from the given input list.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
       "apiSdkGetJobStatusResponse": {
         "properties": {
           "job": {
@@ -6110,7 +6143,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.48"
+    "version": "0.102.48"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -8147,6 +8180,37 @@
           }
         },
         "summary": "Returns bytes used of multiple volumes for a give node",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/filter-nonoverlapping": {
+      "post": {
+        "operationId": "FilterNonOverlappingNodes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilterNonOverlappingNodesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilterNonOverlappingNodesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Returns a subset of nodes which do not share replicas of any volume in the cluster.",
         "tags": [
           "OpenStorageNode"
         ]
