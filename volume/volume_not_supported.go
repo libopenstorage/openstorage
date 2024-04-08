@@ -36,6 +36,8 @@ var (
 	// FilesystemCheckNotSupported implements FilesystemCheckDriver by returning
 	// Not supported error
 	FilesystemCheckNotSupported = &filesystemCheckNotSupported{}
+	// UpgraderNotSupported implements Upgrader by returning Not supported error
+	UpgraderNotSupported = &upgraderNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -96,10 +98,10 @@ func (s *statsNotSupported) GetActiveRequests() (*api.ActiveRequests, error) {
 	return nil, nil
 }
 
-func (s *statsNotSupported)    VolumeBytesUsedByNode(nodeID string,
-   ids []uint64,
+func (s *statsNotSupported) VolumeBytesUsedByNode(nodeID string,
+	ids []uint64,
 ) (*api.VolumeBytesUsedByNode, error) {
-   return nil, ErrNotSupported
+	return nil, ErrNotSupported
 }
 
 // GetCapacityUsage gets exclusive and shared capacity
@@ -318,5 +320,11 @@ func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFil
 	return nil, ErrNotSupported
 }
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
+	return nil, ErrNotSupported
+}
+
+type upgraderNotSupported struct{}
+
+func (cl *upgraderNotSupported) FilterNonOverlappingNodes(inputNodes, downNodes []string) ([]string, error) {
 	return nil, ErrNotSupported
 }

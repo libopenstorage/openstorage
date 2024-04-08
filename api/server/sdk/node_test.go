@@ -553,3 +553,45 @@ func TestSdkVolumeBytesUsedByNode(t *testing.T) {
 		assert.Equal(t, volUsage.GetTotalBytes(), volumeBytesUsedInfo.VolUsage[i].TotalBytes)
 	}
 }
+
+func TestFilterNonOverlappingNodes(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	inputNodes := []string{"node1", "node2"}
+	downNodes := []string{"node3", "node4"}
+
+	// Setup client
+	c := api.NewOpenStorageNodeClient(s.Conn())
+
+	// TestCase: Success case
+	fmt.Println("TestCase: Success case")
+	s.MockDriver().EXPECT().FilterNonOverlappingNodes(inputNodes, downNodes).Return([]string{"node1"}, nil).Times(1)
+
+	resp, err := c.FilterNonOverlappingNodes(
+		context.Background(),
+		&api.SdkFilterNonOverlappingNodesRequest{
+			InputNodes: inputNodes,
+			DownNodes:  downNodes,
+		},
+	)
+
+	assert.NoError(t, err)
+	assert.Equal(t, []string{"node1"}, resp.GetNodeIds())
+
+	// TestCase: Driver API returns error
+	s.MockDriver().EXPECT().FilterNonOverlappingNodes(nil, nil).Return(nil, fmt.Errorf("driver error"))
+
+	resp, err = c.FilterNonOverlappingNodes(
+		context.Background(),
+		&api.SdkFilterNonOverlappingNodesRequest{},
+	)
+
+	assert.Nil(t, resp.GetNodeIds())
+	assert.Error(t, err)
+	serverError, ok := status.FromError(err)
+	assert.True(t, ok)
+	assert.Equal(t, serverError.Code(), codes.Internal)
+	assert.Equal(t, serverError.Message(), "Failed in FilterNonOverlappingNodes: driver error")
+}

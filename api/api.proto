@@ -5433,9 +5433,9 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 102;
+    Minor = 101;
     // SDK version patch value of this specification
-    Patch = 48;
+    Patch = 49;
   }
 
   // The following cannot be set to use the enum Version because the REST

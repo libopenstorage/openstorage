@@ -2,23 +2,11 @@
 
 ## Releases
 
-<<<<<<< HEAD
-### v0.101.48 - (03/19/2024)
-=======
-### v0.183.0 - (04/23/2024)
+### v0.101.49 - (04/23/2024)
 
 * Add an API to return non-overlapping nodes with respect to volume replicas
 
-### v0.182.0 - (04/16/2024)
-
-* Added NFS Endpoint in volume spec
-
-### v0.181.0 - (03/20/2024)
-
-* Add servers and APIs for defrag and schedule services
-
-### v0.180.0 - (03/19/2024)
->>>>>>> 7a0857f7... PWX-36511 Expose API to return a set of nodes that can be upgraded
+### v0.101.48 - (03/19/2024)
 
 * Add force option to StoragePool api
 

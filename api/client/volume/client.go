@@ -28,6 +28,7 @@ type volumeClient struct {
 	volume.IODriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.Upgrader
 	c *client.Client
 }
 
@@ -36,6 +37,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		Upgrader:              volume.UpgraderNotSupported,
 		c:                     c}
 }
 
@@ -313,22 +315,22 @@ func (v *volumeClient) VolumeUsageByNode(
 }
 
 func (v *volumeClient) VolumeBytesUsedByNode(
-   nodeID string,
-   IDs []uint64,
+	nodeID string,
+	IDs []uint64,
 ) (*api.VolumeBytesUsedByNode, error) {
-   result := &api.SdkVolumeBytesUsedResponse{}
-   req := &api.SdkVolumeBytesUsedRequest{NodeId: nodeID, Ids: IDs}
-   resp := v.c.Post().Resource(volumePath + "/bytesused").Body(req).Do()
+	result := &api.SdkVolumeBytesUsedResponse{}
+	req := &api.SdkVolumeBytesUsedRequest{NodeId: nodeID, Ids: IDs}
+	resp := v.c.Post().Resource(volumePath + "/bytesused").Body(req).Do()
 
-   if resp.Error() != nil {
-       return nil, resp.FormatError()
-   }
+	if resp.Error() != nil {
+		return nil, resp.FormatError()
+	}
 
-   if err := resp.Unmarshal(result); err != nil {
-       return nil, err
-   }
+	if err := resp.Unmarshal(result); err != nil {
+		return nil, err
+	}
 
-   return result.VolUtilInfo, nil
+	return result.VolUtilInfo, nil
 }
 
 // Shutdown and cleanup.
