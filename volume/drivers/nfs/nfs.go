@@ -5,20 +5,21 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"os"
 	"os/exec"
 	"path"
 	"regexp"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 	losetup "gopkg.in/freddierice/go-losetup.v1"
-
-	"math/rand"
-	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/config"
@@ -28,8 +29,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/util"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
 )
 
 const (
@@ -54,6 +53,7 @@ type driver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 	nfsServers []string
 	nfsPath    string
 	mounter    mount.Manager
@@ -99,6 +99,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
+		Upgrader:              volume.UpgraderNotSupported,
 	}
 
 	//make directory for each nfs server

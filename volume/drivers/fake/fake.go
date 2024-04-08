@@ -27,16 +27,17 @@ import (
 	"time"
 
 	"github.com/golang/protobuf/ptypes/timestamp"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/kvdb/mem"
+	"github.com/sirupsen/logrus"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
-	"github.com/portworx/kvdb/mem"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -59,6 +60,7 @@ type driver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 	kv            kvdb.Kvdb
 	thisCluster   cluster.Cluster
 	volumeChannel chan *api.Volume
@@ -102,6 +104,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
+		Upgrader:              volume.UpgraderNotSupported,
 		kv:                    kv,
 		volumeChannel:         make(chan *api.Volume, 2),
 	}

@@ -3,6 +3,7 @@ package volume
 import (
 	"context"
 	"errors"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -99,6 +100,7 @@ type VolumeDriver interface {
 	BlockDriver
 	Enumerator
 	Watcher
+	Upgrader
 }
 
 // IODriver interfaces applicable to object store interfaces.
@@ -315,7 +317,7 @@ type Enumerator interface {
 	SnapEnumerate(volID []string, snapLabels map[string]string) ([]*api.Volume, error)
 }
 
-// Water provides a set of function to get volume
+// Watcher provides a set of functions to get volume.
 type Watcher interface {
 	// Stop Volume notifier
 	StartVolumeWatcher()
@@ -323,6 +325,13 @@ type Watcher interface {
 	GetVolumeWatcher(locator *api.VolumeLocator, labels map[string]string) (chan *api.Volume, error)
 	// Stop Volume notifier
 	StopVolumeWatcher()
+}
+
+// Upgrader provides a set of functions to aid in upgrading the volume driver.
+type Upgrader interface {
+	// Returns a subset of nodes from the input list, such that these nodes can be upgraded
+	// together without any interruption to multi-replica volumes.
+	FilterNonOverlappingNodes(inputNodes, downNodes []string) ([]string, error)
 }
 
 // StoreEnumerator combines Store and Enumerator capabilities

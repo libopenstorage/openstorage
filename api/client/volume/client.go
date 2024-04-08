@@ -29,6 +29,7 @@ type volumeClient struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 	c *client.Client
 }
 
@@ -38,6 +39,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
+		Upgrader:              volume.UpgraderNotSupported,
 		c:                     c}
 }
 

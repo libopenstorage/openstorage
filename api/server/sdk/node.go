@@ -20,15 +20,16 @@ import (
 	"context"
 	"net"
 
+	"github.com/portworx/kvdb"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/cluster"
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/pkg/grpcserver"
-	"github.com/portworx/kvdb"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 // NodeServer is an implementation of the gRPC OpenStorageNodeServer interface
@@ -232,10 +233,28 @@ func (s *NodeServer) VolumeBytesUsedByNode(
 	}
 	resp, err := s.server.driver(ctx).VolumeBytesUsedByNode(req.GetNodeId(), req.GetIds())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
+		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode: %v", err.Error())
 	}
 	sdkResp := &api.SdkVolumeBytesUsedResponse{
 		VolUtilInfo: resp,
+	}
+	return sdkResp, nil
+}
+
+func (s *NodeServer) FilterNonOverlappingNodes(
+	ctx context.Context,
+	req *api.SdkFilterNonOverlappingNodesRequest,
+) (*api.SdkFilterNonOverlappingNodesResponse, error) {
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	resp, err := s.server.driver(ctx).FilterNonOverlappingNodes(req.InputNodes, req.DownNodes)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed in FilterNonOverlappingNodes: %v", err.Error())
+	}
+	sdkResp := &api.SdkFilterNonOverlappingNodesResponse{
+		NodeIds: resp,
 	}
 	return sdkResp, nil
 }

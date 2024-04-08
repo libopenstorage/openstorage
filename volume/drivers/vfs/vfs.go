@@ -10,13 +10,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
 )
 
 const (
@@ -40,6 +40,7 @@ type driver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 }
 
 // Init Driver intialization.
@@ -56,6 +57,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
 		volume.VerifyChecksumNotSupported,
+		volume.UpgraderNotSupported,
 	}, nil
 }
 
