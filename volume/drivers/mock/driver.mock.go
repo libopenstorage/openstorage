@@ -712,6 +712,21 @@ func (mr *MockVolumeDriverMockRecorder) FilesystemTrimStop(arg0 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilesystemTrimStop", reflect.TypeOf((*MockVolumeDriver)(nil).FilesystemTrimStop), arg0)
 }
 
+// FilterNonOverlappingNodes mocks base method.
+func (m *MockVolumeDriver) FilterNonOverlappingNodes(arg0, arg1 []string) ([]string, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FilterNonOverlappingNodes", arg0, arg1)
+	ret0, _ := ret[0].([]string)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FilterNonOverlappingNodes indicates an expected call of FilterNonOverlappingNodes.
+func (mr *MockVolumeDriverMockRecorder) FilterNonOverlappingNodes(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FilterNonOverlappingNodes", reflect.TypeOf((*MockVolumeDriver)(nil).FilterNonOverlappingNodes), arg0, arg1)
+}
+
 // Flush mocks base method.
 func (m *MockVolumeDriver) Flush(arg0 string) error {
 	m.ctrl.T.Helper()

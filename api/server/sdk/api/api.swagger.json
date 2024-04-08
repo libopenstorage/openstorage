@@ -1958,7 +1958,7 @@
             "type": "integer"
           },
           "start_time": {
-            "title": "StartTime is the scheduled time to start a run\nValid formats: \n  daily=HH:mm  e.g. daily=19:15\n  weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\n  monthly=dd@HH:mm  e.g. monthly=22@19:15",
+            "title": "StartTime is the scheduled time to start a run\nValid formats:\n  daily=HH:mm  e.g. daily=19:15\n  weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\n  monthly=dd@HH:mm  e.g. monthly=22@19:15",
             "type": "string"
           },
           "tasks": {
@@ -1972,7 +1972,7 @@
             "$ref": "#/components/schemas/apiJobType"
           }
         },
-        "title": "Schedule is a generic schedule object that can encapsulate different  \ntypes of scheduled jobs which follow the schedule framework of APIs",
+        "title": "Schedule is a generic schedule object that can encapsulate different\ntypes of scheduled jobs which follow the schedule framework of APIs",
         "type": "object"
       },
       "apiSchedulerTopology": {
@@ -3123,7 +3123,7 @@
             "$ref": "#/components/schemas/apiDefragJob"
           },
           "start_time": {
-            "title": "StartTime is the scheduled time to start a run\nValid formats: \ndaily=HH:mm  e.g. daily=19:15\nweekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\nmonthly=dd@HH:mm  e.g. monthly=22@19:15",
+            "title": "StartTime is the scheduled time to start a run\nValid formats:\ndaily=HH:mm  e.g. daily=19:15\nweekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\nmonthly=dd@HH:mm  e.g. monthly=22@19:15",
             "type": "string"
           }
         },
@@ -3544,6 +3544,39 @@
       },
       "apiSdkFilesystemTrimStopResponse": {
         "title": "Empty response",
+        "type": "object"
+      },
+      "apiSdkFilterNonOverlappingNodesRequest": {
+        "description": "Defines a request to filter nodes from the input list, such that the filtered nodes can\ndon't have overlapping volume replicas. This can be used to upgrade nodes in parallel.",
+        "properties": {
+          "down_nodes": {
+            "description": "List of IDs of nodes that are down or the caller deems to be down.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "input_nodes": {
+            "description": "List of nodes IDs from which we need to filter the non-overlapping nodes.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "apiSdkFilterNonOverlappingNodesResponse": {
+        "description": "Defines a response with a list of non overlapping nodes from the given input list of nodes.",
+        "properties": {
+          "node_ids": {
+            "description": "Filtered list of all the non overlapping nodes from the given input list.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array"
+          }
+        },
         "type": "object"
       },
       "apiSdkGetDefragNodeStatusResponse": {
@@ -6594,7 +6627,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.182.0"
+    "version": "0.183.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -9579,6 +9612,47 @@
           }
         },
         "summary": "Returns bytes used of multiple volumes for a give node",
+        "tags": [
+          "OpenStorageNode"
+        ]
+      }
+    },
+    "/v1/nodes/filter-nonoverlapping": {
+      "post": {
+        "operationId": "OpenStorageNode_FilterNonOverlappingNodes",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkFilterNonOverlappingNodesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkFilterNonOverlappingNodesResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "Returns a subset of nodes which do not share replicas of any volume in the cluster.",
         "tags": [
           "OpenStorageNode"
         ]
