@@ -839,10 +839,10 @@
             "title": "IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;\nif not provided, will run on all nodes\ncannot coexist with ExcludeNodes and NodeSelector",
             "type": "array"
           },
-          "max_duration_hours": {
-            "format": "double",
-            "title": "MaxDurationHours defines the time limit in hours",
-            "type": "number"
+          "max_duration_minutes": {
+            "format": "int64",
+            "title": "MaxDurationMinutes defines the time limit in minutes",
+            "type": "integer"
           },
           "max_nodes_in_parallel": {
             "format": "int64",
@@ -921,7 +921,7 @@
             "type": "integer"
           },
           "progress_percentage": {
-            "format": "int32",
+            "format": "int64",
             "title": "ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool\npercentage = bytes completed / sum of file sizes",
             "type": "integer"
           },
@@ -1949,10 +1949,10 @@
             "title": "LastUpdateTime is the time the schedule was updated",
             "type": "string"
           },
-          "max_duration_hours": {
-            "format": "double",
-            "title": "MaxDurationHours defines the time limit of one run in hours",
-            "type": "number"
+          "max_duration_minutes": {
+            "format": "int64",
+            "title": "MaxDurationMinutes defines the time limit of one run in minutes",
+            "type": "integer"
           },
           "start_time": {
             "title": "StartTime is the scheduled time to start a run\nValid formats: \n  daily=HH:mm  e.g. daily=19:15\n  weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\n  monthly=dd@HH:mm  e.g. monthly=22@19:15",
@@ -3334,7 +3334,7 @@
         "properties": {
           "status": {
             "additionalProperties": {
-              "$ref": "#/components/schemas/apiDefragNodeStatus"
+              "$ref": "#/components/schemas/apiSdkGetDefragNodeStatusResponse"
             },
             "title": "Status is a map with node uuid as the key and defrag node status as the value",
             "type": "object"
@@ -3545,8 +3545,24 @@
       },
       "apiSdkGetDefragNodeStatusResponse": {
         "properties": {
-          "node_status": {
+          "data_ip": {
+            "title": "DataIp is the IP address of this node",
+            "type": "string"
+          },
+          "defrag_node_status": {
             "$ref": "#/components/schemas/apiDefragNodeStatus"
+          },
+          "pool_usage": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "title": "PoolUsage is a map with pool UUID as the key and pool usage percentage as the value",
+            "type": "object"
+          },
+          "scheduler_node_name": {
+            "title": "SchedulerNodeName is name of the node in scheduler context",
+            "type": "string"
           }
         },
         "title": "Defines a response of defrag node status",
