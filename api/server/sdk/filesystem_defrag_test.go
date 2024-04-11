@@ -33,14 +33,14 @@ func TestSdkCreateDefragSchedule(t *testing.T) {
 
 	// Create request and response
 	defragTask := &api.DefragJob{
-		MaxDurationHours: 1,
+		MaxDurationMinutes: 60,
 		MaxNodesInParallel: 1,
 	}
 	resp := &api.SdkCreateDefragScheduleResponse{
 		Schedule: &api.Schedule{
 			Id:		"12345",
 			StartTime: "daily=19:15",
-			MaxDurationHours: 1,
+			MaxDurationMinutes: 60,
 			Type: api.Job_DEFRAG,
 			Tasks: []*api.Job{
 				{

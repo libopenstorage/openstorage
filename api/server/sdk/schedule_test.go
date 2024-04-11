@@ -19,14 +19,14 @@ func TestInspectSchedule(t *testing.T) {
 		Schedule: &api.Schedule{
 			Id:		"12345",
 			StartTime: "daily=19:15",
-			MaxDurationHours: 1,
+			MaxDurationMinutes: 60,
 			Type: api.Job_DEFRAG,
 			Tasks: []*api.Job{
 				{
 					Type: api.Job_DEFRAG,
 					Job: &api.Job_Defrag{
 						Defrag: &api.DefragJob{
-							MaxDurationHours: 1,
+							MaxDurationMinutes: 60,
 							MaxNodesInParallel: 1,
 						},
 					},
@@ -58,7 +58,7 @@ func TestInspectSchedule(t *testing.T) {
 	assert.Equal(t, resp.Schedule.Id, r.Schedule.Id)
 	assert.Equal(t, 1, len(r.Schedule.Tasks))
 	assert.NotNil(t, r.Schedule.Tasks[0].GetDefrag())
-	assert.Equal(t, resp.Schedule.Tasks[0].GetDefrag().MaxDurationHours, r.Schedule.Tasks[0].GetDefrag().MaxDurationHours)
+	assert.Equal(t, resp.Schedule.Tasks[0].GetDefrag().MaxDurationMinutes, r.Schedule.Tasks[0].GetDefrag().MaxDurationMinutes)
 }
 
 func TestEnumerateSchedules(t *testing.T) {
@@ -70,14 +70,14 @@ func TestEnumerateSchedules(t *testing.T) {
 	schedule := &api.Schedule{
 		Id:		"12345",
 		StartTime: "daily=19:15",
-		MaxDurationHours: 1,
+		MaxDurationMinutes: 60,
 		Type: api.Job_DEFRAG,
 		Tasks: []*api.Job{
 			{
 				Type: api.Job_DEFRAG,
 				Job: &api.Job_Defrag{
 					Defrag: &api.DefragJob{
-						MaxDurationHours: 1,
+						MaxDurationMinutes: 60,
 						MaxNodesInParallel: 1,
 					},
 				},
@@ -110,8 +110,8 @@ func TestEnumerateSchedules(t *testing.T) {
 	assert.Equal(t, schedule.Id, r.Schedules[0].Id)
 	assert.Equal(t, 1, len(r.Schedules[0].Tasks))
 	assert.NotNil(t, r.Schedules[0].Tasks[0].GetDefrag())
-	assert.Equal(t, resp.Schedules[0].Tasks[0].GetDefrag().MaxDurationHours,
-		r.Schedules[0].Tasks[0].GetDefrag().MaxDurationHours)
+	assert.Equal(t, resp.Schedules[0].Tasks[0].GetDefrag().MaxDurationMinutes,
+		r.Schedules[0].Tasks[0].GetDefrag().MaxDurationMinutes)
 }
 
 func TestDeleteSchedule(t *testing.T) {

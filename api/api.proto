@@ -4123,8 +4123,8 @@ message Schedule {
   //   weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
   //   monthly=dd@HH:mm  e.g. monthly=22@19:15
   string start_time = 2;
-  // MaxDurationHours defines the time limit of one run in hours
-  double max_duration_hours = 3;
+  // MaxDurationMinutes defines the time limit of one run in minutes
+  uint32 max_duration_minutes = 3;
   // Type is the schedule type (type of scheduled tasks)
   Job.Type type = 4;
   // Tasks is the tasks to be run in this schedule (must be of same job type)
@@ -4239,8 +4239,8 @@ message CollectDiagsJob {
 
 // DefragJob describes a job to run defragmentation on cluster nodes
 message DefragJob {
-  // MaxDurationHours defines the time limit in hours
-  double max_duration_hours = 1;
+  // MaxDurationMinutes defines the time limit in minutes
+  uint32 max_duration_minutes = 1;
   // MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel
   uint32 max_nodes_in_parallel = 2;
   // IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;
@@ -4293,7 +4293,7 @@ message DefragPoolStatus {
   int64 last_offset = 7;
   // ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool
   // percentage = bytes completed / sum of file sizes
-  int32 progress_percentage = 8;
+  uint32 progress_percentage = 8;
 }
 
 // Defines a request to create a defrag schedule
