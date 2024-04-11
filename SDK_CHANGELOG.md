@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.181.0 - (03/20/2024)
+
+* Add servers and APIs for defrag and schedule services
+
 ### v0.180.0 - (03/19/2024)
 
 * Add force option to StoragePool api

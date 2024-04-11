@@ -1907,6 +1907,43 @@ service OpenStorageFilesystemCheck {
     }
 }
 
+// ## OpenStorageFilesystemDefrag Service
+// This service provides APIs to manage filesystem defragmentation schedules/jobs on a cluster.
+service OpenStorageFilesystemDefrag {
+  // Create a schedule to run defragmentation tasks periodically
+  rpc CreateSchedule(SdkCreateDefragScheduleRequest)
+    returns (SdkCreateDefragScheduleResponse){
+      option(google.api.http) = {
+        post: "/v1/filesystem-defrag/schedule"
+        body: "*"
+      };
+    }
+
+  // Get defrag status of a node
+  rpc GetNodeStatus(SdkGetDefragNodeStatusRequest)
+    returns (SdkGetDefragNodeStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-defrag/status/{node_id}"
+      };
+    }
+
+  // Enumerate all nodes, returning defrag status of the entire cluster
+  rpc EnumerateNodeStatus(SdkEnumerateDefragStatusRequest)
+    returns (SdkEnumerateDefragStatusResponse){
+      option(google.api.http) = {
+        get: "/v1/filesystem-defrag/status"
+      };
+    }
+
+  // Clean up all defrag schedules and stop all operations
+  rpc CleanUpSchedules(SdkCleanUpDefragSchedulesRequest)
+    returns (SdkCleanUpDefragSchedulesResponse) {
+      option(google.api.http) = {
+        delete: "/v1/filesystem-defrag/schedules"
+      };
+    }
+}
+
 // OpenStorageIdentity service provides methods to obtain information
 // about the cluster
 service OpenStorageIdentity {
@@ -2167,6 +2204,34 @@ service OpenStorageJob {
         get: "/v1/jobs"
       };
   }
+}
+
+// OpenstorageSchedule is a service that provides a common set of APIs for services
+// that use the scheduled job framework
+service OpenStorageSchedule {
+  // Inspect queries information of a schedule by type and ID
+  rpc Inspect(SdkInspectScheduleRequest)
+    returns (SdkInspectScheduleResponse) {
+      option(google.api.http) = {
+        get: "/v1/schedules/{type}/{id}"
+      };
+    }
+
+  // Enumerate returns all the schedules
+  rpc Enumerate(SdkEnumerateSchedulesRequest)
+  returns (SdkEnumerateSchedulesResponse) {
+    option(google.api.http) = {
+        get: "/v1/schedules/{type}"
+      };
+  }
+
+  // Delete deletes a schedule by type and ID
+  rpc Delete(SdkDeleteScheduleRequest)
+    returns (SdkDeleteScheduleResponse) {
+      option(google.api.http) = {
+        delete: "/v1/schedules/{type}/{id}"
+      };
+    }
 }
 
 // OpenStorageNode is a service used to manage nodes in the cluster
@@ -4058,8 +4123,8 @@ message Schedule {
   //   weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
   //   monthly=dd@HH:mm  e.g. monthly=22@19:15
   string start_time = 2;
-  // MaxDurationHours defines the time limit of one run in hours
-  double max_duration_hours = 3;
+  // MaxDurationMinutes defines the time limit of one run in minutes
+  uint32 max_duration_minutes = 3;
   // Type is the schedule type (type of scheduled tasks)
   Job.Type type = 4;
   // Tasks is the tasks to be run in this schedule (must be of same job type)
@@ -4068,6 +4133,42 @@ message Schedule {
   google.protobuf.Timestamp create_time = 6;
   // LastUpdateTime is the time the schedule was updated
   google.protobuf.Timestamp last_update_time = 7;
+}
+
+// Defines a request to inspect schedule
+message SdkInspectScheduleRequest {
+  // ID of the schedule
+  string id = 1;
+  // Type is schedule type
+  Job.Type type = 2;
+}
+
+// Defines a response of schedule information
+message SdkInspectScheduleResponse {
+  Schedule schedule = 1;
+}
+
+// Defines a request to enumerate all schedules of a type
+message SdkEnumerateSchedulesRequest {
+  // Type is schedule type
+  Job.Type type = 1;
+}
+
+// Defines a response containing list of schedules
+message SdkEnumerateSchedulesResponse {
+  repeated Schedule schedules = 1;
+}
+
+// Defines a request to delete a schedule
+message SdkDeleteScheduleRequest {
+  // ID of the schedule
+  string id = 1;
+  // Type is schedule type
+  Job.Type type = 2;
+}
+
+// Empty response
+message SdkDeleteScheduleResponse {
 }
 
 // Defines a response for an SDK request that spins up a new job
@@ -4138,8 +4239,8 @@ message CollectDiagsJob {
 
 // DefragJob describes a job to run defragmentation on cluster nodes
 message DefragJob {
-  // MaxDurationHours defines the time limit in hours
-  double max_duration_hours = 1;
+  // MaxDurationMinutes defines the time limit in minutes
+  uint32 max_duration_minutes = 1;
   // MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel
   uint32 max_nodes_in_parallel = 2;
   // IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;
@@ -4150,10 +4251,10 @@ message DefragJob {
   // if not provided, will run on all nodes
   // cannot coexist with IncludeNodes
   repeated string exclude_nodes = 4;
-  // NodeSelector is a list of node label `key=value` pairs separated by comma,
+  // NodeSelector is a list of node label `key=value` pairs,
   // which selects the nodes to be run on for the job
   // can coexist with ExcludeNodes but cannot coexist with IncludeNodes
-  repeated string node_selector = 5;
+  repeated LabelSelectorRequirement node_selector = 5;
   // CurrentRunningNodes stores the nodes on which the job is currently running
   repeated string current_running_nodes = 6;
   // ScheduleId is the ID of the schedule which started this job
@@ -4192,7 +4293,61 @@ message DefragPoolStatus {
   int64 last_offset = 7;
   // ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool
   // percentage = bytes completed / sum of file sizes
-  int32 progress_percentage = 8;
+  uint32 progress_percentage = 8;
+}
+
+// Defines a request to create a defrag schedule
+message SdkCreateDefragScheduleRequest {
+  // DefragTask is the defragmentation task run by the schedule
+  DefragJob defrag_task = 1;
+  // StartTime is the scheduled time to start a run
+  // Valid formats: 
+  // daily=HH:mm  e.g. daily=19:15
+  // weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+  // monthly=dd@HH:mm  e.g. monthly=22@19:15
+  string start_time = 2;
+}
+
+// Defines a response of defrag schedule creation
+message SdkCreateDefragScheduleResponse {
+  // Schedule is the newly created schedule
+  Schedule schedule = 1;
+}
+
+// Defines a request to clean up defrag schedules
+message SdkCleanUpDefragSchedulesRequest {
+}
+
+// Defines a response of defrag schedules clean-up
+message SdkCleanUpDefragSchedulesResponse {
+}
+
+// Defines a request to query defrag status of a node
+message SdkGetDefragNodeStatusRequest {
+  // NodeId is uuid of the node
+  string node_id = 1;
+}
+
+// Defines a response of defrag node status
+message SdkGetDefragNodeStatusResponse {
+  // DefragNodeStatus stores the defrag status of the node
+  DefragNodeStatus defrag_node_status = 1;
+  // DataIp is the IP address of this node
+  string data_ip = 2;
+  // SchedulerNodeName is name of the node in scheduler context
+  string scheduler_node_name = 3;
+  // PoolUsage is a map with pool UUID as the key and pool usage percentage as the value
+  map<string, uint32> pool_usage = 4;
+}
+
+// Defines a request to get defrag status of the entire cluster
+message SdkEnumerateDefragStatusRequest {
+}
+
+// Defines a response of defrag status of the entire cluster
+message SdkEnumerateDefragStatusResponse {
+  // Status is a map with node uuid as the key and defrag node status as the value
+  map<string, SdkGetDefragNodeStatusResponse> status = 1;
 }
 
 message DiagsCollectionStatus {
@@ -5694,7 +5849,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 180;
+    Minor = 181;
     // SDK version patch value of this specification
     Patch = 0;
   }
