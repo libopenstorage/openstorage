@@ -4330,7 +4330,14 @@ message SdkGetDefragNodeStatusRequest {
 
 // Defines a response of defrag node status
 message SdkGetDefragNodeStatusResponse {
-  DefragNodeStatus node_status = 1;
+  // DefragNodeStatus stores the defrag status of the node
+  DefragNodeStatus defrag_node_status = 1;
+  // DataIp is the IP address of this node
+  string data_ip = 2;
+  // SchedulerNodeName is name of the node in scheduler context
+  string scheduler_node_name = 3;
+  // PoolUsage is a map with pool UUID as the key and pool usage percentage as the value
+  map<string, uint32> pool_usage = 4;
 }
 
 // Defines a request to get defrag status of the entire cluster
@@ -4340,7 +4347,7 @@ message SdkEnumerateDefragStatusRequest {
 // Defines a response of defrag status of the entire cluster
 message SdkEnumerateDefragStatusResponse {
   // Status is a map with node uuid as the key and defrag node status as the value
-  map<string, DefragNodeStatus> status = 1;
+  map<string, SdkGetDefragNodeStatusResponse> status = 1;
 }
 
 message DiagsCollectionStatus {

@@ -105,10 +105,12 @@ func TestSdkGetDefragNodeStatus(t *testing.T) {
 
 	// Create response
 	resp := &api.SdkGetDefragNodeStatusResponse{
-		NodeStatus: &api.DefragNodeStatus{
+		DefragNodeStatus: &api.DefragNodeStatus{
 			PoolStatus: make(map[string]*api.DefragPoolStatus),
 			RunningSchedule: "12345",
 		},
+		DataIp: "12.34.56.0",
+		PoolUsage: make(map[string]uint32),
 	}
 	poolStatus := &api.DefragPoolStatus{
 		NumIterations: 1,
@@ -118,7 +120,8 @@ func TestSdkGetDefragNodeStatus(t *testing.T) {
 		LastOffset: 200000,
 		ProgressPercentage: 35,
 	}
-	resp.NodeStatus.PoolStatus["pool-1"] = poolStatus
+	resp.DefragNodeStatus.PoolStatus["pool-1"] = poolStatus
+	resp.PoolUsage["pool-1"] = 20
 
 	s.MockCluster().
 		EXPECT().
@@ -134,13 +137,16 @@ func TestSdkGetDefragNodeStatus(t *testing.T) {
 		NodeId: "node-1",
 	})
 	assert.NoError(t, err)
-	assert.NotNil(t, r.NodeStatus)
-	assert.Equal(t, resp.NodeStatus.RunningSchedule, r.NodeStatus.RunningSchedule)
-	assert.Equal(t, 1, len(r.NodeStatus.PoolStatus))
-	assert.NotNil(t, r.NodeStatus.PoolStatus["pool-1"])
-	assert.Equal(t, poolStatus.NumIterations, r.NodeStatus.PoolStatus["pool-1"].NumIterations)
-	assert.Equal(t, poolStatus.Running, r.NodeStatus.PoolStatus["pool-1"].Running)
-	assert.Equal(t, poolStatus.LastOffset, r.NodeStatus.PoolStatus["pool-1"].LastOffset)
+	assert.NotNil(t, r.DefragNodeStatus)
+	assert.Equal(t, resp.DefragNodeStatus.RunningSchedule, r.DefragNodeStatus.RunningSchedule)
+	assert.Equal(t, 1, len(r.DefragNodeStatus.PoolStatus))
+	assert.NotNil(t, r.DefragNodeStatus.PoolStatus["pool-1"])
+	assert.Equal(t, poolStatus.NumIterations, r.DefragNodeStatus.PoolStatus["pool-1"].NumIterations)
+	assert.Equal(t, poolStatus.Running, r.DefragNodeStatus.PoolStatus["pool-1"].Running)
+	assert.Equal(t, poolStatus.LastOffset, r.DefragNodeStatus.PoolStatus["pool-1"].LastOffset)
+	assert.Equal(t, resp.DataIp, r.DataIp)
+	assert.Equal(t, resp.SchedulerNodeName, r.SchedulerNodeName)
+	assert.Equal(t, resp.PoolUsage, r.PoolUsage)
 }
 
 func TestSdkEnumerateDefragStatus(t *testing.T) {
@@ -150,7 +156,7 @@ func TestSdkEnumerateDefragStatus(t *testing.T) {
 
 	// Create response
 	resp := &api.SdkEnumerateDefragStatusResponse{
-		Status: make(map[string]*api.DefragNodeStatus),
+		Status: make(map[string]*api.SdkGetDefragNodeStatusResponse),
 	}
 	poolStatus := &api.DefragPoolStatus{
 		NumIterations: 1,
@@ -160,12 +166,17 @@ func TestSdkEnumerateDefragStatus(t *testing.T) {
 		LastOffset: 200000,
 		ProgressPercentage: 35,
 	}
-	nodeStatus := &api.DefragNodeStatus{
+	defragNodeStatus := &api.DefragNodeStatus{
 		PoolStatus: make(map[string]*api.DefragPoolStatus),
 		RunningSchedule: "12345",
 	}
-	nodeStatus.PoolStatus["pool-1"] = poolStatus
-	resp.Status["node-1"] = nodeStatus
+	defragNodeStatus.PoolStatus["pool-1"] = poolStatus
+	resp.Status["node-1"] = &api.SdkGetDefragNodeStatusResponse{
+		DefragNodeStatus: defragNodeStatus,
+		DataIp: "12.34.56.0",
+		PoolUsage: make(map[string]uint32),
+	}
+	resp.Status["node-1"] .PoolUsage["pool-1"] = 20
 
 	s.MockCluster().
 		EXPECT().
@@ -182,10 +193,13 @@ func TestSdkEnumerateDefragStatus(t *testing.T) {
 	assert.NotNil(t, r.Status)
 	assert.Equal(t, 1, len(r.Status))
 	assert.NotNil(t, r.Status["node-1"])
-	assert.Equal(t, nodeStatus.RunningSchedule, r.Status["node-1"].RunningSchedule)
-	assert.Equal(t, 1, len(r.Status["node-1"].PoolStatus))
-	assert.NotNil(t, r.Status["node-1"].PoolStatus["pool-1"])
-	assert.Equal(t, poolStatus.NumIterations, r.Status["node-1"].PoolStatus["pool-1"].NumIterations)
-	assert.Equal(t, poolStatus.Running, r.Status["node-1"].PoolStatus["pool-1"].Running)
-	assert.Equal(t, poolStatus.LastOffset, r.Status["node-1"].PoolStatus["pool-1"].LastOffset)
+	assert.Equal(t, defragNodeStatus.RunningSchedule, r.Status["node-1"].DefragNodeStatus.RunningSchedule)
+	assert.Equal(t, 1, len(r.Status["node-1"].DefragNodeStatus.PoolStatus))
+	assert.NotNil(t, r.Status["node-1"].DefragNodeStatus.PoolStatus["pool-1"])
+	assert.Equal(t, poolStatus.NumIterations, r.Status["node-1"].DefragNodeStatus.PoolStatus["pool-1"].NumIterations)
+	assert.Equal(t, poolStatus.Running, r.Status["node-1"].DefragNodeStatus.PoolStatus["pool-1"].Running)
+	assert.Equal(t, poolStatus.LastOffset, r.Status["node-1"].DefragNodeStatus.PoolStatus["pool-1"].LastOffset)
+	assert.Equal(t, resp.Status["node-1"].DataIp, r.Status["node-1"].DataIp)
+	assert.Equal(t, resp.Status["node-1"].SchedulerNodeName, r.Status["node-1"].SchedulerNodeName)
+	assert.Equal(t, resp.Status["node-1"].PoolUsage, r.Status["node-1"].PoolUsage)
 }
