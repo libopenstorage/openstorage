@@ -108,6 +108,7 @@ const (
 	SpecBackendPureBlock                    = "pure_block"
 	SpecBackendPureFile                     = "pure_file"
 	SpecPureFileExportRules                 = "pure_export_rules"
+	SpecPureNFSEnpoint                      = "pure_nfs_endpoint"
 	SpecIoThrottleRdIOPS                    = "io_throttle_rd_iops"
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"

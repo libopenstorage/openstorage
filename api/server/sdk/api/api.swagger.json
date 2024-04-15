@@ -1651,6 +1651,9 @@
           },
           "full_vol_name": {
             "type": "string"
+          },
+          "nfs_endpoint": {
+            "type": "string"
           }
         },
         "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",

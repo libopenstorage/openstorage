@@ -648,6 +648,14 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.ExportRules = v
+		case api.SpecPureNFSEnpoint:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.PureFileSpec == nil {
+				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			spec.ProxySpec.PureFileSpec.NfsEndpoint = v
 		case api.SpecIoThrottleRdIOPS:
 			if spec.IoThrottle == nil {
 				spec.IoThrottle = &api.IoThrottle{}
