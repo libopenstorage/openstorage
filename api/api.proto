@@ -413,6 +413,7 @@ message PureBlockSpec {
 message PureFileSpec {
   string export_rules = 1;
   string full_vol_name = 2;
+  string nfs_endpoint = 3;
 }
 
 // ProxySpec defines how this volume will reflect an external data source.
