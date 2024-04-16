@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.182.0 - (04/16/2024)
+
+* Added NFS Endpoint in volume spec
+
 ### v0.181.0 - (03/20/2024)
 
 * Add servers and APIs for defrag and schedule services

@@ -523,7 +523,21 @@ func TestPureNFSEndpoint(t *testing.T) {
 	require.NoError(t, err)
 	proxySpec := spec.GetProxySpec()
 	require.NotNil(t, proxySpec)
-	require.Equal(t, proxySpec.GetPureFileSpec().GetNFSEndpoint(), nfsEndpoint)
+	require.Equal(t, proxySpec.GetPureFileSpec().GetNfsEndpoint(), nfsEndpoint)
+
+	nfsEndpoint = ""
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecPureNFSEnpoint: nfsEndpoint,
+	})
+	require.Error(t, err, "Failed to parse nfs endpoint parameter")
+	require.ErrorContains(t, err, "invalid Pure NFS endpoint")
+
+	nfsEndpoint = "abc"
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecPureNFSEnpoint: nfsEndpoint,
+	})
+	require.Error(t, err, "Failed to parse nfs endpoint parameter")
+	require.ErrorContains(t, err, "invalid Pure NFS endpoint")
 }
 
 func TestXattr(t *testing.T) {
