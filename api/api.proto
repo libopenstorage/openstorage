@@ -415,6 +415,7 @@ message PureBlockSpec {
 message PureFileSpec {
   string export_rules = 1;
   string full_vol_name = 2;
+  string nfs_endpoint = 3;
 }
 
 // ProxySpec defines how this volume will reflect an external data source.
@@ -5849,7 +5850,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 181;
+    Minor = 182;
     // SDK version patch value of this specification
     Patch = 0;
   }

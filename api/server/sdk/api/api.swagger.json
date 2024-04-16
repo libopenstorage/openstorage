@@ -1651,6 +1651,9 @@
           },
           "full_vol_name": {
             "type": "string"
+          },
+          "nfs_endpoint": {
+            "type": "string"
           }
         },
         "title": "PureFileSpec is the spec for proxying a volume on pure_file backends",
@@ -6591,7 +6594,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.181.0"
+    "version": "0.182.0"
   },
   "openapi": "3.0.0",
   "paths": {

@@ -514,6 +514,32 @@ func TestPureBackendSpec(t *testing.T) {
 	require.Error(t, err, "Failed to parse backend parameter")
 }
 
+func TestPureNFSEndpoint(t *testing.T) {
+	nfsEndpoint := "10.68.101.80"
+	s := NewSpecHandler()
+	spec, _, _, err := s.SpecFromOpts(map[string]string{
+		api.SpecPureNFSEnpoint: nfsEndpoint,
+	})
+	require.NoError(t, err)
+	proxySpec := spec.GetProxySpec()
+	require.NotNil(t, proxySpec)
+	require.Equal(t, proxySpec.GetPureFileSpec().GetNfsEndpoint(), nfsEndpoint)
+
+	nfsEndpoint = ""
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecPureNFSEnpoint: nfsEndpoint,
+	})
+	require.Error(t, err, "Failed to parse nfs endpoint parameter")
+	require.ErrorContains(t, err, "invalid Pure NFS endpoint")
+
+	nfsEndpoint = "abc"
+	_, _, _, err = s.SpecFromOpts(map[string]string{
+		api.SpecPureNFSEnpoint: nfsEndpoint,
+	})
+	require.Error(t, err, "Failed to parse nfs endpoint parameter")
+	require.ErrorContains(t, err, "invalid Pure NFS endpoint")
+}
+
 func TestXattr(t *testing.T) {
 	testSpecOptString(t, api.SpecCowOnDemand, "true")
 
