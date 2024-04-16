@@ -125,7 +125,7 @@ func (cpb *ConnectionParamsBuilder) BuildClientsEndpoints() (string, string, err
 		return "", "", fmt.Errorf("failed to get k8s service specification: %v", err)
 	}
 
-	endpoint = fmt.Sprintf("%s.%s.svc.cluster.local", svc.Name, svc.Namespace)
+	endpoint = fmt.Sprintf("%s.%s", svc.Name, svc.Namespace)
 
 	var restPort int
 	var restPortSecured int
