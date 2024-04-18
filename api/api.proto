@@ -5850,7 +5850,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 182;
+    Minor = 183;
     // SDK version patch value of this specification
     Patch = 0;
   }
@@ -6526,6 +6526,7 @@ message VerifyChecksum {
 message SdkVerifyChecksumStartRequest {
   // Id of the volume
   string volume_id = 1;
+  bool resume_from_saved_offset = 2;
 }
 
 // SdkVerifyChecksumStartResponse defines the response for a

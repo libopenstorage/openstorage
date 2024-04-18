@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.183.0 - (04/30/2024)
+
+* Added flag ResumeFromSavedOffset to verify-checksum start command
+
 ### v0.182.0 - (04/16/2024)
 
 * Added NFS Endpoint in volume spec
