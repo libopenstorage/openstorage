@@ -776,7 +776,10 @@ message VolumeSpecUpdate {
   oneof io_throttle_opt { IoThrottle io_throttle = 40;}
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   oneof near_sync_replication_strategy_opt { NearSyncReplicationStrategy near_sync_replication_strategy = 41;}
+  // PureNfsEnpoint specifies NFS endpoint for PureFile Direct Access volumes
+  oneof pure_nfs_endpoint_opt { string pure_nfs_endpoint = 42; }
 }
+
 
 // VolumeSpecPolicy provides a method to set volume storage policy
 message VolumeSpecPolicy {
