@@ -6366,6 +6366,9 @@
           "proxy_write": {
             "type": "boolean"
           },
+          "pure_nfs_endpoint": {
+            "type": "string"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
@@ -6597,7 +6600,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.183.0"
+    "version": "0.184.0"
   },
   "openapi": "3.0.0",
   "paths": {

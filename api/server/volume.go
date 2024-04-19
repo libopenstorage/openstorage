@@ -637,6 +637,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume, isSchedulerReque
 		}
 	}
 
+	if spec.ProxySpec != nil && spec.ProxySpec.PureFileSpec != nil && spec.ProxySpec.PureFileSpec.NfsEndpoint != "" {
+		newSpec.PureNfsEndpointOpt = &api.VolumeSpecUpdate_PureNfsEndpoint{
+			PureNfsEndpoint: spec.ProxySpec.PureFileSpec.NfsEndpoint,
+		}
+	}
+
 	if spec.FpPreference != vol.Spec.FpPreference {
 		newSpec.FastpathOpt = &api.VolumeSpecUpdate_Fastpath{
 			Fastpath: spec.FpPreference,
@@ -1837,6 +1843,35 @@ func (vd *volAPI) VolService(w http.ResponseWriter, r *http.Request) {
 	}
 
 	json.NewEncoder(w).Encode(*vsresp)
+}
+
+func (vd *volAPI) volumeBytesUsedByNode(w http.ResponseWriter, r *http.Request) {
+	var err error
+
+	method := "volumeBytesUsedByNode"
+	var req api.SdkVolumeBytesUsedRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		vd.sendError(vd.name, method, w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	d, err := vd.getVolDriver(r)
+	if err != nil {
+		notFound(w, r)
+		return
+	}
+
+	volUtilInfo, err := d.VolumeBytesUsedByNode(req.NodeId, req.Ids)
+	if err != nil {
+		var e error
+		if err != nil {
+			e = fmt.Errorf("Failed to get volumeBytesUsedByNode: %s", err.Error())
+		}
+		vd.sendError(vd.name, method, w, e.Error(), http.StatusInternalServerError)
+		return
+	}
+	var result api.SdkVolumeBytesUsedResponse
+	result.VolUtilInfo = volUtilInfo
+	json.NewEncoder(w).Encode(&result)
 }
 
 func volVersion(route, version string) string {
