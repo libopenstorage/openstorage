@@ -968,6 +968,21 @@ func (s *VolumeServer) mergeVolumeSpecs(vol *api.VolumeSpec, req *api.VolumeSpec
 		spec.ProxySpec = vol.GetProxySpec()
 	}
 
+	// Pure NFS Endpoint
+	if vol != nil && vol.ProxySpec != nil && vol.ProxySpec.PureFileSpec != nil {
+		// if volume to be updated is Pure File Direct Access volume
+		if spec.ProxySpec == nil {
+			spec.ProxySpec = &api.ProxySpec{
+				PureFileSpec: &api.PureFileSpec{},
+			}
+		}
+		if req.GetPureNfsEndpoint() != "" {
+			spec.ProxySpec.PureFileSpec.NfsEndpoint = req.GetPureNfsEndpoint()
+		} else {
+			spec.ProxySpec.PureFileSpec.NfsEndpoint = vol.ProxySpec.PureFileSpec.GetNfsEndpoint()
+		}
+	}
+
 	// Sharedv4ServiceSpec
 	if req.GetSharedv4ServiceSpec() != nil {
 		spec.Sharedv4ServiceSpec = req.GetSharedv4ServiceSpec()
@@ -1090,7 +1105,6 @@ func GetDefaultVolSpecs(
 		}
 		return spec, nil
 	}
-
 	return mergeVolumeSpecsPolicy(spec, policy.GetPolicy(), policy.GetForce())
 }
 
@@ -1111,6 +1125,19 @@ func mergeVolumeSpecsPolicy(vol *api.VolumeSpec, req *api.VolumeSpecPolicy, isVa
 		}
 		spec.Sharedv4 = req.GetSharedv4()
 	}
+
+	//NFS Endpoint
+	if req.GetProxySpec() != nil &&
+		req.GetProxySpec().GetPureFileSpec() != nil &&
+		req.GetProxySpec().GetPureFileSpec().NfsEndpoint != "" {
+		if spec.ProxySpec == nil {
+			spec.ProxySpec = &api.ProxySpec{
+				PureFileSpec: &api.PureFileSpec{},
+			}
+		}
+		spec.ProxySpec.PureFileSpec.NfsEndpoint = req.GetProxySpec().GetPureFileSpec().NfsEndpoint
+	}
+
 	//sticky
 	if req.GetStickyOpt() != nil {
 		if isValidate && vol.GetSticky() != req.GetSticky() {

@@ -5936,6 +5936,9 @@
             "format": "boolean",
             "type": "boolean"
           },
+          "pure_nfs_endpoint": {
+            "type": "string"
+          },
           "queue_depth": {
             "format": "int64",
             "type": "integer"
