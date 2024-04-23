@@ -2,6 +2,7 @@ package volume
 
 import (
 	"context"
+
 	"github.com/libopenstorage/openstorage/api"
 )
 
@@ -38,6 +39,8 @@ var (
 	// VerifyChecksumNotSupported implements VerifyChecksumDriver by returning
 	// Not supported error
 	VerifyChecksumNotSupported = &verifyChecksumNotSupported{}
+	// UpgraderNotSupported implements Upgrader by returning Not supported error
+	UpgraderNotSupported = &upgraderNotSupported{}
 )
 
 type blockNotSupported struct{}
@@ -341,5 +344,11 @@ func (cl *verifyChecksumNotSupported) VerifyChecksumStatus(request *api.SdkVerif
 	return nil, ErrNotSupported
 }
 func (cl *verifyChecksumNotSupported) VerifyChecksumStop(request *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error) {
+	return nil, ErrNotSupported
+}
+
+type upgraderNotSupported struct{}
+
+func (cl *upgraderNotSupported) FilterNonOverlappingNodes(inputNodes, downNodes []string) ([]string, error) {
 	return nil, ErrNotSupported
 }

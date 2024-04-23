@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.183.0 - (04/23/2024)
+
+* Add an API to return non-overlapping nodes with respect to volume replicas
+
 ### v0.182.0 - (04/16/2024)
 
 * Added NFS Endpoint in volume spec

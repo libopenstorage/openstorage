@@ -10,6 +10,8 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
 
 	"github.com/libopenstorage/openstorage/api"
@@ -18,8 +20,6 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
 )
 
 const (
@@ -45,6 +45,7 @@ type driver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 	buseDevices map[string]*buseDev
 	cl          cluster.ClusterListener
 }
@@ -111,6 +112,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
+		Upgrader:              volume.UpgraderNotSupported,
 	}
 	inst.buseDevices = make(map[string]*buseDev)
 	if err := os.MkdirAll(BuseMountPath, 0744); err != nil {

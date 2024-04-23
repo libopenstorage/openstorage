@@ -9,12 +9,12 @@ import (
 
 	"bazil.org/fuse"
 	"bazil.org/fuse/fs"
+	"github.com/pborman/uuid"
+	"github.com/portworx/kvdb"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 	"github.com/libopenstorage/openstorage/volume/drivers/common"
-	"github.com/pborman/uuid"
-	"github.com/portworx/kvdb"
 )
 
 type volumeDriver struct {
@@ -30,6 +30,7 @@ type volumeDriver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.VerifyChecksumDriver
+	volume.Upgrader
 	name        string
 	baseDirPath string
 	provider    Provider
@@ -56,6 +57,7 @@ func newVolumeDriver(
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
 		volume.VerifyChecksumNotSupported,
+		volume.UpgraderNotSupported,
 		name,
 		baseDirPath,
 		provider,
