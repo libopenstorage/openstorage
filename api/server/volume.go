@@ -637,6 +637,12 @@ func getVolumeUpdateSpec(spec *api.VolumeSpec, vol *api.Volume, isSchedulerReque
 		}
 	}
 
+	if spec.ProxySpec != nil && spec.ProxySpec.PureFileSpec != nil && spec.ProxySpec.PureFileSpec.NfsEndpoint != "" {
+		newSpec.PureNfsEndpointOpt = &api.VolumeSpecUpdate_PureNfsEndpoint{
+			PureNfsEndpoint: spec.ProxySpec.PureFileSpec.NfsEndpoint,
+		}
+	}
+	
 	if spec.FpPreference != vol.Spec.FpPreference {
 		newSpec.FastpathOpt = &api.VolumeSpecUpdate_Fastpath{
 			Fastpath: spec.FpPreference,
