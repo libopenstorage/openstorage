@@ -5681,7 +5681,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 52;
+    Patch = 53;
   }
 
   // The following cannot be set to use the enum Version because the REST
@@ -6353,6 +6353,7 @@ message VerifyChecksum {
 message SdkVerifyChecksumStartRequest {
   // Id of the volume
   string volume_id = 1;
+  bool resume_from_saved_offset = 2;
 }
 
 // SdkVerifyChecksumStartResponse defines the response for a

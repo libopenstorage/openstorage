@@ -4321,6 +4321,10 @@
       },
       "apiSdkVerifyChecksumStartRequest": {
         "properties": {
+          "resume_from_saved_offset": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "volume_id": {
             "title": "Id of the volume",
             "type": "string"
@@ -6472,7 +6476,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.52"
+    "version": "0.101.53"
   },
   "openapi": "3.0.0",
   "paths": {
