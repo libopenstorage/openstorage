@@ -2163,6 +2163,15 @@ service OpenStorageNode {
         body: "*"
       };
     }
+
+    // Returns a subset of nodes which do not share replicas of any volume in the cluster.
+    rpc FilterNonOverlappingNodes(SdkFilterNonOverlappingNodesRequest)
+      returns (SdkFilterNonOverlappingNodesResponse) {
+        option(google.api.http) = {
+          post: "/v1/nodes/filter-nonoverlapping"
+          body: "*"
+        };
+      }
 }
 
 // BucketService to manage the bucket driver
@@ -4469,6 +4478,21 @@ message SdkNodeEnumerateWithFiltersResponse {
   repeated StorageNode nodes = 1;
 }
 
+// Defines a request to filter nodes from the input list, such that the filtered nodes can
+// don't have overlapping volume replicas. This can be used to upgrade nodes in parallel.
+message SdkFilterNonOverlappingNodesRequest {
+  // List of nodes IDs from which we need to filter the non-overlapping nodes.
+  repeated string input_nodes = 1;
+  // List of IDs of nodes that are down or the caller deems to be down.
+  repeated string down_nodes = 2;
+}
+
+// Defines a response with a list of non overlapping nodes from the given input list of nodes.
+message SdkFilterNonOverlappingNodesResponse {
+  // Filtered list of all the non overlapping nodes from the given input list.
+  repeated string node_ids = 1;
+}
+
 // Defines a request to get information about an object store endpoint
 message SdkObjectstoreInspectRequest {
   // Id of the object store
@@ -5411,7 +5435,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 48;
+    Patch = 49;
   }
 
   // The following cannot be set to use the enum Version because the REST

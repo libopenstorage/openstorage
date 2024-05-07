@@ -245,10 +245,28 @@ func (s *NodeServer) VolumeBytesUsedByNode(
 	}
 	resp, err := s.server.driver(ctx).VolumeBytesUsedByNode(req.GetNodeId(), req.GetIds())
 	if err != nil {
-		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode :%v", err.Error())
+		return nil, status.Errorf(codes.Internal, " Failed to get VolumeBytesUsedByNode: %v", err.Error())
 	}
 	sdkResp := &api.SdkVolumeBytesUsedResponse{
 		VolUtilInfo: resp,
+	}
+	return sdkResp, nil
+}
+
+func (s *NodeServer) FilterNonOverlappingNodes(
+	ctx context.Context,
+	req *api.SdkFilterNonOverlappingNodesRequest,
+) (*api.SdkFilterNonOverlappingNodesResponse, error) {
+	if s.server.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	resp, err := s.server.driver(ctx).FilterNonOverlappingNodes(req.InputNodes, req.DownNodes)
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "Failed in FilterNonOverlappingNodes: %v", err.Error())
+	}
+	sdkResp := &api.SdkFilterNonOverlappingNodesResponse{
+		NodeIds: resp,
 	}
 	return sdkResp, nil
 }

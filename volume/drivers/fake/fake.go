@@ -58,7 +58,8 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
-	kv            kvdb.Kvdb
+	kv kvdb.Kvdb
+	volume.Upgrader
 	thisCluster   cluster.Cluster
 	volumeChannel chan *api.Volume
 }
@@ -101,6 +102,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
 		kv:                    kv,
+		Upgrader:              volume.UpgraderNotSupported,
 		volumeChannel:         make(chan *api.Volume, 2),
 	}
 
