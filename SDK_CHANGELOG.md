@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.50 - (05/24/2024)
+
+* Add a parameter for FlashArray Pod names
+
 ### v0.101.49 - (04/23/2024)
 
 * Add an API to return non-overlapping nodes with respect to volume replicas
