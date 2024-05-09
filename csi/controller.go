@@ -18,7 +18,6 @@ package csi
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"reflect"
@@ -478,17 +477,22 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
-	if req.VolumeContentSource != nil && req.VolumeContentSource.GetSnapshot() != nil {
-		clogger.WithContext(ctx).Infof("csi.CreateVolume restoring snapshot to Volume: %s", req.GetName())
-		return s.restoreSnapshot(ctx, req)
-	}
-
 	// Get parameters
 	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
 		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
 		clogger.WithContext(ctx).Errorln(e)
 		return nil, status.Error(codes.InvalidArgument, e)
+	}
+
+	// Check ID is valid with the specified volume capabilities
+	snapshotType, ok := locator.VolumeLabels[osdSnapshotLabelsTypeKey]
+	if !ok {
+		snapshotType = DriverTypeLocal
+	}
+	if DriverTypeCloud == snapshotType && req.VolumeContentSource != nil && req.VolumeContentSource.GetSnapshot() != nil {
+		clogger.WithContext(ctx).Infof("csi.CreateVolume restoring snapshot to Volume: %s", req.GetName())
+		return s.restoreSnapshot(ctx, req)
 	}
 
 	if spec.IsPureVolume() {
@@ -641,9 +645,10 @@ func (s *OsdCsiServer) CreateVolume(
 func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	req *csi.CreateVolumeRequest,
 ) (resp *csi.CreateVolumeResponse, err error) {
+	clogger.WithContext(ctx).Infof("csi.CreateVolume is restoring snapshot. Volume: %s Snapshot: %s", req.GetName(), req.VolumeContentSource.GetSnapshot())
 	snapshot := req.VolumeContentSource.GetSnapshot()
 	if snapshot == nil {
-		return nil, errors.New("snapshot fetched is not accurate or does not exist")
+		return nil, status.Error(codes.NotFound, "snapshot fetched is not accurate or does not exist")
 	}
 
 	cloudBackupClient, err := s.getCloudBackupClient(ctx)
@@ -655,7 +660,7 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 
 	csiSnapshotID := snapshot.GetSnapshotId()
 	if len(csiSnapshotID) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
+		return nil, status.Error(codes.InvalidArgument, "snapshot id must be provided")
 	}
 
 	var backupStatus *api.SdkCloudBackupStatusResponse
@@ -672,9 +677,10 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	}
 
 	if (sdk.IsErrorNotFound(err) && !cloudBackupDriverDisabled && cloudBackupClientAvailable) || !isSnapshotIDPresentInCloud {
-
+		clogger.WithContext(ctx).Infof("csi.CreateVolume is restoring snapshot. Volume: %s Snapshot: %s is a local backup", req.GetName(), csiSnapshotID)
 		return
 	}
+	clogger.WithContext(ctx).Infof("csi.CreateVolume is restoring snapshot. Volume: %s Snapshot: %s is a cloud backup", req.GetName(), csiSnapshotID)
 
 	resp, err = s.restoreCloudSnapshot(ctx, req)
 	return
@@ -689,16 +695,18 @@ func (s *OsdCsiServer) restoreCloudSnapshot(ctx context.Context,
 		return nil, err
 	}
 	// Get parameters
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
-	if err != nil {
-		e := fmt.Sprintf("Unable to get parameters: %s\n", err.Error())
-		clogger.WithContext(ctx).Errorln(e)
-		return nil, status.Error(codes.InvalidArgument, e)
-	}
+	_, locator, _, _ := s.specHandler.SpecFromOpts(req.GetParameters())
 
 	csiSnapshotID := req.VolumeContentSource.GetSnapshot().GetSnapshotId()
 
-	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	clogger.WithContext(ctx).Infof("csi.CreateVolume is restoring snapshot. Volume: %s Snapshot: %s is a cloud backup with labels %+v", req.GetName(), csiSnapshotID, locator.VolumeLabels)
+
+	credentialID, ok := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	if !ok {
+		e := fmt.Sprintf("csi.CreateVolume is restoring snapshot. Volume: %s Snapshot: %s credentials missing", req.GetName(), csiSnapshotID)
+		clogger.WithContext(ctx).Infof(e)
+		return nil, status.Error(codes.InvalidArgument, e)
+	}
 
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
 		BackupId:          csiSnapshotID,
@@ -708,7 +716,7 @@ func (s *OsdCsiServer) restoreCloudSnapshot(ctx context.Context,
 		CredentialId:      credentialID,
 	})
 	if nil != err {
-		return nil, err
+		return nil, status.Error(codes.Internal, err.Error())
 	}
 
 	resp = &csi.CreateVolumeResponse{
