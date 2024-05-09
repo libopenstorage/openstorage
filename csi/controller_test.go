@@ -3734,3 +3734,185 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		})
 	}
 }
+
+func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
+
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+
+	ctx := context.Background()
+
+	mockErr := errors.New("MOCK ERROR")
+	creationTime := timestamppb.Now()
+
+	mockVolumeName := "mock-volume-id"
+
+	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
+	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
+		func(ctx context.Context) (*grpc.ClientConn, bool, error) {
+			var err error
+			var conn *grpc.ClientConn
+			if ctx.Value("remote-client-error").(bool) {
+				err = mockErr
+				conn = &grpc.ClientConn{}
+			}
+			return conn, true, err
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Restore(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupRestoreRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupRestoreResponse, error) {
+			clogger.WithContext(ctx).Infof("csi.CreateVolume is restoring snapshot. SdkCloudBackupRestoreRequest: %+v", req)
+			if req.BackupId == "client-error" {
+				return nil, mockErr
+			}
+
+			if req.BackupId == "snapshot-notfound" {
+				return nil, status.Errorf(codes.NotFound, "Snapshot not found")
+			}
+
+			if req.BackupId == "ok" {
+				return &api.SdkCloudBackupRestoreResponse{
+					RestoreVolumeId: req.BackupId,
+					TaskId:          req.BackupId,
+				}, nil
+			}
+
+			return &api.SdkCloudBackupRestoreResponse{}, nil
+
+		}).AnyTimes()
+
+	mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+		DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+			if req.TaskId == "status-error" {
+				return nil, mockErr
+			}
+
+			return &api.SdkCloudBackupStatusResponse{
+				Statuses: map[string]*api.SdkCloudBackupStatus{
+					req.TaskId: {
+						BackupId:  req.TaskId,
+						Status:    api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
+						StartTime: creationTime,
+					},
+				},
+			}, nil
+
+		}).AnyTimes()
+
+	tests := []struct {
+		name         string
+		SnapshotName string
+		want         *csi.CreateVolumeResponse
+		wantErr      bool
+	}{
+
+		{
+			"snapshot not provided in volume source",
+			"nil",
+			nil,
+			true,
+		},
+		{
+			"remote client connection failed",
+			"remote-client-error",
+			nil,
+			true,
+		},
+		{
+			"snapshot id is blank",
+			"",
+			nil,
+			true,
+		},
+		{
+			"failed to get credentials",
+			"cred-error",
+			nil,
+			true,
+		},
+		{
+			"Cloud backup client not available",
+			"client-error",
+			nil,
+			true,
+		},
+		{
+			"fail to get cloud snap not found",
+			"snapshot-notfound",
+			nil,
+			true,
+		},
+		{
+			"Snapshot restored without error",
+			"ok",
+			&csi.CreateVolumeResponse{
+				Volume: &csi.Volume{
+					VolumeId: "ok",
+					ContentSource: &csi.VolumeContentSource{
+						Type: &csi.VolumeContentSource_Snapshot{
+							Snapshot: &csi.VolumeContentSource_SnapshotSource{
+								SnapshotId: "ok",
+							},
+						},
+					},
+				},
+			},
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			snapshot := &csi.VolumeContentSource_SnapshotSource{
+				SnapshotId: tt.SnapshotName,
+			}
+			if tt.SnapshotName == "nil" {
+				snapshot = nil
+			}
+
+			req := &csi.CreateVolumeRequest{
+				Name: mockVolumeName,
+				VolumeContentSource: &csi.VolumeContentSource{
+					Type: &csi.VolumeContentSource_Snapshot{
+						Snapshot: snapshot,
+					},
+				},
+			}
+			specLabels := []string{}
+			if tt.SnapshotName != "cred-error" {
+				specLabels = append(specLabels, osdSnapshotCredentialIDKey+"=mockcredid")
+				specLabels = append(specLabels, osdSnapshotLabelsTypeKey+"=cloud")
+				req.Parameters = map[string]string{
+					api.SpecLabels: strings.Join(specLabels, ","),
+				}
+			} else {
+				req.Parameters = nil
+			}
+
+			s := &OsdCsiServer{
+				specHandler: spec.NewSpecHandler(),
+				mu:          sync.Mutex{},
+				cloudBackupClient: func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient {
+					return mockCloudBackupClient
+				},
+				roundRobinBalancer: mockRoundRobinBalancer,
+			}
+
+			doClientErr := tt.SnapshotName == "remote-client-error"
+
+			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+
+			got, err := s.CreateVolume(ctx, req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("OsdCsiServer.CreateSnapshot() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("OsdCsiServer.CreateSnapshot() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
