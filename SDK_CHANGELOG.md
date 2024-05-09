@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.184.0 - (04/30/2024)
+
+* Added new `pure_nfs_endpoint_opt` field to VolumeSpecUpdate message in proto.
+
 ### v0.183.0 - (04/30/2024)
 
 * Added flag ResumeFromSavedOffset to verify-checksum start command
