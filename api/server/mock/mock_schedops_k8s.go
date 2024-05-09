@@ -307,20 +307,6 @@ func (mr *MockOpsMockRecorder) DeleteNamespace(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNamespace", reflect.TypeOf((*MockOps)(nil).DeleteNamespace), arg0)
 }
 
-// DeleteNode mocks base method.
-func (m *MockOps) DeleteNode(arg0 string) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "DeleteNode", arg0)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// DeleteNode indicates an expected call of DeleteNode.
-func (mr *MockOpsMockRecorder) DeleteNode(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteNode", reflect.TypeOf((*MockOps)(nil).DeleteNode), arg0)
-}
-
 // DeletePersistentVolume mocks base method.
 func (m *MockOps) DeletePersistentVolume(arg0 string) error {
 	m.ctrl.T.Helper()
@@ -1088,6 +1074,21 @@ func (mr *MockOpsMockRecorder) ListNamespaces(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListNamespaces", reflect.TypeOf((*MockOps)(nil).ListNamespaces), arg0)
 }
 
+// ListPods mocks base method.
+func (m *MockOps) ListPods(arg0 map[string]string) (*v1.PodList, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListPods", arg0)
+	ret0, _ := ret[0].(*v1.PodList)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListPods indicates an expected call of ListPods.
+func (mr *MockOpsMockRecorder) ListPods(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListPods", reflect.TypeOf((*MockOps)(nil).ListPods), arg0)
+}
+
 // ListServices mocks base method.
 func (m *MockOps) ListServices(arg0 string, arg1 v11.ListOptions) (*v1.ServiceList, error) {
 	m.ctrl.T.Helper()
@@ -1104,43 +1105,33 @@ func (mr *MockOpsMockRecorder) ListServices(arg0, arg1 interface{}) *gomock.Call
 }
 
 // PatchEndpoints mocks base method.
-func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 []byte, arg4 ...string) (*v1.Endpoints, error) {
+func (m *MockOps) PatchEndpoints(arg0, arg1 string, arg2 types.PatchType, arg3 []byte) (*v1.Endpoints, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1, arg2, arg3}
-	for _, a := range arg4 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "PatchEndpoints", varargs...)
+	ret := m.ctrl.Call(m, "PatchEndpoints", arg0, arg1, arg2, arg3)
 	ret0, _ := ret[0].(*v1.Endpoints)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PatchEndpoints indicates an expected call of PatchEndpoints.
-func (mr *MockOpsMockRecorder) PatchEndpoints(arg0, arg1, arg2, arg3 interface{}, arg4 ...interface{}) *gomock.Call {
+func (mr *MockOpsMockRecorder) PatchEndpoints(arg0, arg1, arg2, arg3 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1, arg2, arg3}, arg4...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchEndpoints", reflect.TypeOf((*MockOps)(nil).PatchEndpoints), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchEndpoints", reflect.TypeOf((*MockOps)(nil).PatchEndpoints), arg0, arg1, arg2, arg3)
 }
 
 // PatchService mocks base method.
-func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte, arg3 ...string) (*v1.Service, error) {
+func (m *MockOps) PatchService(arg0, arg1 string, arg2 []byte) (*v1.Service, error) {
 	m.ctrl.T.Helper()
-	varargs := []interface{}{arg0, arg1, arg2}
-	for _, a := range arg3 {
-		varargs = append(varargs, a)
-	}
-	ret := m.ctrl.Call(m, "PatchService", varargs...)
+	ret := m.ctrl.Call(m, "PatchService", arg0, arg1, arg2)
 	ret0, _ := ret[0].(*v1.Service)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PatchService indicates an expected call of PatchService.
-func (mr *MockOpsMockRecorder) PatchService(arg0, arg1, arg2 interface{}, arg3 ...interface{}) *gomock.Call {
+func (mr *MockOpsMockRecorder) PatchService(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	varargs := append([]interface{}{arg0, arg1, arg2}, arg3...)
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchService", reflect.TypeOf((*MockOps)(nil).PatchService), varargs...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PatchService", reflect.TypeOf((*MockOps)(nil).PatchService), arg0, arg1, arg2)
 }
 
 // RecordEvent mocks base method.
