@@ -2166,6 +2166,12 @@
 			"revisionTime": "2019-10-04T07:49:56Z"
 		},
 		{
+			"checksumSHA1": "TlU741F0YrWXfWXLBfMqAoYTLwg=",
+			"path": "k8s.io/api/certificates/v1",
+			"revision": "7ccc2456a96f03595337467ebeadece49e1736b1",
+			"revisionTime": "2024-05-08T19:23:19Z"
+		},
+		{
 			"checksumSHA1": "o0zqnZlVFk0bBjo7jygVgcWsaIs=",
 			"path": "k8s.io/api/certificates/v1beta1",
 			"revision": "159aefb8556bb8ed4be7631461d1558546d304db",
