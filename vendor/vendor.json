@@ -1283,10 +1283,10 @@
 			"revisionTime": "2020-04-13T19:14:45Z"
 		},
 		{
-			"checksumSHA1": "0NZIbE/8hay7k0l3tF0Vllj1haE=",
+			"checksumSHA1": "UukIo63UtmtfO1z4t83v6zEMZzU=",
 			"path": "github.com/portworx/sched-ops/k8s/core",
-			"revision": "6f93ebad686b9831ac4e9e8e70dd1a46a3fe3e5a",
-			"revisionTime": "2020-04-13T19:14:45Z"
+			"revision": "f0a12d0cb6cd77b3c859b07aa72ffab661d6487c",
+			"revisionTime": "2024-05-10T06:43:45Z"
 		},
 		{
 			"checksumSHA1": "lLPF1/eoOkO94IOsMfQHWmBlgk4=",

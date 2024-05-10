@@ -6,8 +6,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/portworx/sched-ops/k8s/common"
 	"github.com/portworx/sched-ops/task"
 	"github.com/sirupsen/logrus"
+	certv1 "k8s.io/api/certificates/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -17,11 +19,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/tools/events"
 	"k8s.io/client-go/tools/record"
 )
 
 const (
 	masterLabelKey           = "node-role.kubernetes.io/master"
+	controlplaneLabelKey     = "node-role.kubernetes.io/controlplane"
+	controlDashPlaneLabelKey = "node-role.kubernetes.io/control-plane"
 	pvcStorageProvisionerKey = "volume.beta.kubernetes.io/storage-provisioner"
 	labelUpdateMaxRetries    = 5
 )
@@ -46,6 +51,9 @@ type Ops interface {
 	SecretOps
 	ServiceOps
 	ServiceAccountOps
+	LimitRangeOps
+	NetworkPolicyOps
+	CertificateOps
 
 	// SetConfig sets the config and resets the client
 	SetConfig(config *rest.Config)
@@ -104,10 +112,20 @@ func NewInstanceFromConfigFile(config string) (Ops, error) {
 type Client struct {
 	config     *rest.Config
 	kubernetes kubernetes.Interface
-	// eventRecorders is a map of component to event recorders
-	eventRecorders     map[string]record.EventRecorder
+
+	// common lock used by both old and new recorder interfaces
 	eventRecordersLock sync.Mutex
-	eventBroadcaster   record.EventBroadcaster
+
+	// event broadcaster and recorders that record the events with the old interface
+	// (https://kubernetes.io/docs/reference/generated/kubernetes-api/v1.27/#event-v1-core)
+	// eventRecordersLegacy is a map of component to event recorders
+	eventRecordersLegacy   map[string]record.EventRecorder
+	eventBroadcasterLegacy record.EventBroadcaster
+
+	// event broadcaster and recorders that record the events with new interface
+	// (https://pkg.go.dev/k8s.io/api/events/v1)
+	eventRecordersNew   map[string]events.EventRecorder
+	eventBroadcasterNew events.EventBroadcaster
 }
 
 // SetConfig sets the config and resets the client.
@@ -200,7 +218,10 @@ func (c *Client) loadClient() error {
 	}
 
 	var err error
-
+	err = common.SetRateLimiter(c.config)
+	if err != nil {
+		return err
+	}
 	c.kubernetes, err = kubernetes.NewForConfig(c.config)
 	if err != nil {
 		return err
@@ -219,7 +240,8 @@ func (c *Client) handleWatch(
 	object runtime.Object,
 	namespace string,
 	fn WatchFunc,
-	listOptions metav1.ListOptions) {
+	listOptions metav1.ListOptions,
+) {
 	defer watchInterface.Stop()
 	for {
 		select {
@@ -237,6 +259,8 @@ func (c *Client) handleWatch(
 						err = c.WatchPods(namespace, fn, listOptions)
 					} else if sc, ok := object.(*corev1.Secret); ok {
 						err = c.WatchSecret(sc, fn)
+					} else if csr, ok := object.(*certv1.CertificateSigningRequest); ok {
+						err = c.WatchCertificateSigningRequests(csr, fn)
 					} else {
 						return "", false, fmt.Errorf("unsupported object: %v given to handle watch", object)
 					}

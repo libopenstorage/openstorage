@@ -1,6 +1,8 @@
 package core
 
 import (
+	"context"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -15,6 +17,8 @@ type ServiceAccountOps interface {
 	UpdateServiceAccount(account *corev1.ServiceAccount) (*corev1.ServiceAccount, error)
 	// DeleteServiceAccount deletes the given service account
 	DeleteServiceAccount(accountName, namespace string) error
+	// ListServiceAccount in given namespace
+	ListServiceAccount(namespace string, opts metav1.ListOptions) (*corev1.ServiceAccountList, error)
 }
 
 // CreateServiceAccount creates the given service account
@@ -23,7 +27,7 @@ func (c *Client) CreateServiceAccount(account *corev1.ServiceAccount) (*corev1.S
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().ServiceAccounts(account.Namespace).Create(account)
+	return c.kubernetes.CoreV1().ServiceAccounts(account.Namespace).Create(context.TODO(), account, metav1.CreateOptions{})
 }
 
 // GetServiceAccount gets the given service account
@@ -32,16 +36,25 @@ func (c *Client) GetServiceAccount(name, namespace string) (*corev1.ServiceAccou
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	return c.kubernetes.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 }
 
-// UpdaeServiceAccount updates the given service account
+// ListServiceAccount in given namespace
+func (c *Client) ListServiceAccount(namespace string, opts metav1.ListOptions) (*corev1.ServiceAccountList, error) {
+	if err := c.initClient(); err != nil {
+		return nil, err
+	}
+
+	return c.kubernetes.CoreV1().ServiceAccounts(namespace).List(context.TODO(), opts)
+}
+
+// UpdateServiceAccount updates the given service account
 func (c *Client) UpdateServiceAccount(account *corev1.ServiceAccount) (*corev1.ServiceAccount, error) {
 	if err := c.initClient(); err != nil {
 		return nil, err
 	}
 
-	return c.kubernetes.CoreV1().ServiceAccounts(account.Namespace).Update(account)
+	return c.kubernetes.CoreV1().ServiceAccounts(account.Namespace).Update(context.TODO(), account, metav1.UpdateOptions{})
 }
 
 // DeleteServiceAccount deletes the given service account
@@ -50,7 +63,7 @@ func (c *Client) DeleteServiceAccount(accountName, namespace string) error {
 		return err
 	}
 
-	return c.kubernetes.CoreV1().ServiceAccounts(namespace).Delete(accountName, &metav1.DeleteOptions{
+	return c.kubernetes.CoreV1().ServiceAccounts(namespace).Delete(context.TODO(), accountName, metav1.DeleteOptions{
 		PropagationPolicy: &deleteForegroundPolicy,
 	})
 }
