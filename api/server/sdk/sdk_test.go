@@ -294,10 +294,16 @@ func (s *testServer) Stop() {
 	volumedrivers.Remove("mock")
 
 	// Shutdown servers
-	s.conn.Close()
+	if s.conn != nil {
+		s.conn.Close()
+	}
 	s.m.EXPECT().StopVolumeWatcher().Return().AnyTimes()
-	s.server.Stop()
-	s.gw.Close()
+	if s.server != nil {
+		s.server.Stop()
+	}
+	if s.gw != nil {
+		s.gw.Close()
+	}
 
 	// Check mocks
 	s.mc.Finish()

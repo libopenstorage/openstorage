@@ -1268,6 +1268,14 @@ func (d *specHandler) RestoreSpecFromOpts(
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.ExportRules = v
+		case api.SpecPurePodName:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.PureBlockSpec == nil {
+				spec.ProxySpec.PureBlockSpec = &api.PureBlockSpec{}
+			}
+			spec.ProxySpec.PureBlockSpec.PodName = v
 		case api.SpecBackendVolName:
 			volName := v
 			pureBackendVolName = &volName

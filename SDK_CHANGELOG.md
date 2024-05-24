@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.185.0 - (05/24/2024)
+
+* Added a parameter for FlashArray Pod names
+
 ### v0.184.0 - (04/30/2024)
 
 * Added new `pure_nfs_endpoint_opt` field to VolumeSpecUpdate message in proto.
