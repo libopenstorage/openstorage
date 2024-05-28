@@ -33,7 +33,7 @@ import (
 )
 
 var (
-	DefaultConnectionTimeout = 5 * time.Minute
+	DefaultConnectionTimeout = 1 * time.Minute
 )
 
 // GetTlsDialOptions returns the appropriate gRPC dial options to connect to a gRPC server over TLS.
