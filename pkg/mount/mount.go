@@ -352,7 +352,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	// Old mountable had no mounts, copy over new mounts.
 	oldM, ok := m.mounts[device]
 	if !ok {
-		logrus.Infof("Reload: Adding the tuple to device path[%v:%v]", device, newM.Fs)
+		logrus.Debugf("Reload: Adding the tuple to device path[%v:%v]", device, newM.Fs)
 		m.mounts[device] = newM
 		return nil
 	}
@@ -368,7 +368,7 @@ func (m *Mounter) reload(device string, newM *Info) error {
 	}
 
 	// Purge old mounts.
-	logrus.Infof("Reload: Adding the device tuple [%v:%v] to mount table", device, newM.Fs)
+	logrus.Debugf("Reload: Adding the device tuple [%v:%v] to mount table", device, newM.Fs)
 	m.mounts[device] = newM
 	return nil
 }
@@ -416,7 +416,7 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 					Mountpoint: make([]*PathInfo, 0),
 				}
 				m.mounts[mountSourcePath] = mount
-				logrus.Infof("load: Adding the device[%v:%v] to mount table", deviceSourcePath, v.FSType)
+				logrus.Debugf("load: Adding the device[%v:%v] to mount table", deviceSourcePath, v.FSType)
 			}
 			// Allow Load to be called multiple times.
 			for _, p := range mount.Mountpoint {
@@ -431,7 +431,7 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 				Path: normalizeMountPath(v.Mountpoint),
 			}
 			mount.Mountpoint = append(mount.Mountpoint, pi)
-			logrus.Infof("load: Adding path to [%v:%v] to MountTable Entry for device [%v:%v]", v.Root, v.Mountpoint, deviceSourcePath, v.FSType)
+			logrus.Debugf("load: Adding path to [%v:%v] to MountTable Entry for device [%v:%v]", v.Root, v.Mountpoint, deviceSourcePath, v.FSType)
 			if updatePaths {
 				m.paths[v.Mountpoint] = mountSourcePath
 			}
