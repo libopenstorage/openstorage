@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -345,7 +345,8 @@ func TestAlertsServerEnumerate(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			R.Alerts = append(R.Alerts, r.Alerts...)
+			R.Alerts =
+				append(R.Alerts, r.Alerts...)
 		}
 
 		assert.Len(t, R.Alerts, config.expected)
