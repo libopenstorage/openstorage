@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/proto/time"
+	prototime "github.com/libopenstorage/openstorage/pkg/proto/time"
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"

@@ -1637,6 +1637,9 @@
           "full_vol_name": {
             "type": "string"
           },
+          "pod_name": {
+            "type": "string"
+          },
           "serial_num": {
             "type": "string"
           }
@@ -6600,7 +6603,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.184.0"
+    "version": "0.185.0"
   },
   "openapi": "3.0.0",
   "paths": {
