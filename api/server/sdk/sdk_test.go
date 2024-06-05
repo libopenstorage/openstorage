@@ -50,7 +50,7 @@ import (
 	"github.com/portworx/kvdb"
 	"github.com/portworx/kvdb/mem"
 	"github.com/sirupsen/logrus"
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/metadata"
@@ -91,7 +91,7 @@ func setupMockDriver(tester *testServer, t *testing.T) {
 
 	// Register mock driver
 	err = volumedrivers.Register(mockDriverName, nil)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }
 
 func setupMockBucketDriver(tester *testServer, t *testing.T) {
@@ -99,7 +99,7 @@ func setupMockBucketDriver(tester *testServer, t *testing.T) {
 	driverMap := make(map[string]bucket.BucketDriver)
 	driverMap[DefaultDriverName] = tester.b
 	tester.server.UseBucketDrivers(driverMap)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 }
 
 func newTestServer(t *testing.T) *testServer {
@@ -116,12 +116,12 @@ func newTestServer(t *testing.T) *testServer {
 	setupMockDriver(tester, t)
 
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	kvdb.SetInstance(kv)
 	// Init storage policy manager
 	_, err = policy.Init()
 	sp, err := policy.Inst()
-	assert.NotNil(t, sp)
+	require.NotNil(t, sp)
 
 	// Setup simple driver
 	os.Remove(testUds)
@@ -145,7 +145,7 @@ func newTestServer(t *testing.T) *testServer {
 		RoundRobinBalancer: loadbalancer.NewNullBalancer(),
 	})
 
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
@@ -155,24 +155,24 @@ func newTestServer(t *testing.T) *testServer {
 	}).Times(1)
 
 	err = tester.server.Start()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Read the CA cert data
 	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Get TLS dial options
 	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup a connection to the driver
 	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup REST gateway
 	mux, err := tester.server.restGateway.restServerSetupHandlers()
-	assert.NoError(t, err)
-	assert.NotNil(t, mux)
+	require.NoError(t, err)
+	require.NotNil(t, mux)
 	tester.gw = httptest.NewServer(mux)
 
 	// Add mock bucket driver to the server
@@ -194,15 +194,15 @@ func newTestServerAuth(t *testing.T) *testServer {
 	setupMockDriver(tester, t)
 
 	kv, err := kvdb.New(mem.Name, "policy", []string{}, nil, kvdb.LogFatalErrorCB)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	kvdb.SetInstance(kv)
 	// Init storage policy manager
 	_, err = policy.Init()
 	sp, err := policy.Inst()
-	assert.NotNil(t, sp)
+	require.NotNil(t, sp)
 
 	rm, err := role.NewSdkRoleManager(kv)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	selfsignedJwt, err := auth.NewJwtAuth(&auth.JwtAuthConfig{
 		SharedSecret:  []byte(testSharedSecret),
@@ -233,7 +233,7 @@ func newTestServerAuth(t *testing.T) *testServer {
 			},
 		},
 	})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	tester.m.EXPECT().StartVolumeWatcher().Return().Times(1)
 	tester.m.EXPECT().GetVolumeWatcher(&api.VolumeLocator{}, make(map[string]string)).DoAndReturn(func(a *api.VolumeLocator, l map[string]string) (chan *api.Volume, error) {
 		ch := make(chan *api.Volume, 1)
@@ -242,24 +242,24 @@ func newTestServerAuth(t *testing.T) *testServer {
 	}).Times(1)
 
 	err = tester.server.Start()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Read the CA cert data
 	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Get TLS dial options
 	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup a connection to the driver
 	tester.conn, err = grpcserver.Connect("localhost:"+tester.port, dopts)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup REST gateway
 	mux, err := tester.server.restGateway.restServerSetupHandlers()
-	assert.NoError(t, err)
-	assert.NotNil(t, mux)
+	require.NoError(t, err)
+	require.NotNil(t, mux)
 	tester.gw = httptest.NewServer(mux)
 	return tester
 }
@@ -359,18 +359,18 @@ func TestSdkGateway(t *testing.T) {
 
 	// Check we can get the swagger.json file
 	res, err := http.Get(s.GatewayURL() + "/swagger.json")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// Check we get the swagger-ui
 	res, err = http.Get(s.GatewayURL() + "/swagger-ui")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// Check unhandled address
 	res, err = http.Get(s.GatewayURL() + "/this-should-not-work")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusNotFound, res.StatusCode)
 
 	// Check the gateway works
 	// First setup the mock
@@ -386,8 +386,8 @@ func TestSdkGateway(t *testing.T) {
 
 	// Then send the request
 	res, err = http.Get(s.GatewayURL() + "/v1/clusters/inspectcurrent")
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	require.NoError(t, err)
+	require.Equal(t, http.StatusOK, res.StatusCode)
 
 	// Setup mock for CORS request
 	s.MockCluster().EXPECT().Enumerate().Return(cluster, nil).Times(1)
@@ -396,12 +396,12 @@ func TestSdkGateway(t *testing.T) {
 	// Try cross-origin reqeuest, should get allowed
 	reqOrigin := "openstorage.io"
 	req, err := http.NewRequest("GET", s.GatewayURL()+"/v1/clusters/inspectcurrent", nil)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	req.Header.Add("origin", reqOrigin)
 
 	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	assert.Equal(t, "*", resp.Header.Get("Access-Control-Allow-Origin"))
+	require.NoError(t, err)
+	require.Equal(t, "*", resp.Header.Get("Access-Control-Allow-Origin"))
 
 }
 
@@ -431,7 +431,7 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 
 	// Setup SDK Server with no volume driver
 	alert, err := alerts.NewFilterDeleter()
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	sp, err := policy.Inst()
 	os.Remove(testUds)
@@ -456,25 +456,25 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 			},
 		},
 	})
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	err = server.Start()
-	assert.Nil(t, err)
+	require.Nil(t, err)
 	defer func() {
 		server.Stop()
 	}()
 
 	// Read the CA cert data
 	caCertdata, err := ioutil.ReadFile("test_certs/insecure_ca.crt")
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Get TLS dial options
 	dopts, err := grpcserver.GetTlsDialOptions(caCertdata)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup a connection to the driver
 	conn, err := grpc.Dial("localhost:"+tester.port, dopts...)
-	assert.Nil(t, err)
+	require.Nil(t, err)
 
 	// Setup API names that depend on the volume driver
 	// To get the names, look at api.pb.go and search for grpc.Invoke or c.cc.Invoke
@@ -519,29 +519,29 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 	// does not panic using a nil point to a driver
 	for _, api := range apis {
 		err = conn.Invoke(context.Background(), api, nil, nil)
-		assert.Error(t, err)
+		require.Error(t, err)
 		serverError, ok := status.FromError(err)
-		assert.True(t, ok)
-		assert.Equal(t, serverError.Code(), codes.Unavailable)
-		assert.Contains(t, serverError.Message(), "Resource")
+		require.True(t, ok)
+		require.Equal(t, serverError.Code(), codes.Unavailable)
+		require.Contains(t, serverError.Message(), "Resource")
 	}
 
 	// Check the driver is not loaded
 	identities := api.NewOpenStorageIdentityClient(conn)
 	id, err := identities.Version(context.Background(), &api.SdkIdentityVersionRequest{})
-	assert.NoError(t, err)
-	assert.Contains(t, id.GetVersion().GetDriver(), "no driver")
+	require.NoError(t, err)
+	require.Contains(t, id.GetVersion().GetDriver(), "no driver")
 
 	// Now add the volume driver
 	d, err := volumedrivers.Get("fake")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	driverMap := map[string]volume.VolumeDriver{"fake": d, DefaultDriverName: d}
 	server.UseVolumeDrivers(driverMap)
 
 	// Identify that the driver is now running
 	id, err = identities.Version(context.Background(), &api.SdkIdentityVersionRequest{})
-	assert.NoError(t, err)
-	assert.Equal(t, "fake", id.GetVersion().GetDriver())
+	require.NoError(t, err)
+	require.Equal(t, "fake", id.GetVersion().GetDriver())
 
 	// This part of the test we cannot simply send nils for request and response
 	// because real data is being passed. Therefore, a single call will satisfy that
@@ -554,6 +554,6 @@ func TestSdkWithNoVolumeDriverThenAddOne(t *testing.T) {
 			HaLevel: 1,
 		},
 	})
-	assert.NoError(t, err)
-	assert.True(t, len(r.GetVolumeId()) != 0)
+	require.NoError(t, err)
+	require.True(t, len(r.GetVolumeId()) != 0)
 }
