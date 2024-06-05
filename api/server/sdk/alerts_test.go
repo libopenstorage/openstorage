@@ -315,7 +315,6 @@ func testNewIsClearedOption(isCleared bool) *api.SdkAlertsOption_IsCleared {
 
 // TestAlertsServerEnumerate tests enumerate functionality over gRPC using mock.
 func TestAlertsServerEnumerate(t *testing.T) {
-	t.Skip()
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
