@@ -35,6 +35,9 @@ import (
 	"github.com/libopenstorage/openstorage/volume"
 )
 
+// FADAPodLabelKey is a label added to volume locators in the case of FADA volume clone/snap restore
+const FADAPodLabelKey = "pure-pod-name" // Used to plumb in the pod name for volume cloning
+
 // When create is called for an existing volume, this function is called to make sure
 // the SDK only returns that the volume is ready when the status is UP
 func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.Volume, error) {
@@ -105,7 +108,6 @@ func (s *VolumeServer) create(
 	spec *api.VolumeSpec,
 	additionalCloneLabels map[string]string,
 ) (string, error) {
-
 	// Check if the volume has already been created or is in process of creation
 	volName := locator.GetName()
 	v, err := util.VolumeFromName(s.driver(ctx), volName)
@@ -170,8 +172,18 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
+		// Only include the FADA pod label
+		var labels map[string]string = nil
+		if locator.GetVolumeLabels() != nil {
+			if pod, ok := locator.GetVolumeLabels()[FADAPodLabelKey]; ok {
+				labels = map[string]string{
+					FADAPodLabelKey: pod,
+				}
+			}
+		}
 		id, err = s.driver(ctx).Snapshot(parent.GetId(), false, &api.VolumeLocator{
-			Name: volName,
+			Name:         volName,
+			VolumeLabels: labels,
 		}, false)
 		if err != nil {
 			if err == kvdb.ErrNotFound {
@@ -334,7 +346,8 @@ func (s *VolumeServer) Clone(
 	}
 
 	locator := &api.VolumeLocator{
-		Name: req.GetName(),
+		Name:         req.GetName(),
+		VolumeLabels: req.GetAdditionalLabels(),
 	}
 	source := &api.Source{
 		Parent: req.GetParentId(),
