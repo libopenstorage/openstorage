@@ -4039,6 +4039,37 @@ message DefragJob {
   string schedule_id = 7;
 }
 
+// DefragNodeStatus describes the defragmentation status of a node
+message DefragNodeStatus {
+  // PoolStatus is a map of <pool_uuid, DefragPoolStatus> pairs
+  map<string, DefragPoolStatus> pool_status = 1;
+  // RunningSchedule is the defrag schedule being run on the node
+  string running_schedule = 2;
+}
+
+// DefragNodeStatus describes the defragmentation status of a pool 
+message DefragPoolStatus {
+  // NumIterations counts the number of times the pool gets defraged
+  uint32 num_iterations = 1;
+  // Running indicates whether the pool is being defraged
+  bool running = 2;
+  // LastSuccess indicates whether the last run of defrag on this pool was successful
+  bool last_success = 3;
+  // LastStartTime is the start time of the latest run (current or last run) on this pool
+  google.protobuf.Timestamp last_start_time = 4;
+  // LastCompleteTime is the completion time of the last run on this pool
+  google.protobuf.Timestamp last_complete_time = 5;
+  // LastVolumeId is the volume on which defrag has started but not yet finished
+  // if provided, volume is currently being defraged or was interrupted in the last run of defrag
+  string last_volume_id = 6;
+  // LastOffset is the offset of the last defrag command executed on the pending volume
+  // -1 means no volume is in a pending state (either not started or fully finished)
+  int64 last_offset = 7;
+  // ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool
+  // percentage = bytes completed / sum of file sizes
+  int32 progress_percentage = 8;
+}
+
 message DiagsCollectionStatus {
   // Node is the node that's collecting the diags
   string node = 1;
