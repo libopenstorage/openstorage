@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.51 - (06/18/2024)
+
+* Add DefragJob data structure
+
 ### v0.101.50 - (05/24/2024)
 
 * Add a parameter for FlashArray Pod names
