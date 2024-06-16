@@ -848,6 +848,11 @@
           "schedule_id": {
             "title": "ScheduleId is the ID of the schedule which started this job",
             "type": "string"
+          },
+          "schedule_one_iteration_only": {
+            "format": "boolean",
+            "title": "ScheduleOneIterationOnly is true when the defragJob is run by a one-iteration-only schedule",
+            "type": "boolean"
           }
         },
         "title": "DefragJob describes a job to run defragmentation on cluster nodes",
