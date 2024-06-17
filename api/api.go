@@ -1329,6 +1329,14 @@ func (v *VolumeSpec) IsNFSProxyVolume() bool {
 	return v.GetProxySpec() != nil && v.GetProxySpec().NfsSpec != nil
 }
 
+// GetFADAPodName returns the FlashArray Pod name specified in the Pure Block spec, or empty if any fields are unspecified
+func (v *VolumeSpec) GetFADAPodName() string {
+	if v.GetProxySpec() != nil && v.GetProxySpec().PureBlockSpec != nil {
+		return v.GetProxySpec().PureBlockSpec.PodName
+	}
+	return ""
+}
+
 // GetCloneCreatorOwnership returns the appropriate ownership for the
 // new snapshot and if an update is required
 func (v *VolumeSpec) GetCloneCreatorOwnership(ctx context.Context) (*Ownership, bool) {
