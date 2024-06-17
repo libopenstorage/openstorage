@@ -33,6 +33,7 @@ import (
 	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/mock"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/api/spec"
 	authsecrets "github.com/libopenstorage/openstorage/pkg/auth/secrets"
 	mockLoadBalancer "github.com/libopenstorage/openstorage/pkg/loadbalancer/mock"
@@ -1940,6 +1941,122 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(snapID, nil).
+			Times(1),
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{snapID},
+			}, nil).
+			Return([]*api.Volume{
+				{
+					Id:     id,
+					Source: &api.Source{Parent: mockParentID},
+				},
+			}, nil).
+			Times(2),
+
+		s.MockDriver().
+			EXPECT().
+			Set(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(gomock.Any(), nil).
+			Return([]*api.Volume{
+				{
+					Id:     id,
+					Source: &api.Source{Parent: mockParentID},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	r, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
+	assert.Equal(t, mockParentID, volumeInfo.GetVolumeContext()[api.SpecParent])
+}
+
+func TestControllerCreateVolumeFromSnapshotFADAPod(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+	s.mockClusterEnumerateNode(t, "node-1")
+	// Setup request
+	mockParentID := "parendId"
+	name := "myvol"
+	pod := "mypod"
+	size := int64(1234)
+	req := &csi.CreateVolumeRequest{
+		Name: name,
+		VolumeCapabilities: []*csi.VolumeCapability{
+			{},
+		},
+		CapacityRange: &csi.CapacityRange{
+			RequiredBytes: size,
+		},
+		VolumeContentSource: &csi.VolumeContentSource{
+			Type: &csi.VolumeContentSource_Snapshot{
+				Snapshot: &csi.VolumeContentSource_SnapshotSource{
+					SnapshotId: mockParentID,
+				},
+			},
+		},
+		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+		Parameters: map[string]string{
+			api.SpecPurePodName: pod,
+		},
+	}
+
+	// Setup mock functions
+	id := "myid"
+	snapID := id + "-snap"
+	gomock.InOrder(
+
+		// First check on parent
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{mockParentID},
+			}, nil).
+			Return([]*api.Volume{{Id: mockParentID}}, nil).
+			Times(1),
+
+		// VolFromName (name)
+		s.MockDriver().
+			EXPECT().
+			Inspect(gomock.Any(), []string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(gomock.Any(), nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		//VolFromName parent
+		s.MockDriver().
+			EXPECT().
+			Inspect(gomock.Any(), gomock.Any()).
+			Return(
+				[]*api.Volume{{
+					Id: mockParentID,
+				}}, nil).
+			Times(1),
+
+		// create
+		s.MockDriver().
+			EXPECT().
+			Snapshot(gomock.Any(), gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{sdk.FADAPodLabelKey: pod}}, gomock.Any()).
 			Return(snapID, nil).
 			Times(1),
 		s.MockDriver().

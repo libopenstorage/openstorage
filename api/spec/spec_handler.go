@@ -640,6 +640,14 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 		case api.SpecBackendVolName:
 			volName := v
 			pureBackendVolName = &volName
+		case api.SpecPurePodName:
+			if spec.ProxySpec == nil {
+				spec.ProxySpec = &api.ProxySpec{}
+			}
+			if spec.ProxySpec.PureBlockSpec == nil {
+				spec.ProxySpec.PureBlockSpec = &api.PureBlockSpec{}
+			}
+			spec.ProxySpec.PureBlockSpec.PodName = v
 		case api.SpecPureFileExportRules:
 			if spec.ProxySpec == nil {
 				spec.ProxySpec = &api.ProxySpec{}
