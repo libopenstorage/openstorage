@@ -6603,7 +6603,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.185.0"
+    "version": "0.186.0"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -10304,19 +10304,11 @@
         "operationId": "OpenStorageSchedule_Enumerate",
         "parameters": [
           {
-            "description": "Type is schedule type",
+            "description": "Type is schedule type (cast to string from a Job.Type enum, as the version of\nprotoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           }
@@ -10354,19 +10346,11 @@
         "operationId": "OpenStorageSchedule_Delete",
         "parameters": [
           {
-            "description": "Type is schedule type",
+            "description": "Type is schedule type (cast to string from a Job.Type enum, as the version of\nprotoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           },
@@ -10411,19 +10395,11 @@
         "operationId": "OpenStorageSchedule_Inspect",
         "parameters": [
           {
-            "description": "Type is schedule type",
+            "description": "Type is schedule type (cast to string from a Job.Type enum, as the version of\nprotoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           },

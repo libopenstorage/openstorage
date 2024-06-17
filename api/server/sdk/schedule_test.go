@@ -47,7 +47,7 @@ func TestInspectSchedule(t *testing.T) {
 	r, err := c.Inspect(
 		context.Background(), 
 		&api.SdkInspectScheduleRequest{
-			Type: api.Job_DEFRAG, 
+			Type: "DEFRAG", 
 			Id: "12345",
 		},
 	)
@@ -100,7 +100,7 @@ func TestEnumerateSchedules(t *testing.T) {
 	r, err := c.Enumerate(
 		context.Background(), 
 		&api.SdkEnumerateSchedulesRequest{
-			Type: api.Job_DEFRAG,
+			Type: "DEFRAG",
 		},
 	)
 
@@ -132,7 +132,7 @@ func TestDeleteSchedule(t *testing.T) {
 		context.Background(),
 		&api.SdkDeleteScheduleRequest{
 			Id: "12345",
-			Type: api.Job_DEFRAG,
+			Type: "DEFRAG",
 		},
 	)
 	assert.NoError(t, err)

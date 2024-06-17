@@ -1816,7 +1816,6 @@ func request_OpenStorageSchedule_Inspect_0(ctx context.Context, marshaler runtim
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -1827,13 +1826,11 @@ func request_OpenStorageSchedule_Inspect_0(ctx context.Context, marshaler runtim
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -1857,7 +1854,6 @@ func local_request_OpenStorageSchedule_Inspect_0(ctx context.Context, marshaler 
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -1868,13 +1864,11 @@ func local_request_OpenStorageSchedule_Inspect_0(ctx context.Context, marshaler 
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -1898,7 +1892,6 @@ func request_OpenStorageSchedule_Enumerate_0(ctx context.Context, marshaler runt
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -1909,13 +1902,11 @@ func request_OpenStorageSchedule_Enumerate_0(ctx context.Context, marshaler runt
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
@@ -1928,7 +1919,6 @@ func local_request_OpenStorageSchedule_Enumerate_0(ctx context.Context, marshale
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -1939,13 +1929,11 @@ func local_request_OpenStorageSchedule_Enumerate_0(ctx context.Context, marshale
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	msg, err := server.Enumerate(ctx, &protoReq)
 	return msg, metadata, err
@@ -1958,7 +1946,6 @@ func request_OpenStorageSchedule_Delete_0(ctx context.Context, marshaler runtime
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -1969,13 +1956,11 @@ func request_OpenStorageSchedule_Delete_0(ctx context.Context, marshaler runtime
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	val, ok = pathParams["id"]
 	if !ok {
@@ -1999,7 +1984,6 @@ func local_request_OpenStorageSchedule_Delete_0(ctx context.Context, marshaler r
 
 	var (
 		val string
-		e   int32
 		ok  bool
 		err error
 		_   = err
@@ -2010,13 +1994,11 @@ func local_request_OpenStorageSchedule_Delete_0(ctx context.Context, marshaler r
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
 	}
 
-	e, err = runtime.Enum(val, Job_Type_value)
+	protoReq.Type, err = runtime.String(val)
 
 	if err != nil {
 		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
 	}
-
-	protoReq.Type = Job_Type(e)
 
 	val, ok = pathParams["id"]
 	if !ok {

@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.186.0 - (06/17/2024)
+
+* Change OpenStorageSchedule API parameter type to string
+
 ### v0.185.0 - (05/24/2024)
 
 * Added a parameter for FlashArray Pod names
