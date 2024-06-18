@@ -4144,8 +4144,9 @@ message Schedule {
 message SdkInspectScheduleRequest {
   // ID of the schedule
   string id = 1;
-  // Type is schedule type
-  Job.Type type = 2;
+  // Type is schedule type (cast to string from a Job.Type enum, as the version of
+  // protoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)
+  string type = 2;
 }
 
 // Defines a response of schedule information
@@ -4155,8 +4156,9 @@ message SdkInspectScheduleResponse {
 
 // Defines a request to enumerate all schedules of a type
 message SdkEnumerateSchedulesRequest {
-  // Type is schedule type
-  Job.Type type = 1;
+  // Type is schedule type (cast to string from a Job.Type enum, as the version of
+  // protoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)
+  string type = 1;
 }
 
 // Defines a response containing list of schedules
@@ -4168,8 +4170,9 @@ message SdkEnumerateSchedulesResponse {
 message SdkDeleteScheduleRequest {
   // ID of the schedule
   string id = 1;
-  // Type is schedule type
-  Job.Type type = 2;
+  // Type is schedule type (cast to string from a Job.Type enum, as the version of
+  // protoc-gen-grpc-gateway on release branch doesn't support enum type in REST API path parameter)
+  string type = 2;
 }
 
 // Empty response
@@ -5854,7 +5857,7 @@ message SdkVersion {
     // SDK version major value of this specification
     Major = 0;
     // SDK version minor value of this specification
-    Minor = 185;
+    Minor = 186;
     // SDK version patch value of this specification
     Patch = 0;
   }
