@@ -17716,6 +17716,306 @@ func (m *Schedule) GetLastUpdateTime() *timestamp.Timestamp {
 	return nil
 }
 
+// Defines a request to inspect schedule
+type SdkInspectScheduleRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// ID of the schedule
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Type is schedule type
+	Type Job_Type `protobuf:"varint,2,opt,name=type,proto3,enum=openstorage.api.Job_Type" json:"type,omitempty"`
+}
+
+func (x *SdkInspectScheduleRequest) Reset() {
+	*x = SdkInspectScheduleRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[202]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkInspectScheduleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkInspectScheduleRequest) ProtoMessage() {}
+
+func (x *SdkInspectScheduleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[202]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkInspectScheduleRequest.ProtoReflect.Descriptor instead.
+func (*SdkInspectScheduleRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{202}
+}
+
+func (x *SdkInspectScheduleRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SdkInspectScheduleRequest) GetType() Job_Type {
+	if x != nil {
+		return x.Type
+	}
+	return Job_UNSPECIFIED_TYPE
+}
+
+// Defines a response of schedule information
+type SdkInspectScheduleResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Schedule *Schedule `protobuf:"bytes,1,opt,name=schedule,proto3" json:"schedule,omitempty"`
+}
+
+func (x *SdkInspectScheduleResponse) Reset() {
+	*x = SdkInspectScheduleResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[203]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkInspectScheduleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkInspectScheduleResponse) ProtoMessage() {}
+
+func (x *SdkInspectScheduleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[203]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkInspectScheduleResponse.ProtoReflect.Descriptor instead.
+func (*SdkInspectScheduleResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{203}
+}
+
+func (x *SdkInspectScheduleResponse) GetSchedule() *Schedule {
+	if x != nil {
+		return x.Schedule
+	}
+	return nil
+}
+
+// Defines a request to enumerate all schedules of a type
+type SdkEnumerateSchedulesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Type is schedule type
+	Type Job_Type `protobuf:"varint,1,opt,name=type,proto3,enum=openstorage.api.Job_Type" json:"type,omitempty"`
+}
+
+func (x *SdkEnumerateSchedulesRequest) Reset() {
+	*x = SdkEnumerateSchedulesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[204]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkEnumerateSchedulesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkEnumerateSchedulesRequest) ProtoMessage() {}
+
+func (x *SdkEnumerateSchedulesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[204]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkEnumerateSchedulesRequest.ProtoReflect.Descriptor instead.
+func (*SdkEnumerateSchedulesRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{204}
+}
+
+func (x *SdkEnumerateSchedulesRequest) GetType() Job_Type {
+	if x != nil {
+		return x.Type
+	}
+	return Job_UNSPECIFIED_TYPE
+}
+
+// Defines a response containing list of schedules
+type SdkEnumerateSchedulesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Schedules []*Schedule `protobuf:"bytes,1,rep,name=schedules,proto3" json:"schedules,omitempty"`
+}
+
+func (x *SdkEnumerateSchedulesResponse) Reset() {
+	*x = SdkEnumerateSchedulesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[205]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkEnumerateSchedulesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkEnumerateSchedulesResponse) ProtoMessage() {}
+
+func (x *SdkEnumerateSchedulesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[205]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkEnumerateSchedulesResponse.ProtoReflect.Descriptor instead.
+func (*SdkEnumerateSchedulesResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{205}
+}
+
+func (x *SdkEnumerateSchedulesResponse) GetSchedules() []*Schedule {
+	if x != nil {
+		return x.Schedules
+	}
+	return nil
+}
+
+// Defines a request to delete a schedule
+type SdkDeleteScheduleRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// ID of the schedule
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// Type is schedule type
+	Type Job_Type `protobuf:"varint,2,opt,name=type,proto3,enum=openstorage.api.Job_Type" json:"type,omitempty"`
+}
+
+func (x *SdkDeleteScheduleRequest) Reset() {
+	*x = SdkDeleteScheduleRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[206]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkDeleteScheduleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkDeleteScheduleRequest) ProtoMessage() {}
+
+func (x *SdkDeleteScheduleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[206]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkDeleteScheduleRequest.ProtoReflect.Descriptor instead.
+func (*SdkDeleteScheduleRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{206}
+}
+
+func (x *SdkDeleteScheduleRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *SdkDeleteScheduleRequest) GetType() Job_Type {
+	if x != nil {
+		return x.Type
+	}
+	return Job_UNSPECIFIED_TYPE
+}
+
+// Empty response
+type SdkDeleteScheduleResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SdkDeleteScheduleResponse) Reset() {
+	*x = SdkDeleteScheduleResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[207]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkDeleteScheduleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkDeleteScheduleResponse) ProtoMessage() {}
+
+func (x *SdkDeleteScheduleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[207]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkDeleteScheduleResponse.ProtoReflect.Descriptor instead.
+func (*SdkDeleteScheduleResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{207}
+}
+
 // Defines a response for an SDK request that spins up a new job
 // to perform the request
 type SdkJobResponse struct {
@@ -18325,6 +18625,408 @@ func (m *DefragPoolStatus) GetProgressPercentage() int32 {
 		return m.ProgressPercentage
 	}
 	return 0
+}
+
+// Defines a request to create a defrag schedule
+type SdkCreateDefragScheduleRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// DefragTask is the defragmentation task run by the schedule
+	DefragTask *DefragJob `protobuf:"bytes,1,opt,name=defrag_task,json=defragTask,proto3" json:"defrag_task,omitempty"`
+	// StartTime is the scheduled time to start a run
+	// Valid formats:
+	// daily=HH:mm  e.g. daily=19:15
+	// weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15
+	// monthly=dd@HH:mm  e.g. monthly=22@19:15
+	StartTime string `protobuf:"bytes,2,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+}
+
+func (x *SdkCreateDefragScheduleRequest) Reset() {
+	*x = SdkCreateDefragScheduleRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[217]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkCreateDefragScheduleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkCreateDefragScheduleRequest) ProtoMessage() {}
+
+func (x *SdkCreateDefragScheduleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[217]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkCreateDefragScheduleRequest.ProtoReflect.Descriptor instead.
+func (*SdkCreateDefragScheduleRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{217}
+}
+
+func (x *SdkCreateDefragScheduleRequest) GetDefragTask() *DefragJob {
+	if x != nil {
+		return x.DefragTask
+	}
+	return nil
+}
+
+func (x *SdkCreateDefragScheduleRequest) GetStartTime() string {
+	if x != nil {
+		return x.StartTime
+	}
+	return ""
+}
+
+// Defines a response of defrag schedule creation
+type SdkCreateDefragScheduleResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Schedule is the newly created schedule
+	Schedule *Schedule `protobuf:"bytes,1,opt,name=schedule,proto3" json:"schedule,omitempty"`
+}
+
+func (x *SdkCreateDefragScheduleResponse) Reset() {
+	*x = SdkCreateDefragScheduleResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[218]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkCreateDefragScheduleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkCreateDefragScheduleResponse) ProtoMessage() {}
+
+func (x *SdkCreateDefragScheduleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[218]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkCreateDefragScheduleResponse.ProtoReflect.Descriptor instead.
+func (*SdkCreateDefragScheduleResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{218}
+}
+
+func (x *SdkCreateDefragScheduleResponse) GetSchedule() *Schedule {
+	if x != nil {
+		return x.Schedule
+	}
+	return nil
+}
+
+// Defines a request to clean up defrag schedules
+type SdkCleanUpDefragSchedulesRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SdkCleanUpDefragSchedulesRequest) Reset() {
+	*x = SdkCleanUpDefragSchedulesRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[219]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkCleanUpDefragSchedulesRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkCleanUpDefragSchedulesRequest) ProtoMessage() {}
+
+func (x *SdkCleanUpDefragSchedulesRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[219]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkCleanUpDefragSchedulesRequest.ProtoReflect.Descriptor instead.
+func (*SdkCleanUpDefragSchedulesRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{219}
+}
+
+// Defines a response of defrag schedules clean-up
+type SdkCleanUpDefragSchedulesResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SdkCleanUpDefragSchedulesResponse) Reset() {
+	*x = SdkCleanUpDefragSchedulesResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[220]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkCleanUpDefragSchedulesResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkCleanUpDefragSchedulesResponse) ProtoMessage() {}
+
+func (x *SdkCleanUpDefragSchedulesResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[220]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkCleanUpDefragSchedulesResponse.ProtoReflect.Descriptor instead.
+func (*SdkCleanUpDefragSchedulesResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{220}
+}
+
+// Defines a request to query defrag status of a node
+type SdkGetDefragNodeStatusRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// NodeId is uuid of the node
+	NodeId string `protobuf:"bytes,1,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+}
+
+func (x *SdkGetDefragNodeStatusRequest) Reset() {
+	*x = SdkGetDefragNodeStatusRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[221]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkGetDefragNodeStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkGetDefragNodeStatusRequest) ProtoMessage() {}
+
+func (x *SdkGetDefragNodeStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[221]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkGetDefragNodeStatusRequest.ProtoReflect.Descriptor instead.
+func (*SdkGetDefragNodeStatusRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{221}
+}
+
+func (x *SdkGetDefragNodeStatusRequest) GetNodeId() string {
+	if x != nil {
+		return x.NodeId
+	}
+	return ""
+}
+
+// Defines a response of defrag node status
+type SdkGetDefragNodeStatusResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// DefragNodeStatus stores the defrag status of the node
+	DefragNodeStatus *DefragNodeStatus `protobuf:"bytes,1,opt,name=defrag_node_status,json=defragNodeStatus,proto3" json:"defrag_node_status,omitempty"`
+	// DataIp is the IP address of this node
+	DataIp string `protobuf:"bytes,2,opt,name=data_ip,json=dataIp,proto3" json:"data_ip,omitempty"`
+	// SchedulerNodeName is name of the node in scheduler context
+	SchedulerNodeName string `protobuf:"bytes,3,opt,name=scheduler_node_name,json=schedulerNodeName,proto3" json:"scheduler_node_name,omitempty"`
+	// PoolUsage is a map with pool UUID as the key and pool usage percentage as the value
+	PoolUsage map[string]uint32 `protobuf:"bytes,4,rep,name=pool_usage,json=poolUsage,proto3" json:"pool_usage,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`
+}
+
+func (x *SdkGetDefragNodeStatusResponse) Reset() {
+	*x = SdkGetDefragNodeStatusResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[222]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkGetDefragNodeStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkGetDefragNodeStatusResponse) ProtoMessage() {}
+
+func (x *SdkGetDefragNodeStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[222]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkGetDefragNodeStatusResponse.ProtoReflect.Descriptor instead.
+func (*SdkGetDefragNodeStatusResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{222}
+}
+
+func (x *SdkGetDefragNodeStatusResponse) GetDefragNodeStatus() *DefragNodeStatus {
+	if x != nil {
+		return x.DefragNodeStatus
+	}
+	return nil
+}
+
+func (x *SdkGetDefragNodeStatusResponse) GetDataIp() string {
+	if x != nil {
+		return x.DataIp
+	}
+	return ""
+}
+
+func (x *SdkGetDefragNodeStatusResponse) GetSchedulerNodeName() string {
+	if x != nil {
+		return x.SchedulerNodeName
+	}
+	return ""
+}
+
+func (x *SdkGetDefragNodeStatusResponse) GetPoolUsage() map[string]uint32 {
+	if x != nil {
+		return x.PoolUsage
+	}
+	return nil
+}
+
+// Defines a request to get defrag status of the entire cluster
+type SdkEnumerateDefragStatusRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SdkEnumerateDefragStatusRequest) Reset() {
+	*x = SdkEnumerateDefragStatusRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[223]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkEnumerateDefragStatusRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkEnumerateDefragStatusRequest) ProtoMessage() {}
+
+func (x *SdkEnumerateDefragStatusRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[223]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkEnumerateDefragStatusRequest.ProtoReflect.Descriptor instead.
+func (*SdkEnumerateDefragStatusRequest) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{223}
+}
+
+// Defines a response of defrag status of the entire cluster
+type SdkEnumerateDefragStatusResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Status is a map with node uuid as the key and defrag node status as the value
+	Status map[string]*SdkGetDefragNodeStatusResponse `protobuf:"bytes,1,rep,name=status,proto3" json:"status,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *SdkEnumerateDefragStatusResponse) Reset() {
+	*x = SdkEnumerateDefragStatusResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_api_api_proto_msgTypes[224]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SdkEnumerateDefragStatusResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SdkEnumerateDefragStatusResponse) ProtoMessage() {}
+
+func (x *SdkEnumerateDefragStatusResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_api_api_proto_msgTypes[224]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SdkEnumerateDefragStatusResponse.ProtoReflect.Descriptor instead.
+func (*SdkEnumerateDefragStatusResponse) Descriptor() ([]byte, []int) {
+	return file_api_api_proto_rawDescGZIP(), []int{224}
+}
+
+func (x *SdkEnumerateDefragStatusResponse) GetStatus() map[string]*SdkGetDefragNodeStatusResponse {
+	if x != nil {
+		return x.Status
+	}
+	return nil
 }
 
 type DiagsCollectionStatus struct {

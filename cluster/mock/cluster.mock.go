@@ -54,6 +54,21 @@ func (mr *MockClusterMockRecorder) AddEventListener(arg0 interface{}) *gomock.Ca
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddEventListener", reflect.TypeOf((*MockCluster)(nil).AddEventListener), arg0)
 }
 
+// CleanUpDefragSchedules mocks base method.
+func (m *MockCluster) CleanUpDefragSchedules(arg0 context.Context, arg1 *api.SdkCleanUpDefragSchedulesRequest) (*api.SdkCleanUpDefragSchedulesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CleanUpDefragSchedules", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkCleanUpDefragSchedulesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CleanUpDefragSchedules indicates an expected call of CleanUpDefragSchedules.
+func (mr *MockClusterMockRecorder) CleanUpDefragSchedules(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpDefragSchedules", reflect.TypeOf((*MockCluster)(nil).CleanUpDefragSchedules), arg0, arg1)
+}
+
 // ClusterNotifyClusterDomainsUpdate mocks base method
 func (m *MockCluster) ClusterNotifyClusterDomainsUpdate(arg0 types.ClusterDomainsActiveMap) error {
 	m.ctrl.T.Helper()
@@ -113,6 +128,21 @@ func (mr *MockClusterMockRecorder) CordonAttachments(arg0, arg1 interface{}) *go
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CordonAttachments", reflect.TypeOf((*MockCluster)(nil).CordonAttachments), arg0, arg1)
 }
 
+// CreateDefragSchedule mocks base method.
+func (m *MockCluster) CreateDefragSchedule(arg0 context.Context, arg1 *api.SdkCreateDefragScheduleRequest) (*api.SdkCreateDefragScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "CreateDefragSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkCreateDefragScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// CreateDefragSchedule indicates an expected call of CreateDefragSchedule.
+func (mr *MockClusterMockRecorder) CreateDefragSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateDefragSchedule", reflect.TypeOf((*MockCluster)(nil).CreateDefragSchedule), arg0, arg1)
+}
+
 // CreatePair mocks base method
 func (m *MockCluster) CreatePair(arg0 *api.ClusterPairCreateRequest) (*api.ClusterPairCreateResponse, error) {
 	m.ctrl.T.Helper()
@@ -170,7 +200,22 @@ func (mr *MockClusterMockRecorder) DeletePair(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeletePair", reflect.TypeOf((*MockCluster)(nil).DeletePair), arg0)
 }
 
-// DisableUpdates mocks base method
+// DeleteSchedule mocks base method.
+func (m *MockCluster) DeleteSchedule(arg0 context.Context, arg1 *api.SdkDeleteScheduleRequest) (*api.SdkDeleteScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "DeleteSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkDeleteScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// DeleteSchedule indicates an expected call of DeleteSchedule.
+func (mr *MockClusterMockRecorder) DeleteSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "DeleteSchedule", reflect.TypeOf((*MockCluster)(nil).DeleteSchedule), arg0, arg1)
+}
+
+// DisableUpdates mocks base method.
 func (m *MockCluster) DisableUpdates() error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "DisableUpdates")
@@ -241,6 +286,36 @@ func (m *MockCluster) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceTyp
 func (mr *MockClusterMockRecorder) EnumerateAlerts(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateAlerts", reflect.TypeOf((*MockCluster)(nil).EnumerateAlerts), arg0, arg1, arg2)
+}
+
+// EnumerateDefragStatus mocks base method.
+func (m *MockCluster) EnumerateDefragStatus(arg0 context.Context, arg1 *api.SdkEnumerateDefragStatusRequest) (*api.SdkEnumerateDefragStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateDefragStatus", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateDefragStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateDefragStatus indicates an expected call of EnumerateDefragStatus.
+func (mr *MockClusterMockRecorder) EnumerateDefragStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateDefragStatus", reflect.TypeOf((*MockCluster)(nil).EnumerateDefragStatus), arg0, arg1)
+}
+
+// EnumerateDefragStatus mocks base method.
+func (m *MockCluster) EnumerateDefragStatus(arg0 context.Context, arg1 *api.SdkEnumerateDefragStatusRequest) (*api.SdkEnumerateDefragStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateDefragStatus", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateDefragStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateDefragStatus indicates an expected call of EnumerateDefragStatus.
+func (mr *MockClusterMockRecorder) EnumerateDefragStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateDefragStatus", reflect.TypeOf((*MockCluster)(nil).EnumerateDefragStatus), arg0, arg1)
 }
 
 // EnumerateDomains mocks base method
@@ -318,6 +393,21 @@ func (mr *MockClusterMockRecorder) EnumerateRebalanceJobs(arg0, arg1 interface{}
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateRebalanceJobs", reflect.TypeOf((*MockCluster)(nil).EnumerateRebalanceJobs), arg0, arg1)
 }
 
+// EnumerateSchedules mocks base method.
+func (m *MockCluster) EnumerateSchedules(arg0 context.Context, arg1 *api.SdkEnumerateSchedulesRequest) (*api.SdkEnumerateSchedulesResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "EnumerateSchedules", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkEnumerateSchedulesResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// EnumerateSchedules indicates an expected call of EnumerateSchedules.
+func (mr *MockClusterMockRecorder) EnumerateSchedules(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateSchedules", reflect.TypeOf((*MockCluster)(nil).EnumerateSchedules), arg0, arg1)
+}
+
 // EraseAlert mocks base method
 func (m *MockCluster) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
 	m.ctrl.T.Helper()
@@ -360,6 +450,21 @@ func (m *MockCluster) GetData() (map[string]*api.Node, error) {
 func (mr *MockClusterMockRecorder) GetData() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetData", reflect.TypeOf((*MockCluster)(nil).GetData))
+}
+
+// GetDefragNodeStatus mocks base method.
+func (m *MockCluster) GetDefragNodeStatus(arg0 context.Context, arg1 *api.SdkGetDefragNodeStatusRequest) (*api.SdkGetDefragNodeStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetDefragNodeStatus", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkGetDefragNodeStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// GetDefragNodeStatus indicates an expected call of GetDefragNodeStatus.
+func (mr *MockClusterMockRecorder) GetDefragNodeStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetDefragNodeStatus", reflect.TypeOf((*MockCluster)(nil).GetDefragNodeStatus), arg0, arg1)
 }
 
 // GetGossipIntervals mocks base method
@@ -523,6 +628,21 @@ func (m *MockCluster) InspectDomain(arg0 string) (*clusterdomain.ClusterDomainIn
 func (mr *MockClusterMockRecorder) InspectDomain(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectDomain", reflect.TypeOf((*MockCluster)(nil).InspectDomain), arg0)
+}
+
+// InspectSchedule mocks base method.
+func (m *MockCluster) InspectSchedule(arg0 context.Context, arg1 *api.SdkInspectScheduleRequest) (*api.SdkInspectScheduleResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "InspectSchedule", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkInspectScheduleResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// InspectSchedule indicates an expected call of InspectSchedule.
+func (mr *MockClusterMockRecorder) InspectSchedule(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectSchedule", reflect.TypeOf((*MockCluster)(nil).InspectSchedule), arg0, arg1)
 }
 
 // NodeRemoveDone mocks base method

@@ -4,7 +4,9 @@
 
 ### v0.101.51 - (06/18/2024)
 
-* Add defrag schedule data structures
+* Add defrag job and status data structures
+* Add generic schedule data structure
+* Add server and APIs for defrag and schedule services
 
 ### v0.101.50 - (05/24/2024)
 
