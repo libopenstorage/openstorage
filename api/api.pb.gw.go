@@ -281,6 +281,64 @@ func request_OpenStorageFilesystemCheck_Stop_0(ctx context.Context, marshaler ru
 
 }
 
+func request_OpenStorageFilesystemDefrag_CreateSchedule_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemDefragClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCreateDefragScheduleRequest
+	var metadata runtime.ServerMetadata
+
+	if err := marshaler.NewDecoder(req.Body).Decode(&protoReq); err != nil && err != io.EOF {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "%v", err)
+	}
+
+	msg, err := client.CreateSchedule(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageFilesystemDefrag_GetNodeStatus_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemDefragClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkGetDefragNodeStatusRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["node_id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "node_id")
+	}
+
+	protoReq.NodeId, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "node_id", err)
+	}
+
+	msg, err := client.GetNodeStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageFilesystemDefrag_EnumerateNodeStatus_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemDefragClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkEnumerateDefragStatusRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.EnumerateNodeStatus(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageFilesystemDefrag_CleanUpSchedules_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageFilesystemDefragClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkCleanUpDefragSchedulesRequest
+	var metadata runtime.ServerMetadata
+
+	msg, err := client.CleanUpSchedules(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
 func request_OpenStorageIdentity_Capabilities_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageIdentityClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
 	var protoReq SdkIdentityCapabilitiesRequest
 	var metadata runtime.ServerMetadata
@@ -711,6 +769,109 @@ func request_OpenStorageJob_Enumerate_0(ctx context.Context, marshaler runtime.M
 	}
 
 	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageSchedule_Inspect_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageScheduleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkInspectScheduleRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["type"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
+	}
+
+	protoReq.Type, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
+	}
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	msg, err := client.Inspect(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageSchedule_Enumerate_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageScheduleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkEnumerateSchedulesRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["type"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
+	}
+
+	protoReq.Type, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
+	}
+
+	msg, err := client.Enumerate(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
+	return msg, metadata, err
+
+}
+
+func request_OpenStorageSchedule_Delete_0(ctx context.Context, marshaler runtime.Marshaler, client OpenStorageScheduleClient, req *http.Request, pathParams map[string]string) (proto.Message, runtime.ServerMetadata, error) {
+	var protoReq SdkDeleteScheduleRequest
+	var metadata runtime.ServerMetadata
+
+	var (
+		val string
+		ok  bool
+		err error
+		_   = err
+	)
+
+	val, ok = pathParams["type"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "type")
+	}
+
+	protoReq.Type, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "type", err)
+	}
+
+	val, ok = pathParams["id"]
+	if !ok {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "missing parameter %s", "id")
+	}
+
+	protoReq.Id, err = runtime.String(val)
+
+	if err != nil {
+		return nil, metadata, status.Errorf(codes.InvalidArgument, "type mismatch, parameter: %s, error: %v", "id", err)
+	}
+
+	msg, err := client.Delete(ctx, &protoReq, grpc.Header(&metadata.HeaderMD), grpc.Trailer(&metadata.TrailerMD))
 	return msg, metadata, err
 
 }
@@ -2961,14 +3122,14 @@ func RegisterOpenStorageFilesystemDefragHandlerFromEndpoint(ctx context.Context,
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -2982,8 +3143,8 @@ func RegisterOpenStorageFilesystemDefragHandler(ctx context.Context, mux *runtim
 	return RegisterOpenStorageFilesystemDefragHandlerClient(ctx, mux, NewOpenStorageFilesystemDefragClient(conn))
 }
 
-// RegisterOpenStorageFilesystemDefragHandlerClient registers the http handlers for service OpenStorageFilesystemDefrag
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageFilesystemDefragClient".
+// RegisterOpenStorageFilesystemDefragHandler registers the http handlers for service OpenStorageFilesystemDefrag to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageFilesystemDefragClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageFilesystemDefragClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageFilesystemDefragClient" to call the correct interceptors.
@@ -2992,6 +3153,15 @@ func RegisterOpenStorageFilesystemDefragHandlerClient(ctx context.Context, mux *
 	mux.Handle("POST", pattern_OpenStorageFilesystemDefrag_CreateSchedule_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -3012,6 +3182,15 @@ func RegisterOpenStorageFilesystemDefragHandlerClient(ctx context.Context, mux *
 	mux.Handle("GET", pattern_OpenStorageFilesystemDefrag_GetNodeStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -3032,6 +3211,15 @@ func RegisterOpenStorageFilesystemDefragHandlerClient(ctx context.Context, mux *
 	mux.Handle("GET", pattern_OpenStorageFilesystemDefrag_EnumerateNodeStatus_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -3052,6 +3240,15 @@ func RegisterOpenStorageFilesystemDefragHandlerClient(ctx context.Context, mux *
 	mux.Handle("DELETE", pattern_OpenStorageFilesystemDefrag_CleanUpSchedules_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -3073,13 +3270,13 @@ func RegisterOpenStorageFilesystemDefragHandlerClient(ctx context.Context, mux *
 }
 
 var (
-	pattern_OpenStorageFilesystemDefrag_CreateSchedule_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "schedule"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageFilesystemDefrag_CreateSchedule_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "schedule"}, ""))
 
-	pattern_OpenStorageFilesystemDefrag_GetNodeStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "filesystem-defrag", "status", "node_id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageFilesystemDefrag_GetNodeStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "filesystem-defrag", "status", "node_id"}, ""))
 
-	pattern_OpenStorageFilesystemDefrag_EnumerateNodeStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "status"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageFilesystemDefrag_EnumerateNodeStatus_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "status"}, ""))
 
-	pattern_OpenStorageFilesystemDefrag_CleanUpSchedules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "schedules"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageFilesystemDefrag_CleanUpSchedules_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 2, 2}, []string{"v1", "filesystem-defrag", "schedules"}, ""))
 )
 
 var (
@@ -4143,14 +4340,14 @@ func RegisterOpenStorageScheduleHandlerFromEndpoint(ctx context.Context, mux *ru
 	defer func() {
 		if err != nil {
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 			return
 		}
 		go func() {
 			<-ctx.Done()
 			if cerr := conn.Close(); cerr != nil {
-				grpclog.Infof("Failed to close conn to %s: %v", endpoint, cerr)
+				grpclog.Printf("Failed to close conn to %s: %v", endpoint, cerr)
 			}
 		}()
 	}()
@@ -4164,8 +4361,8 @@ func RegisterOpenStorageScheduleHandler(ctx context.Context, mux *runtime.ServeM
 	return RegisterOpenStorageScheduleHandlerClient(ctx, mux, NewOpenStorageScheduleClient(conn))
 }
 
-// RegisterOpenStorageScheduleHandlerClient registers the http handlers for service OpenStorageSchedule
-// to "mux". The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageScheduleClient".
+// RegisterOpenStorageScheduleHandler registers the http handlers for service OpenStorageSchedule to "mux".
+// The handlers forward requests to the grpc endpoint over the given implementation of "OpenStorageScheduleClient".
 // Note: the gRPC framework executes interceptors within the gRPC handler. If the passed in "OpenStorageScheduleClient"
 // doesn't go through the normal gRPC flow (creating a gRPC client etc.) then it will be up to the passed in
 // "OpenStorageScheduleClient" to call the correct interceptors.
@@ -4174,6 +4371,15 @@ func RegisterOpenStorageScheduleHandlerClient(ctx context.Context, mux *runtime.
 	mux.Handle("GET", pattern_OpenStorageSchedule_Inspect_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -4194,6 +4400,15 @@ func RegisterOpenStorageScheduleHandlerClient(ctx context.Context, mux *runtime.
 	mux.Handle("GET", pattern_OpenStorageSchedule_Enumerate_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -4214,6 +4429,15 @@ func RegisterOpenStorageScheduleHandlerClient(ctx context.Context, mux *runtime.
 	mux.Handle("DELETE", pattern_OpenStorageSchedule_Delete_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
 		ctx, cancel := context.WithCancel(req.Context())
 		defer cancel()
+		if cn, ok := w.(http.CloseNotifier); ok {
+			go func(done <-chan struct{}, closed <-chan bool) {
+				select {
+				case <-done:
+				case <-closed:
+					cancel()
+				}
+			}(ctx.Done(), cn.CloseNotify())
+		}
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, req)
 		rctx, err := runtime.AnnotateContext(ctx, mux, req)
 		if err != nil {
@@ -4235,11 +4459,11 @@ func RegisterOpenStorageScheduleHandlerClient(ctx context.Context, mux *runtime.
 }
 
 var (
-	pattern_OpenStorageSchedule_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "schedules", "type", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageSchedule_Inspect_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "schedules", "type", "id"}, ""))
 
-	pattern_OpenStorageSchedule_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "schedules", "type"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageSchedule_Enumerate_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2}, []string{"v1", "schedules", "type"}, ""))
 
-	pattern_OpenStorageSchedule_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "schedules", "type", "id"}, "", runtime.AssumeColonVerbOpt(true)))
+	pattern_OpenStorageSchedule_Delete_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1, 1, 0, 4, 1, 5, 2, 1, 0, 4, 1, 5, 3}, []string{"v1", "schedules", "type", "id"}, ""))
 )
 
 var (

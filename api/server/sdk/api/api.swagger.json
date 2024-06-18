@@ -842,7 +842,7 @@
             "items": {
               "$ref": "#/components/schemas/apiLabelSelectorRequirement"
             },
-            "title": "NodeSelector is a list of node label `key=value` pairs separated by comma, \nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
+            "title": "NodeSelector is a list of node label `key=value` pairs,\nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
             "type": "array"
           },
           "schedule_id": {
@@ -898,6 +898,7 @@
             "type": "string"
           },
           "last_success": {
+            "format": "boolean",
             "title": "LastSuccess indicates whether the last run of defrag on this pool was successful",
             "type": "boolean"
           },
@@ -916,6 +917,7 @@
             "type": "integer"
           },
           "running": {
+            "format": "boolean",
             "title": "Running indicates whether the pool is being defraged",
             "type": "boolean"
           }
@@ -3071,6 +3073,28 @@
         "title": "Defines a response for the token request",
         "type": "object"
       },
+      "apiSdkCreateDefragScheduleRequest": {
+        "properties": {
+          "defrag_task": {
+            "$ref": "#/components/schemas/apiDefragJob"
+          },
+          "start_time": {
+            "title": "StartTime is the scheduled time to start a run\nValid formats: \ndaily=HH:mm  e.g. daily=19:15\nweekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\nmonthly=dd@HH:mm  e.g. monthly=22@19:15",
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to create a defrag schedule",
+        "type": "object"
+      },
+      "apiSdkCreateDefragScheduleResponse": {
+        "properties": {
+          "schedule": {
+            "$ref": "#/components/schemas/apiSchedule"
+          }
+        },
+        "title": "Defines a response of defrag schedule creation",
+        "type": "object"
+      },
       "apiSdkCredentialCreateRequest": {
         "properties": {
           "aws_credential": {
@@ -3212,6 +3236,10 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkDeleteScheduleResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkDiagsCollectRequest": {
         "properties": {
           "issuer": {
@@ -3288,6 +3316,18 @@
             "type": "array"
           }
         },
+        "type": "object"
+      },
+      "apiSdkEnumerateSchedulesResponse": {
+        "properties": {
+          "schedules": {
+            "items": {
+              "$ref": "#/components/schemas/apiSchedule"
+            },
+            "type": "array"
+          }
+        },
+        "title": "Defines a response containing list of schedules",
         "type": "object"
       },
       "apiSdkFilesystemCheckStartRequest": {
@@ -3440,6 +3480,31 @@
             "type": "array"
           }
         },
+        "type": "object"
+      },
+      "apiSdkGetDefragNodeStatusResponse": {
+        "properties": {
+          "data_ip": {
+            "title": "DataIp is the IP address of this node",
+            "type": "string"
+          },
+          "defrag_node_status": {
+            "$ref": "#/components/schemas/apiDefragNodeStatus"
+          },
+          "pool_usage": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "title": "PoolUsage is a map with pool UUID as the key and pool usage percentage as the value",
+            "type": "object"
+          },
+          "scheduler_node_name": {
+            "title": "SchedulerNodeName is name of the node in scheduler context",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response of defrag node status",
         "type": "object"
       },
       "apiSdkGetJobStatusResponse": {
@@ -7699,7 +7764,7 @@
     },
     "/v1/filesystem-defrag/schedule": {
       "post": {
-        "operationId": "OpenStorageFilesystemDefrag_CreateSchedule",
+        "operationId": "CreateSchedule",
         "requestBody": {
           "content": {
             "application/json": {
@@ -7719,17 +7784,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Create a schedule to run defragmentation tasks periodically",
@@ -7740,7 +7795,7 @@
     },
     "/v1/filesystem-defrag/schedules": {
       "delete": {
-        "operationId": "OpenStorageFilesystemDefrag_CleanUpSchedules",
+        "operationId": "CleanUpSchedules",
         "responses": {
           "200": {
             "content": {
@@ -7750,17 +7805,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Clean up all defrag schedules and stop all operations",
@@ -7771,7 +7816,7 @@
     },
     "/v1/filesystem-defrag/status": {
       "get": {
-        "operationId": "OpenStorageFilesystemDefrag_EnumerateNodeStatus",
+        "operationId": "EnumerateNodeStatus",
         "responses": {
           "200": {
             "content": {
@@ -7781,17 +7826,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Enumerate all nodes, returning defrag status of the entire cluster",
@@ -7802,10 +7837,9 @@
     },
     "/v1/filesystem-defrag/status/{node_id}": {
       "get": {
-        "operationId": "OpenStorageFilesystemDefrag_GetNodeStatus",
+        "operationId": "GetNodeStatus",
         "parameters": [
           {
-            "description": "NodeId is uuid of the node",
             "in": "path",
             "name": "node_id",
             "required": true,
@@ -7823,17 +7857,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Get defrag status of a node",
@@ -9073,22 +9097,13 @@
     },
     "/v1/schedules/{type}": {
       "get": {
-        "operationId": "OpenStorageSchedule_Enumerate",
+        "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type is schedule type",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           }
@@ -9102,17 +9117,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Enumerate returns all the schedules",
@@ -9123,27 +9128,17 @@
     },
     "/v1/schedules/{type}/{id}": {
       "delete": {
-        "operationId": "OpenStorageSchedule_Delete",
+        "operationId": "Delete",
         "parameters": [
           {
-            "description": "Type is schedule type",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           },
           {
-            "description": "ID of the schedule",
             "in": "path",
             "name": "id",
             "required": true,
@@ -9161,17 +9156,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Delete deletes a schedule by type and ID",
@@ -9180,27 +9165,17 @@
         ]
       },
       "get": {
-        "operationId": "OpenStorageSchedule_Inspect",
+        "operationId": "Inspect",
         "parameters": [
           {
-            "description": "Type is schedule type",
             "in": "path",
             "name": "type",
             "required": true,
             "schema": {
-              "enum": [
-                "UNSPECIFIED_TYPE",
-                "NONE",
-                "DRAIN_ATTACHMENTS",
-                "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS",
-                "DEFRAG"
-              ],
               "type": "string"
             }
           },
           {
-            "description": "ID of the schedule",
             "in": "path",
             "name": "id",
             "required": true,
@@ -9218,17 +9193,7 @@
                 }
               }
             },
-            "description": "A successful response."
-          },
-          "default": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/runtimeError"
-                }
-              }
-            },
-            "description": "An unexpected error response."
+            "description": ""
           }
         },
         "summary": "Inspect queries information of a schedule by type and ID",

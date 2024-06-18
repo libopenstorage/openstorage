@@ -6,37 +6,36 @@ package mock
 
 import (
 	context "context"
-	reflect "reflect"
-
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	grpc "google.golang.org/grpc"
+	reflect "reflect"
 )
 
-// MockOpenStorageFilesystemDefragServer is a mock of OpenStorageFilesystemDefragServer interface.
+// MockOpenStorageFilesystemDefragServer is a mock of OpenStorageFilesystemDefragServer interface
 type MockOpenStorageFilesystemDefragServer struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageFilesystemDefragServerMockRecorder
 }
 
-// MockOpenStorageFilesystemDefragServerMockRecorder is the mock recorder for MockOpenStorageFilesystemDefragServer.
+// MockOpenStorageFilesystemDefragServerMockRecorder is the mock recorder for MockOpenStorageFilesystemDefragServer
 type MockOpenStorageFilesystemDefragServerMockRecorder struct {
 	mock *MockOpenStorageFilesystemDefragServer
 }
 
-// NewMockOpenStorageFilesystemDefragServer creates a new mock instance.
+// NewMockOpenStorageFilesystemDefragServer creates a new mock instance
 func NewMockOpenStorageFilesystemDefragServer(ctrl *gomock.Controller) *MockOpenStorageFilesystemDefragServer {
 	mock := &MockOpenStorageFilesystemDefragServer{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageFilesystemDefragServerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockOpenStorageFilesystemDefragServer) EXPECT() *MockOpenStorageFilesystemDefragServerMockRecorder {
 	return m.recorder
 }
 
-// CleanUpSchedules mocks base method.
+// CleanUpSchedules mocks base method
 func (m *MockOpenStorageFilesystemDefragServer) CleanUpSchedules(arg0 context.Context, arg1 *api.SdkCleanUpDefragSchedulesRequest) (*api.SdkCleanUpDefragSchedulesResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CleanUpSchedules", arg0, arg1)
@@ -45,13 +44,13 @@ func (m *MockOpenStorageFilesystemDefragServer) CleanUpSchedules(arg0 context.Co
 	return ret0, ret1
 }
 
-// CleanUpSchedules indicates an expected call of CleanUpSchedules.
+// CleanUpSchedules indicates an expected call of CleanUpSchedules
 func (mr *MockOpenStorageFilesystemDefragServerMockRecorder) CleanUpSchedules(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpSchedules", reflect.TypeOf((*MockOpenStorageFilesystemDefragServer)(nil).CleanUpSchedules), arg0, arg1)
 }
 
-// CreateSchedule mocks base method.
+// CreateSchedule mocks base method
 func (m *MockOpenStorageFilesystemDefragServer) CreateSchedule(arg0 context.Context, arg1 *api.SdkCreateDefragScheduleRequest) (*api.SdkCreateDefragScheduleResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreateSchedule", arg0, arg1)
@@ -60,13 +59,13 @@ func (m *MockOpenStorageFilesystemDefragServer) CreateSchedule(arg0 context.Cont
 	return ret0, ret1
 }
 
-// CreateSchedule indicates an expected call of CreateSchedule.
+// CreateSchedule indicates an expected call of CreateSchedule
 func (mr *MockOpenStorageFilesystemDefragServerMockRecorder) CreateSchedule(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchedule", reflect.TypeOf((*MockOpenStorageFilesystemDefragServer)(nil).CreateSchedule), arg0, arg1)
 }
 
-// EnumerateNodeStatus mocks base method.
+// EnumerateNodeStatus mocks base method
 func (m *MockOpenStorageFilesystemDefragServer) EnumerateNodeStatus(arg0 context.Context, arg1 *api.SdkEnumerateDefragStatusRequest) (*api.SdkEnumerateDefragStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnumerateNodeStatus", arg0, arg1)
@@ -75,13 +74,13 @@ func (m *MockOpenStorageFilesystemDefragServer) EnumerateNodeStatus(arg0 context
 	return ret0, ret1
 }
 
-// EnumerateNodeStatus indicates an expected call of EnumerateNodeStatus.
+// EnumerateNodeStatus indicates an expected call of EnumerateNodeStatus
 func (mr *MockOpenStorageFilesystemDefragServerMockRecorder) EnumerateNodeStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateNodeStatus", reflect.TypeOf((*MockOpenStorageFilesystemDefragServer)(nil).EnumerateNodeStatus), arg0, arg1)
 }
 
-// GetNodeStatus mocks base method.
+// GetNodeStatus mocks base method
 func (m *MockOpenStorageFilesystemDefragServer) GetNodeStatus(arg0 context.Context, arg1 *api.SdkGetDefragNodeStatusRequest) (*api.SdkGetDefragNodeStatusResponse, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetNodeStatus", arg0, arg1)
@@ -90,36 +89,36 @@ func (m *MockOpenStorageFilesystemDefragServer) GetNodeStatus(arg0 context.Conte
 	return ret0, ret1
 }
 
-// GetNodeStatus indicates an expected call of GetNodeStatus.
+// GetNodeStatus indicates an expected call of GetNodeStatus
 func (mr *MockOpenStorageFilesystemDefragServerMockRecorder) GetNodeStatus(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetNodeStatus", reflect.TypeOf((*MockOpenStorageFilesystemDefragServer)(nil).GetNodeStatus), arg0, arg1)
 }
 
-// MockOpenStorageFilesystemDefragClient is a mock of OpenStorageFilesystemDefragClient interface.
+// MockOpenStorageFilesystemDefragClient is a mock of OpenStorageFilesystemDefragClient interface
 type MockOpenStorageFilesystemDefragClient struct {
 	ctrl     *gomock.Controller
 	recorder *MockOpenStorageFilesystemDefragClientMockRecorder
 }
 
-// MockOpenStorageFilesystemDefragClientMockRecorder is the mock recorder for MockOpenStorageFilesystemDefragClient.
+// MockOpenStorageFilesystemDefragClientMockRecorder is the mock recorder for MockOpenStorageFilesystemDefragClient
 type MockOpenStorageFilesystemDefragClientMockRecorder struct {
 	mock *MockOpenStorageFilesystemDefragClient
 }
 
-// NewMockOpenStorageFilesystemDefragClient creates a new mock instance.
+// NewMockOpenStorageFilesystemDefragClient creates a new mock instance
 func NewMockOpenStorageFilesystemDefragClient(ctrl *gomock.Controller) *MockOpenStorageFilesystemDefragClient {
 	mock := &MockOpenStorageFilesystemDefragClient{ctrl: ctrl}
 	mock.recorder = &MockOpenStorageFilesystemDefragClientMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockOpenStorageFilesystemDefragClient) EXPECT() *MockOpenStorageFilesystemDefragClientMockRecorder {
 	return m.recorder
 }
 
-// CleanUpSchedules mocks base method.
+// CleanUpSchedules mocks base method
 func (m *MockOpenStorageFilesystemDefragClient) CleanUpSchedules(arg0 context.Context, arg1 *api.SdkCleanUpDefragSchedulesRequest, arg2 ...grpc.CallOption) (*api.SdkCleanUpDefragSchedulesResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -132,14 +131,14 @@ func (m *MockOpenStorageFilesystemDefragClient) CleanUpSchedules(arg0 context.Co
 	return ret0, ret1
 }
 
-// CleanUpSchedules indicates an expected call of CleanUpSchedules.
+// CleanUpSchedules indicates an expected call of CleanUpSchedules
 func (mr *MockOpenStorageFilesystemDefragClientMockRecorder) CleanUpSchedules(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanUpSchedules", reflect.TypeOf((*MockOpenStorageFilesystemDefragClient)(nil).CleanUpSchedules), varargs...)
 }
 
-// CreateSchedule mocks base method.
+// CreateSchedule mocks base method
 func (m *MockOpenStorageFilesystemDefragClient) CreateSchedule(arg0 context.Context, arg1 *api.SdkCreateDefragScheduleRequest, arg2 ...grpc.CallOption) (*api.SdkCreateDefragScheduleResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -152,14 +151,14 @@ func (m *MockOpenStorageFilesystemDefragClient) CreateSchedule(arg0 context.Cont
 	return ret0, ret1
 }
 
-// CreateSchedule indicates an expected call of CreateSchedule.
+// CreateSchedule indicates an expected call of CreateSchedule
 func (mr *MockOpenStorageFilesystemDefragClientMockRecorder) CreateSchedule(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreateSchedule", reflect.TypeOf((*MockOpenStorageFilesystemDefragClient)(nil).CreateSchedule), varargs...)
 }
 
-// EnumerateNodeStatus mocks base method.
+// EnumerateNodeStatus mocks base method
 func (m *MockOpenStorageFilesystemDefragClient) EnumerateNodeStatus(arg0 context.Context, arg1 *api.SdkEnumerateDefragStatusRequest, arg2 ...grpc.CallOption) (*api.SdkEnumerateDefragStatusResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -172,14 +171,14 @@ func (m *MockOpenStorageFilesystemDefragClient) EnumerateNodeStatus(arg0 context
 	return ret0, ret1
 }
 
-// EnumerateNodeStatus indicates an expected call of EnumerateNodeStatus.
+// EnumerateNodeStatus indicates an expected call of EnumerateNodeStatus
 func (mr *MockOpenStorageFilesystemDefragClientMockRecorder) EnumerateNodeStatus(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateNodeStatus", reflect.TypeOf((*MockOpenStorageFilesystemDefragClient)(nil).EnumerateNodeStatus), varargs...)
 }
 
-// GetNodeStatus mocks base method.
+// GetNodeStatus mocks base method
 func (m *MockOpenStorageFilesystemDefragClient) GetNodeStatus(arg0 context.Context, arg1 *api.SdkGetDefragNodeStatusRequest, arg2 ...grpc.CallOption) (*api.SdkGetDefragNodeStatusResponse, error) {
 	m.ctrl.T.Helper()
 	varargs := []interface{}{arg0, arg1}
@@ -192,7 +191,7 @@ func (m *MockOpenStorageFilesystemDefragClient) GetNodeStatus(arg0 context.Conte
 	return ret0, ret1
 }
 
-// GetNodeStatus indicates an expected call of GetNodeStatus.
+// GetNodeStatus indicates an expected call of GetNodeStatus
 func (mr *MockOpenStorageFilesystemDefragClientMockRecorder) GetNodeStatus(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
