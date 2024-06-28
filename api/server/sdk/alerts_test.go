@@ -345,7 +345,8 @@ func TestAlertsServerEnumerate(t *testing.T) {
 			}
 			assert.NoError(t, err)
 
-			R.Alerts = append(R.Alerts, r.Alerts...)
+			R.Alerts =
+				append(R.Alerts, r.Alerts...)
 		}
 
 		assert.Len(t, R.Alerts, config.expected)
