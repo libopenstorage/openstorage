@@ -1424,10 +1424,10 @@
             "format": "boolean",
             "type": "boolean"
           },
-          "dstMID": {
+          "dest": {
             "type": "string"
           },
-          "sourceMID": {
+          "source": {
             "type": "string"
           }
         },

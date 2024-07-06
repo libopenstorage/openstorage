@@ -609,8 +609,8 @@ enum NearSyncReplicationStrategy {
 
 message Migration {
     bool active = 1;
-    string sourceMID = 2;
-    string dstMID = 3;
+    string source = 2;
+    string dest = 3;
 }
 
 // VolumeSpec has the properties needed to create a volume.
