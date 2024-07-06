@@ -1418,6 +1418,21 @@
         },
         "type": "object"
       },
+      "apiMigration": {
+        "properties": {
+          "active": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "dstMID": {
+            "type": "string"
+          },
+          "sourceMID": {
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "apiMountOptions": {
         "description": "MountOptions defines the mount options with which a volume is mounted.",
         "properties": {
@@ -5608,6 +5623,9 @@
           },
           "locator": {
             "$ref": "#/components/schemas/apiVolumeLocator"
+          },
+          "migration": {
+            "$ref": "#/components/schemas/apiMigration"
           },
           "mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"

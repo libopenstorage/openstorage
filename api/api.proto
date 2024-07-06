@@ -607,6 +607,12 @@ enum NearSyncReplicationStrategy {
     NEAR_SYNC_STRATEGY_OPTIMIZED = 2;
 }
 
+message Migration {
+    bool active = 1;
+    string sourceMID = 2;
+    string dstMID = 3;
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -1013,6 +1019,8 @@ message Volume {
   IoProfile derived_io_profile = 31;
   // InTrashcan if the volume is in trashcan
   bool in_trashcan = 32;
+  // Migration support
+  Migration migration = 33;
 }
 
 // Stats is a structure that represents last collected stats for a volume
