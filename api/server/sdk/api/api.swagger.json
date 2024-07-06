@@ -1424,11 +1424,25 @@
             "format": "boolean",
             "type": "boolean"
           },
-          "dest": {
+          "dest_address": {
             "type": "string"
           },
-          "source": {
+          "dest_machine": {
             "type": "string"
+          },
+          "dest_node": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "source_address": {
+            "type": "string"
+          },
+          "source_machine": {
+            "type": "string"
+          },
+          "source_node": {
+            "format": "int64",
+            "type": "integer"
           }
         },
         "type": "object"
