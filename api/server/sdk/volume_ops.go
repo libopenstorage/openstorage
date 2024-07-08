@@ -1490,7 +1490,7 @@ func (s *VolumeServer) MigrationCancel(
 		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
 	}
 
-	r, err := s.driver(ctx).MigrationComplete(req)
+	r, err := s.driver(ctx).MigrationCancel(req)
 	s.auditLog(ctx, "volume.Failover", "Volume %s Migration Cancel, error %v", req.GetVolumeId(), err)
 	return r, err
 }
