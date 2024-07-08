@@ -1431,43 +1431,66 @@ func (s *VolumeServer) MigrationStart(
 	ctx context.Context,
 	req *api.SdkVolumeMigrationStartRequest,
 ) (*api.SdkVolumeMigrationStartResponse, error) {
-	return nil, status.Errorf(
-		codes.Unimplemented,
-		"MigrationStart on volume %s, dest %s, err: %v",
-		req.GetVolumeId(),
-		req.GetDestinationMachine(),
-		volume.ErrNotSupported.Error())
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 || len(req.GetDestinationMachine()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId/DestMachine not provided.")
+	}
+
+	r, err := s.driver(ctx).MigrationStart(req)
+	s.auditLog(ctx, "volume.MigrationStart", "Volume %s Migration Started, error %v", req.GetVolumeId(), err)
+	return r, err
 }
 
 func (s *VolumeServer) MigrationFailover(
 	ctx context.Context,
 	req *api.SdkVolumeMigrationFailoverRequest,
 ) (*api.SdkVolumeMigrationFailoverResponse, error) {
-	return nil, status.Errorf(
-		codes.Unimplemented,
-		"MigrationFailover on volume %s, err: %v",
-		req.GetVolumeId(),
-		volume.ErrNotSupported.Error())
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	r, err := s.driver(ctx).MigrationFailover(req)
+	s.auditLog(ctx, "volume.Failover", "Volume %s Migration Failover, error %v", req.GetVolumeId(), err)
+	return r, err
 }
 
 func (s *VolumeServer) MigrationComplete(
 	ctx context.Context,
 	req *api.SdkVolumeMigrationCompleteRequest,
 ) (*api.SdkVolumeMigrationCompleteResponse, error) {
-	return nil, status.Errorf(
-		codes.Unimplemented,
-		"MigrationComplete on volume %s, err: %v",
-		req.GetVolumeId(),
-		volume.ErrNotSupported.Error())
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	r, err := s.driver(ctx).MigrationComplete(req)
+	s.auditLog(ctx, "volume.Failover", "Volume %s Migration Complete, error %v", req.GetVolumeId(), err)
+	return r, err
 }
 
 func (s *VolumeServer) MigrationCancel(
 	ctx context.Context,
 	req *api.SdkVolumeMigrationCancelRequest,
 ) (*api.SdkVolumeMigrationCancelResponse, error) {
-	return nil, status.Errorf(
-		codes.Unimplemented,
-		"MigrationCancel on volume %s, err: %v",
-		req.GetVolumeId(),
-		volume.ErrNotSupported.Error())
+	if s.cluster() == nil || s.driver(ctx) == nil {
+		return nil, status.Error(codes.Unavailable, "Resource has not been initialized")
+	}
+
+	if len(req.GetVolumeId()) == 0 {
+		return nil, status.Error(codes.Unavailable, "VolumeId not provided.")
+	}
+
+	r, err := s.driver(ctx).MigrationComplete(req)
+	s.auditLog(ctx, "volume.Failover", "Volume %s Migration Cancel, error %v", req.GetVolumeId(), err)
+	return r, err
 }
