@@ -4691,6 +4691,61 @@
         "title": "Defines the response when inspecting volumes using a filter",
         "type": "object"
       },
+      "apiSdkVolumeMigrationCancelRequest": {
+        "properties": {
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeMigrationCancelRequest cancel migration on volume\nbefore failover, can cancel\nafter failover, cannot cancel, but only complete",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationCancelResponse": {
+        "title": "empty response",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationCompleteRequest": {
+        "properties": {
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeMigrationCompleteRequest graceful migration completion",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationCompleteResponse": {
+        "title": "empty response",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationFailoverRequest": {
+        "properties": {
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeMigrationFailoverRequest initiate failover to destination",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationFailoverResponse": {
+        "title": "empty response",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationStartRequest": {
+        "properties": {
+          "destination_machine": {
+            "type": "string"
+          },
+          "volume_id": {
+            "type": "string"
+          }
+        },
+        "title": "SdkVolumeMigrationStartRequest start volume migration to destination\nvolume should be attached",
+        "type": "object"
+      },
+      "apiSdkVolumeMigrationStartResponse": {
+        "title": "empty response",
+        "type": "object"
+      },
       "apiSdkVolumeMountRequest": {
         "properties": {
           "driver_options": {
@@ -9627,6 +9682,46 @@
           }
         },
         "summary": "Gets the volume catalog of an attached and mounted volume.\nReturns the entire tree up to \"n\"  depth (default is all of it)\nTakes a path that can be used as the new root for the catalog request.",
+        "tags": [
+          "OpenStorageVolume"
+        ]
+      }
+    },
+    "/v1/volume/migrate/{volume_id}": {
+      "post": {
+        "operationId": "MigrationCancel",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "volume_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkVolumeMigrationCancelRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkVolumeMigrationCancelResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
         "tags": [
           "OpenStorageVolume"
         ]

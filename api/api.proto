@@ -2585,6 +2585,37 @@ service OpenStorageVolume {
     }
 
 
+  rpc MigrationStart(SdkVolumeMigrationStartRequest)
+    returns (SdkVolumeMigrationStartResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/migrate/{volume_id}"
+        body: "*"
+      };
+    }
+
+  rpc MigrationFailover(SdkVolumeMigrationFailoverRequest)
+    returns (SdkVolumeMigrationFailoverResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/migrate/{volume_id}"
+        body: "*"
+      };
+    }
+
+  rpc MigrationComplete(SdkVolumeMigrationCompleteRequest)
+    returns (SdkVolumeMigrationCompleteResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/migrate/{volume_id}"
+        body: "*"
+      };
+    }
+
+  rpc MigrationCancel(SdkVolumeMigrationCancelRequest)
+    returns (SdkVolumeMigrationCancelResponse) {
+      option(google.api.http) = {
+        post: "/v1/volume/migrate/{volume_id}"
+        body: "*"
+      };
+    }
 }
 
 
@@ -6296,4 +6327,44 @@ message SdkVolumeCatalogRequest {
 message SdkVolumeCatalogResponse {
   // Catalog
   CatalogResponse catalog = 1;
+}
+
+// SdkVolumeMigrationStartRequest start volume migration to destination
+// volume should be attached
+message SdkVolumeMigrationStartRequest {
+	string volume_id = 1;
+	string destination_machine = 2;
+}
+
+// empty response
+message SdkVolumeMigrationStartResponse {
+}
+
+// SdkVolumeMigrationFailoverRequest initiate failover to destination
+message SdkVolumeMigrationFailoverRequest {
+	string volume_id = 1;
+}
+
+// empty response
+message SdkVolumeMigrationFailoverResponse {
+}
+
+// SdkVolumeMigrationCompleteRequest graceful migration completion
+message SdkVolumeMigrationCompleteRequest {
+	string volume_id = 1;
+}
+
+// empty response
+message SdkVolumeMigrationCompleteResponse {
+}
+
+// SdkVolumeMigrationCancelRequest cancel migration on volume
+// before failover, can cancel
+// after failover, cannot cancel, but only complete
+message SdkVolumeMigrationCancelRequest {
+	string volume_id = 1;
+}
+
+// empty response
+message SdkVolumeMigrationCancelResponse {
 }

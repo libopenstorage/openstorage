@@ -740,6 +740,66 @@ func (mr *MockVolumeDriverMockRecorder) Inspect(arg0 interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Inspect", reflect.TypeOf((*MockVolumeDriver)(nil).Inspect), arg0)
 }
 
+// MigrationCancel mocks base method
+func (m *MockVolumeDriver) MigrationCancel(arg0 *api.SdkVolumeMigrationCancelRequest) (*api.SdkVolumeMigrationCancelResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationCancel", arg0)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCancelResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationCancel indicates an expected call of MigrationCancel
+func (mr *MockVolumeDriverMockRecorder) MigrationCancel(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationCancel", reflect.TypeOf((*MockVolumeDriver)(nil).MigrationCancel), arg0)
+}
+
+// MigrationComplete mocks base method
+func (m *MockVolumeDriver) MigrationComplete(arg0 *api.SdkVolumeMigrationCompleteRequest) (*api.SdkVolumeMigrationCompleteResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationComplete", arg0)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCompleteResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationComplete indicates an expected call of MigrationComplete
+func (mr *MockVolumeDriverMockRecorder) MigrationComplete(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationComplete", reflect.TypeOf((*MockVolumeDriver)(nil).MigrationComplete), arg0)
+}
+
+// MigrationFailover mocks base method
+func (m *MockVolumeDriver) MigrationFailover(arg0 *api.SdkVolumeMigrationFailoverRequest) (*api.SdkVolumeMigrationFailoverResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationFailover", arg0)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationFailoverResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationFailover indicates an expected call of MigrationFailover
+func (mr *MockVolumeDriverMockRecorder) MigrationFailover(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationFailover", reflect.TypeOf((*MockVolumeDriver)(nil).MigrationFailover), arg0)
+}
+
+// MigrationStart mocks base method
+func (m *MockVolumeDriver) MigrationStart(arg0 *api.SdkVolumeMigrationStartRequest) (*api.SdkVolumeMigrationStartResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationStart", arg0)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationStartResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationStart indicates an expected call of MigrationStart
+func (mr *MockVolumeDriverMockRecorder) MigrationStart(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationStart", reflect.TypeOf((*MockVolumeDriver)(nil).MigrationStart), arg0)
+}
+
 // Mount mocks base method
 func (m *MockVolumeDriver) Mount(arg0 context.Context, arg1, arg2 string, arg3 map[string]string) error {
 	m.ctrl.T.Helper()

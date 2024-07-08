@@ -155,6 +155,66 @@ func (mr *MockOpenStorageVolumeServerMockRecorder) InspectWithFilters(arg0, arg1
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectWithFilters", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).InspectWithFilters), arg0, arg1)
 }
 
+// MigrationCancel mocks base method
+func (m *MockOpenStorageVolumeServer) MigrationCancel(arg0 context.Context, arg1 *api.SdkVolumeMigrationCancelRequest) (*api.SdkVolumeMigrationCancelResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationCancel", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCancelResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationCancel indicates an expected call of MigrationCancel
+func (mr *MockOpenStorageVolumeServerMockRecorder) MigrationCancel(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationCancel", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).MigrationCancel), arg0, arg1)
+}
+
+// MigrationComplete mocks base method
+func (m *MockOpenStorageVolumeServer) MigrationComplete(arg0 context.Context, arg1 *api.SdkVolumeMigrationCompleteRequest) (*api.SdkVolumeMigrationCompleteResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationComplete", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCompleteResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationComplete indicates an expected call of MigrationComplete
+func (mr *MockOpenStorageVolumeServerMockRecorder) MigrationComplete(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationComplete", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).MigrationComplete), arg0, arg1)
+}
+
+// MigrationFailover mocks base method
+func (m *MockOpenStorageVolumeServer) MigrationFailover(arg0 context.Context, arg1 *api.SdkVolumeMigrationFailoverRequest) (*api.SdkVolumeMigrationFailoverResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationFailover", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationFailoverResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationFailover indicates an expected call of MigrationFailover
+func (mr *MockOpenStorageVolumeServerMockRecorder) MigrationFailover(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationFailover", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).MigrationFailover), arg0, arg1)
+}
+
+// MigrationStart mocks base method
+func (m *MockOpenStorageVolumeServer) MigrationStart(arg0 context.Context, arg1 *api.SdkVolumeMigrationStartRequest) (*api.SdkVolumeMigrationStartResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "MigrationStart", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationStartResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationStart indicates an expected call of MigrationStart
+func (mr *MockOpenStorageVolumeServerMockRecorder) MigrationStart(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationStart", reflect.TypeOf((*MockOpenStorageVolumeServer)(nil).MigrationStart), arg0, arg1)
+}
+
 // SnapshotCreate mocks base method
 func (m *MockOpenStorageVolumeServer) SnapshotCreate(arg0 context.Context, arg1 *api.SdkVolumeSnapshotCreateRequest) (*api.SdkVolumeSnapshotCreateResponse, error) {
 	m.ctrl.T.Helper()
@@ -456,6 +516,86 @@ func (mr *MockOpenStorageVolumeClientMockRecorder) InspectWithFilters(arg0, arg1
 	mr.mock.ctrl.T.Helper()
 	varargs := append([]interface{}{arg0, arg1}, arg2...)
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "InspectWithFilters", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).InspectWithFilters), varargs...)
+}
+
+// MigrationCancel mocks base method
+func (m *MockOpenStorageVolumeClient) MigrationCancel(arg0 context.Context, arg1 *api.SdkVolumeMigrationCancelRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeMigrationCancelResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MigrationCancel", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCancelResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationCancel indicates an expected call of MigrationCancel
+func (mr *MockOpenStorageVolumeClientMockRecorder) MigrationCancel(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationCancel", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).MigrationCancel), varargs...)
+}
+
+// MigrationComplete mocks base method
+func (m *MockOpenStorageVolumeClient) MigrationComplete(arg0 context.Context, arg1 *api.SdkVolumeMigrationCompleteRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeMigrationCompleteResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MigrationComplete", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationCompleteResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationComplete indicates an expected call of MigrationComplete
+func (mr *MockOpenStorageVolumeClientMockRecorder) MigrationComplete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationComplete", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).MigrationComplete), varargs...)
+}
+
+// MigrationFailover mocks base method
+func (m *MockOpenStorageVolumeClient) MigrationFailover(arg0 context.Context, arg1 *api.SdkVolumeMigrationFailoverRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeMigrationFailoverResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MigrationFailover", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationFailoverResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationFailover indicates an expected call of MigrationFailover
+func (mr *MockOpenStorageVolumeClientMockRecorder) MigrationFailover(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationFailover", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).MigrationFailover), varargs...)
+}
+
+// MigrationStart mocks base method
+func (m *MockOpenStorageVolumeClient) MigrationStart(arg0 context.Context, arg1 *api.SdkVolumeMigrationStartRequest, arg2 ...grpc.CallOption) (*api.SdkVolumeMigrationStartResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "MigrationStart", varargs...)
+	ret0, _ := ret[0].(*api.SdkVolumeMigrationStartResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// MigrationStart indicates an expected call of MigrationStart
+func (mr *MockOpenStorageVolumeClientMockRecorder) MigrationStart(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MigrationStart", reflect.TypeOf((*MockOpenStorageVolumeClient)(nil).MigrationStart), varargs...)
 }
 
 // SnapshotCreate mocks base method

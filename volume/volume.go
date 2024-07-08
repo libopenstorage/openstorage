@@ -250,6 +250,13 @@ type FilesystemCheckDriver interface {
 	FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error)
 }
 
+type MigrationDriver interface {
+	MigrationStart(request *api.SdkVolumeMigrationStartRequest) (*api.SdkVolumeMigrationStartResponse, error)
+	MigrationFailover(request *api.SdkVolumeMigrationFailoverRequest) (*api.SdkVolumeMigrationFailoverResponse, error)
+	MigrationComplete(request *api.SdkVolumeMigrationCompleteRequest) (*api.SdkVolumeMigrationCompleteResponse, error)
+	MigrationCancel(request *api.SdkVolumeMigrationCancelRequest) (*api.SdkVolumeMigrationCancelResponse, error)
+}
+
 // ProtoDriver must be implemented by all volume drivers.  It specifies the
 // most basic functionality, such as creating and deleting volumes.
 type ProtoDriver interface {
@@ -261,6 +268,7 @@ type ProtoDriver interface {
 	CloudMigrateDriver
 	FilesystemTrimDriver
 	FilesystemCheckDriver
+	MigrationDriver
 	// Name returns the name of the driver.
 	Name() string
 	// Type of this driver
