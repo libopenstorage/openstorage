@@ -58,6 +58,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.MigrationDriver
 	kv kvdb.Kvdb
 	volume.Upgrader
 	thisCluster   cluster.Cluster

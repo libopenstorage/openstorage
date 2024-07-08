@@ -1425,3 +1425,49 @@ func validateMinMaxParams(policy uint64, specified uint64, op api.VolumeSpecPoli
 	}
 	return true
 }
+
+// MigrationSupport stubbing apis
+func (s *VolumeServer) MigrationStart(
+	ctx context.Context,
+	req *api.SdkVolumeMigrationStartRequest,
+) (*api.SdkVolumeMigrationStartResponse, error) {
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"MigrationStart on volume %s, dest %s, err: %v",
+		req.GetVolumeId(),
+		req.GetDestinationMachine(),
+		volume.ErrNotSupported.Error())
+}
+
+func (s *VolumeServer) MigrationFailover(
+	ctx context.Context,
+	req *api.SdkVolumeMigrationFailoverRequest,
+) (*api.SdkVolumeMigrationFailoverResponse, error) {
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"MigrationFailover on volume %s, err: %v",
+		req.GetVolumeId(),
+		volume.ErrNotSupported.Error())
+}
+
+func (s *VolumeServer) MigrationComplete(
+	ctx context.Context,
+	req *api.SdkVolumeMigrationCompleteRequest,
+) (*api.SdkVolumeMigrationCompleteResponse, error) {
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"MigrationComplete on volume %s, err: %v",
+		req.GetVolumeId(),
+		volume.ErrNotSupported.Error())
+}
+
+func (s *VolumeServer) MigrationCancel(
+	ctx context.Context,
+	req *api.SdkVolumeMigrationCancelRequest,
+) (*api.SdkVolumeMigrationCancelResponse, error) {
+	return nil, status.Errorf(
+		codes.Unimplemented,
+		"MigrationCancel on volume %s, err: %v",
+		req.GetVolumeId(),
+		volume.ErrNotSupported.Error())
+}
