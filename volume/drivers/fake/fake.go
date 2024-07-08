@@ -101,6 +101,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		MigrationDriver:       volume.MigrationNotSupported,
 		kv:                    kv,
 		Upgrader:              volume.UpgraderNotSupported,
 		volumeChannel:         make(chan *api.Volume, 2),

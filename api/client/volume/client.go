@@ -28,6 +28,7 @@ type volumeClient struct {
 	volume.IODriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.MigrationDriver
 	volume.Upgrader
 	c *client.Client
 }
@@ -37,6 +38,7 @@ func newVolumeClient(c *client.Client) volume.VolumeDriver {
 		IODriver:              volume.IONotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		MigrationDriver:       volume.MigrationNotSupported,
 		Upgrader:              volume.UpgraderNotSupported,
 		c:                     c}
 }

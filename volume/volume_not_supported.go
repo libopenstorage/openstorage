@@ -36,6 +36,8 @@ var (
 	// FilesystemCheckNotSupported implements FilesystemCheckDriver by returning
 	// Not supported error
 	FilesystemCheckNotSupported = &filesystemCheckNotSupported{}
+	// MigrationNotSupported implements migrationdriver by returning Not supported error
+	MigrationNotSupported = &migrationNotSupported{}
 	// UpgraderNotSupported implements Upgrader by returning Not supported error
 	UpgraderNotSupported = &upgraderNotSupported{}
 )
@@ -320,6 +322,21 @@ func (cl *filesystemCheckNotSupported) FilesystemCheckStatus(request *api.SdkFil
 	return nil, ErrNotSupported
 }
 func (cl *filesystemCheckNotSupported) FilesystemCheckStop(request *api.SdkFilesystemCheckStopRequest) (*api.SdkFilesystemCheckStopResponse, error) {
+	return nil, ErrNotSupported
+}
+
+type migrationNotSupported struct{}
+
+func (cl *migrationNotSupported) MigrationStart(request *api.SdkVolumeMigrationStartRequest) (*api.SdkVolumeMigrationStartResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *migrationNotSupported) MigrationFailover(request *api.SdkVolumeMigrationFailoverRequest) (*api.SdkVolumeMigrationFailoverResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *migrationNotSupported) MigrationComplete(request *api.SdkVolumeMigrationCompleteRequest) (*api.SdkVolumeMigrationCompleteResponse, error) {
+	return nil, ErrNotSupported
+}
+func (cl *migrationNotSupported) MigrationCancel(request *api.SdkVolumeMigrationCancelRequest) (*api.SdkVolumeMigrationCancelResponse, error) {
 	return nil, ErrNotSupported
 }
 

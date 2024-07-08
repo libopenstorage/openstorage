@@ -51,6 +51,7 @@ type driver struct {
 	volume.CloudMigrateDriver
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
+	volume.MigrationDriver
 	volume.Upgrader
 	nfsServers []string
 	nfsPath    string
@@ -96,6 +97,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		MigrationDriver:       volume.MigrationNotSupported,
 		Upgrader:              volume.UpgraderNotSupported,
 	}
 
