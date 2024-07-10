@@ -92,10 +92,10 @@ type ClusterManager struct {
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	storagePoolProvider  api.OpenStoragePoolServer
 	jobProvider          job.Provider
-	scheduleProvider 	 schedule.Provider
+	scheduleProvider     schedule.Provider
 	nodeDrainProvider    nodedrain.Provider
 	diagsProvider        diags.Provider
-	defragProvider 		 defrag.Provider
+	defragProvider       defrag.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1921,7 +1921,8 @@ func (c *ClusterManager) NodeRemoveDone(nodeID string, result error) error {
 	logrus.Infof("Cluster manager node remove done: node ID %s", nodeID)
 
 	// Remove osdconfig data from etcd
-	if err := c.configManager.DeleteNodeConf(nodeID); err != nil {
+	err := c.configManager.DeleteNodeConf(nodeID)
+	if err != nil && !strings.Contains(err.Error(), "Key not found") {
 		logrus.Warn("error removing node from osdconfig:", err)
 		return err
 	}
