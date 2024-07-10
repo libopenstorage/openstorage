@@ -805,6 +805,126 @@
         ],
         "type": "string"
       },
+      "apiDefragJob": {
+        "properties": {
+          "current_running_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "CurrentRunningNodes stores the nodes on which the job is currently running",
+            "type": "array"
+          },
+          "exclude_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExcludeNodes is a list of node UUID: if provided, the job will skip these nodes;\nif not provided, will run on all nodes\ncannot coexist with IncludeNodes",
+            "type": "array"
+          },
+          "include_nodes": {
+            "items": {
+              "type": "string"
+            },
+            "title": "IncludeNodes is a list of node UUID: if provided, will only run the job on these nodes;\nif not provided, will run on all nodes\ncannot coexist with ExcludeNodes and NodeSelector",
+            "type": "array"
+          },
+          "max_duration_minutes": {
+            "format": "int64",
+            "title": "MaxDurationMinutes defines the time limit in minutes",
+            "type": "integer"
+          },
+          "max_nodes_in_parallel": {
+            "format": "int64",
+            "title": "MaxNodesInParallel defines the maximum number of nodes running the defrag job in parallel",
+            "type": "integer"
+          },
+          "node_selector": {
+            "items": {
+              "$ref": "#/components/schemas/apiLabelSelectorRequirement"
+            },
+            "title": "NodeSelector is a list of node label `key=value` pairs,\nwhich selects the nodes to be run on for the job\ncan coexist with ExcludeNodes but cannot coexist with IncludeNodes",
+            "type": "array"
+          },
+          "schedule_id": {
+            "title": "ScheduleId is the ID of the schedule which started this job",
+            "type": "string"
+          },
+          "schedule_one_iteration_only": {
+            "format": "boolean",
+            "title": "ScheduleOneIterationOnly is true when the defragJob is run by a one-iteration-only schedule",
+            "type": "boolean"
+          }
+        },
+        "title": "DefragJob describes a job to run defragmentation on cluster nodes",
+        "type": "object"
+      },
+      "apiDefragNodeStatus": {
+        "properties": {
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time when DefragNodeStatus or any DefragPoolStatus was last updated on this node",
+            "type": "string"
+          },
+          "pool_status": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/apiDefragPoolStatus"
+            },
+            "title": "PoolStatus is a map of \u003cpool_uuid, DefragPoolStatus\u003e pairs",
+            "type": "object"
+          },
+          "running_schedule": {
+            "title": "RunningSchedule is the defrag schedule being run on the node",
+            "type": "string"
+          }
+        },
+        "title": "DefragNodeStatus describes the defragmentation status of a node",
+        "type": "object"
+      },
+      "apiDefragPoolStatus": {
+        "properties": {
+          "last_complete_time": {
+            "format": "date-time",
+            "title": "LastCompleteTime is the completion time of the last run on this pool",
+            "type": "string"
+          },
+          "last_offset": {
+            "format": "int64",
+            "title": "LastOffset is the offset of the last defrag command executed on the pending volume\n-1 means no volume is in a pending state (either not started or fully finished)",
+            "type": "string"
+          },
+          "last_start_time": {
+            "format": "date-time",
+            "title": "LastStartTime is the start time of the latest run (current or last run) on this pool",
+            "type": "string"
+          },
+          "last_success": {
+            "format": "boolean",
+            "title": "LastSuccess indicates whether the last run of defrag on this pool was successful",
+            "type": "boolean"
+          },
+          "last_volume_id": {
+            "title": "LastVolumeId is the volume on which defrag has started but not yet finished\nif provided, volume is currently being defraged or was interrupted in the last run of defrag",
+            "type": "string"
+          },
+          "num_iterations": {
+            "format": "int64",
+            "title": "NumIterations counts the number of times the pool gets defraged",
+            "type": "integer"
+          },
+          "progress_percentage": {
+            "format": "int64",
+            "title": "ProgressPercentage describes the progress of the lastest defrag job (current or last run) on this pool\npercentage = bytes completed / sum of file sizes",
+            "type": "integer"
+          },
+          "running": {
+            "format": "boolean",
+            "title": "Running indicates whether the pool is being defraged",
+            "type": "boolean"
+          }
+        },
+        "title": "DefragNodeStatus describes the defragmentation status of a pool",
+        "type": "object"
+      },
       "apiDiagsCollectionStatus": {
         "properties": {
           "message": {
@@ -1193,6 +1313,9 @@
             "title": "CreateTime is the time the job was created",
             "type": "string"
           },
+          "defrag": {
+            "$ref": "#/components/schemas/apiDefragJob"
+          },
           "drain_attachments": {
             "$ref": "#/components/schemas/apiNodeDrainAttachmentsJob"
           },
@@ -1254,13 +1377,14 @@
       },
       "apiJobType": {
         "default": "UNSPECIFIED_TYPE",
-        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+        "description": "- UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
         "enum": [
           "UNSPECIFIED_TYPE",
           "NONE",
           "DRAIN_ATTACHMENTS",
           "CLOUD_DRIVE_TRANSFER",
-          "COLLECT_DIAGS"
+          "COLLECT_DIAGS",
+          "DEFRAG"
         ],
         "title": "Type are the supported job types",
         "type": "string"
@@ -1753,6 +1877,45 @@
         },
         "type": "object"
       },
+      "apiSchedule": {
+        "properties": {
+          "create_time": {
+            "format": "date-time",
+            "title": "CreateTime is the time the schedule was created",
+            "type": "string"
+          },
+          "id": {
+            "title": "ID of the schedule",
+            "type": "string"
+          },
+          "last_update_time": {
+            "format": "date-time",
+            "title": "LastUpdateTime is the time the schedule was updated",
+            "type": "string"
+          },
+          "max_duration_minutes": {
+            "format": "int64",
+            "title": "MaxDurationMinutes defines the time limit of one run in minutes",
+            "type": "integer"
+          },
+          "start_time": {
+            "title": "StartTime is the scheduled time to start a run\nValid formats: \n  daily=HH:mm  e.g. daily=19:15\n  weekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\n  monthly=dd@HH:mm  e.g. monthly=22@19:15",
+            "type": "string"
+          },
+          "tasks": {
+            "items": {
+              "$ref": "#/components/schemas/apiJob"
+            },
+            "title": "Tasks is the tasks to be run in this schedule (must be of same job type)",
+            "type": "array"
+          },
+          "type": {
+            "$ref": "#/components/schemas/apiJobType"
+          }
+        },
+        "title": "Schedule is a generic schedule object that can encapsulate different  \ntypes of scheduled jobs which follow the schedule framework of APIs",
+        "type": "object"
+      },
       "apiSchedulerTopology": {
         "properties": {
           "labels": {
@@ -2092,6 +2255,10 @@
           }
         },
         "title": "Defines the response for Azure credentials",
+        "type": "object"
+      },
+      "apiSdkCleanUpDefragSchedulesResponse": {
+        "title": "Defines a response of defrag schedules clean-up",
         "type": "object"
       },
       "apiSdkCloudBackupCatalogRequest": {
@@ -2906,6 +3073,28 @@
         "title": "Defines a response for the token request",
         "type": "object"
       },
+      "apiSdkCreateDefragScheduleRequest": {
+        "properties": {
+          "defrag_task": {
+            "$ref": "#/components/schemas/apiDefragJob"
+          },
+          "start_time": {
+            "title": "StartTime is the scheduled time to start a run\nValid formats: \ndaily=HH:mm  e.g. daily=19:15\nweekly=weekday@HH:mm  e.g. weekly=Sunday@19:15\nmonthly=dd@HH:mm  e.g. monthly=22@19:15",
+            "type": "string"
+          }
+        },
+        "title": "Defines a request to create a defrag schedule",
+        "type": "object"
+      },
+      "apiSdkCreateDefragScheduleResponse": {
+        "properties": {
+          "schedule": {
+            "$ref": "#/components/schemas/apiSchedule"
+          }
+        },
+        "title": "Defines a response of defrag schedule creation",
+        "type": "object"
+      },
       "apiSdkCredentialCreateRequest": {
         "properties": {
           "aws_credential": {
@@ -3047,6 +3236,10 @@
         "title": "Empty response",
         "type": "object"
       },
+      "apiSdkDeleteScheduleResponse": {
+        "title": "Empty response",
+        "type": "object"
+      },
       "apiSdkDiagsCollectRequest": {
         "properties": {
           "issuer": {
@@ -3087,6 +3280,19 @@
         "title": "SdkDiagsCollectResponse defines a response for an SDK request to collect diags",
         "type": "object"
       },
+      "apiSdkEnumerateDefragStatusResponse": {
+        "properties": {
+          "status": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/apiSdkGetDefragNodeStatusResponse"
+            },
+            "title": "Status is a map with node uuid as the key and defrag node status as the value",
+            "type": "object"
+          }
+        },
+        "title": "Defines a response of defrag status of the entire cluster",
+        "type": "object"
+      },
       "apiSdkEnumerateJobsResponse": {
         "properties": {
           "jobs": {
@@ -3110,6 +3316,18 @@
             "type": "array"
           }
         },
+        "type": "object"
+      },
+      "apiSdkEnumerateSchedulesResponse": {
+        "properties": {
+          "schedules": {
+            "items": {
+              "$ref": "#/components/schemas/apiSchedule"
+            },
+            "type": "array"
+          }
+        },
+        "title": "Defines a response containing list of schedules",
         "type": "object"
       },
       "apiSdkFilesystemCheckStartRequest": {
@@ -3264,6 +3482,31 @@
         },
         "type": "object"
       },
+      "apiSdkGetDefragNodeStatusResponse": {
+        "properties": {
+          "data_ip": {
+            "title": "DataIp is the IP address of this node",
+            "type": "string"
+          },
+          "defrag_node_status": {
+            "$ref": "#/components/schemas/apiDefragNodeStatus"
+          },
+          "pool_usage": {
+            "additionalProperties": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "title": "PoolUsage is a map with pool UUID as the key and pool usage percentage as the value",
+            "type": "object"
+          },
+          "scheduler_node_name": {
+            "title": "SchedulerNodeName is name of the node in scheduler context",
+            "type": "string"
+          }
+        },
+        "title": "Defines a response of defrag node status",
+        "type": "object"
+      },
       "apiSdkGetJobStatusResponse": {
         "properties": {
           "job": {
@@ -3341,6 +3584,15 @@
           }
         },
         "title": "Defines a response containing version information",
+        "type": "object"
+      },
+      "apiSdkInspectScheduleResponse": {
+        "properties": {
+          "schedule": {
+            "$ref": "#/components/schemas/apiSchedule"
+          }
+        },
+        "title": "Defines a response of schedule information",
         "type": "object"
       },
       "apiSdkJobResponse": {
@@ -6146,7 +6398,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.50"
+    "version": "0.101.51"
   },
   "openapi": "3.0.0",
   "paths": {
@@ -7510,6 +7762,110 @@
         ]
       }
     },
+    "/v1/filesystem-defrag/schedule": {
+      "post": {
+        "operationId": "CreateSchedule",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/apiSdkCreateDefragScheduleRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCreateDefragScheduleResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Create a schedule to run defragmentation tasks periodically",
+        "tags": [
+          "OpenStorageFilesystemDefrag"
+        ]
+      }
+    },
+    "/v1/filesystem-defrag/schedules": {
+      "delete": {
+        "operationId": "CleanUpSchedules",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkCleanUpDefragSchedulesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Clean up all defrag schedules and stop all operations",
+        "tags": [
+          "OpenStorageFilesystemDefrag"
+        ]
+      }
+    },
+    "/v1/filesystem-defrag/status": {
+      "get": {
+        "operationId": "EnumerateNodeStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkEnumerateDefragStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Enumerate all nodes, returning defrag status of the entire cluster",
+        "tags": [
+          "OpenStorageFilesystemDefrag"
+        ]
+      }
+    },
+    "/v1/filesystem-defrag/status/{node_id}": {
+      "get": {
+        "operationId": "GetNodeStatus",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "node_id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkGetDefragNodeStatusResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get defrag status of a node",
+        "tags": [
+          "OpenStorageFilesystemDefrag"
+        ]
+      }
+    },
     "/v1/filesystem-trim/auto-fstrim-pop": {
       "post": {
         "operationId": "AutoFSTrimPop",
@@ -7763,7 +8119,7 @@
         "operationId": "Enumerate",
         "parameters": [
           {
-            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+            "description": "Type if specified will list the jobs of the provided type.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -7774,7 +8130,8 @@
                 "NONE",
                 "DRAIN_ATTACHMENTS",
                 "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS"
+                "COLLECT_DIAGS",
+                "DEFRAG"
               ],
               "type": "string"
             }
@@ -7811,7 +8168,7 @@
             }
           },
           {
-            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes",
+            "description": "Type of the job.\n\n - UNSPECIFIED_TYPE: Unspecified\n - NONE: None\n - DRAIN_ATTACHMENTS: Job for draining volume attachments\n - CLOUD_DRIVE_TRANSFER: Job for transferring cloud drives between nodes\n - COLLECT_DIAGS: Job for collecting diags from the cluster nodes\n - DEFRAG: Job for storage defragmentation on cluster nodes",
             "in": "query",
             "name": "type",
             "required": false,
@@ -7822,7 +8179,8 @@
                 "NONE",
                 "DRAIN_ATTACHMENTS",
                 "CLOUD_DRIVE_TRANSFER",
-                "COLLECT_DIAGS"
+                "COLLECT_DIAGS",
+                "DEFRAG"
               ],
               "type": "string"
             }
@@ -8734,6 +9092,113 @@
         "summary": "Delete removes a snapshot schedule",
         "tags": [
           "OpenStorageSchedulePolicy"
+        ]
+      }
+    },
+    "/v1/schedules/{type}": {
+      "get": {
+        "operationId": "Enumerate",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkEnumerateSchedulesResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Enumerate returns all the schedules",
+        "tags": [
+          "OpenStorageSchedule"
+        ]
+      }
+    },
+    "/v1/schedules/{type}/{id}": {
+      "delete": {
+        "operationId": "Delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkDeleteScheduleResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Delete deletes a schedule by type and ID",
+        "tags": [
+          "OpenStorageSchedule"
+        ]
+      },
+      "get": {
+        "operationId": "Inspect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "type",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkInspectScheduleResponse"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Inspect queries information of a schedule by type and ID",
+        "tags": [
+          "OpenStorageSchedule"
         ]
       }
     },

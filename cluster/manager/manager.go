@@ -32,9 +32,11 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/clusterdomain"
 	"github.com/libopenstorage/openstorage/pkg/dbg"
+	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	sched "github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -90,8 +92,10 @@ type ClusterManager struct {
 	clusterDomainManager clusterdomain.ClusterDomainProvider
 	storagePoolProvider  api.OpenStoragePoolServer
 	jobProvider          job.Provider
+	scheduleProvider 	 schedule.Provider
 	nodeDrainProvider    nodedrain.Provider
 	diagsProvider        diags.Provider
+	defragProvider 		 defrag.Provider
 	snapshotPrefixes     []string
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
@@ -1402,6 +1406,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.jobProvider = config.ConfigJobProvider
 	}
 
+	if config.ConfigScheduleProvider == nil {
+		c.scheduleProvider = schedule.NewDefaultScheduleProvider()
+	} else {
+		c.scheduleProvider = config.ConfigScheduleProvider
+	}
+
 	if config.ConfigNodeDrainProvider == nil {
 		c.nodeDrainProvider = nodedrain.NewDefaultNodeDrainProvider()
 	} else {
@@ -1418,6 +1428,12 @@ func (c *ClusterManager) setupManagers(config *cluster.ClusterServerConfiguratio
 		c.storagePoolProvider = storagepool.NewDefaultStoragePoolProvider()
 	} else {
 		c.storagePoolProvider = config.ConfigStoragePoolProvider
+	}
+
+	if config.ConfigDefragProvider == nil {
+		c.defragProvider = defrag.NewDefaultDefragProvider()
+	} else {
+		c.defragProvider = config.ConfigDefragProvider
 	}
 }
 
@@ -2221,4 +2237,49 @@ func (c *ClusterManager) EnumerateJobs(
 	req *api.SdkEnumerateJobsRequest,
 ) (*api.SdkEnumerateJobsResponse, error) {
 	return c.jobProvider.EnumerateJobs(ctx, req)
+}
+
+func (c *ClusterManager) InspectSchedule(
+	ctx context.Context,
+	req *api.SdkInspectScheduleRequest,
+) (*api.SdkInspectScheduleResponse, error) {
+	return c.scheduleProvider.InspectSchedule(ctx, req)
+}
+
+func (c *ClusterManager) EnumerateSchedules(
+	ctx context.Context,
+	req *api.SdkEnumerateSchedulesRequest,
+) (*api.SdkEnumerateSchedulesResponse, error) {
+	return c.scheduleProvider.EnumerateSchedules(ctx, req)
+}
+
+func (c *ClusterManager) DeleteSchedule(
+	ctx context.Context,
+	req *api.SdkDeleteScheduleRequest,
+) (*api.SdkDeleteScheduleResponse, error) {
+	return c.scheduleProvider.DeleteSchedule(ctx, req)
+}
+
+func (c *ClusterManager) CreateDefragSchedule(
+	ctx context.Context, req *api.SdkCreateDefragScheduleRequest,
+) (*api.SdkCreateDefragScheduleResponse, error) {
+	return c.defragProvider.CreateDefragSchedule(ctx, req)
+}
+
+func (c *ClusterManager) CleanUpDefragSchedules(
+	ctx context.Context, req *api.SdkCleanUpDefragSchedulesRequest,
+) (*api.SdkCleanUpDefragSchedulesResponse, error) {
+	return c.defragProvider.CleanUpDefragSchedules(ctx, req)
+}
+
+func (c *ClusterManager) GetDefragNodeStatus(
+	ctx context.Context, req *api.SdkGetDefragNodeStatusRequest,
+) (*api.SdkGetDefragNodeStatusResponse, error) {
+	return c.defragProvider.GetDefragNodeStatus(ctx, req)
+}
+
+func (c *ClusterManager) EnumerateDefragStatus(
+	ctx context.Context, req *api.SdkEnumerateDefragStatusRequest,
+) (*api.SdkEnumerateDefragStatusResponse, error) {
+	return c.defragProvider.EnumerateDefragStatus(ctx, req)
 }
