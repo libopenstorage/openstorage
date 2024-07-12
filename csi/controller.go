@@ -276,7 +276,8 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
-			if !v.Spec.Sharedv4 && !v.Spec.Shared {
+			// raw block volume rwx supported
+			if v.Spec.Format != api.FSType_FS_TYPE_NONE && !v.Spec.Sharedv4 && !v.Spec.Shared {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
@@ -390,9 +391,7 @@ func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
 	}
 
 	if block && shared {
-		return status.Errorf(
-			codes.InvalidArgument,
-			"Shared raw block volumes are not supported")
+		logrus.Infof("shared block device support enabled")
 	}
 
 	return nil
@@ -814,6 +813,26 @@ func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 	return spec, nil
 }
 
+func resolveAccessMode(csiMode csi.VolumeCapability_AccessMode_Mode) (api.AccessMode, bool) {
+	switch csiMode {
+	case csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
+		return api.AccessMode_SINGLE_NODE_MULTI_WRITER, false // px default
+	case csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
+		return api.AccessMode_SINGLE_NODE_MULTI_WRITER, true
+	case csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
+		return api.AccessMode_MULTI_NODE_MULTI_WRITER, true
+	case csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER:
+		return api.AccessMode_MULTI_NODE_SINGLE_WRITER, false // read many write one vol
+	case csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
+		return api.AccessMode_MULTI_NODE_MULTI_WRITER, false  // rwx
+	case csi.VolumeCapability_AccessMode_SINGLE_NODE_SINGLE_WRITER:
+		return api.AccessMode_SINGLE_NODE_MULTI_WRITER, false
+	case csi.VolumeCapability_AccessMode_SINGLE_NODE_MULTI_WRITER:
+		return api.AccessMode_SINGLE_NODE_MULTI_WRITER, false
+	}
+	return api.AccessMode_SINGLE_NODE_MULTI_WRITER, false
+}
+
 // resolveFSTypeSpec makes the following assumptions:
 // 1. If provided, the PX "fstype" parameter should always override corresponding the CSI parameter.
 // 2. The default value for spec.Format is determined upstream by SpecFromOpts(req.GetParameters())
@@ -822,6 +841,7 @@ func resolveFSTypeSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 	for _, cap := range req.GetVolumeCapabilities() {
 		if cap.GetBlock() != nil {
 			spec.Format = api.FSType_FS_TYPE_NONE
+			spec.AccessMode, spec.Readonly = resolveAccessMode(cap.GetAccessMode().GetMode())
 			return spec, nil
 		}
 

@@ -243,6 +243,17 @@
         "title": "This defines an operator for the policy comparisons",
         "type": "string"
       },
+      "apiAccessMode": {
+        "default": "UNKNOWN",
+        "enum": [
+          "UNKNOWN",
+          "MULTI_NODE_SINGLE_WRITER",
+          "MULTI_NODE_MULTI_WRITER",
+          "SINGLE_NODE_MULTI_WRITER"
+        ],
+        "title": "- MULTI_NODE_SINGLE_WRITER: maps to AccessMode of CSI Specification",
+        "type": "string"
+      },
       "apiAlert": {
         "properties": {
           "alert_type": {
@@ -5654,6 +5665,13 @@
             "description": "Error is the Last recorded error.",
             "type": "string"
           },
+          "exported_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExportedOn tracks attached volumes on multiple nodes for RWX or RMWO vols",
+            "type": "array"
+          },
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
@@ -5916,6 +5934,9 @@
       "apiVolumeSpec": {
         "description": "VolumeSpec has the properties needed to create a volume.",
         "properties": {
+          "access_mode": {
+            "$ref": "#/components/schemas/apiAccessMode"
+          },
           "aggregation_level": {
             "description": "Aggregation level Specifies the number of parts the volume can be aggregated from.",
             "format": "int64",
@@ -6045,6 +6066,10 @@
             "title": "QueueDepth defines the desired block device queue depth",
             "type": "integer"
           },
+          "readonly": {
+            "format": "boolean",
+            "type": "boolean"
+          },
           "replica_set": {
             "$ref": "#/components/schemas/apiReplicaSet"
           },
@@ -6057,13 +6082,13 @@
             "$ref": "#/components/schemas/apiScanPolicy"
           },
           "shared": {
-            "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
             "format": "boolean",
+            "title": "Shared is true if this volume can be concurrently accessed by multiple users using fs",
             "type": "boolean"
           },
           "sharedv4": {
-            "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
             "format": "boolean",
+            "title": "Sharedv4 is true if this volume can be accessed via sharedv4 over fs",
             "type": "boolean"
           },
           "sharedv4_mount_options": {

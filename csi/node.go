@@ -124,7 +124,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	driverType := s.driver.Type()
 	if driverType != api.DriverType_DRIVER_TYPE_BLOCK &&
 		req.GetVolumeCapability().GetBlock() != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach as block a non block device")
+		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach a block device through an unsupported driver")
 	}
 
 	// Gather volume attributes
@@ -134,6 +134,15 @@ func (s *OsdCsiServer) NodePublishVolume(
 			codes.InvalidArgument,
 			"Invalid volume attributes: %#v",
 			req.GetVolumeContext())
+	}
+
+	spec.Format = api.FSType_FS_TYPE_EXT4
+	spec.AccessMode = api.AccessMode_SINGLE_NODE_MULTI_WRITER
+	spec.Readonly = false
+	cap := req.GetVolumeCapability()
+	if cap.GetBlock() != nil {
+		spec.Format = api.FSType_FS_TYPE_NONE
+		spec.AccessMode, spec.Readonly = resolveAccessMode(cap.GetAccessMode().GetMode())
 	}
 
 	// Get volume encryption info from req.Secrets

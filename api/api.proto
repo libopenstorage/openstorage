@@ -607,6 +607,14 @@ enum NearSyncReplicationStrategy {
     NEAR_SYNC_STRATEGY_OPTIMIZED = 2;
 }
 
+enum AccessMode {
+  UNKNOWN = 0;
+  // maps to AccessMode of CSI Specification
+  MULTI_NODE_SINGLE_WRITER = 4; // read many write one volume support
+  MULTI_NODE_MULTI_WRITER = 5; // this is readwritemany
+  SINGLE_NODE_MULTI_WRITER = 7; // px default volume support
+}
+
 message Migration {
   bool active = 1;
 
@@ -641,7 +649,7 @@ message VolumeSpec {
   uint32 snapshot_interval = 9;
   // (deprecated, do not use) VolumeLabels configuration labels
   map<string, string> volume_labels = 10;
-  // Shared is true if this volume can be concurrently accessed by multiple users.
+  // Shared is true if this volume can be concurrently accessed by multiple users using fs
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
@@ -667,7 +675,7 @@ message VolumeSpec {
   bool cascaded = 24;
   // Journal is true if data for the volume goes into the journal.
   bool journal = 25;
-  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  // Sharedv4 is true if this volume can be accessed via sharedv4 over fs
   bool sharedv4 = 26;
   // QueueDepth defines the desired block device queue depth
   uint32 queue_depth = 27;
@@ -718,6 +726,9 @@ message VolumeSpec {
   bool near_sync = 51;
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   NearSyncReplicationStrategy near_sync_replication_strategy = 52;
+  // Read many write one raw block volume
+  AccessMode access_mode = 53;
+  bool readonly = 54;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -1027,6 +1038,8 @@ message Volume {
   bool in_trashcan = 32;
   // Migration support
   Migration migration = 33;
+  // ExportedOn tracks attached volumes on multiple nodes for RWX or RMWO vols
+  repeated string exported_on = 34;
 }
 
 // Stats is a structure that represents last collected stats for a volume
