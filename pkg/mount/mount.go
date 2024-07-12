@@ -4,14 +4,12 @@
 package mount
 
 import (
-	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -104,7 +102,6 @@ const (
 	mountPathRemoveDelay = 30 * time.Second
 	testDeviceEnv        = "Test_Device_Mounter"
 	bindMountPrefix      = "readonly"
-	statTimeout          = 30 * time.Second
 )
 
 var (
@@ -728,11 +725,7 @@ func (m *Mounter) removeMountPath(path string) error {
 
 // RemoveMountPath makes the path writeable and removes it after a fixed delay
 func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), statTimeout)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "stat", mountPath)
-	_, err := cmd.CombinedOutput()
-	if err == nil {
+	if _, err := os.Stat(mountPath); err == nil {
 		if options.IsBoolOptionSet(opts, options.OptionsWaitBeforeDelete) {
 			hasher := md5.New()
 			hasher.Write([]byte(mountPath))
