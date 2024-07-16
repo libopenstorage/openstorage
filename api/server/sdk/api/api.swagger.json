@@ -2204,6 +2204,9 @@
         "title": "Defines the response for Azure credentials",
         "type": "object"
       },
+      "apiSdkClearPoolDrainStatusResponse": {
+        "type": "object"
+      },
       "apiSdkCloudBackupCatalogRequest": {
         "properties": {
           "backup_id": {
@@ -10263,6 +10266,37 @@
         "summary": "Deletes specified storage policy",
         "tags": [
           "OpenStoragePolicy"
+        ]
+      }
+    },
+    "/v1/storagepools/pooldrain/clear": {
+      "put": {
+        "operationId": "OpenStoragePool_ClearPoolDrainStatus",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/apiSdkClearPoolDrainStatusResponse"
+                }
+              }
+            },
+            "description": "A successful response."
+          },
+          "default": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/runtimeError"
+                }
+              }
+            },
+            "description": "An unexpected error response."
+          }
+        },
+        "summary": "ClearPoolDrainStatus clears the drain status of the pool",
+        "tags": [
+          "OpenStoragePool"
         ]
       }
     },

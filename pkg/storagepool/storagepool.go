@@ -55,3 +55,8 @@ func (n *UnsupportedPoolProvider) DeleteRebalanceSchedule(
 	c context.Context, request *api.SdkDeleteRebalanceScheduleRequest) (*api.SdkDeleteRebalanceScheduleResponse, error) {
 	return nil, &errors.ErrNotSupported{}
 }
+
+func (n *UnsupportedPoolProvider) ClearPoolDrainStatus(
+	c context.Context, request *api.SdkClearPoolDrainStatusRequest) (*api.SdkClearPoolDrainStatusResponse, error) {
+	return nil, &errors.ErrNotSupported{}
+}

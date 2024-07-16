@@ -2118,6 +2118,14 @@ service OpenStoragePool {
         delete: "/v1/storagepools/rebalance/schedule"
       };
   }
+
+    // ClearPoolDrainStatus clears the drain status of the pool
+    rpc ClearPoolDrainStatus (SdkClearPoolDrainStatusRequest) returns (SdkClearPoolDrainStatusResponse) {
+      option (google.api.http) = {
+          put: "/v1/storagepools/pooldrain/clear"
+        };
+    }
+  
 }
 
 // OpenStorageDiags service provides methods to manage diagnostic bundles
@@ -4621,6 +4629,14 @@ message SdkDeleteRebalanceScheduleRequest {
 }
 
 message SdkDeleteRebalanceScheduleResponse {
+}
+
+message SdkClearPoolDrainStatusRequest {
+  // PoolId is the id of the pool for which drain status needs to be cleared
+  string pool_uuid = 1;
+}
+
+message SdkClearPoolDrainStatusResponse {
 }
 
 message SdkStoragePool {

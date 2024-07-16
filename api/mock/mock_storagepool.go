@@ -36,6 +36,21 @@ func (m *MockOpenStoragePoolServer) EXPECT() *MockOpenStoragePoolServerMockRecor
 	return m.recorder
 }
 
+// ClearPoolDrainStatus mocks base method.
+func (m *MockOpenStoragePoolServer) ClearPoolDrainStatus(arg0 context.Context, arg1 *api.SdkClearPoolDrainStatusRequest) (*api.SdkClearPoolDrainStatusResponse, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ClearPoolDrainStatus", arg0, arg1)
+	ret0, _ := ret[0].(*api.SdkClearPoolDrainStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPoolDrainStatus indicates an expected call of ClearPoolDrainStatus.
+func (mr *MockOpenStoragePoolServerMockRecorder) ClearPoolDrainStatus(arg0, arg1 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPoolDrainStatus", reflect.TypeOf((*MockOpenStoragePoolServer)(nil).ClearPoolDrainStatus), arg0, arg1)
+}
+
 // CreateRebalanceSchedule mocks base method.
 func (m *MockOpenStoragePoolServer) CreateRebalanceSchedule(arg0 context.Context, arg1 *api.SdkCreateRebalanceScheduleRequest) (*api.SdkCreateRebalanceScheduleResponse, error) {
 	m.ctrl.T.Helper()
@@ -177,6 +192,26 @@ func NewMockOpenStoragePoolClient(ctrl *gomock.Controller) *MockOpenStoragePoolC
 // EXPECT returns an object that allows the caller to indicate expected use.
 func (m *MockOpenStoragePoolClient) EXPECT() *MockOpenStoragePoolClientMockRecorder {
 	return m.recorder
+}
+
+// ClearPoolDrainStatus mocks base method.
+func (m *MockOpenStoragePoolClient) ClearPoolDrainStatus(arg0 context.Context, arg1 *api.SdkClearPoolDrainStatusRequest, arg2 ...grpc.CallOption) (*api.SdkClearPoolDrainStatusResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "ClearPoolDrainStatus", varargs...)
+	ret0, _ := ret[0].(*api.SdkClearPoolDrainStatusResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ClearPoolDrainStatus indicates an expected call of ClearPoolDrainStatus.
+func (mr *MockOpenStoragePoolClientMockRecorder) ClearPoolDrainStatus(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClearPoolDrainStatus", reflect.TypeOf((*MockOpenStoragePoolClient)(nil).ClearPoolDrainStatus), varargs...)
 }
 
 // CreateRebalanceSchedule mocks base method.

@@ -82,3 +82,11 @@ func (sp *StoragePoolServer) DeleteRebalanceSchedule(
 	}
 	return sp.cluster().DeleteRebalanceSchedule(c, req)
 }
+
+func (sp *StoragePoolServer) ClearPoolDrainStatus(
+	c context.Context, req *api.SdkClearPoolDrainStatusRequest) (*api.SdkClearPoolDrainStatusResponse, error) {
+	if sp.cluster() == nil {
+		return nil, status.Error(codes.Unavailable, errors.ErrResourceNotInitialized.Error())
+	}
+	return sp.cluster().ClearPoolDrainStatus(c, req)
+}

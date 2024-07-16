@@ -2198,6 +2198,12 @@ func (c *ClusterManager) DeleteRebalanceSchedule(
 	return c.storagePoolProvider.DeleteRebalanceSchedule(context, request)
 }
 
+func (c *ClusterManager) ClearPoolDrainStatus(
+	context context.Context, request *api.SdkClearPoolDrainStatusRequest) (
+	*api.SdkClearPoolDrainStatusResponse, error) {
+	return c.storagePoolProvider.ClearPoolDrainStatus(context, request)
+}
+
 func (c *ClusterManager) Collect(ctx context.Context, in *api.SdkDiagsCollectRequest) (*api.SdkDiagsCollectResponse, error) {
 	return c.diagsProvider.Collect(ctx, in)
 }
