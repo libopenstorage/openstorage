@@ -40,6 +40,7 @@ type driver struct {
 	volume.FilesystemTrimDriver
 	volume.FilesystemCheckDriver
 	volume.Upgrader
+	volume.VerifyChecksumDriver
 }
 
 // Init Driver intialization.
@@ -56,6 +57,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 		volume.FilesystemTrimNotSupported,
 		volume.FilesystemCheckNotSupported,
 		volume.UpgraderNotSupported,
+		volume.VerifyChecksumNotSupported,
 	}, nil
 }
 

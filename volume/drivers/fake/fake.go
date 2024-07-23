@@ -60,6 +60,7 @@ type driver struct {
 	volume.FilesystemCheckDriver
 	kv kvdb.Kvdb
 	volume.Upgrader
+	volume.VerifyChecksumDriver
 	thisCluster   cluster.Cluster
 	volumeChannel chan *api.Volume
 }
@@ -101,6 +102,7 @@ func newFakeDriver(params map[string]string) (*driver, error) {
 		CloudMigrateDriver:    volume.CloudMigrateNotSupported,
 		FilesystemTrimDriver:  volume.FilesystemTrimNotSupported,
 		FilesystemCheckDriver: volume.FilesystemCheckNotSupported,
+		VerifyChecksumDriver:  volume.VerifyChecksumNotSupported,
 		kv:                    kv,
 		Upgrader:              volume.UpgraderNotSupported,
 		volumeChannel:         make(chan *api.Volume, 2),
