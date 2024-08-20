@@ -1324,7 +1324,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// Return an error from snapshot
 		s.MockDriver().
 			EXPECT().
-			Snapshot(parent, false, &api.VolumeLocator{Name: name, VolumeLabels: nil}, false).
+			Snapshot(parent, false, &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{api.SpecParent: parent, "pvc": "", "namespace": ""}}, false).
 			Return("", fmt.Errorf("snapshoterr")).
 			Times(1),
 	)
@@ -2045,7 +2045,7 @@ func TestControllerCreateVolumeFromSnapshotFADAPod(t *testing.T) {
 		// create
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{api.SpecPurePodName: pod}}, gomock.Any()).
+			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{api.SpecPurePodName: pod, "pvc": "", "namespace": ""}}, gomock.Any()).
 			Return(snapID, nil).
 			Times(1),
 		s.MockDriver().
@@ -2153,7 +2153,8 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		s.MockDriver().
 			EXPECT().
 			Snapshot(mockParentID, false, &api.VolumeLocator{
-				Name: name,
+				Name:         name,
+				VolumeLabels: map[string]string{api.SpecParent: mockParentID, "pvc": "", "namespace": ""},
 			},
 				false).
 			Return(id, nil).
@@ -2306,7 +2307,7 @@ func TestControllerCreateVolumeFromSource(t *testing.T) {
 		// create
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{"testkey": "testval"}}, gomock.Any()).
+			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{"testkey": "testval", "pvc": "", "namespace": ""}}, gomock.Any()).
 			Return(snapID, nil).
 			Times(1),
 		s.MockDriver().
@@ -2423,7 +2424,7 @@ func TestControllerCreateVolumeFromSourceFADAPod(t *testing.T) {
 		// create
 		s.MockDriver().
 			EXPECT().
-			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{api.SpecPurePodName: pod, "testkey": "testval"}}, gomock.Any()).
+			Snapshot(gomock.Any(), gomock.Any(), &api.VolumeLocator{Name: name, VolumeLabels: map[string]string{api.SpecPurePodName: pod, "testkey": "testval", "pvc": "", "namespace": ""}}, gomock.Any()).
 			Return(snapID, nil).
 			Times(1),
 		s.MockDriver().
