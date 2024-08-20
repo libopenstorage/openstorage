@@ -614,14 +614,17 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 		newVolumeId = createResp.VolumeId
 	} else {
-		clonedMetadata := getClonedPVCMetadata(locator)
+		labels := locator.GetVolumeLabels()
 		if spec.GetFADAPodName() != "" {
-			clonedMetadata[sdk.FADAPodLabelKey] = spec.GetFADAPodName()
+			labels[api.SpecPurePodName] = spec.GetFADAPodName()
 		}
+		delete(labels, intreePvcNameKey)
+		delete(labels, intreePvcNamespaceKey)
+		delete(labels, api.SpecParent)
 		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
 			Name:             req.GetName(),
 			ParentId:         source.Parent,
-			AdditionalLabels: clonedMetadata,
+			AdditionalLabels: labels,
 		})
 		if err != nil {
 			return nil, err
