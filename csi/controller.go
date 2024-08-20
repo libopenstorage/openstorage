@@ -618,9 +618,6 @@ func (s *OsdCsiServer) CreateVolume(
 		if spec.GetFADAPodName() != "" {
 			labels[api.SpecPurePodName] = spec.GetFADAPodName()
 		}
-		delete(labels, intreePvcNameKey)
-		delete(labels, intreePvcNamespaceKey)
-		delete(labels, api.SpecParent)
 		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
 			Name:             req.GetName(),
 			ParentId:         source.Parent,
