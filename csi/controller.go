@@ -28,7 +28,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
@@ -587,14 +586,14 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 		newVolumeId = createResp.VolumeId
 	} else {
-		clonedMetadata := getClonedPVCMetadata(locator)
+		labels := locator.GetVolumeLabels()
 		if spec.GetFADAPodName() != "" {
-			clonedMetadata[sdk.FADAPodLabelKey] = spec.GetFADAPodName()
+			labels[api.SpecPurePodName] = spec.GetFADAPodName()
 		}
 		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
 			Name:             req.GetName(),
 			ParentId:         source.Parent,
-			AdditionalLabels: clonedMetadata,
+			AdditionalLabels: labels,
 		})
 		if err != nil {
 			return nil, err
