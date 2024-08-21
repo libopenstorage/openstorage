@@ -63,6 +63,11 @@ const (
 	// - Attach
 	// It indicates which IO path to use to complete user IO
 	OptionsFastpath = "FASTPATH_STATE"
+	// OptionsForceUnmount is an option to the following Opentstorage Volume API
+	// - Unmount
+	// It is used to issue an umount system call to the requested path even
+	// if the entry for the path is not present in the mount table
+	OptionsForceUnmount = "FORCE_UNMOUNT"
 )
 
 // IsBoolOptionSet checks if a boolean option key is set
