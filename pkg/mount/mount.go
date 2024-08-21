@@ -662,8 +662,6 @@ func (m *Mounter) Unmount(
 		if forceUnmount {
 			unmountErr := m.mountImpl.Unmount(path, flags, timeout)
 			if unmountErr == nil {
-				// If Unmount failed, assume it is due to ErrEnoent and return the failure as enoent,
-				// so that the underlying directory can be removed.
 				logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
 				if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
 					m.RemoveMountPath(path, opts)
@@ -671,6 +669,8 @@ func (m *Mounter) Unmount(
 				// reset err
 				err = nil
 			} else {
+				// If Unmount failed, assume it is due to ErrEnoent and return the failure as enoent,
+				// so that the underlying directory can be removed.
 				logrus.Debugf("Unmount devPath[%s] from path[%s] failed with error [%v]", devPath, path, unmountErr)
 			}
 		}
