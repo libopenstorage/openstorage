@@ -646,26 +646,37 @@ func (m *Mounter) Unmount(
 		// fuse mounts show-up with this key as device.
 		device = value
 	}
+	forceUnmount := false
+	if value, ok := opts[options.OptionsForceUnmount]; ok {
+		forceUnmount = true
+	}
 	info, ok := m.mounts[device]
 	if !ok {
 		logrus.Warnf("Unable to find device %q path %q: in mount table",
 			devPath, path)
 		m.printMountTable()
 		m.Unlock()
-		err := m.mountImpl.Unmount(path, flags, timeout)
-		if err != nil {
-			logrus.Infof("Unmount devPath[%s] from path[%s] failed with error [%v]", devPath, path, err)
-			// If Unmount failed, assume it is due to ErrEnoent and return the failure as enoent,
-			// so that the underlying directory can be removted.
-			err = ErrEnoent
-			return err
-		}
-		logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
-		if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
-			m.RemoveMountPath(path, opts)
+		err := ErrEnoent
+		// If forceUnmount, we need to attempt Unmount even if entry is not there
+		// in the mount table.
+		if forceUnmount {
+			unmountErr := m.mountImpl.Unmount(path, flags, timeout)
+			if unmountErr == nil {
+				// If Unmount failed, assume it is due to ErrEnoent and return the failure as enoent,
+				// so that the underlying directory can be removed.
+				logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
+				if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
+					m.RemoveMountPath(path, opts)
+				}
+				// reset err
+				err = nil
+			} else {
+				logrus.Debugf("Unmount devPath[%s] from path[%s] failed with error [%v]", devPath, path, unmountErr)
+			}
 		}
 		return err
 	}
+
 	m.Unlock()
 	info.Lock()
 	defer info.Unlock()
@@ -687,15 +698,17 @@ func (m *Mounter) Unmount(
 
 		return nil
 	}
-	logrus.Warnf("Device %q is not mounted at path %q as per mount table, still attempt the Unmount", device, path)
-	err := m.mountImpl.Unmount(path, flags, timeout)
-	if err != nil {
-		// Return Enoent if unmount failed.
-		return ErrEnoent
-	}
-	logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
-	if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
-		m.RemoveMountPath(path, opts)
+	err = ErrEnoent
+	if forceUnmount {
+		logrus.Warnf("Device %q is not mounted at path %q as per mount table, still attempt the Unmount", device, path)
+		unmountErr := m.mountImpl.Unmount(path, flags, timeout)
+		if unmountErr == nil {
+			logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
+			if options.IsBoolOptionSet(opts, options.OptionsDeleteAfterUnmount) {
+				m.RemoveMountPath(path, opts)
+			}
+			err = nil
+		}
 	}
 	return err
 }
