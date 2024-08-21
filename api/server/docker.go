@@ -377,6 +377,7 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 		_, err = volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
 			Name:     name,
 			ParentId: source.Parent,
+			AdditionalLabels: locator.GetVolumeLabels(),
 		})
 	} else {
 		// create

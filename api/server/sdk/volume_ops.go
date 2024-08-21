@@ -36,9 +36,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-// FADAPodLabelKey is a label added to volume locators in the case of FADA volume clone/snap restore
-const FADAPodLabelKey = "pure-pod-name" // Used to plumb in the pod name for volume cloning
-
 // When create is called for an existing volume, this function is called to make sure
 // the SDK only returns that the volume is ready when the status is UP
 func (s *VolumeServer) waitForVolumeReady(ctx context.Context, id string) (*api.Volume, error) {
@@ -173,18 +170,9 @@ func (s *VolumeServer) create(
 		}
 
 		// Create a snapshot from the parent
-		// Only include the FADA pod label
-		var labels map[string]string = nil
-		if locator.GetVolumeLabels() != nil {
-			if pod, ok := locator.GetVolumeLabels()[FADAPodLabelKey]; ok {
-				labels = map[string]string{
-					FADAPodLabelKey: pod,
-				}
-			}
-		}
 		id, err = s.driver(ctx).Snapshot(ctx, parent.GetId(), false, &api.VolumeLocator{
 			Name:         volName,
-			VolumeLabels: labels,
+			VolumeLabels: locator.GetVolumeLabels(),
 		}, false)
 		if err != nil {
 			if err == kvdb.ErrNotFound {
