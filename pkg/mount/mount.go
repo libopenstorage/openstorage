@@ -647,7 +647,7 @@ func (m *Mounter) Unmount(
 		device = value
 	}
 	forceUnmount := false
-	if value, ok := opts[options.OptionsForceUnmount]; ok {
+	if _, ok := opts[options.OptionsForceUnmount]; ok {
 		forceUnmount = true
 	}
 	info, ok := m.mounts[device]
@@ -698,7 +698,7 @@ func (m *Mounter) Unmount(
 
 		return nil
 	}
-	err = ErrEnoent
+	err := ErrEnoent
 	if forceUnmount {
 		logrus.Warnf("Device %q is not mounted at path %q as per mount table, still attempt the Unmount", device, path)
 		unmountErr := m.mountImpl.Unmount(path, flags, timeout)
