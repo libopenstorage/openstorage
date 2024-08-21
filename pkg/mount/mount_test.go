@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -40,6 +41,7 @@ func TestRawMounter(t *testing.T) {
 func allTests(t *testing.T, source, dest string) {
 	load(t, source, dest)
 	mountTest(t, source, dest)
+	forceUnmountTest(t, source, dest)
 	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
@@ -93,6 +95,14 @@ func mountTest(t *testing.T, source, dest string) {
 	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
 	require.NoError(t, err, "Failed in mount")
 	err = m.Unmount(source, dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+}
+
+func forceUnmountTest(t *testing.T, source, dest string) {
+	opts := make(map[string]string)
+	opts[options.OptionsForceUnmount] = "true"
+	syscall.Mount(source, dest, "", syscall.MS_BIND, "")
+	err := m.Unmount(source, dest, 0, 0, opts)
 	require.NoError(t, err, "Failed in unmount")
 }
 
