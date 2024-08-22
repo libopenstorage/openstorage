@@ -8,6 +8,7 @@ import (
 	"syscall"
 	"testing"
 
+	"github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -40,6 +41,9 @@ func TestRawMounter(t *testing.T) {
 func allTests(t *testing.T, source, dest string) {
 	load(t, source, dest)
 	mountTest(t, source, dest)
+	enoentUnmountTest(t, source, dest)
+	doubleUnmountTest(t, source, dest)
+	enoentUnmountTestWithoutOptions(t, source, dest)
 	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
@@ -95,6 +99,31 @@ func mountTest(t *testing.T, source, dest string) {
 	err = m.Unmount(source, dest, 0, 0, nil)
 	require.NoError(t, err, "Failed in unmount")
 }
+
+func enoentUnmountTest(t *testing.T, source, dest string) {
+	opts := make(map[string]string)
+	opts[options.OptionsUnmountOnEnoent] = "true"
+	syscall.Mount(source, dest, "", syscall.MS_BIND, "")
+	err := m.Unmount(source, dest, 0, 0, opts)
+	require.NoError(t, err, "Failed in unmount")
+}
+
+func doubleUnmountTest(t *testing.T, source, dest string) {
+	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
+	require.NoError(t, err, "Failed in mount")
+	err = m.Unmount(source, dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+	err = m.Unmount(source, dest, 0, 0, nil)
+	require.Error(t, err, "Failed in second unmount, expected an error")
+}
+
+func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
+	syscall.Mount(source, dest, "", syscall.MS_BIND, "")
+	err := m.Unmount(source, dest, 0, 0, nil)
+	require.Error(t, err, "Failed in unmount, expected an error")
+	syscall.Unmount(dest, 0)
+}
+
 
 // mountTestParallel runs mount and unmount in parallel with serveral dirs
 // in addition, we trigger failed unmount to test race condition in the case
