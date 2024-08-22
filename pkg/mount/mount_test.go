@@ -119,7 +119,7 @@ func doubleUnmountTest(t *testing.T, source, dest string) {
 
 func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
 	syscall.Mount(source, dest, "", syscall.MS_BIND, "")
-	err := m.Unmount(source, dest, 0, 0, opts)
+	err := m.Unmount(source, dest, 0, 0, nil)
 	require.Error(t, err, "Failed in unmount, expected an error")
 	syscall.Unmount(dest, 0)
 }
