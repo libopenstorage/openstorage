@@ -646,9 +646,9 @@ func (m *Mounter) Unmount(
 		// fuse mounts show-up with this key as device.
 		device = value
 	}
-	forceUnmount := false
-	if _, ok := opts[options.OptionsForceUnmount]; ok {
-		forceUnmount = true
+	unmountOnEnoent := false
+	if _, ok := opts[options.OptionsUnmountOnEnoent]; ok {
+		unmountOnEnoent = true
 	}
 	info, ok := m.mounts[device]
 	if !ok {
@@ -657,9 +657,9 @@ func (m *Mounter) Unmount(
 		m.printMountTable()
 		m.Unlock()
 		err := ErrEnoent
-		// If forceUnmount, we need to attempt Unmount even if entry is not there
+		// If unmountOnEnoent, we need to attempt Unmount even if entry is not there
 		// in the mount table.
-		if forceUnmount {
+		if unmountOnEnoent {
 			unmountErr := m.mountImpl.Unmount(path, flags, timeout)
 			if unmountErr == nil {
 				logrus.Infof("Unmount of path [%s] successful even though entry didn't exist in mount-table", path)
@@ -699,7 +699,7 @@ func (m *Mounter) Unmount(
 		return nil
 	}
 	err := ErrEnoent
-	if forceUnmount {
+	if unmountOnEnoent {
 		logrus.Warnf("Device %q is not mounted at path %q as per mount table, still attempt the Unmount", device, path)
 		unmountErr := m.mountImpl.Unmount(path, flags, timeout)
 		if unmountErr == nil {
