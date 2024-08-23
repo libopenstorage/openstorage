@@ -124,7 +124,6 @@ func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
 	syscall.Unmount(dest, 0)
 }
 
-
 // mountTestParallel runs mount and unmount in parallel with serveral dirs
 // in addition, we trigger failed unmount to test race condition in the case
 // source directory is not found in the cache
@@ -273,4 +272,53 @@ func makeFile(pathname string) error {
 	}
 
 	return nil
+}
+
+func TestSafeEmptyTrashDir(t *testing.T) {
+	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
+	require.NoError(t, err, "Failed to setup test %v", err)
+
+	// Create a new file
+	file, err := os.Create("/tmp/should-not-remove.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	file.Close()
+
+	// Create a symbolic link
+	err = os.Symlink("/tmp/should-not-remove.txt", "/tmp/should-not-remove-symlink.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = os.MkdirAll("/tmp/should-remove/", 0755)
+	require.NoError(t, err)
+	// Create a new file
+	file, err = os.Create("/tmp/should-remove-file.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	file.Close()
+
+	// Create a symbolic link
+	err = os.Symlink("/tmp/should-remove-file.txt", "/tmp/should-remove/symlink.txt")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	err = m.SafeEmptyTrashDir("/tmp/should-remove", "/tmp")
+	require.NoError(t, err, "Failed to empty trash dir %v", err)
+
+	_, err = os.Stat("/tmp/should-remove-file.txt")
+	require.True(t, os.IsNotExist(err), "File should be removed")
+	_, err = os.Stat("//tmp/should-remove/symlink.txt")
+	require.True(t, os.IsNotExist(err), "File should be removed")
+	_, err = os.Stat("/tmp/should-not-remove.txt")
+	require.NoError(t, err, "File should not be removed")
+	_, err = os.Stat("/tmp/should-not-remove-symlink.txt")
+	require.NoError(t, err, "File should not be removed")
 }
