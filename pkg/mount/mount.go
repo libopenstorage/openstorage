@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -448,6 +449,35 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 	return nil
 }
 
+func resolveToIPs(hostPath string) []string {
+	index := strings.LastIndex(hostPath, ":")
+	if index != -1 {
+		hostPath = hostPath[:index]
+	}
+	ips, err := net.LookupIP(hostPath)
+	if err != nil || len(ips) == 0 {
+		return []string{hostPath} // Return the original input if resolution fails
+	}
+	// Convert all IP addresses to strings
+	ipStrings := make([]string, len(ips))
+	for i, ip := range ips {
+		ipStrings[i] = ip.String()
+	}
+	return ipStrings
+}
+
+func areSameIPs(ips1, ips2 []string) bool {
+	if len(ips1) != len(ips2) {
+		return false
+	}
+	for i := range ips1 {
+		if ips1[i] != ips2[i] {
+			return false
+		}
+	}
+	return true
+}
+
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
@@ -479,10 +509,29 @@ func (m *Mounter) Mount(
 			return ErrMountpathNotAllowed
 		}
 	}
+	resolveDNSOnMount := false
+	if _, ok := opts[options.OptionsResolveDNSOnMount]; ok {
+		resolveDNSOnMount = true
+	}
+	var err error
 	dev, ok := m.HasTarget(path)
-	if ok && dev != device {
-		logrus.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
-		return ErrExist
+	if ok {
+		if dev != device {
+			err = ErrExist
+			if resolveDNSOnMount {
+				// Resolve both using DNS lookup
+				resolvedDev := resolveToIPs(dev)
+				resolvedDevice := resolveToIPs(device)
+				if areSameIPs(resolvedDev, resolvedDevice) {
+					logrus.Infof("Device %q, is already mount at %q, as source path %q", device, path, dev)
+					return nil
+				}
+			}
+		}
+	}
+	if err != nil {
+		logrus.Warnf("Cannot mount %q, device %q is mounted at %q", device, dev, path)
+		return err
 	}
 	m.Lock()
 	info, ok := m.mounts[device]
