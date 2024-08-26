@@ -467,15 +467,14 @@ func resolveToIPs(hostPath string) []string {
 }
 
 func areSameIPs(ips1, ips2 []string) bool {
-	if len(ips1) != len(ips2) {
-		return false
-	}
-	for i := range ips1 {
-		if ips1[i] != ips2[i] {
-			return false
+	for _, ip1 := range ips1 {
+		for _, ip2 := range ips2 {
+			if ip1 == ip2 {
+				return true
+			}
 		}
 	}
-	return true
+	return false
 }
 
 // Mount new mountpoint for specified device.
