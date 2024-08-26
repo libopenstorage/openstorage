@@ -44,6 +44,9 @@ func allTests(t *testing.T, source, dest string) {
 	enoentUnmountTest(t, source, dest)
 	doubleUnmountTest(t, source, dest)
 	enoentUnmountTestWithoutOptions(t, source, dest)
+	doubleMountTest(t, source, dest)
+	mountTestPathMismatchFailure(t, source, dest)
+	mountTestPathMismatchSuccessWithOptions(t, source, dest)
 	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
@@ -100,6 +103,55 @@ func mountTest(t *testing.T, source, dest string) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
+func doubleMountTest(t *testing.T, source, dest string) {
+	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
+	require.NoError(t, err, "Failed in mount")
+
+	// Mount point is already created and new request lands on the same mount point
+	err = m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
+	require.NoError(t, err, "Unexpected error in mount")
+
+	err = m.Unmount(source, dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+}
+
+func mountTestPathMismatchFailure(t *testing.T, source, dest string) {
+	cleandir("localhost:" + source)
+	cleandir("127.0.0.1:" + source)
+	err := m.Mount(0, "localhost:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
+	require.NoError(t, err, "Failed in mount")
+
+	// Mount point is already created and new request lands on the same mount point
+	// but source paths are different
+	err = m.Mount(0, "127.0.0.1:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
+	// Expected error as source paths are different
+	require.Error(t, err, "Expected error in mount")
+
+	err = m.Unmount("localhost:"+source, dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+	shutdown(t, "localhost:"+source, dest)
+	shutdown(t, "127.0.0.1:"+source, dest)
+}
+
+func mountTestPathMismatchSuccessWithOptions(t *testing.T, source, dest string) {
+	opts := make(map[string]string)
+	opts[options.OptionsResolveDNSOnMount] = "true"
+	cleandir("localhost:" + source)
+	cleandir("127.0.0.1:" + source)
+	err := m.Mount(0, "localhost:"+source, dest, "", syscall.MS_BIND, "", 0, opts)
+	require.NoError(t, err, "Failed in mount")
+
+	// Mount point is already created and new request lands on the same mount point
+	// and source paths resolve to same IP with OptionsResolveDNSOnMount
+	err = m.Mount(0, "127.0.0.1:"+source, dest, "", syscall.MS_BIND, "", 0, opts)
+	// Expected success as source paths are different but resolve to same IP
+	require.NoError(t, err, "Failed in mount")
+
+	err = m.Unmount("localhost:"+source, dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+	shutdown(t, "localhost:"+source, dest)
+	shutdown(t, "127.0.0.1:"+source, dest)
+}
 func enoentUnmountTest(t *testing.T, source, dest string) {
 	opts := make(map[string]string)
 	opts[options.OptionsUnmountOnEnoent] = "true"
@@ -123,7 +175,6 @@ func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
 	require.Error(t, err, "Failed in unmount, expected an error")
 	syscall.Unmount(dest, 0)
 }
-
 
 // mountTestParallel runs mount and unmount in parallel with serveral dirs
 // in addition, we trigger failed unmount to test race condition in the case
@@ -273,4 +324,95 @@ func makeFile(pathname string) error {
 	}
 
 	return nil
+}
+
+func TestResolveToIPs(t *testing.T) {
+	tests := []struct {
+		hostPath string
+		expected []string
+	}{
+		// Case: Valid hostname with path
+		{"localhost:/path", []string{"127.0.0.1"}},
+
+		// Case: Valid hostname without path
+		{"localhost", []string{"127.0.0.1"}},
+
+		// Case: Invalid hostname
+		{"invalidhost", []string{"invalidhost"}},
+
+		// Case: IP address with path
+		{"192.168.1.1:/path", []string{"192.168.1.1"}},
+
+		// Case: IP address without path
+		{"192.168.1.1", []string{"192.168.1.1"}},
+
+		// Case: Empty string
+		{"", []string{""}},
+	}
+	for _, test := range tests {
+		result := resolveToIPs(test.hostPath)
+		if !areSameIPs(result, test.expected) {
+			t.Errorf("resolveToIPs(%v) = %v; expected %v", test.hostPath, result, test.expected)
+		}
+	}
+}
+func TestAreSameIPs(t *testing.T) {
+	tests := []struct {
+		name     string
+		ips1     []string
+		ips2     []string
+		expected bool
+	}{
+		{
+			name:     "One matching IP",
+			ips1:     []string{"192.168.1.1", "192.168.1.2"},
+			ips2:     []string{"10.0.0.1", "192.168.1.2"},
+			expected: true,
+		},
+		{
+			name:     "No matching IPs",
+			ips1:     []string{"192.168.1.1", "192.168.1.2"},
+			ips2:     []string{"10.0.0.1", "10.0.0.2"},
+			expected: false,
+		},
+		{
+			name:     "Empty second slice",
+			ips1:     []string{"192.168.1.1", "192.168.1.2"},
+			ips2:     []string{},
+			expected: false,
+		},
+		{
+			name:     "Empty first slice",
+			ips1:     []string{},
+			ips2:     []string{"192.168.1.1", "192.168.1.2"},
+			expected: false,
+		},
+		{
+			name:     "Both slices empty",
+			ips1:     []string{},
+			ips2:     []string{},
+			expected: false,
+		},
+		{
+			name:     "Identical IPs in both slices",
+			ips1:     []string{"192.168.1.1", "192.168.1.2"},
+			ips2:     []string{"192.168.1.1", "192.168.1.2"},
+			expected: true,
+		},
+		{
+			name:     "Multiple matches",
+			ips1:     []string{"192.168.1.1", "10.0.0.1"},
+			ips2:     []string{"192.168.1.1", "10.0.0.1"},
+			expected: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := areSameIPs(tt.ips1, tt.ips2)
+			if result != tt.expected {
+				t.Errorf("areSameIPs(%v, %v) = %v; expected %v", tt.ips1, tt.ips2, result, tt.expected)
+			}
+		})
+	}
 }
