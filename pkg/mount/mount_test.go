@@ -7,8 +7,10 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -23,17 +25,27 @@ const (
 
 var m Manager
 
+func setLogger(fn string, t *testing.T) {
+	// The mount tests log a lot of messages, so we route the logs
+	// to a tmp location to avoid Travis CI log limits.
+	logFile, err := os.Create("/tmp/" + fn + ".log")
+	require.NoError(t, err, "unable to create log file")
+	logrus.SetOutput(logFile)
+}
 func TestNFSMounter(t *testing.T) {
+	setLogger("TestNFSMounter", t)
 	setupNFS(t)
 	allTests(t, source, dest)
 }
 
 func TestBindMounter(t *testing.T) {
+	setLogger("TestBindMounter", t)
 	setupBindMounter(t)
 	allTests(t, source, dest)
 }
 
 func TestRawMounter(t *testing.T) {
+	setLogger("TestRawMounter", t)
 	setupRawMounter(t)
 	allTests(t, rawSource, rawDest)
 }
@@ -275,6 +287,7 @@ func makeFile(pathname string) error {
 }
 
 func TestSafeEmptyTrashDir(t *testing.T) {
+	sched.Init(time.Second)
 	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
 	require.NoError(t, err, "Failed to setup test %v", err)
 
