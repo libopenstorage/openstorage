@@ -45,8 +45,9 @@ func allTests(t *testing.T, source, dest string) {
 	doubleUnmountTest(t, source, dest)
 	enoentUnmountTestWithoutOptions(t, source, dest)
 	doubleMountTest(t, source, dest)
-	mountTestPathMismatchFailure(t, source, dest)
-	mountTestPathMismatchSuccessWithOptions(t, source, dest)
+	mountTestHostMismatchFailure(t, source, dest)
+	mountTestHostMismatchSuccessWithOptions(t, source, dest)
+	mountTestPathMismatchFailureWithOptions(t, source, dest)
 	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
@@ -115,7 +116,7 @@ func doubleMountTest(t *testing.T, source, dest string) {
 	require.NoError(t, err, "Failed in unmount")
 }
 
-func mountTestPathMismatchFailure(t *testing.T, source, dest string) {
+func mountTestHostMismatchFailure(t *testing.T, source, dest string) {
 	cleandir("localhost:" + source)
 	cleandir("127.0.0.1:" + source)
 	err := m.Mount(0, "localhost:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
@@ -126,6 +127,7 @@ func mountTestPathMismatchFailure(t *testing.T, source, dest string) {
 	err = m.Mount(0, "127.0.0.1:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
 	// Expected error as source paths are different
 	require.Error(t, err, "Expected error in mount")
+	require.Equal(t, err.Error(), "Mountpath already exists", "Expected \"Mountpath already exists\"")
 
 	err = m.Unmount("localhost:"+source, dest, 0, 0, nil)
 	require.NoError(t, err, "Failed in unmount")
@@ -133,7 +135,7 @@ func mountTestPathMismatchFailure(t *testing.T, source, dest string) {
 	shutdown(t, "127.0.0.1:"+source, dest)
 }
 
-func mountTestPathMismatchSuccessWithOptions(t *testing.T, source, dest string) {
+func mountTestHostMismatchSuccessWithOptions(t *testing.T, source, dest string) {
 	opts := make(map[string]string)
 	opts[options.OptionsResolveDNSOnMount] = "true"
 	cleandir("localhost:" + source)
@@ -152,6 +154,29 @@ func mountTestPathMismatchSuccessWithOptions(t *testing.T, source, dest string) 
 	shutdown(t, "localhost:"+source, dest)
 	shutdown(t, "127.0.0.1:"+source, dest)
 }
+
+func mountTestPathMismatchFailureWithOptions(t *testing.T, source, dest string) {
+	opts := make(map[string]string)
+	opts[options.OptionsResolveDNSOnMount] = "true"
+	cleandir("localhost:" + source + "/path1")
+	cleandir("localhost:" + source + "/path2")
+	err := m.Mount(0, "localhost:"+source+"/path1", dest, "", syscall.MS_BIND, "", 0, nil)
+	require.NoError(t, err, "Failed in mount")
+
+	// Mount point is already created and new request lands on the same mount point
+	// but source paths are different even when NFS server is same.
+	// Unlikely in practice.
+	err = m.Mount(0, "localhost:"+source+"/path2", dest, "", syscall.MS_BIND, "", 0, nil)
+	// Expected error as source paths are different
+	require.Error(t, err, "Expected error in mount")
+	require.Equal(t, err.Error(), "Mountpath already exists", "Expected \"Mountpath already exists\"")
+
+	err = m.Unmount("localhost:"+source+"/path1", dest, 0, 0, nil)
+	require.NoError(t, err, "Failed in unmount")
+	shutdown(t, "localhost:"+source+"/path1", dest)
+	shutdown(t, "localhost:"+source+"/path2", dest)
+}
+
 func enoentUnmountTest(t *testing.T, source, dest string) {
 	opts := make(map[string]string)
 	opts[options.OptionsUnmountOnEnoent] = "true"
@@ -412,6 +437,64 @@ func TestAreSameIPs(t *testing.T) {
 			result := areSameIPs(tt.ips1, tt.ips2)
 			if result != tt.expected {
 				t.Errorf("areSameIPs(%v, %v) = %v; expected %v", tt.ips1, tt.ips2, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestExtractSourcePath(t *testing.T) {
+	tests := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "Single colon with valid suffix",
+			input:    "a:/b",
+			expected: "/b",
+		},
+		{
+			name:     "Colon at the beginning",
+			input:    ":/path",
+			expected: "/path",
+		},
+		{
+			name:     "Multiple colons in string",
+			input:    "path:/to:/resource",
+			expected: "/resource",
+		},
+		{
+			name:     "Colon at the end",
+			input:    "path:/",
+			expected: "/",
+		},
+		{
+			name:     "No colon in string",
+			input:    "noColonHere",
+			expected: "noColonHere",
+		},
+		{
+			name:     "Empty string",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "Colon only",
+			input:    ":",
+			expected: ":",
+		},
+		{
+			name:     "Colon followed by space",
+			input:    "path: /to/resource",
+			expected: " /to/resource",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := extractSourcePath(tt.input)
+			if result != tt.expected {
+				t.Errorf("extractSourcePath(%q) = %q; expected %q", tt.input, result, tt.expected)
 			}
 		})
 	}
