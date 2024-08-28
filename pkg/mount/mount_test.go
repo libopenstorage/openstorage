@@ -291,47 +291,44 @@ func TestSafeEmptyTrashDir(t *testing.T) {
 	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
 	require.NoError(t, err, "Failed to setup test %v", err)
 
-	// Create a new file
-	file, err := os.Create("/tmp/should-not-remove.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	file.Close()
-
-	// Create a symbolic link
-	err = os.Symlink("/tmp/should-not-remove.txt", "/tmp/should-not-remove-symlink.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	err = os.MkdirAll("/tmp/should-remove/", 0755)
+	err = os.MkdirAll("/tmp/safe-empty-trash-dir-tests", 0755)
 	require.NoError(t, err)
-	// Create a new file
-	file, err = os.Create("/tmp/should-remove-file.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+
+	defer func() {
+		err = os.RemoveAll("/tmp/safe-empty-trash-dir-tests")
+		require.NoError(t, err, "Failed to cleanup after test")
+	}()
+
+	// Create files that should not be removed
+	file, err := os.Create("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
+	require.NoError(t, err, "Failed to create file: %v", err)
+	file.Close()
+
+	// Create a symbolic link that should not be removed
+	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt", "/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
+	require.NoError(t, err, "Failed to create symlink: %v", err)
+
+	// Create a file that should be removed
+	file, err = os.Create("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
+	require.NoError(t, err, "Failed to create file: %v", err)
+
 	file.Close()
 
 	// Create a symbolic link
-	err = os.Symlink("/tmp/should-remove-file.txt", "/tmp/should-remove/symlink.txt")
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
+	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt", "/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
+	require.NoError(t, err, "Failed to create symlink: %v", err)
 
-	err = m.SafeEmptyTrashDir("/tmp/should-remove", "/tmp")
+	err = m.SafeEmptyTrashDir("/tmp/safe-empty-trash-dir-tests/should-remove", "/tmp/safe-empty-trash-dir-tests")
 	require.NoError(t, err, "Failed to empty trash dir %v", err)
 
-	_, err = os.Stat("/tmp/should-remove-file.txt")
+	time.Sleep(mountPathRemoveDelay + 5*time.Second)
+
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
 	require.True(t, os.IsNotExist(err), "File should be removed")
-	_, err = os.Stat("//tmp/should-remove/symlink.txt")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
 	require.True(t, os.IsNotExist(err), "File should be removed")
-	_, err = os.Stat("/tmp/should-not-remove.txt")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
 	require.NoError(t, err, "File should not be removed")
-	_, err = os.Stat("/tmp/should-not-remove-symlink.txt")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
 	require.NoError(t, err, "File should not be removed")
 }
