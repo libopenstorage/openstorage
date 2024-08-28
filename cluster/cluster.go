@@ -376,6 +376,7 @@ type Cluster interface {
 		snapshotPrefixes []string,
 		selfClusterDomain string,
 		config *ClusterServerConfiguration,
+		gobRegisterName string,
 	) error
 
 	// Get a unique identifier for this cluster. Depending on the implementation, this could
