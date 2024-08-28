@@ -467,15 +467,23 @@ func resolveToIPs(hostPath string) []string {
 }
 
 func areSameIPs(ips1, ips2 []string) bool {
-	if len(ips1) != len(ips2) {
-		return false
-	}
-	for i := range ips1 {
-		if ips1[i] != ips2[i] {
-			return false
+	for _, ip1 := range ips1 {
+		for _, ip2 := range ips2 {
+			if ip1 == ip2 {
+				return true
+			}
 		}
 	}
-	return true
+	return false
+}
+
+func extractSourcePath(hostPath string) string {
+	index := strings.LastIndex(hostPath, ":")
+	if index != -1 && index < len(hostPath)-1 {
+		return hostPath[index+1:]
+	}
+	// Return the original input if resolution fails
+	return hostPath
 }
 
 // Mount new mountpoint for specified device.
@@ -519,13 +527,18 @@ func (m *Mounter) Mount(
 		if dev != device {
 			err = ErrExist
 			if resolveDNSOnMount {
-				// Resolve both using DNS lookup
-				resolvedDev := resolveToIPs(dev)
-				resolvedDevice := resolveToIPs(device)
-				if areSameIPs(resolvedDev, resolvedDevice) {
-					logrus.Infof("Device %q, is already mount at %q, as source path %q", device, path, dev)
-					return nil
+				resolvedDevPath := extractSourcePath(dev)
+				resolvedDevicePath := extractSourcePath(device)
+				if resolvedDevPath == resolvedDevicePath {
+					// Resolve both using DNS lookup
+					resolvedDevIPs := resolveToIPs(dev)
+					resolvedDeviceIPs := resolveToIPs(device)
+					if areSameIPs(resolvedDevIPs, resolvedDeviceIPs) {
+						logrus.Infof("Device %q, is already mount at %q, as source path %q", device, path, dev)
+						return nil
+					}
 				}
+
 			}
 		}
 	}
