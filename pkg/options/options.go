@@ -68,6 +68,11 @@ const (
 	// It is used to issue an umount system call to the requested path even
 	// if the entry for the path is not present in the mount table
 	OptionsUnmountOnEnoent = "UNMOUNT_ON_ENOENT"
+	// OptionsResolveDNSOnMount is an option to the following Opentstorage Volume API
+	// - Mount
+	// It is used to issue an mount system call to the requested path to resolve
+	// the path if there is a mismatch in the mount table and the source path.
+	OptionsResolveDNSOnMount = "RESOLVE_DNS_ON_MOUNT"
 )
 
 // IsBoolOptionSet checks if a boolean option key is set

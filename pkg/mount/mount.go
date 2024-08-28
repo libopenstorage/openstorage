@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -451,6 +452,43 @@ func (m *Mounter) load(prefixes []*regexp.Regexp, fmp findMountPoint) error {
 	return nil
 }
 
+func resolveToIPs(hostPath string) []string {
+	index := strings.LastIndex(hostPath, ":")
+	if index != -1 {
+		hostPath = hostPath[:index]
+	}
+	ips, err := net.LookupIP(hostPath)
+	if err != nil || len(ips) == 0 {
+		return []string{hostPath} // Return the original input if resolution fails
+	}
+	// Convert all IP addresses to strings
+	ipStrings := make([]string, len(ips))
+	for i, ip := range ips {
+		ipStrings[i] = ip.String()
+	}
+	return ipStrings
+}
+
+func areSameIPs(ips1, ips2 []string) bool {
+	for _, ip1 := range ips1 {
+		for _, ip2 := range ips2 {
+			if ip1 == ip2 {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func extractSourcePath(hostPath string) string {
+	index := strings.LastIndex(hostPath, ":")
+	if index != -1 && index < len(hostPath)-1 {
+		return hostPath[index+1:]
+	}
+	// Return the original input if resolution fails
+	return hostPath
+}
+
 // Mount new mountpoint for specified device.
 func (m *Mounter) Mount(
 	minor int,
@@ -482,10 +520,34 @@ func (m *Mounter) Mount(
 			return ErrMountpathNotAllowed
 		}
 	}
+	resolveDNSOnMount := false
+	if _, ok := opts[options.OptionsResolveDNSOnMount]; ok {
+		resolveDNSOnMount = true
+	}
+	var err error
 	dev, ok := m.HasTarget(path)
-	if ok && dev != device {
-		logrus.Warnf("cannot mount %q,  device %q is mounted at %q", device, dev, path)
-		return ErrExist
+	if ok {
+		if dev != device {
+			err = ErrExist
+			if resolveDNSOnMount {
+				resolvedDevPath := extractSourcePath(dev)
+				resolvedDevicePath := extractSourcePath(device)
+				if resolvedDevPath == resolvedDevicePath {
+					// Resolve both using DNS lookup
+					resolvedDevIPs := resolveToIPs(dev)
+					resolvedDeviceIPs := resolveToIPs(device)
+					if areSameIPs(resolvedDevIPs, resolvedDeviceIPs) {
+						logrus.Infof("Device %q, is already mount at %q, as source path %q", device, path, dev)
+						return nil
+					}
+				}
+
+			}
+		}
+	}
+	if err != nil {
+		logrus.Warnf("Cannot mount %q, device %q is mounted at %q", device, dev, path)
+		return err
 	}
 	m.Lock()
 	info, ok := m.mounts[device]
