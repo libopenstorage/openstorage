@@ -1448,7 +1448,8 @@ func (c *ClusterManager) Start(
 		gossipPort,
 		[]string{ClusterDBKey},
 		selfClusterDomain,
-		&cluster.ClusterServerConfiguration{})
+		&cluster.ClusterServerConfiguration{},
+		"")
 }
 
 func (c *ClusterManager) StartWithConfiguration(
@@ -1457,6 +1458,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	snapshotPrefixes []string,
 	selfClusterDomain string,
 	config *cluster.ClusterServerConfiguration,
+	gobRegisterName string,
 ) error {
 	var err error
 
@@ -1511,7 +1513,7 @@ func (c *ClusterManager) StartWithConfiguration(
 	// Start the gossip protocol.
 	// Replacing gob.Register with gob.RegisterName to avoid any issue caused due to the movement from portworx to pure-px
 	// gossip: Error in unmarshalling peer's local data. Error : gob: name not registered for interface.
-	gob.RegisterName("github.com/portworx/porx/vendor/github.com/libopenstorage/openstorage/api.Node", api.Node{})
+	gob.RegisterName(gobRegisterName+"api.Node", api.Node{})
 	quorumTimeout := types.DEFAULT_QUORUM_TIMEOUT
 	if c.config.QuorumTimeoutInSeconds > 0 {
 		quorumTimeout = time.Duration(c.config.QuorumTimeoutInSeconds) * time.Second
