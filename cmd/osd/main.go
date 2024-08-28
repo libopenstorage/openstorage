@@ -630,6 +630,7 @@ func start(c *cli.Context) error {
 				ConfigObjectStoreManager: objectstore.NewfakeObjectstore(),
 				ConfigSystemTokenManager: auth.SystemTokenManagerInst(),
 			},
+			"",
 		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
 		}
