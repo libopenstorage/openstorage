@@ -7,8 +7,10 @@ import (
 	"sync"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/options"
+	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -23,17 +25,27 @@ const (
 
 var m Manager
 
+func setLogger(fn string, t *testing.T) {
+	// The mount tests log a lot of messages, so we route the logs
+	// to a tmp location to avoid Travis CI log limits.
+	logFile, err := os.Create("/tmp/" + fn + ".log")
+	require.NoError(t, err, "unable to create log file")
+	logrus.SetOutput(logFile)
+}
 func TestNFSMounter(t *testing.T) {
+	setLogger("TestNFSMounter", t)
 	setupNFS(t)
 	allTests(t, source, dest)
 }
 
 func TestBindMounter(t *testing.T) {
+	setLogger("TestBindMounter", t)
 	setupBindMounter(t)
 	allTests(t, source, dest)
 }
 
 func TestRawMounter(t *testing.T) {
+	setLogger("TestRawMounter", t)
 	setupRawMounter(t)
 	allTests(t, rawSource, rawDest)
 }
@@ -123,7 +135,6 @@ func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
 	require.Error(t, err, "Failed in unmount, expected an error")
 	syscall.Unmount(dest, 0)
 }
-
 
 // mountTestParallel runs mount and unmount in parallel with serveral dirs
 // in addition, we trigger failed unmount to test race condition in the case
@@ -273,4 +284,51 @@ func makeFile(pathname string) error {
 	}
 
 	return nil
+}
+
+func TestSafeEmptyTrashDir(t *testing.T) {
+	sched.Init(time.Second)
+	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
+	require.NoError(t, err, "Failed to setup test %v", err)
+
+	err = os.MkdirAll("/tmp/safe-empty-trash-dir-tests", 0755)
+	require.NoError(t, err)
+
+	defer func() {
+		err = os.RemoveAll("/tmp/safe-empty-trash-dir-tests")
+		require.NoError(t, err, "Failed to cleanup after test")
+	}()
+
+	// Create files that should not be removed
+	file, err := os.Create("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
+	require.NoError(t, err, "Failed to create file: %v", err)
+	file.Close()
+
+	// Create a symbolic link that should not be removed
+	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt", "/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
+	require.NoError(t, err, "Failed to create symlink: %v", err)
+
+	// Create a file that should be removed
+	file, err = os.Create("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
+	require.NoError(t, err, "Failed to create file: %v", err)
+
+	file.Close()
+
+	// Create a symbolic link
+	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt", "/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
+	require.NoError(t, err, "Failed to create symlink: %v", err)
+
+	err = m.SafeEmptyTrashDir("/tmp/safe-empty-trash-dir-tests/should-remove", "/tmp/safe-empty-trash-dir-tests")
+	require.NoError(t, err, "Failed to empty trash dir %v", err)
+
+	time.Sleep(mountPathRemoveDelay + 5*time.Second)
+
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
+	require.True(t, os.IsNotExist(err), "File should be removed")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
+	require.True(t, os.IsNotExist(err), "File should be removed")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
+	require.NoError(t, err, "File should not be removed")
+	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
+	require.NoError(t, err, "File should not be removed")
 }

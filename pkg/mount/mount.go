@@ -75,6 +75,9 @@ type Manager interface {
 	RemoveMountPath(path string, opts map[string]string) error
 	// EmptyTrashDir removes all directories from the mounter trash directory
 	EmptyTrashDir() error
+	// SafeEmptyTrashDir removes all the directories from the mounter trash directory
+	// only if the targets have the provided targetPrefix
+	SafeEmptyTrashDir(targetPrefix string, trashLocation string) error
 }
 
 // MountImpl backend implementation for Mount/Unmount calls
@@ -809,20 +812,27 @@ func (m *Mounter) RemoveMountPath(mountPath string, opts map[string]string) erro
 	return nil
 }
 
+func (m *Mounter) SafeEmptyTrashDir(targetPrefix string, trashLocation string) error {
+	return m.emptyTrashDir(targetPrefix, trashLocation)
+}
+
 func (m *Mounter) EmptyTrashDir() error {
-	files, err := ioutil.ReadDir(m.trashLocation)
+	return m.emptyTrashDir("", m.trashLocation)
+}
+
+func (m *Mounter) emptyTrashDir(safeRemovalPrefix, trashLocation string) error {
+	files, err := ioutil.ReadDir(trashLocation)
 	if err != nil {
-		logrus.Errorf("failed to read trash dir: %s. Err: %v", m.trashLocation, err)
+		logrus.Errorf("failed to read trash dir: %s. Err: %v", trashLocation, err)
 		return err
 	}
 
 	if _, err := sched.Instance().Schedule(
 		func(sched.Interval) {
 			for _, file := range files {
-				logrus.Infof("[EmptyTrashDir] Scheduled removing file %v in trash location %v", file.Name(), m.trashLocation)
-				e := m.removeSoftlinkAndTarget(path.Join(m.trashLocation, file.Name()))
+				e := m.removeSoftlinkAndTarget(safeRemovalPrefix, path.Join(trashLocation, file.Name()))
 				if e != nil {
-					logrus.Errorf("failed to remove link: %s. Err: %v", path.Join(m.trashLocation, file.Name()), e)
+					logrus.Errorf("failed to remove link: %s. Err: %v", path.Join(trashLocation, file.Name()), e)
 				}
 			}
 		},
@@ -836,16 +846,29 @@ func (m *Mounter) EmptyTrashDir() error {
 	return nil
 }
 
-func (m *Mounter) removeSoftlinkAndTarget(link string) error {
+func (m *Mounter) removeSoftlinkAndTarget(safeRemovalPrefix, link string) error {
 	if _, err := os.Stat(link); err == nil {
 		target, err := os.Readlink(link)
 		if err != nil {
+			if len(safeRemovalPrefix) > 0 {
+				// In case of safe removals if we are not able to validate the target path
+				// and its prefix we dont want the caller to think we hit an error with this file.
+				// This is primarily done to not log the error.
+				return nil
+			}
 			return err
 		}
+		if len(safeRemovalPrefix) > 0 && !strings.HasPrefix(target, safeRemovalPrefix) {
+			return fmt.Errorf("target %s does not have prefix %s, skipping removal", target, safeRemovalPrefix)
+		}
+
+		logrus.Infof("[EmptyTrashDir] Scheduled removing file %v", target)
 
 		if err = m.removeMountPath(target); err != nil {
 			return err
 		}
+	} else {
+		return fmt.Errorf("failed to stat link: %s. Err: %w", link, err)
 	}
 
 	if err := os.Remove(link); err != nil {
