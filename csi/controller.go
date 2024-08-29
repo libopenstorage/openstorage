@@ -19,22 +19,22 @@ package csi
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/pkg/grpcutil"
-	"github.com/libopenstorage/openstorage/pkg/units"
-	"github.com/libopenstorage/openstorage/pkg/util"
-	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
 
 	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/pkg/grpcutil"
+	"github.com/libopenstorage/openstorage/pkg/units"
+	"github.com/libopenstorage/openstorage/pkg/util"
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -59,6 +59,7 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
+	defaultRWOExportRule                      = "*(ro)"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -168,6 +169,7 @@ func (s *OsdCsiServer) ControllerGetVolume(
 
 // ValidateVolumeCapabilities is a CSI API used by container orchestration systems
 // to make sure a volume specification is validiated by the CSI driver.
+// Note: This is not invoked in case of Kubernetes, please see https://groups.google.com/g/kubernetes-sig-storage/c/WxC5DPd8-pY/m/8s0f5NjbEAAJ
 func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
 	req *csi.ValidateVolumeCapabilitiesRequest,
@@ -424,7 +426,7 @@ func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpe
 			if proxySpec.PureFileSpec != nil {
 				exportRules = proxySpec.PureFileSpec.ExportRules
 			}
-			if isFBDA && exportRules != "" && !strings.HasPrefix(exportRules, "*(ro") {
+			if isFBDA && exportRules != "" && !strings.Contains(exportRules, defaultRWOExportRule) {
 				return status.Errorf(
 					codes.InvalidArgument,
 					"FlashArray Direct Access export rules do not match the volume access mode",
@@ -477,7 +479,7 @@ func setPureDefaults(caps []*csi.VolumeCapability, proxySpec *api.ProxySpec) err
 				proxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			if isFBDA && proxySpec.PureFileSpec.ExportRules == "" {
-				proxySpec.PureFileSpec.ExportRules = "*(ro)"
+				proxySpec.PureFileSpec.ExportRules = defaultRWOExportRule
 			}
 		}
 	}
@@ -587,7 +589,6 @@ func (s *OsdCsiServer) CreateVolume(
 
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
-
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
@@ -614,6 +615,7 @@ func (s *OsdCsiServer) CreateVolume(
 				}
 			}
 		} else {
+
 			createResp, createErr = volumes.Create(ctx, &api.SdkVolumeCreateRequest{
 				Name:   req.GetName(),
 				Spec:   spec,
@@ -640,7 +642,6 @@ func (s *OsdCsiServer) CreateVolume(
 
 		newVolumeId = cloneResp.VolumeId
 	}
-
 	// Get volume information
 	inspectResp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 		VolumeId: newVolumeId,
