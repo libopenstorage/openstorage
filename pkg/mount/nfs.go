@@ -70,10 +70,13 @@ func (m *nfsMounter) Reload(inputSource string) error {
 		return fmt.Errorf("Internal error failed to convert %T",
 			newNFSmounter)
 	}
-	var newM *Info
-	if m.handleDNSResolution {
+	newM := newNFSmounter.mounts[inputSource]
+
+	if m.handleDNSResolution && newM == nil {
+
 		// Check if the source is a IP:share combination which maps to an
 		// DNS:share combination.
+		resolvedInputSourceIPs := resolveToIPs(inputSource)
 		inputSourceExportPath := extractSourcePath(inputSource)
 		for existingSource, existingMountInfo := range newNFSmounter.mounts {
 			if inputSourceExportPath == extractSourcePath(existingSource) {
@@ -81,7 +84,6 @@ func (m *nfsMounter) Reload(inputSource string) error {
 				// Now lets check if the input source (IP or DNS) matches
 				// with the existing source (IP or DNS).
 				resolvedExistingSourceIPs := resolveToIPs(existingSource)
-				resolvedInputSourceIPs := resolveToIPs(inputSource)
 				if areSameIPs(resolvedExistingSourceIPs, resolvedInputSourceIPs) {
 					// The input source and existing source are the same.
 					// So, we can use the existing mount info even if it was for a
@@ -92,8 +94,6 @@ func (m *nfsMounter) Reload(inputSource string) error {
 			}
 		}
 
-	} else {
-		newM = newNFSmounter.mounts[inputSource]
 	}
 	return m.reload(inputSource, newM)
 }
