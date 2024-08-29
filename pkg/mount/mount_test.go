@@ -32,9 +32,15 @@ func setLogger(fn string, t *testing.T) {
 	require.NoError(t, err, "unable to create log file")
 	logrus.SetOutput(logFile)
 }
+func TestNFSMounterHandleDNSResolution(t *testing.T) {
+	setLogger("TestNFSMounterHandleDNSResolution", t)
+	setupNFS(t, true)
+	allTests(t, source, dest)
+}
+
 func TestNFSMounter(t *testing.T) {
 	setLogger("TestNFSMounter", t)
-	setupNFS(t)
+	setupNFS(t, false)
 	allTests(t, source, dest)
 }
 
@@ -69,9 +75,9 @@ func allTests(t *testing.T, source, dest string) {
 	shutdown(t, source, dest)
 }
 
-func setupNFS(t *testing.T) {
+func setupNFS(t *testing.T, handleDNSResolution bool) {
 	var err error
-	m, err = New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
+	m, err = New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, handleDNSResolution)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -81,7 +87,7 @@ func setupNFS(t *testing.T) {
 
 func setupBindMounter(t *testing.T) {
 	var err error
-	m, err = New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
+	m, err = New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, false)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -91,7 +97,7 @@ func setupBindMounter(t *testing.T) {
 
 func setupRawMounter(t *testing.T) {
 	var err error
-	m, err = New(RawMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
+	m, err = New(RawMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, false)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -511,9 +517,10 @@ func TestExtractSourcePath(t *testing.T) {
 		})
 	}
 }
+
 func TestSafeEmptyTrashDir(t *testing.T) {
 	sched.Init(time.Second)
-	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
+	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "", true)
 	require.NoError(t, err, "Failed to setup test %v", err)
 
 	err = os.MkdirAll("/tmp/safe-empty-trash-dir-tests", 0755)
