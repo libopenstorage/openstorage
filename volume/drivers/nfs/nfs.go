@@ -77,7 +77,7 @@ func Init(params map[string]string) (volume.VolumeDriver, error) {
 	}
 
 	// Create a mount manager for this NFS server. Blank sever is OK.
-	mounter, err := mount.New(mount.NFSMount, nil, serverRegexes, nil, []string{}, "")
+	mounter, err := mount.New(mount.NFSMount, nil, serverRegexes, nil, []string{}, "", true)
 	if err != nil {
 		logrus.Warnf("Failed to create mount manager for server: %v (%v)", server, err)
 		return nil, err
