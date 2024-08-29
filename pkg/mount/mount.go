@@ -793,7 +793,7 @@ func (m *Mounter) removeMountPath(path string) error {
 	}
 
 	var bindMountPath string
-	bindMounter, err := New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
+	bindMounter, err := New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "", false)
 	if err != nil {
 		return err
 	}
@@ -964,6 +964,7 @@ func New(
 	customMounter CustomMounter,
 	allowedDirs []string,
 	trashLocation string,
+	handleDNSResolution bool,
 ) (Manager, error) {
 
 	if mountImpl == nil {
@@ -974,7 +975,7 @@ func New(
 	case DeviceMount:
 		return NewDeviceMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case NFSMount:
-		return NewNFSMounter(identifiers, mountImpl, allowedDirs, trashLocation)
+		return NewNFSMounter(identifiers, mountImpl, allowedDirs, trashLocation, handleDNSResolution)
 	case BindMount:
 		return NewBindMounter(identifiers, mountImpl, allowedDirs, trashLocation)
 	case CustomMount:
