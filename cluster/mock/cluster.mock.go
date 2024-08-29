@@ -1033,7 +1033,7 @@ func (mr *MockClusterMockRecorder) Start(arg0, arg1, arg2 interface{}) *gomock.C
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Start", reflect.TypeOf((*MockCluster)(nil).Start), arg0, arg1, arg2)
 }
 
-// StartWithConfiguration mocks base method.
+// StartWithConfiguration mocks base method
 func (m *MockCluster) StartWithConfiguration(arg0 bool, arg1 string, arg2 []string, arg3 string, arg4 *cluster.ClusterServerConfiguration, arg5 string) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "StartWithConfiguration", arg0, arg1, arg2, arg3, arg4, arg5)
@@ -1041,7 +1041,7 @@ func (m *MockCluster) StartWithConfiguration(arg0 bool, arg1 string, arg2 []stri
 	return ret0
 }
 
-// StartWithConfiguration indicates an expected call of StartWithConfiguration.
+// StartWithConfiguration indicates an expected call of StartWithConfiguration
 func (mr *MockClusterMockRecorder) StartWithConfiguration(arg0, arg1, arg2, arg3, arg4, arg5 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "StartWithConfiguration", reflect.TypeOf((*MockCluster)(nil).StartWithConfiguration), arg0, arg1, arg2, arg3, arg4, arg5)
