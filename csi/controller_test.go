@@ -874,6 +874,57 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 	assert.NotNil(t, err)
 }
 
+func TestControllerValidateVolumePureFile(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+
+	// Setup mock
+	id := "testvolumeid"
+
+	gomock.InOrder(
+		// FBDA with ROX
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{
+				VolumeIds: []string{id},
+			}, nil).
+			Return([]*api.Volume{
+				{
+					Id:       id,
+					Readonly: true,
+					Spec: &api.VolumeSpec{
+						ProxySpec: &api.ProxySpec{
+							ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+						},
+					},
+				},
+			}, nil),
+	)
+
+	// Setup request
+	req := &csi.ValidateVolumeCapabilitiesRequest{
+		VolumeCapabilities: []*csi.VolumeCapability{
+			{
+				AccessType: &csi.VolumeCapability_Mount{
+					Mount: &csi.VolumeCapability_MountVolume{},
+				},
+				AccessMode: &csi.VolumeCapability_AccessMode{
+					Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY,
+				},
+			},
+		},
+		VolumeId: id,
+		Secrets:  map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+	}
+
+	// Expect no error and non nil confirmed
+	c := csi.NewControllerClient(s.Conn())
+	r, err := c.ValidateVolumeCapabilities(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r.GetConfirmed())
+}
+
 func TestControllerCreateVolumeInvalidArguments(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
@@ -1195,6 +1246,135 @@ func TestControllerCreateVolumeBadParameters(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, serverError.Code(), codes.InvalidArgument)
 	assert.Contains(t, serverError.Message(), "get parameters")
+}
+
+func TestControllerCreateVolumeValidationPureFile(t *testing.T) {
+	// Create server and client connection
+	s := newTestServer(t)
+	defer s.Stop()
+	c := csi.NewControllerClient(s.Conn())
+	s.mockClusterEnumerateNode(t, "node-1")
+	// Setup request
+	name := "myvol"
+	size := int64(1234)
+
+	tests := []struct {
+		name        string
+		request     csi.CreateVolumeRequest
+		errorString string
+		expectFunc  func()
+	}{
+		{
+			name: "create volume invalid export rule",
+			request: csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size,
+				},
+				Parameters: map[string]string{
+					api.SpecPureFileExportRules: "(rw)",
+					api.SpecBackendType:         api.SpecBackendPureFile,
+				},
+				Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+			},
+			errorString: "export rules do not match the volume",
+		},
+		{
+			name: "create volume valid export rule",
+			request: csi.CreateVolumeRequest{
+				Name: name,
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY,
+						},
+					},
+				},
+				CapacityRange: &csi.CapacityRange{
+					RequiredBytes: size,
+				},
+				Parameters: map[string]string{
+					api.SpecPureFileExportRules: "*(ro)",
+					api.SpecBackendType:         api.SpecBackendPureFile,
+				},
+				Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
+			},
+			expectFunc: func() {
+				id := "myid"
+				gomock.InOrder(
+					s.MockDriver().
+						EXPECT().
+						Inspect(gomock.Any(), []string{name}).
+						Return(nil, fmt.Errorf("not found")).
+						Times(1),
+
+					s.MockDriver().
+						EXPECT().
+						Enumerate(&api.VolumeLocator{Name: name}, nil).
+						Return(nil, fmt.Errorf("not found")).
+						Times(1),
+
+					s.MockDriver().
+						EXPECT().
+						Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+						Do(func(
+							ctx context.Context,
+							locator *api.VolumeLocator,
+							Source *api.Source,
+							spec *api.VolumeSpec,
+						) (string, error) {
+							assert.Equal(t, spec.Size, defaultCSIVolumeSize)
+							return id, nil
+						}).
+						Return(id, nil).
+						Times(1),
+
+					s.MockDriver().
+						EXPECT().
+						Enumerate(&api.VolumeLocator{
+							VolumeIds: []string{id},
+						}, nil).
+						Return([]*api.Volume{
+							{
+								Id: id,
+								Locator: &api.VolumeLocator{
+									Name: name,
+								},
+								Spec: &api.VolumeSpec{
+									Size:     defaultCSIVolumeSize,
+									Sharedv4: true,
+								},
+							},
+						}, nil).
+						Times(1),
+				)
+			},
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if tc.expectFunc != nil {
+				tc.expectFunc()
+			}
+			_, err := c.CreateVolume(context.Background(), &tc.request)
+			if tc.errorString != "" {
+				assert.NotNil(t, err)
+				serverError, ok := status.FromError(err)
+				assert.True(t, ok)
+				assert.Contains(t, serverError.Message(), tc.errorString)
+			} else {
+				assert.Nil(t, err)
+			}
+		})
+	}
 }
 
 func TestControllerCreateVolumeBadParentId(t *testing.T) {
@@ -3652,6 +3832,33 @@ func TestResolveSpecFromCSI(t *testing.T) {
 				Sharedv4: false,
 				ProxySpec: &api.ProxySpec{
 					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_NFS,
+				},
+			},
+		},
+		{
+			name: "Should set export rules for Pure based volumes and ROX is used",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Shared: false,
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+					PureFileSpec: &api.PureFileSpec{
+						ExportRules: "*(ro)",
+					},
 				},
 			},
 		},
