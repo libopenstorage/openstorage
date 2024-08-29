@@ -299,7 +299,7 @@ func (c *clusterClient) Uuid() string {
 	return ""
 }
 
-func (c *clusterClient) StartWithConfiguration(bool, string, []string, string, *cluster.ClusterServerConfiguration) error {
+func (c *clusterClient) StartWithConfiguration(bool, string, []string, string, *cluster.ClusterServerConfiguration, string) error {
 	return nil
 }
 

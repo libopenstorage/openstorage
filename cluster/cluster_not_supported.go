@@ -11,8 +11,8 @@ import (
 	"github.com/libopenstorage/openstorage/pkg/defrag"
 	"github.com/libopenstorage/openstorage/pkg/diags"
 	"github.com/libopenstorage/openstorage/pkg/job"
-	"github.com/libopenstorage/openstorage/pkg/schedule"
 	"github.com/libopenstorage/openstorage/pkg/nodedrain"
+	"github.com/libopenstorage/openstorage/pkg/schedule"
 	"github.com/libopenstorage/openstorage/pkg/storagepool"
 	"github.com/libopenstorage/openstorage/schedpolicy"
 	"github.com/libopenstorage/openstorage/secrets"
@@ -117,7 +117,7 @@ func (m *NullClusterManager) Start(arg1 bool, arg2 string, arg3 string) error {
 }
 
 // StartWithConfiguration
-func (m *NullClusterManager) StartWithConfiguration(arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration) error {
+func (m *NullClusterManager) StartWithConfiguration(arg1 bool, arg2 string, arg3 []string, arg4 string, arg5 *ClusterServerConfiguration, arg6 string) error {
 	return ErrNotImplemented
 }
 

@@ -510,6 +510,7 @@ func TestExtractSourcePath(t *testing.T) {
 			}
 		})
 	}
+}
 func TestSafeEmptyTrashDir(t *testing.T) {
 	sched.Init(time.Second)
 	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "")
