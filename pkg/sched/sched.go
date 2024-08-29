@@ -123,6 +123,9 @@ type Scheduler interface {
 
 	// Stop scheduling.
 	Stop()
+
+	// Get the number of worker goroutines that are currently running.
+	GetRunningWorkerCount() int
 }
 
 var instance Scheduler
@@ -178,6 +181,8 @@ type manager struct {
 	taskStartHist histogram
 	// histogram for how long a task was running
 	taskDurationHist histogram
+	// runOnlyBatchSizeTaks if true will run only batchSize tasks at any time
+	runOnlyBatchSizeTasks bool
 }
 
 func (s *manager) Schedule(
@@ -306,6 +311,12 @@ func (s *manager) scheduleTasks() {
 	}
 }
 
+
+
+func (s *manager) GetRunningWorkerCount() int {
+	return s.getWorkerCount()
+}
+
 // for testing
 func (s *manager) getWorkerCount() int {
 	s.Lock()
@@ -367,7 +378,7 @@ func (s *manager) addWorkersIfNeeded(enqueuedTasks int) (uint64, uint64) {
 	s.Lock()
 	defer s.Unlock()
 	numWorkers := s.workersStarted - s.workersExited
-	if numWorkers < workerBatchSize || uint64(enqueuedTasks) > numWorkers+workerBatchSize {
+	if numWorkers < workerBatchSize || (!s.runOnlyBatchSizeTasks && uint64(enqueuedTasks) > numWorkers+workerBatchSize) {
 		for i := 0; i < workerBatchSize && numWorkers < maxWorkers; i++ {
 			go s.runTasks(uuid.New())
 			numWorkers++
@@ -377,7 +388,7 @@ func (s *manager) addWorkersIfNeeded(enqueuedTasks int) (uint64, uint64) {
 	return s.workersStarted, s.workersExited
 }
 
-func New(minimumInterval time.Duration) Scheduler {
+func New(minimumInterval time.Duration, runOnlyBatchSizeTasks bool) Scheduler {
 	m := &manager{
 		tasks:             list.New(),
 		currTaskID:        0,
@@ -390,6 +401,7 @@ func New(minimumInterval time.Duration) Scheduler {
 		taskScheduleHist:  newHistogram("task scheduling delay", 1*time.Second, 30*time.Minute),
 		taskStartHist:     newHistogram("task start delay", 1*time.Second, 30*time.Minute),
 		taskDurationHist:  newHistogram("task runtime", 500*time.Millisecond, 20*time.Minute),
+		runOnlyBatchSizeTasks: runOnlyBatchSizeTasks,
 	}
 	m.cv = sync.NewCond(&m.enqueuedTasksLock)
 	m.addWorkersIfNeeded(0)
@@ -398,9 +410,9 @@ func New(minimumInterval time.Duration) Scheduler {
 	return m
 }
 
-func Init(minimumInterval time.Duration) {
+func Init(minimumInterval time.Duration, runOnlyBatchSizeTasks bool) {
 	dbg.Assert(instance == nil, "Scheduler already initialized")
-	instance = New(minimumInterval)
+	instance = New(minimumInterval, runOnlyBatchSizeTasks)
 }
 
 func Instance() Scheduler {

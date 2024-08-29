@@ -22,13 +22,13 @@ func (tc *testCounter) incr() {
 }
 
 func TestStartStop(t *testing.T) {
-	s := New(time.Second)
+	s := New(time.Second, false)
 	s.Stop()
 	require.True(t, true, "OK")
 }
 
 func TestSingle(t *testing.T) {
-	s := New(time.Second)
+	s := New(time.Second, false)
 	tc := testCounter{count: 0}
 	task := func(Interval) {
 		tc.incr()
@@ -57,7 +57,7 @@ func TestSingle(t *testing.T) {
 }
 
 func TestCancel(t *testing.T) {
-	s := New(time.Second)
+	s := New(time.Second, false)
 	tc := testCounter{count: 0}
 	task := func(Interval) {
 		tc.incr()
@@ -76,7 +76,7 @@ func TestCancel(t *testing.T) {
 }
 
 func TestMulti(t *testing.T) {
-	s := New(time.Second)
+	s := New(time.Second, false)
 
 	// Create a bunch of task counters and tasks.
 	tcs := make([]*testCounter, 0)
@@ -155,7 +155,7 @@ func TestMulti(t *testing.T) {
 }
 
 func TestWorkersAddRemove(t *testing.T) {
-	s := New(time.Second)
+	s := New(time.Second, false)
 
 	// Create a bunch of task counters and tasks.
 	tcs := make([]*testCounter, 0)
