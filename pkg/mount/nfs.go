@@ -9,8 +9,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/libopenstorage/openstorage/pkg/keylock"
 	"github.com/moby/sys/mountinfo"
+	"github.com/libopenstorage/openstorage/pkg/keylock"
 )
 
 const (
@@ -20,8 +20,7 @@ const (
 
 // nfsMounter implements Manager and keeps track of active mounts for volume drivers.
 type nfsMounter struct {
-	servers             []*regexp.Regexp
-	handleDNSResolution bool
+	servers []*regexp.Regexp
 	Mounter
 }
 
@@ -32,11 +31,9 @@ func NewNFSMounter(servers []*regexp.Regexp,
 	mountImpl MountImpl,
 	allowedDirs []string,
 	trashLocation string,
-	handleDNSResolution bool,
 ) (Manager, error) {
 	m := &nfsMounter{
-		servers:             servers,
-		handleDNSResolution: handleDNSResolution,
+		servers: servers,
 		Mounter: Mounter{
 			mountImpl:     mountImpl,
 			mounts:        make(DeviceMap),
@@ -54,12 +51,11 @@ func NewNFSMounter(servers []*regexp.Regexp,
 }
 
 // Reload reloads the mount table for the specified source/
-func (m *nfsMounter) Reload(inputSource string) error {
+func (m *nfsMounter) Reload(source string) error {
 	newNFSm, err := NewNFSMounter([]*regexp.Regexp{regexp.MustCompile(NFSAllServers)},
 		m.mountImpl,
 		m.Mounter.allowedDirs,
 		m.trashLocation,
-		m.handleDNSResolution,
 	)
 	if err != nil {
 		return err
@@ -70,35 +66,11 @@ func (m *nfsMounter) Reload(inputSource string) error {
 		return fmt.Errorf("Internal error failed to convert %T",
 			newNFSmounter)
 	}
-	newM := newNFSmounter.mounts[inputSource]
 
-	if m.handleDNSResolution && newM == nil {
-
-		// Check if the source is a IP:share combination which maps to an
-		// DNS:share combination.
-		resolvedInputSourceIPs := resolveToIPs(inputSource)
-		inputSourceExportPath := extractSourcePath(inputSource)
-		for existingSource, existingMountInfo := range newNFSmounter.mounts {
-			if inputSourceExportPath == extractSourcePath(existingSource) {
-				// Found a match for the same export path.
-				// Now lets check if the input source (IP or DNS) matches
-				// with the existing source (IP or DNS).
-				resolvedExistingSourceIPs := resolveToIPs(existingSource)
-				if areSameIPs(resolvedExistingSourceIPs, resolvedInputSourceIPs) {
-					// The input source and existing source are the same.
-					// So, we can use the existing mount info even if it was for a
-					// a DNS representation of the server and our input source is an IP.
-					newM = existingMountInfo
-					break
-				}
-			}
-		}
-
-	}
-	return m.reload(inputSource, newM)
+	return m.reload(source, newNFSmounter.mounts[source])
 }
 
-// serverExists utility function to test if a server is part of driver config
+//serverExists utility function to test if a server is part of driver config
 func (m *nfsMounter) serverExists(server string) bool {
 	for _, v := range m.servers {
 		vStr := v.String()

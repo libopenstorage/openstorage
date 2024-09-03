@@ -7,10 +7,8 @@ import (
 	"sync"
 	"syscall"
 	"testing"
-	"time"
 
 	"github.com/libopenstorage/openstorage/pkg/options"
-	"github.com/libopenstorage/openstorage/pkg/sched"
 	"github.com/sirupsen/logrus"
 	"github.com/stretchr/testify/require"
 )
@@ -25,33 +23,17 @@ const (
 
 var m Manager
 
-func setLogger(fn string, t *testing.T) {
-	// The mount tests log a lot of messages, so we route the logs
-	// to a tmp location to avoid Travis CI log limits.
-	logFile, err := os.Create("/tmp/" + fn + ".log")
-	require.NoError(t, err, "unable to create log file")
-	logrus.SetOutput(logFile)
-}
-func TestNFSMounterHandleDNSResolution(t *testing.T) {
-	setLogger("TestNFSMounterHandleDNSResolution", t)
-	setupNFS(t, true)
-	allTests(t, source, dest)
-}
-
 func TestNFSMounter(t *testing.T) {
-	setLogger("TestNFSMounter", t)
-	setupNFS(t, false)
+	setupNFS(t)
 	allTests(t, source, dest)
 }
 
 func TestBindMounter(t *testing.T) {
-	setLogger("TestBindMounter", t)
 	setupBindMounter(t)
 	allTests(t, source, dest)
 }
 
 func TestRawMounter(t *testing.T) {
-	setLogger("TestRawMounter", t)
 	setupRawMounter(t)
 	allTests(t, rawSource, rawDest)
 }
@@ -62,10 +44,6 @@ func allTests(t *testing.T, source, dest string) {
 	enoentUnmountTest(t, source, dest)
 	doubleUnmountTest(t, source, dest)
 	enoentUnmountTestWithoutOptions(t, source, dest)
-	doubleMountTest(t, source, dest)
-	mountTestHostMismatchFailure(t, source, dest)
-	mountTestHostMismatchSuccessWithOptions(t, source, dest)
-	mountTestPathMismatchFailureWithOptions(t, source, dest)
 	mountTestParallel(t, source, dest)
 	inspect(t, source, dest)
 	reload(t, source, dest)
@@ -75,9 +53,9 @@ func allTests(t *testing.T, source, dest string) {
 	shutdown(t, source, dest)
 }
 
-func setupNFS(t *testing.T, handleDNSResolution bool) {
+func setupNFS(t *testing.T) {
 	var err error
-	m, err = New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, handleDNSResolution)
+	m, err = New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -87,7 +65,7 @@ func setupNFS(t *testing.T, handleDNSResolution bool) {
 
 func setupBindMounter(t *testing.T) {
 	var err error
-	m, err = New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, false)
+	m, err = New(BindMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -97,7 +75,7 @@ func setupBindMounter(t *testing.T) {
 
 func setupRawMounter(t *testing.T) {
 	var err error
-	m, err = New(RawMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation, false)
+	m, err = New(RawMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, trashLocation)
 	if err != nil {
 		t.Fatalf("Failed to setup test %v", err)
 	}
@@ -120,79 +98,6 @@ func mountTest(t *testing.T, source, dest string) {
 	require.NoError(t, err, "Failed in mount")
 	err = m.Unmount(source, dest, 0, 0, nil)
 	require.NoError(t, err, "Failed in unmount")
-}
-
-func doubleMountTest(t *testing.T, source, dest string) {
-	err := m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
-	require.NoError(t, err, "Failed in mount")
-
-	// Mount point is already created and new request lands on the same mount point
-	err = m.Mount(0, source, dest, "", syscall.MS_BIND, "", 0, nil)
-	require.NoError(t, err, "Unexpected error in mount")
-
-	err = m.Unmount(source, dest, 0, 0, nil)
-	require.NoError(t, err, "Failed in unmount")
-}
-
-func mountTestHostMismatchFailure(t *testing.T, source, dest string) {
-	cleandir("localhost:" + source)
-	cleandir("127.0.0.1:" + source)
-	err := m.Mount(0, "localhost:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
-	require.NoError(t, err, "Failed in mount")
-
-	// Mount point is already created and new request lands on the same mount point
-	// but source paths are different
-	err = m.Mount(0, "127.0.0.1:"+source, dest, "", syscall.MS_BIND, "", 0, nil)
-	// Expected error as source paths are different
-	require.Error(t, err, "Expected error in mount")
-	require.Equal(t, err.Error(), "Mountpath already exists", "Expected \"Mountpath already exists\"")
-
-	err = m.Unmount("localhost:"+source, dest, 0, 0, nil)
-	require.NoError(t, err, "Failed in unmount")
-	shutdown(t, "localhost:"+source, dest)
-	shutdown(t, "127.0.0.1:"+source, dest)
-}
-
-func mountTestHostMismatchSuccessWithOptions(t *testing.T, source, dest string) {
-	opts := make(map[string]string)
-	opts[options.OptionsResolveDNSOnMount] = "true"
-	cleandir("localhost:" + source)
-	cleandir("127.0.0.1:" + source)
-	err := m.Mount(0, "localhost:"+source, dest, "", syscall.MS_BIND, "", 0, opts)
-	require.NoError(t, err, "Failed in mount")
-
-	// Mount point is already created and new request lands on the same mount point
-	// and source paths resolve to same IP with OptionsResolveDNSOnMount
-	err = m.Mount(0, "127.0.0.1:"+source, dest, "", syscall.MS_BIND, "", 0, opts)
-	// Expected success as source paths are different but resolve to same IP
-	require.NoError(t, err, "Failed in mount")
-
-	err = m.Unmount("localhost:"+source, dest, 0, 0, nil)
-	require.NoError(t, err, "Failed in unmount")
-	shutdown(t, "localhost:"+source, dest)
-	shutdown(t, "127.0.0.1:"+source, dest)
-}
-
-func mountTestPathMismatchFailureWithOptions(t *testing.T, source, dest string) {
-	opts := make(map[string]string)
-	opts[options.OptionsResolveDNSOnMount] = "true"
-	cleandir("localhost:" + source + "/path1")
-	cleandir("localhost:" + source + "/path2")
-	err := m.Mount(0, "localhost:"+source+"/path1", dest, "", syscall.MS_BIND, "", 0, nil)
-	require.NoError(t, err, "Failed in mount")
-
-	// Mount point is already created and new request lands on the same mount point
-	// but source paths are different even when NFS server is same.
-	// Unlikely in practice.
-	err = m.Mount(0, "localhost:"+source+"/path2", dest, "", syscall.MS_BIND, "", 0, nil)
-	// Expected error as source paths are different
-	require.Error(t, err, "Expected error in mount")
-	require.Equal(t, err.Error(), "Mountpath already exists", "Expected \"Mountpath already exists\"")
-
-	err = m.Unmount("localhost:"+source+"/path1", dest, 0, 0, nil)
-	require.NoError(t, err, "Failed in unmount")
-	shutdown(t, "localhost:"+source+"/path1", dest)
-	shutdown(t, "localhost:"+source+"/path2", dest)
 }
 
 func enoentUnmountTest(t *testing.T, source, dest string) {
@@ -218,6 +123,7 @@ func enoentUnmountTestWithoutOptions(t *testing.T, source, dest string) {
 	require.Error(t, err, "Failed in unmount, expected an error")
 	syscall.Unmount(dest, 0)
 }
+
 
 // mountTestParallel runs mount and unmount in parallel with serveral dirs
 // in addition, we trigger failed unmount to test race condition in the case
@@ -367,200 +273,4 @@ func makeFile(pathname string) error {
 	}
 
 	return nil
-}
-
-func TestResolveToIPs(t *testing.T) {
-	tests := []struct {
-		hostPath string
-		expected []string
-	}{
-		// Case: Valid hostname with path
-		{"localhost:/path", []string{"127.0.0.1"}},
-
-		// Case: Valid hostname without path
-		{"localhost", []string{"127.0.0.1"}},
-
-		// Case: Invalid hostname
-		{"invalidhost", []string{"invalidhost"}},
-
-		// Case: IP address with path
-		{"192.168.1.1:/path", []string{"192.168.1.1"}},
-
-		// Case: IP address without path
-		{"192.168.1.1", []string{"192.168.1.1"}},
-
-		// Case: Empty string
-		{"", []string{""}},
-	}
-	for _, test := range tests {
-		result := resolveToIPs(test.hostPath)
-		if !areSameIPs(result, test.expected) {
-			t.Errorf("resolveToIPs(%v) = %v; expected %v", test.hostPath, result, test.expected)
-		}
-	}
-}
-func TestAreSameIPs(t *testing.T) {
-	tests := []struct {
-		name     string
-		ips1     []string
-		ips2     []string
-		expected bool
-	}{
-		{
-			name:     "One matching IP",
-			ips1:     []string{"192.168.1.1", "192.168.1.2"},
-			ips2:     []string{"10.0.0.1", "192.168.1.2"},
-			expected: true,
-		},
-		{
-			name:     "No matching IPs",
-			ips1:     []string{"192.168.1.1", "192.168.1.2"},
-			ips2:     []string{"10.0.0.1", "10.0.0.2"},
-			expected: false,
-		},
-		{
-			name:     "Empty second slice",
-			ips1:     []string{"192.168.1.1", "192.168.1.2"},
-			ips2:     []string{},
-			expected: false,
-		},
-		{
-			name:     "Empty first slice",
-			ips1:     []string{},
-			ips2:     []string{"192.168.1.1", "192.168.1.2"},
-			expected: false,
-		},
-		{
-			name:     "Both slices empty",
-			ips1:     []string{},
-			ips2:     []string{},
-			expected: false,
-		},
-		{
-			name:     "Identical IPs in both slices",
-			ips1:     []string{"192.168.1.1", "192.168.1.2"},
-			ips2:     []string{"192.168.1.1", "192.168.1.2"},
-			expected: true,
-		},
-		{
-			name:     "Multiple matches",
-			ips1:     []string{"192.168.1.1", "10.0.0.1"},
-			ips2:     []string{"192.168.1.1", "10.0.0.1"},
-			expected: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := areSameIPs(tt.ips1, tt.ips2)
-			if result != tt.expected {
-				t.Errorf("areSameIPs(%v, %v) = %v; expected %v", tt.ips1, tt.ips2, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestExtractSourcePath(t *testing.T) {
-	tests := []struct {
-		name     string
-		input    string
-		expected string
-	}{
-		{
-			name:     "Single colon with valid suffix",
-			input:    "a:/b",
-			expected: "/b",
-		},
-		{
-			name:     "Colon at the beginning",
-			input:    ":/path",
-			expected: "/path",
-		},
-		{
-			name:     "Multiple colons in string",
-			input:    "path:/to:/resource",
-			expected: "/resource",
-		},
-		{
-			name:     "Colon at the end",
-			input:    "path:/",
-			expected: "/",
-		},
-		{
-			name:     "No colon in string",
-			input:    "noColonHere",
-			expected: "noColonHere",
-		},
-		{
-			name:     "Empty string",
-			input:    "",
-			expected: "",
-		},
-		{
-			name:     "Colon only",
-			input:    ":",
-			expected: ":",
-		},
-		{
-			name:     "Colon followed by space",
-			input:    "path: /to/resource",
-			expected: " /to/resource",
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			result := extractSourcePath(tt.input)
-			if result != tt.expected {
-				t.Errorf("extractSourcePath(%q) = %q; expected %q", tt.input, result, tt.expected)
-			}
-		})
-	}
-}
-
-func TestSafeEmptyTrashDir(t *testing.T) {
-	sched.Init(time.Second)
-	m, err := New(NFSMount, nil, []*regexp.Regexp{regexp.MustCompile("")}, nil, []string{}, "", true)
-	require.NoError(t, err, "Failed to setup test %v", err)
-
-	err = os.MkdirAll("/tmp/safe-empty-trash-dir-tests", 0755)
-	require.NoError(t, err)
-
-	defer func() {
-		err = os.RemoveAll("/tmp/safe-empty-trash-dir-tests")
-		require.NoError(t, err, "Failed to cleanup after test")
-	}()
-
-	// Create files that should not be removed
-	file, err := os.Create("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
-	require.NoError(t, err, "Failed to create file: %v", err)
-	file.Close()
-
-	// Create a symbolic link that should not be removed
-	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt", "/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
-	require.NoError(t, err, "Failed to create symlink: %v", err)
-
-	// Create a file that should be removed
-	file, err = os.Create("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
-	require.NoError(t, err, "Failed to create file: %v", err)
-
-	file.Close()
-
-	// Create a symbolic link
-	err = os.Symlink("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt", "/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
-	require.NoError(t, err, "Failed to create symlink: %v", err)
-
-	err = m.SafeEmptyTrashDir("/tmp/safe-empty-trash-dir-tests/should-remove", "/tmp/safe-empty-trash-dir-tests")
-	require.NoError(t, err, "Failed to empty trash dir %v", err)
-
-	time.Sleep(mountPathRemoveDelay + 5*time.Second)
-
-	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-file.txt")
-	require.True(t, os.IsNotExist(err), "File should be removed")
-	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-remove-symlink.txt")
-	require.True(t, os.IsNotExist(err), "File should be removed")
-	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove.txt")
-	require.NoError(t, err, "File should not be removed")
-	_, err = os.Stat("/tmp/safe-empty-trash-dir-tests/should-not-remove-symlink.txt")
-	require.NoError(t, err, "File should not be removed")
 }
