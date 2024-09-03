@@ -147,7 +147,7 @@ func (d *graphDriver) create(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if err := d.gd.Create(request.ID, request.Parent, &graphdriver.CreateOpts{MountLabel: "", StorageOpt: nil}); err != nil {
+	if err := d.gd.Create(request.ID, request.Parent, "", nil); err != nil {
 		d.errResponse(method, w, err)
 		return
 	}
@@ -184,12 +184,11 @@ func (d *graphDriver) get(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	fs, err := d.gd.Get(request.ID, request.MountLabel)
-	if err != nil {
-		d.errResponse(method, w, err)
+	response.Dir, response.Err = d.gd.Get(request.ID, request.MountLabel)
+	if response.Err != nil {
+		d.errResponse(method, w, response.Err)
 		return
 	}
-	response.Dir = fs.Path()
 	json.NewEncoder(w).Encode(&response)
 }
 
