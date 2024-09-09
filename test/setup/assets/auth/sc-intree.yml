@@ -1,9 +1,0 @@
-kind: StorageClass
-apiVersion: storage.k8s.io/v1beta1
-metadata:
-  name: intree-auth
-provisioner: kubernetes.io/portworx-volume
-parameters:
-  repl: "1"
-  openstorage.io/auth-secret-name: k8s-user
-  openstorage.io/auth-secret-namespace: openstorage
