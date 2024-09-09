@@ -16,11 +16,16 @@ limitations under the License.
 package manager
 
 import (
+	"container/list"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
 
+	"github.com/golang/mock/gomock"
+	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/cluster"
+	"github.com/libopenstorage/openstorage/cluster/mock"
 	"github.com/libopenstorage/openstorage/config"
 	"github.com/libopenstorage/openstorage/pkg/auth"
 	"github.com/libopenstorage/openstorage/pkg/auth/systemtoken"
@@ -113,4 +118,38 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 	assert.True(t, auth.IsJwtToken(tokenResp.Token))
 
 	cleanup()
+}
+
+func TestRemoveOnlineNode(t *testing.T) {
+	const testNodeID = "test id"
+	mockErr := errors.New("mock err")
+	ctrl := gomock.NewController(t)
+	mockListener := mock.NewMockClusterListener(ctrl)
+	nodeToRemove := api.Node{
+		Id:     testNodeID,
+		Status: api.Status_STATUS_OK,
+	}
+	clusterListener := list.New()
+	clusterListener.PushBack(mockListener)
+	testManager := ClusterManager{
+		nodeCache: map[string]api.Node{
+			testNodeID: nodeToRemove,
+		},
+		listeners: clusterListener,
+	}
+
+	kv, err := kvdb.New(mem.Name, "test", []string{}, nil, kvdb.LogFatalErrorCB)
+	assert.NoError(t, err)
+	err = kvdb.SetInstance(kv)
+	assert.NoError(t, err)
+
+	err = testManager.Remove([]api.Node{nodeToRemove}, false)
+	assert.ErrorContains(t, err, fmt.Sprintf(decommissionErrMsg, testNodeID))
+
+	mockListener.EXPECT().String().Return(testNodeID)
+	mockListener.EXPECT().MarkNodeDown(gomock.Any()).Return(mockErr)
+
+	err = testManager.Remove([]api.Node{nodeToRemove}, true)
+	assert.ErrorIs(t, err, mockErr)
+
 }
