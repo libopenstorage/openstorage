@@ -1036,7 +1036,7 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 			snapRes.VolumeCreateResponse.Id = res.GetSnapshotId()
 		}
 	} else {
-		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name})
+		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name, AdditionalLabels: snapReq.Locator.VolumeLabels})
 		if err != nil {
 			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
 				Error: err.Error(),
