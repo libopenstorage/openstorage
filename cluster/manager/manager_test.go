@@ -143,9 +143,11 @@ func TestRemoveOnlineNode(t *testing.T) {
 	err = kvdb.SetInstance(kv)
 	assert.NoError(t, err)
 
+	// when force flag is false, node status check should take precedence 
 	err = testManager.Remove([]api.Node{nodeToRemove}, false)
 	assert.ErrorContains(t, err, fmt.Sprintf(decommissionErrMsg, testNodeID))
 
+	// when force flag is true, we shouldn't abort due to node status
 	mockListener.EXPECT().String().Return(testNodeID)
 	mockListener.EXPECT().MarkNodeDown(gomock.Any()).Return(mockErr)
 
