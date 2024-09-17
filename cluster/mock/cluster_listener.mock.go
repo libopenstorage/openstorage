@@ -5,38 +5,37 @@
 package mock
 
 import (
-	reflect "reflect"
-	time "time"
-
 	gomock "github.com/golang/mock/gomock"
 	api "github.com/libopenstorage/openstorage/api"
 	cluster "github.com/libopenstorage/openstorage/cluster"
+	reflect "reflect"
+	time "time"
 )
 
-// MockClusterListener is a mock of ClusterListener interface.
+// MockClusterListener is a mock of ClusterListener interface
 type MockClusterListener struct {
 	ctrl     *gomock.Controller
 	recorder *MockClusterListenerMockRecorder
 }
 
-// MockClusterListenerMockRecorder is the mock recorder for MockClusterListener.
+// MockClusterListenerMockRecorder is the mock recorder for MockClusterListener
 type MockClusterListenerMockRecorder struct {
 	mock *MockClusterListener
 }
 
-// NewMockClusterListener creates a new mock instance.
+// NewMockClusterListener creates a new mock instance
 func NewMockClusterListener(ctrl *gomock.Controller) *MockClusterListener {
 	mock := &MockClusterListener{ctrl: ctrl}
 	mock.recorder = &MockClusterListenerMockRecorder{mock}
 	return mock
 }
 
-// EXPECT returns an object that allows the caller to indicate expected use.
+// EXPECT returns an object that allows the caller to indicate expected use
 func (m *MockClusterListener) EXPECT() *MockClusterListenerMockRecorder {
 	return m.recorder
 }
 
-// Add mocks base method.
+// Add mocks base method
 func (m *MockClusterListener) Add(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Add", arg0)
@@ -44,13 +43,13 @@ func (m *MockClusterListener) Add(arg0 *api.Node) error {
 	return ret0
 }
 
-// Add indicates an expected call of Add.
+// Add indicates an expected call of Add
 func (mr *MockClusterListenerMockRecorder) Add(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Add", reflect.TypeOf((*MockClusterListener)(nil).Add), arg0)
 }
 
-// CanNodeJoin mocks base method.
+// CanNodeJoin mocks base method
 func (m *MockClusterListener) CanNodeJoin(arg0 *api.Node, arg1 *cluster.ClusterInfo, arg2 bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CanNodeJoin", arg0, arg1, arg2)
@@ -58,13 +57,13 @@ func (m *MockClusterListener) CanNodeJoin(arg0 *api.Node, arg1 *cluster.ClusterI
 	return ret0
 }
 
-// CanNodeJoin indicates an expected call of CanNodeJoin.
+// CanNodeJoin indicates an expected call of CanNodeJoin
 func (mr *MockClusterListenerMockRecorder) CanNodeJoin(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanNodeJoin", reflect.TypeOf((*MockClusterListener)(nil).CanNodeJoin), arg0, arg1, arg2)
 }
 
-// CanNodeRemove mocks base method.
+// CanNodeRemove mocks base method
 func (m *MockClusterListener) CanNodeRemove(arg0 *api.Node) (string, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CanNodeRemove", arg0)
@@ -73,13 +72,13 @@ func (m *MockClusterListener) CanNodeRemove(arg0 *api.Node) (string, error) {
 	return ret0, ret1
 }
 
-// CanNodeRemove indicates an expected call of CanNodeRemove.
+// CanNodeRemove indicates an expected call of CanNodeRemove
 func (mr *MockClusterListenerMockRecorder) CanNodeRemove(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanNodeRemove", reflect.TypeOf((*MockClusterListener)(nil).CanNodeRemove), arg0)
 }
 
-// CleanupInit mocks base method.
+// CleanupInit mocks base method
 func (m *MockClusterListener) CleanupInit(arg0 *api.Node, arg1 *cluster.ClusterInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CleanupInit", arg0, arg1)
@@ -87,13 +86,13 @@ func (m *MockClusterListener) CleanupInit(arg0 *api.Node, arg1 *cluster.ClusterI
 	return ret0
 }
 
-// CleanupInit indicates an expected call of CleanupInit.
+// CleanupInit indicates an expected call of CleanupInit
 func (mr *MockClusterListenerMockRecorder) CleanupInit(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CleanupInit", reflect.TypeOf((*MockClusterListener)(nil).CleanupInit), arg0, arg1)
 }
 
-// ClusterInit mocks base method.
+// ClusterInit mocks base method
 func (m *MockClusterListener) ClusterInit(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ClusterInit", arg0)
@@ -101,13 +100,13 @@ func (m *MockClusterListener) ClusterInit(arg0 *api.Node) error {
 	return ret0
 }
 
-// ClusterInit indicates an expected call of ClusterInit.
+// ClusterInit indicates an expected call of ClusterInit
 func (mr *MockClusterListenerMockRecorder) ClusterInit(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ClusterInit", reflect.TypeOf((*MockClusterListener)(nil).ClusterInit), arg0)
 }
 
-// CreatePair mocks base method.
+// CreatePair mocks base method
 func (m *MockClusterListener) CreatePair(arg0 *api.ClusterPairCreateRequest, arg1 *api.ClusterPairProcessResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "CreatePair", arg0, arg1)
@@ -115,13 +114,13 @@ func (m *MockClusterListener) CreatePair(arg0 *api.ClusterPairCreateRequest, arg
 	return ret0
 }
 
-// CreatePair indicates an expected call of CreatePair.
+// CreatePair indicates an expected call of CreatePair
 func (mr *MockClusterListenerMockRecorder) CreatePair(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CreatePair", reflect.TypeOf((*MockClusterListener)(nil).CreatePair), arg0, arg1)
 }
 
-// Enumerate mocks base method.
+// Enumerate mocks base method
 func (m *MockClusterListener) Enumerate(arg0 *api.Cluster) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Enumerate", arg0)
@@ -129,13 +128,13 @@ func (m *MockClusterListener) Enumerate(arg0 *api.Cluster) error {
 	return ret0
 }
 
-// Enumerate indicates an expected call of Enumerate.
+// Enumerate indicates an expected call of Enumerate
 func (mr *MockClusterListenerMockRecorder) Enumerate(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Enumerate", reflect.TypeOf((*MockClusterListener)(nil).Enumerate), arg0)
 }
 
-// EnumerateAlerts mocks base method.
+// EnumerateAlerts mocks base method
 func (m *MockClusterListener) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.ResourceType) (*api.Alerts, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EnumerateAlerts", arg0, arg1, arg2)
@@ -144,13 +143,13 @@ func (m *MockClusterListener) EnumerateAlerts(arg0, arg1 time.Time, arg2 api.Res
 	return ret0, ret1
 }
 
-// EnumerateAlerts indicates an expected call of EnumerateAlerts.
+// EnumerateAlerts indicates an expected call of EnumerateAlerts
 func (mr *MockClusterListenerMockRecorder) EnumerateAlerts(arg0, arg1, arg2 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EnumerateAlerts", reflect.TypeOf((*MockClusterListener)(nil).EnumerateAlerts), arg0, arg1, arg2)
 }
 
-// EraseAlert mocks base method.
+// EraseAlert mocks base method
 func (m *MockClusterListener) EraseAlert(arg0 api.ResourceType, arg1 int64) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "EraseAlert", arg0, arg1)
@@ -158,13 +157,13 @@ func (m *MockClusterListener) EraseAlert(arg0 api.ResourceType, arg1 int64) erro
 	return ret0
 }
 
-// EraseAlert indicates an expected call of EraseAlert.
+// EraseAlert indicates an expected call of EraseAlert
 func (mr *MockClusterListenerMockRecorder) EraseAlert(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EraseAlert", reflect.TypeOf((*MockClusterListener)(nil).EraseAlert), arg0, arg1)
 }
 
-// GetPairMode mocks base method.
+// GetPairMode mocks base method
 func (m *MockClusterListener) GetPairMode() api.ClusterPairMode_Mode {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetPairMode")
@@ -172,13 +171,13 @@ func (m *MockClusterListener) GetPairMode() api.ClusterPairMode_Mode {
 	return ret0
 }
 
-// GetPairMode indicates an expected call of GetPairMode.
+// GetPairMode indicates an expected call of GetPairMode
 func (mr *MockClusterListenerMockRecorder) GetPairMode() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPairMode", reflect.TypeOf((*MockClusterListener)(nil).GetPairMode))
 }
 
-// Halt mocks base method.
+// Halt mocks base method
 func (m *MockClusterListener) Halt(arg0 *api.Node, arg1 *cluster.ClusterInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Halt", arg0, arg1)
@@ -186,13 +185,13 @@ func (m *MockClusterListener) Halt(arg0 *api.Node, arg1 *cluster.ClusterInfo) er
 	return ret0
 }
 
-// Halt indicates an expected call of Halt.
+// Halt indicates an expected call of Halt
 func (mr *MockClusterListenerMockRecorder) Halt(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Halt", reflect.TypeOf((*MockClusterListener)(nil).Halt), arg0, arg1)
 }
 
-// Init mocks base method.
+// Init mocks base method
 func (m *MockClusterListener) Init(arg0 *api.Node, arg1 *cluster.ClusterInfo) (cluster.FinalizeInitCb, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Init", arg0, arg1)
@@ -201,13 +200,13 @@ func (m *MockClusterListener) Init(arg0 *api.Node, arg1 *cluster.ClusterInfo) (c
 	return ret0, ret1
 }
 
-// Init indicates an expected call of Init.
+// Init indicates an expected call of Init
 func (mr *MockClusterListenerMockRecorder) Init(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Init", reflect.TypeOf((*MockClusterListener)(nil).Init), arg0, arg1)
 }
 
-// Join mocks base method.
+// Join mocks base method
 func (m *MockClusterListener) Join(arg0 *api.Node, arg1 *cluster.ClusterInitState) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Join", arg0, arg1)
@@ -215,13 +214,13 @@ func (m *MockClusterListener) Join(arg0 *api.Node, arg1 *cluster.ClusterInitStat
 	return ret0
 }
 
-// Join indicates an expected call of Join.
+// Join indicates an expected call of Join
 func (mr *MockClusterListenerMockRecorder) Join(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Join", reflect.TypeOf((*MockClusterListener)(nil).Join), arg0, arg1)
 }
 
-// JoinComplete mocks base method.
+// JoinComplete mocks base method
 func (m *MockClusterListener) JoinComplete(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "JoinComplete", arg0)
@@ -229,13 +228,13 @@ func (m *MockClusterListener) JoinComplete(arg0 *api.Node) error {
 	return ret0
 }
 
-// JoinComplete indicates an expected call of JoinComplete.
+// JoinComplete indicates an expected call of JoinComplete
 func (mr *MockClusterListenerMockRecorder) JoinComplete(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "JoinComplete", reflect.TypeOf((*MockClusterListener)(nil).JoinComplete), arg0)
 }
 
-// Leave mocks base method.
+// Leave mocks base method
 func (m *MockClusterListener) Leave(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Leave", arg0)
@@ -243,13 +242,13 @@ func (m *MockClusterListener) Leave(arg0 *api.Node) error {
 	return ret0
 }
 
-// Leave indicates an expected call of Leave.
+// Leave indicates an expected call of Leave
 func (mr *MockClusterListenerMockRecorder) Leave(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Leave", reflect.TypeOf((*MockClusterListener)(nil).Leave), arg0)
 }
 
-// ListenerData mocks base method.
+// ListenerData mocks base method
 func (m *MockClusterListener) ListenerData() map[string]interface{} {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListenerData")
@@ -257,13 +256,13 @@ func (m *MockClusterListener) ListenerData() map[string]interface{} {
 	return ret0
 }
 
-// ListenerData indicates an expected call of ListenerData.
+// ListenerData indicates an expected call of ListenerData
 func (mr *MockClusterListenerMockRecorder) ListenerData() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListenerData", reflect.TypeOf((*MockClusterListener)(nil).ListenerData))
 }
 
-// ListenerPeerStatus mocks base method.
+// ListenerPeerStatus mocks base method
 func (m *MockClusterListener) ListenerPeerStatus() map[string]api.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListenerPeerStatus")
@@ -271,13 +270,13 @@ func (m *MockClusterListener) ListenerPeerStatus() map[string]api.Status {
 	return ret0
 }
 
-// ListenerPeerStatus indicates an expected call of ListenerPeerStatus.
+// ListenerPeerStatus indicates an expected call of ListenerPeerStatus
 func (mr *MockClusterListenerMockRecorder) ListenerPeerStatus() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListenerPeerStatus", reflect.TypeOf((*MockClusterListener)(nil).ListenerPeerStatus))
 }
 
-// ListenerStatus mocks base method.
+// ListenerStatus mocks base method
 func (m *MockClusterListener) ListenerStatus() api.Status {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListenerStatus")
@@ -285,13 +284,13 @@ func (m *MockClusterListener) ListenerStatus() api.Status {
 	return ret0
 }
 
-// ListenerStatus indicates an expected call of ListenerStatus.
+// ListenerStatus indicates an expected call of ListenerStatus
 func (mr *MockClusterListenerMockRecorder) ListenerStatus() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListenerStatus", reflect.TypeOf((*MockClusterListener)(nil).ListenerStatus))
 }
 
-// MarkNodeDown mocks base method.
+// MarkNodeDown mocks base method
 func (m *MockClusterListener) MarkNodeDown(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "MarkNodeDown", arg0)
@@ -299,25 +298,25 @@ func (m *MockClusterListener) MarkNodeDown(arg0 *api.Node) error {
 	return ret0
 }
 
-// MarkNodeDown indicates an expected call of MarkNodeDown.
+// MarkNodeDown indicates an expected call of MarkNodeDown
 func (mr *MockClusterListenerMockRecorder) MarkNodeDown(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkNodeDown", reflect.TypeOf((*MockClusterListener)(nil).MarkNodeDown), arg0)
 }
 
-// MarkNodeForRemoval mocks base method.
+// MarkNodeForRemoval mocks base method
 func (m *MockClusterListener) MarkNodeForRemoval(arg0 *api.Node) {
 	m.ctrl.T.Helper()
 	m.ctrl.Call(m, "MarkNodeForRemoval", arg0)
 }
 
-// MarkNodeForRemoval indicates an expected call of MarkNodeForRemoval.
+// MarkNodeForRemoval indicates an expected call of MarkNodeForRemoval
 func (mr *MockClusterListenerMockRecorder) MarkNodeForRemoval(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "MarkNodeForRemoval", reflect.TypeOf((*MockClusterListener)(nil).MarkNodeForRemoval), arg0)
 }
 
-// NodeInspect mocks base method.
+// NodeInspect mocks base method
 func (m *MockClusterListener) NodeInspect(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "NodeInspect", arg0)
@@ -325,13 +324,13 @@ func (m *MockClusterListener) NodeInspect(arg0 *api.Node) error {
 	return ret0
 }
 
-// NodeInspect indicates an expected call of NodeInspect.
+// NodeInspect indicates an expected call of NodeInspect
 func (mr *MockClusterListenerMockRecorder) NodeInspect(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NodeInspect", reflect.TypeOf((*MockClusterListener)(nil).NodeInspect), arg0)
 }
 
-// PreJoin mocks base method.
+// PreJoin mocks base method
 func (m *MockClusterListener) PreJoin(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "PreJoin", arg0)
@@ -339,13 +338,13 @@ func (m *MockClusterListener) PreJoin(arg0 *api.Node) error {
 	return ret0
 }
 
-// PreJoin indicates an expected call of PreJoin.
+// PreJoin indicates an expected call of PreJoin
 func (mr *MockClusterListenerMockRecorder) PreJoin(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PreJoin", reflect.TypeOf((*MockClusterListener)(nil).PreJoin), arg0)
 }
 
-// ProcessPairRequest mocks base method.
+// ProcessPairRequest mocks base method
 func (m *MockClusterListener) ProcessPairRequest(arg0 *api.ClusterPairProcessRequest, arg1 *api.ClusterPairProcessResponse) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ProcessPairRequest", arg0, arg1)
@@ -353,13 +352,13 @@ func (m *MockClusterListener) ProcessPairRequest(arg0 *api.ClusterPairProcessReq
 	return ret0
 }
 
-// ProcessPairRequest indicates an expected call of ProcessPairRequest.
+// ProcessPairRequest indicates an expected call of ProcessPairRequest
 func (mr *MockClusterListenerMockRecorder) ProcessPairRequest(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProcessPairRequest", reflect.TypeOf((*MockClusterListener)(nil).ProcessPairRequest), arg0, arg1)
 }
 
-// QuorumMember mocks base method.
+// QuorumMember mocks base method
 func (m *MockClusterListener) QuorumMember(arg0 *api.Node) bool {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "QuorumMember", arg0)
@@ -367,13 +366,13 @@ func (m *MockClusterListener) QuorumMember(arg0 *api.Node) bool {
 	return ret0
 }
 
-// QuorumMember indicates an expected call of QuorumMember.
+// QuorumMember indicates an expected call of QuorumMember
 func (mr *MockClusterListenerMockRecorder) QuorumMember(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "QuorumMember", reflect.TypeOf((*MockClusterListener)(nil).QuorumMember), arg0)
 }
 
-// Remove mocks base method.
+// Remove mocks base method
 func (m *MockClusterListener) Remove(arg0 *api.Node, arg1 bool) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Remove", arg0, arg1)
@@ -381,13 +380,13 @@ func (m *MockClusterListener) Remove(arg0 *api.Node, arg1 bool) error {
 	return ret0
 }
 
-// Remove indicates an expected call of Remove.
+// Remove indicates an expected call of Remove
 func (mr *MockClusterListenerMockRecorder) Remove(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Remove", reflect.TypeOf((*MockClusterListener)(nil).Remove), arg0, arg1)
 }
 
-// String mocks base method.
+// String mocks base method
 func (m *MockClusterListener) String() string {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "String")
@@ -395,13 +394,13 @@ func (m *MockClusterListener) String() string {
 	return ret0
 }
 
-// String indicates an expected call of String.
+// String indicates an expected call of String
 func (mr *MockClusterListenerMockRecorder) String() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockClusterListener)(nil).String))
 }
 
-// Update mocks base method.
+// Update mocks base method
 func (m *MockClusterListener) Update(arg0 *api.Node) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Update", arg0)
@@ -409,13 +408,13 @@ func (m *MockClusterListener) Update(arg0 *api.Node) error {
 	return ret0
 }
 
-// Update indicates an expected call of Update.
+// Update indicates an expected call of Update
 func (mr *MockClusterListenerMockRecorder) Update(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockClusterListener)(nil).Update), arg0)
 }
 
-// UpdateCluster mocks base method.
+// UpdateCluster mocks base method
 func (m *MockClusterListener) UpdateCluster(arg0 *api.Node, arg1 *cluster.ClusterInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "UpdateCluster", arg0, arg1)
@@ -423,13 +422,13 @@ func (m *MockClusterListener) UpdateCluster(arg0 *api.Node, arg1 *cluster.Cluste
 	return ret0
 }
 
-// UpdateCluster indicates an expected call of UpdateCluster.
+// UpdateCluster indicates an expected call of UpdateCluster
 func (mr *MockClusterListenerMockRecorder) UpdateCluster(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UpdateCluster", reflect.TypeOf((*MockClusterListener)(nil).UpdateCluster), arg0, arg1)
 }
 
-// ValidatePair mocks base method.
+// ValidatePair mocks base method
 func (m *MockClusterListener) ValidatePair(arg0 *api.ClusterPairInfo) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ValidatePair", arg0)
@@ -437,7 +436,7 @@ func (m *MockClusterListener) ValidatePair(arg0 *api.ClusterPairInfo) error {
 	return ret0
 }
 
-// ValidatePair indicates an expected call of ValidatePair.
+// ValidatePair indicates an expected call of ValidatePair
 func (mr *MockClusterListenerMockRecorder) ValidatePair(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ValidatePair", reflect.TypeOf((*MockClusterListener)(nil).ValidatePair), arg0)
