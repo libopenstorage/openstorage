@@ -1,6 +1,7 @@
 module github.com/libopenstorage/openstorage
 
-go 1.17
+go 1.22.6
+toolchain go1.22.6
 
 require (
 	bazil.org/fuse v0.0.0-20160317181031-37bfa8be9291
