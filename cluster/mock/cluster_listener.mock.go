@@ -64,18 +64,18 @@ func (mr *MockClusterListenerMockRecorder) CanNodeJoin(arg0, arg1, arg2 interfac
 }
 
 // CanNodeRemove mocks base method
-func (m *MockClusterListener) CanNodeRemove(arg0 *api.Node) (string, error) {
+func (m *MockClusterListener) CanNodeRemove(arg0 *api.Node, arg1 bool) (string, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "CanNodeRemove", arg0)
+	ret := m.ctrl.Call(m, "CanNodeRemove", arg0, arg1)
 	ret0, _ := ret[0].(string)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // CanNodeRemove indicates an expected call of CanNodeRemove
-func (mr *MockClusterListenerMockRecorder) CanNodeRemove(arg0 interface{}) *gomock.Call {
+func (mr *MockClusterListenerMockRecorder) CanNodeRemove(arg0, arg1 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanNodeRemove", reflect.TypeOf((*MockClusterListener)(nil).CanNodeRemove), arg0)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CanNodeRemove", reflect.TypeOf((*MockClusterListener)(nil).CanNodeRemove), arg0, arg1)
 }
 
 // CleanupInit mocks base method
