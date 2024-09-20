@@ -27,6 +27,8 @@ const (
 var (
 	// speedUp advances the clock faster for tests.
 	speedUp = false
+	// speedUpIntervalForUT overrides the interval of schedules in unit tests; no-op if set to 0
+	speedUpIntervalForUT = time.Duration(0)
 )
 
 // SpeedUp advances teh clock faster for tests.
@@ -36,6 +38,10 @@ func SpeedUp() {
 
 func inSpeedUp() bool {
 	return speedUp
+}
+
+func SpeedUpForUT(duration time.Duration) {
+	speedUpIntervalForUT = duration
 }
 
 type IntervalSpec struct {
@@ -560,6 +566,8 @@ func (p RetainIntervalImpl) nextAfter(t time.Time) time.Time {
 	newTime := p.iv.nextAfter(t)
 	if inSpeedUp() {
 		return t.Add(time.Minute)
+	} else if speedUpIntervalForUT != time.Duration(0) {
+		return t.Add(speedUpIntervalForUT)
 	}
 	return newTime
 }
