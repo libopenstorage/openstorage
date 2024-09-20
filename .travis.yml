@@ -1,10 +1,9 @@
 sudo: required
-dist: bionic
 services:
   - docker
 language: go
 go:
-  - 1.22.6
+  - 1.19
 install:
   - go install github.com/vbatts/git-validation@v1.1.0
   - curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
