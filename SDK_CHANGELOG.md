@@ -2,6 +2,10 @@
 
 ## Releases
 
+### v0.101.54 - (09/23/2024)
+
+* Revert verify-checksum changes
+
 ### v0.101.53 - (04/30/2024)
 
 * Added flag ResumeFromSavedOffset to verify-checksum start command
