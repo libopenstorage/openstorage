@@ -1006,51 +1006,6 @@ func (mr *MockVolumeDriverMockRecorder) UsedSize(arg0 interface{}) *gomock.Call 
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "UsedSize", reflect.TypeOf((*MockVolumeDriver)(nil).UsedSize), arg0)
 }
 
-// VerifyChecksumStart mocks base method
-func (m *MockVolumeDriver) VerifyChecksumStart(arg0 *api.SdkVerifyChecksumStartRequest) (*api.SdkVerifyChecksumStartResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyChecksumStart", arg0)
-	ret0, _ := ret[0].(*api.SdkVerifyChecksumStartResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// VerifyChecksumStart indicates an expected call of VerifyChecksumStart
-func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStart(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStart", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStart), arg0)
-}
-
-// VerifyChecksumStatus mocks base method
-func (m *MockVolumeDriver) VerifyChecksumStatus(arg0 *api.SdkVerifyChecksumStatusRequest) (*api.SdkVerifyChecksumStatusResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyChecksumStatus", arg0)
-	ret0, _ := ret[0].(*api.SdkVerifyChecksumStatusResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// VerifyChecksumStatus indicates an expected call of VerifyChecksumStatus
-func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStatus(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStatus", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStatus), arg0)
-}
-
-// VerifyChecksumStop mocks base method
-func (m *MockVolumeDriver) VerifyChecksumStop(arg0 *api.SdkVerifyChecksumStopRequest) (*api.SdkVerifyChecksumStopResponse, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "VerifyChecksumStop", arg0)
-	ret0, _ := ret[0].(*api.SdkVerifyChecksumStopResponse)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// VerifyChecksumStop indicates an expected call of VerifyChecksumStop
-func (mr *MockVolumeDriverMockRecorder) VerifyChecksumStop(arg0 interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "VerifyChecksumStop", reflect.TypeOf((*MockVolumeDriver)(nil).VerifyChecksumStop), arg0)
-}
-
 // Version mocks base method
 func (m *MockVolumeDriver) Version() (*api.StorageVersion, error) {
 	m.ctrl.T.Helper()

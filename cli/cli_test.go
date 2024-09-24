@@ -47,8 +47,7 @@ func TestCmdMarshalProto(t *testing.T) {
  "auto_fstrim": false,
  "fa_create_options": "",
  "near_sync": false,
- "near_sync_replication_strategy": "NEAR_SYNC_STRATEGY_NONE",
- "checksum_clone_id": ""
+ "near_sync_replication_strategy": "NEAR_SYNC_STRATEGY_NONE"
 }`,
 		data,
 	)
