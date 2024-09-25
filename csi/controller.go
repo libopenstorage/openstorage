@@ -1138,12 +1138,12 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		TaskId: csiSnapshotID,
 	})
 
-	isSnapshotIDPresentInCloud := true
+	isSnapshotIDPresentInCloud := false
 	if backupStatus != nil {
 		_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
 	}
 	if !isSnapshotIDPresentInCloud {
-		resp, err = s.deleteLocalSnapshot(ctx, req)
+		return s.deleteLocalSnapshot(ctx, req)
 	}
 
 	if err != nil {

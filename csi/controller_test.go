@@ -3334,6 +3334,12 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
+	s.mockCloudBackupClient.
+		EXPECT().
+		Status(gomock.Any(), gomock.Any()).
+		Return(nil).
+		Times(1)
+
 	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
 		SnapshotId: id,
 		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
@@ -3362,7 +3368,7 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 		s.mockCloudBackupClient.
 			EXPECT().
 			Status(gomock.Any(), gomock.Any()).
-			Return(nil).
+			Return(nil, nil).
 			Times(1),
 
 		s.MockDriver().

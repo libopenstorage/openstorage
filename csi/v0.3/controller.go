@@ -108,7 +108,6 @@ func (s *OsdCsiServer) ControllerUnpublishVolume(
 // Note: The method used here to return errors is still not part of the spec.
 // See: https://github.com/container-storage-interface/spec/pull/115
 // Discussion:  https://groups.google.com/forum/#!topic/kubernetes-sig-storage-wg-csi/TpTrNFbRa1I
-//
 func (s *OsdCsiServer) ValidateVolumeCapabilities(
 	ctx context.Context,
 	req *csi.ValidateVolumeCapabilitiesRequest,
