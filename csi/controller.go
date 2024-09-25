@@ -1020,8 +1020,8 @@ func (s *OsdCsiServer) createCloudBackup(
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
-	if ctx.Value(openStorageBackupClient) != nil {
-		cloudBackupClient = ctx.Value(openStorageBackupClient).(api.OpenStorageCloudBackupClient)
+	if s.cloudBackupClient != nil {
+		cloudBackupClient = s.cloudBackupClient
 	} else {
 		// Get grpc connection
 		conn, err := s.getRemoteConn(ctx)
@@ -1112,8 +1112,8 @@ func (s *OsdCsiServer) DeleteSnapshot(
 ) (resp *csi.DeleteSnapshotResponse, err error) {
 	// Get grpc connection
 	var cloudBackupClient api.OpenStorageCloudBackupClient
-	if ctx.Value(openStorageBackupClient) != nil {
-		cloudBackupClient = ctx.Value(openStorageBackupClient).(api.OpenStorageCloudBackupClient)
+	if s.cloudBackupClient != nil {
+		cloudBackupClient = s.cloudBackupClient
 	} else {
 		// Get grpc connection
 		conn, err := s.getRemoteConn(ctx)

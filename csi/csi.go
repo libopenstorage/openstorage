@@ -93,6 +93,7 @@ type OsdCsiServer struct {
 	csiDriverName      string
 	allowInlineVolumes bool
 	roundRobinBalancer loadbalancer.Balancer
+	cloudBackupClient  api.OpenStorageCloudBackupClient
 	config             *OsdCsiServerConfig
 	autoRecoverStopCh  chan struct{}
 	stopCleanupCh      chan bool

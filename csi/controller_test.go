@@ -3304,14 +3304,11 @@ func TestControllerCreateSnapshot(t *testing.T) {
 
 func TestControllerDeleteSnapshotBadParameters(t *testing.T) {
 	// Create server and client connection
-	ctrl := gomock.NewController(t)
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
 
-	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
-	ctx := context.WithValue(context.Background(), openStorageBackupClient, mockCloudBackupClient)
-	_, err := c.DeleteSnapshot(ctx, &csi.DeleteSnapshotRequest{
+	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
 	assert.Error(t, err)
@@ -3326,8 +3323,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	ctrl := gomock.NewController(t)
-
+	
 	id := "id"
 	// Snapshot already exists
 	s.MockDriver().
@@ -3338,10 +3334,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
-	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
-	ctx := context.WithValue(context.Background(), openStorageBackupClient, mockCloudBackupClient)
-
-	_, err := c.DeleteSnapshot(ctx, &csi.DeleteSnapshotRequest{
+	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
 		SnapshotId: id,
 		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
@@ -3856,13 +3849,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 				specHandler:        spec.NewSpecHandler(),
 				mu:                 sync.Mutex{},
 				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
 			}
 
 			doClientErr := tt.SnapshotName == "remote-client-error"
 
 			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
-			ctx = context.WithValue(ctx, openStorageBackupClient, mockCloudBackupClient)
-
 			got, err := s.CreateSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OsdCsiServer.CreateSnapshot() error = %v, wantErr %v", err, tt.wantErr)
@@ -3977,12 +3969,12 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 				specHandler:        spec.NewSpecHandler(),
 				mu:                 sync.Mutex{},
 				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
 			}
 
 			doClientErr := tt.SnapshotName == "remote-client-error"
 
 			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
-			ctx = context.WithValue(ctx, openStorageBackupClient, mockCloudBackupClient)
 
 			got, err := s.DeleteSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
