@@ -1127,11 +1127,6 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		cloudBackupClient = api.NewOpenStorageCloudBackupClient(conn)
 	}
 
-	cloudBackupDriverUnavailable := sdk.IsErrorUnavailable(err)
-	if err != nil && !cloudBackupDriverUnavailable {
-		return nil, err
-	}
-
 	csiSnapshotID := req.GetSnapshotId()
 	if len(csiSnapshotID) == 0 {
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")

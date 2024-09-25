@@ -3304,11 +3304,14 @@ func TestControllerCreateSnapshot(t *testing.T) {
 
 func TestControllerDeleteSnapshotBadParameters(t *testing.T) {
 	// Create server and client connection
+	ctrl := gomock.NewController(t)
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
 
-	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+	ctx := context.WithValue(context.Background(), openStorageBackupClient, mockCloudBackupClient)
+	_, err := c.DeleteSnapshot(ctx, &csi.DeleteSnapshotRequest{
 		Secrets: map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
 	assert.Error(t, err)
@@ -3323,6 +3326,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
+	ctrl := gomock.NewController(t)
 
 	id := "id"
 	// Snapshot already exists
@@ -3334,7 +3338,10 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
-	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
+	mockCloudBackupClient := mock.NewMockOpenStorageCloudBackupClient(ctrl)
+	ctx := context.WithValue(context.Background(), openStorageBackupClient, mockCloudBackupClient)
+
+	_, err := c.DeleteSnapshot(ctx, &csi.DeleteSnapshotRequest{
 		SnapshotId: id,
 		Secrets:    map[string]string{authsecrets.SecretTokenKey: systemUserToken},
 	})
