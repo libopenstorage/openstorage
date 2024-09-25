@@ -62,6 +62,7 @@ type OsdCsiServerConfig struct {
 	DriverName         string
 	Cluster            cluster.Cluster
 	RoundRobinBalancer loadbalancer.Balancer
+	CloudBackupClient  api.OpenStorageCloudBackupClient
 	SdkUds             string
 	SdkPort            string
 	SchedulerName      string
@@ -137,6 +138,7 @@ func NewOsdCsiServer(config *OsdCsiServerConfig) (grpcserver.Server, error) {
 		roundRobinBalancer: config.RoundRobinBalancer,
 		config:             config,
 		autoRecoverStopCh:  make(chan struct{}),
+		cloudBackupClient:  config.CloudBackupClient,
 	}, nil
 }
 
