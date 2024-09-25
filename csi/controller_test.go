@@ -3323,7 +3323,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	s := newTestServer(t)
 	defer s.Stop()
 	c := csi.NewControllerClient(s.Conn())
-	
+
 	id := "id"
 	// Snapshot already exists
 	s.MockDriver().
@@ -3358,6 +3358,11 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 			Return([]*api.Volume{
 				{},
 			}, nil).
+			Times(1),
+		s.mockCloudBackupClient.
+			EXPECT().
+			Status(gomock.Any(), gomock.Any()).
+			Return(nil).
 			Times(1),
 
 		s.MockDriver().
