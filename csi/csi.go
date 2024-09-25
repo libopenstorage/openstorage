@@ -93,7 +93,6 @@ type OsdCsiServer struct {
 	csiDriverName      string
 	allowInlineVolumes bool
 	roundRobinBalancer loadbalancer.Balancer
-	cloudBackupClient  api.OpenStorageCloudBackupClient
 	config             *OsdCsiServerConfig
 	autoRecoverStopCh  chan struct{}
 	stopCleanupCh      chan bool
@@ -160,30 +159,7 @@ func (s *OsdCsiServer) getConn() (*grpc.ClientConn, error) {
 	return s.conn, nil
 }
 
-func (s *OsdCsiServer) getBackupStorageClient() (*grpc.ClientConn, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	if s.conn == nil {
-		var err error
-		fmt.Println("Connecting to", s.sdkUds)
-		s.conn, err = grpcserver.Connect(
-			s.sdkUds,
-			[]grpc.DialOption{
-				grpc.WithInsecure(),
-				grpc.WithUnaryInterceptor(correlation.ContextUnaryClientInterceptor),
-			})
-		if err != nil {
-			return nil, fmt.Errorf("Failed to connect CSI to SDK uds %s: %v", s.sdkUds, err)
-		}
-	}
-
-	return s.conn, nil
-}
-
 func (s *OsdCsiServer) getRemoteConn(ctx context.Context) (*grpc.ClientConn, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
 	remoteConn, _, err := s.roundRobinBalancer.GetRemoteNodeConnection(ctx)
 	return remoteConn, err
 }

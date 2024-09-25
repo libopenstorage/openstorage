@@ -101,9 +101,6 @@ func (s *OsdCsiServer) ControllerGetCapabilities(
 
 		// Volume condition
 		csi.ControllerServiceCapability_RPC_VOLUME_CONDITION,
-
-		// GetCapacity
-		csi.ControllerServiceCapability_RPC_GET_CAPACITY,
 	}
 
 	var serviceCapabilities []*csi.ControllerServiceCapability

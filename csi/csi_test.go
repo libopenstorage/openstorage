@@ -30,7 +30,6 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/kubernetes-csi/csi-test/utils"
 	"github.com/libopenstorage/openstorage/api"
-	"github.com/libopenstorage/openstorage/api/mock"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/cluster"
 	clustermanager "github.com/libopenstorage/openstorage/cluster/manager"
@@ -50,8 +49,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 const (
@@ -77,7 +74,6 @@ type testServer struct {
 	server grpcserver.Server
 	m      *mockdriver.MockVolumeDriver
 	c      *mockcluster.MockCluster
-	cb     *mock.MockOpenStorageCloudBackupClient
 	mc     *gomock.Controller
 	sdk    *sdk.Server
 	port   string
@@ -163,16 +159,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
-
-	// for CSI snapshot there happens to be a call to cloudbackups to check if the snapshot id requested
-	// is a cloud backup. the below code prevents it from crashing the osd-tests and pr-test
-	tester.cb = mock.NewMockOpenStorageCloudBackupClient(tester.mc)
-	tester.m.EXPECT().CloudBackupStatus(gomock.Any()).DoAndReturn(func(input *api.CloudBackupStatusRequest) (*api.CloudBackupStatusResponse, error) {
-		return nil, status.New(codes.NotFound, "MOCK ERR").Err()
-	}).AnyTimes()
-	tester.cb.EXPECT().Status(gomock.Any(), gomock.Any()).DoAndReturn(func(ctx context.Context, in *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
-		return nil, status.New(codes.NotFound, "MOCK ERR").Err()
-	}).AnyTimes()
 
 	if config.Cluster == nil {
 		config.Cluster = tester.c
