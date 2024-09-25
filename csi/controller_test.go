@@ -3380,18 +3380,6 @@ func TestGetCapacity(t *testing.T) {
 	assert.Equal(t, int64(0), res.AvailableCapacity)
 }
 
-type fakeOsdCsiServer struct {
-	*OsdCsiServer
-	mockCloudBackupClient api.OpenStorageCloudBackupClient
-}
-
-func (f *fakeOsdCsiServer) getCloudBackupClient(ctx context.Context) (api.OpenStorageCloudBackupClient, error) {
-	return f.mockCloudBackupClient, nil
-}
-
-func (f *fakeOsdCsiServer) getCloudBackupClient(ctx context.Context) (api.OpenStorageCloudBackupClient, error) {
-	return f.mockCloudBackupClient, nil
-}
 func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
@@ -3570,6 +3558,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 			doClientErr := tt.SnapshotName == "remote-client-error"
 
 			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+			ctx = context.WithValue(ctx, openStorageBackupClient, mockCloudBackupClient)
 
 			got, err := s.CreateSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
@@ -3688,6 +3677,7 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 			doClientErr := tt.SnapshotName == "remote-client-error"
 
 			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
+			ctx = context.WithValue(ctx, openStorageBackupClient, mockCloudBackupClient)
 
 			got, err := s.DeleteSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {

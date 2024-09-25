@@ -69,6 +69,8 @@ const (
 	// driver type
 	DriverTypeLocal = "local"
 	DriverTypeCloud = "cloud"
+
+	openStorageBackupClient = "openStorageBackupClient"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -1020,16 +1022,21 @@ func (s *OsdCsiServer) createCloudBackup(
 	ctx context.Context,
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
-	// Get grpc connection
-	conn, err := s.getRemoteConn(ctx)
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Unavailable,
-			"Unable to connect to SDK server: %v", err)
-	}
+	var cloudBackupClient api.OpenStorageCloudBackupClient
+	if ctx.Value(openStorageBackupClient) != nil {
+		cloudBackupClient = ctx.Value(openStorageBackupClient).(api.OpenStorageCloudBackupClient)
+	} else {
+		// Get grpc connection
+		conn, err := s.getRemoteConn(ctx)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
 
-	// Check ID is valid with the specified volume capabilities
-	cloudBackupClient := api.NewOpenStorageCloudBackupClient(conn)
+		// Check ID is valid with the specified volume capabilities
+		cloudBackupClient = api.NewOpenStorageCloudBackupClient(conn)
+	}
 
 	// In the incoming request the snapshot is denoted by `snapshot-<UID of the volumesnapshot>`
 	csiSnapshotID := req.GetName()
@@ -1107,15 +1114,21 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	req *csi.DeleteSnapshotRequest,
 ) (resp *csi.DeleteSnapshotResponse, err error) {
 	// Get grpc connection
-	conn, err := s.getRemoteConn(ctx)
-	if err != nil {
-		return nil, status.Errorf(
-			codes.Unavailable,
-			"Unable to connect to SDK server: %v", err)
-	}
+	var cloudBackupClient api.OpenStorageCloudBackupClient
+	if ctx.Value(openStorageBackupClient) != nil {
+		cloudBackupClient = ctx.Value(openStorageBackupClient).(api.OpenStorageCloudBackupClient)
+	} else {
+		// Get grpc connection
+		conn, err := s.getRemoteConn(ctx)
+		if err != nil {
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
 
-	// Check ID is valid with the specified volume capabilities
-	cloudBackupClient := api.NewOpenStorageCloudBackupClient(conn)
+		// Check ID is valid with the specified volume capabilities
+		cloudBackupClient = api.NewOpenStorageCloudBackupClient(conn)
+	}
 
 	cloudBackupDriverUnavailable := sdk.IsErrorUnavailable(err)
 	if err != nil && !cloudBackupDriverUnavailable {
