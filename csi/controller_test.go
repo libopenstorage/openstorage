@@ -3337,7 +3337,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	s.mockCloudBackupClient.
 		EXPECT().
 		Status(gomock.Any(), gomock.Any()).
-		Return(nil).
+		Return(nil, nil).
 		Times(1)
 
 	_, err := c.DeleteSnapshot(context.Background(), &csi.DeleteSnapshotRequest{
