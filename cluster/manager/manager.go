@@ -1830,8 +1830,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
 				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
-				nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
-				!forceRemove {
+				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
 
 				msg := fmt.Sprintf(decommissionErrMsg, nodes[i].Id)
 				logrus.Errorf(msg+", node status: %s", nodeCacheStatus)
