@@ -177,9 +177,6 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	if config.Cluster == nil {
 		config.Cluster = tester.c
 	}
-	config.CloudBackupClient = func(cc grpc.ClientConnInterface) api.OpenStorageCloudBackupClient {
-		return tester.cb
-	}
 	config.RoundRobinBalancer = loadbalancer.NewNullBalancer()
 
 	setupMockDriver(tester, t)
