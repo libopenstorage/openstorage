@@ -3929,10 +3929,6 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 				cloudBackupClient:  mockCloudBackupClient,
 			},
 			func() {
-				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
-					func(ctx context.Context) (*grpc.ClientConn, bool, error) {
-						return nil, true, nil
-					})
 				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
 						return nil, mockErr
@@ -3953,10 +3949,6 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 				cloudBackupClient:  mockCloudBackupClient,
 			},
 			func() {
-				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
-					func(ctx context.Context) (*grpc.ClientConn, bool, error) {
-						return nil, true, nil
-					})
 				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
 						return &api.SdkCloudBackupStatusResponse{
