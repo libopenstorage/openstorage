@@ -3917,42 +3917,6 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 
 		}).AnyTimes()
 
-	tests := []struct {
-		name         string
-		SnapshotName string
-		Cred         string
-		want         *csi.DeleteSnapshotRequest
-		wantErr      bool
-	}{
-		{
-			"remote client connection failed",
-			"remote-client-error",
-			"",
-			nil,
-			true,
-		},
-		{
-			"fail to get cloud snap status",
-			"status-error",
-			"",
-			nil,
-			true,
-		},
-		{
-			"fail snapshot delete",
-			"delete-error",
-			"",
-			nil,
-			true,
-		},
-		{
-			"deletion completes without any error",
-			"ok",
-			"",
-			&csi.DeleteSnapshotRequest{},
-			false,
-		},
-	}
 	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
 	// nil, false, nil
 	mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -3966,6 +3930,68 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 			return conn, true, err
 		}).AnyTimes()
 
+	tests := []struct {
+		name         string
+		SnapshotName string
+		Cred         string
+		want         *csi.DeleteSnapshotRequest
+		wantErr      bool
+		server       *OsdCsiServer
+	}{
+		{
+			"remote client connection failed",
+			"remote-client-error",
+			"",
+			nil,
+			true,
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
+		},
+		{
+			"fail to get cloud snap status",
+			"status-error",
+			"",
+			nil,
+			true,
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
+		},
+		{
+			"fail snapshot delete",
+			"delete-error",
+			"",
+			nil,
+			true,
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
+		},
+		{
+			"deletion completes without any error",
+			"ok",
+			"",
+			&csi.DeleteSnapshotRequest{},
+			false,
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
+		},
+	}
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			req := &csi.DeleteSnapshotRequest{
@@ -3975,18 +4001,10 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 				},
 			}
 
-			s := &OsdCsiServer{
-				specHandler:        spec.NewSpecHandler(),
-				mu:                 sync.Mutex{},
-				roundRobinBalancer: mockRoundRobinBalancer,
-				cloudBackupClient:  mockCloudBackupClient,
-			}
+			//			doClientErr := tt.SnapshotName == "remote-client-error"
+			//			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
 
-			doClientErr := tt.SnapshotName == "remote-client-error"
-
-			ctx = context.WithValue(ctx, "remote-client-error", doClientErr)
-
-			got, err := s.DeleteSnapshot(ctx, req)
+			got, err := tt.server.DeleteSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OsdCsiServer.DeleteSnapshot() error = %v, wantErr %v", err, tt.wantErr)
 				return
