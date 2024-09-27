@@ -26,7 +26,7 @@ import (
 
 // VolumeFromName returns the volume object associated with the specified name.
 func VolumeFromName(v volume.VolumeDriver, name string) (*api.Volume, error) {
-	vols, err := v.Inspect([]string{name})
+	vols, err := v.Inspect([]string{name}, nil)
 	if err == nil && len(vols) == 1 {
 		return vols[0], nil
 	}
