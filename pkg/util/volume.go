@@ -19,13 +19,14 @@ package util
 import (
 	"context"
 	"fmt"
+
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/volume"
 )
 
 // VolumeFromName returns the volume object associated with the specified name.
 func VolumeFromName(ctx context.Context, v volume.VolumeDriver, name string) (*api.Volume, error) {
-	vols, err := v.Inspect(ctx, []string{name})
+	vols, err := v.Inspect(ctx, []string{name}, nil)
 	if err == nil && len(vols) == 1 {
 		return vols[0], nil
 	}

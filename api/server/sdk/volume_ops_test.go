@@ -76,22 +76,22 @@ func TestSdkVolumeCreateCheckIdempotencyWaitForRemoved(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return([]*api.Volume{vol}, nil),
 
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return([]*api.Volume{vol}, nil),
 
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return([]*api.Volume{vol}, nil),
 
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("MOCK ERROR")),
 
 		s.MockDriver().
@@ -150,8 +150,8 @@ func TestSdkVolumeCreateCheckIdempotencyWaitForReady(t *testing.T) {
 	// 1 for waiting but getting that the volume is up
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{name}).
-		Do(func(context.Context, []string) {
+		Inspect(gomock.Any(), []string{name}, nil).
+		Do(func(context.Context, []string, *api.VolumeInspectOptions) {
 			count++
 			if count == 4 {
 				vol.Status = api.VolumeStatus_VOLUME_STATUS_UP
@@ -187,7 +187,7 @@ func TestSdkVolumeCreateCheckIdempotency(t *testing.T) {
 	id := "myid"
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{name}).
+		Inspect(gomock.Any(), []string{name}, nil).
 		Return([]*api.Volume{
 			{
 				Id:     id,
@@ -231,7 +231,7 @@ func TestSdkVolumeCreate(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -295,7 +295,7 @@ func TestSdkVolumeClone(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -307,7 +307,7 @@ func TestSdkVolumeClone(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{parentid}).
+			Inspect(gomock.Any(), []string{parentid}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -456,7 +456,7 @@ func TestSdkVolumeInspect(t *testing.T) {
 	req.Options = &api.VolumeInspectOptions{Deep: true}
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{id}).
+		Inspect(gomock.Any(), []string{id}, gomock.Any()).
 		Return([]*api.Volume{
 			{
 				Id: id,
@@ -505,7 +505,7 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	// Returns key not found
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{id}).
+		Inspect(gomock.Any(), []string{id}, nil).
 		Return([]*api.Volume{}, kvdb.ErrNotFound).
 		Times(1)
 
@@ -522,7 +522,7 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	// Key not found, err is nil but empty list returned
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{id}).
+		Inspect(gomock.Any(), []string{id}, nil).
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
@@ -539,7 +539,7 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	expectedErr := fmt.Errorf("WEIRD ERROR")
 	s.MockDriver().
 		EXPECT().
-		Inspect(gomock.Any(), []string{id}).
+		Inspect(gomock.Any(), []string{id}, nil).
 		Return([]*api.Volume{}, expectedErr).
 		Times(1)
 
@@ -1069,7 +1069,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1081,7 +1081,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{parentid}).
+			Inspect(gomock.Any(), []string{parentid}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1116,7 +1116,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1128,7 +1128,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{parentid}).
+			Inspect(gomock.Any(), []string{parentid}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1187,7 +1187,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1199,7 +1199,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{parentid}).
+			Inspect(gomock.Any(), []string{parentid}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1243,7 +1243,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1255,7 +1255,7 @@ func TestSdkCloneOwnership(t *testing.T) {
 
 		mv.
 			EXPECT().
-			Inspect(gomock.Any(), []string{parentid}).
+			Inspect(gomock.Any(), []string{parentid}, nil).
 			Return([]*api.Volume{parentVol}, nil).
 			Times(1),
 
@@ -1386,7 +1386,7 @@ func TestSdkVolumeCreateEnforced(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1562,7 +1562,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 	id := "myid"
 	gomock.InOrder(
 		mv.EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1615,7 +1615,7 @@ func TestSdkVolumeCreateDefaultPolicyOwnership(t *testing.T) {
 	// Create response
 	gomock.InOrder(
 		mv.EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1763,7 +1763,7 @@ func TestSdkVolumeUpdatePolicyOwnership(t *testing.T) {
 	id := "myid"
 	gomock.InOrder(
 		mv.EXPECT().
-			Inspect(gomock.Any(), []string{name}).
+			Inspect(gomock.Any(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 

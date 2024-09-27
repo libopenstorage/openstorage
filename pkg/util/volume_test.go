@@ -41,7 +41,7 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 		// Too many
 		driver.
 			EXPECT().
-			Inspect(context.TODO(), []string{name}).
+			Inspect(context.TODO(), []string{name}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: name,
@@ -74,7 +74,7 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 		// Return that it was not found
 		driver.
 			EXPECT().
-			Inspect(context.TODO(), []string{name}).
+			Inspect(context.TODO(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -108,7 +108,7 @@ func TestVolumeFromNameFailedToLocateDueToTooManyVolumes(t *testing.T) {
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect(context.TODO(), []string{name}).
+			Inspect(context.TODO(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -137,7 +137,7 @@ func TestVolumeFromNameFailedToLocate(t *testing.T) {
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect(context.TODO(), []string{name}).
+			Inspect(context.TODO(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		driver.
@@ -163,7 +163,7 @@ func TestVolumeFromNameFoundFromInspect(t *testing.T) {
 	name := "myvolume"
 	driver.
 		EXPECT().
-		Inspect(context.TODO(), []string{name}).
+		Inspect(context.TODO(), []string{name}, nil).
 		Return([]*api.Volume{
 			{
 				Id: name,
@@ -194,7 +194,7 @@ func TestVolumeFromNameFoundFromEnumerate(t *testing.T) {
 	gomock.InOrder(
 		driver.
 			EXPECT().
-			Inspect(context.TODO(), []string{name}).
+			Inspect(context.TODO(), []string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		driver.

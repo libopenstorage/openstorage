@@ -127,7 +127,7 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.Nil(t, resp)
 
 	// INSPECT
-	res, err := driverclient.Inspect(context.TODO(), []string{id})
+	res, err := driverclient.Inspect(context.TODO(), []string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -575,7 +575,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect(context.TODO(), []string{id})
+	res, err := driverclient.Inspect(context.TODO(), []string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -632,7 +632,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect(context.TODO(), []string{"myid"})
+	res, err := driverclient.Inspect(context.TODO(), []string{"myid"}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, len(res), 0)
 
@@ -2573,7 +2573,7 @@ func TestMiddlewareVolumeInspectFailureVolumeNotFound(t *testing.T) {
 
 	// Confirm that the inspect on secret error returns to the client the correct object,
 	// which should be an empty list
-	ret, err := driverclient.Inspect(context.TODO(), []string{id})
+	ret, err := driverclient.Inspect(context.TODO(), []string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, ret)
 	assert.Empty(t, ret)
@@ -2797,7 +2797,7 @@ func TestStorkVolumeInspect(t *testing.T) {
 	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 
-	vols, err := driverclient.Inspect(context.TODO(), []string{id})
+	vols, err := driverclient.Inspect(context.TODO(), []string{id}, nil)
 	assert.Equal(t, len(vols), 0)
 	assert.Nil(t, err)
 	/*

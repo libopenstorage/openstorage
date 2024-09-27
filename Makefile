@@ -254,7 +254,7 @@ test-sdk: install-sdk-test launch-sdk
 
 # TODO: Remove GODEBUG and fix test certs
 test: packr
-	GODEBUG=x509ignoreCN=0 go test -tags "$(TAGS)" $(TESTFLAGS) $(PKGS)
+	GODEBUG=x509ignoreCN=0 go test -tags "$(TAGS)" -v  $(TESTFLAGS) $(PKGS)
 	
 docs: $(GOPATH)/bin/gomock $(GOPATH)/bin/swagger $(GOPATH)/bin/mockgen
 	go generate ./cmd/osd/main.go
