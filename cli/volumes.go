@@ -3,10 +3,11 @@ package cli
 import (
 	"context"
 	"fmt"
-	"github.com/libopenstorage/openstorage/pkg/correlation"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/libopenstorage/openstorage/pkg/correlation"
 
 	"github.com/codegangsta/cli"
 	"github.com/libopenstorage/openstorage/api"
@@ -214,7 +215,7 @@ func (v *volDriver) volumeInspect(cliContext *cli.Context) {
 		d[i] = string(v)
 	}
 
-	volumes, err := v.volDriver.Inspect(correlation.TODO(), d)
+	volumes, err := v.volDriver.Inspect(correlation.TODO(), d, nil)
 	if err != nil {
 		cmdError(cliContext, fn, err)
 		return

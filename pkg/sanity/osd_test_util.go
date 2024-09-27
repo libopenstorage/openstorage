@@ -54,7 +54,7 @@ func testIfVolumeCreatedSuccessfully(
 	By("Inspecting the created volume")
 
 	inspectVolumes := []string{volumeID}
-	volumesList, err := volumedriver.Inspect(context.TODO(), inspectVolumes)
+	volumesList, err := volumedriver.Inspect(context.TODO(), inspectVolumes, nil)
 	Expect(err).NotTo(HaveOccurred())
 	Expect(volumesList).NotTo(BeEmpty())
 	Expect(len(volumesList)).Should(BeEquivalentTo(1))

@@ -307,6 +307,10 @@ message VolumeInspectOptions {
   // Deep inspection is used to collect more information about
   // the volume. Setting this value may delay the request.
   bool deep = 1;
+  // VolumeConsumers if true will go and attempt to inspect who is using the 
+  // volume being inspected. This can be an expensive call and should be skipped if
+  // you don't need volume consumers
+  bool volume_consumers = 2;
 }
 
 // Source is a structure that can be given to a volume
