@@ -102,7 +102,7 @@ func TestFakeCreateVolume(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, vid)
 
-	vols, err := d.Inspect([]string{vid})
+	vols, err := d.Inspect([]string{vid}, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, vols)
 	assert.Len(t, vols, 1)
@@ -115,7 +115,7 @@ func TestFakeInspect(t *testing.T) {
 	d, err := newFakeDriver(map[string]string{})
 	assert.NoError(t, err)
 
-	v, err := d.Inspect([]string{"asdf"})
+	v, err := d.Inspect([]string{"asdf"}, nil)
 	assert.NotNil(t, err)
 	assert.Error(t, err)
 	assert.Equal(t, err, kvdb.ErrNotFound)
@@ -210,7 +210,7 @@ func testInitForCloudBackups(t *testing.T, d *driver) (string, string, *api.Clou
 	assert.NotEmpty(t, id)
 	assert.NotEmpty(t, name)
 
-	origvols, err := d.Inspect([]string{volid})
+	origvols, err := d.Inspect([]string{volid}, nil)
 	assert.NoError(t, err)
 	assert.Len(t, origvols, 1)
 	origvol := origvols[0]
@@ -231,7 +231,7 @@ func TestFakeCloudBackupRestore(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotEmpty(t, resp.RestoreVolumeID)
 
-	vols, err := d.Inspect([]string{resp.RestoreVolumeID})
+	vols, err := d.Inspect([]string{resp.RestoreVolumeID}, nil)
 	assert.NoError(t, err)
 	assert.Len(t, vols, 1)
 	vol := vols[0]
@@ -728,7 +728,7 @@ func TestFakeSet(t *testing.T) {
 	assert.NoError(t, err)
 
 	// Verify
-	vols, err := d.Inspect([]string{volid})
+	vols, err := d.Inspect([]string{volid}, nil)
 	assert.NoError(t, err)
 	assert.Len(t, vols, 1)
 	assert.NotNil(t, vols[0])
