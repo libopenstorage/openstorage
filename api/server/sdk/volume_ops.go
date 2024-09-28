@@ -502,7 +502,9 @@ func (s *VolumeServer) Inspect(
 		}
 		v = vols[0]
 	} else {
-		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()}, nil)
+		vols, err := s.driver(ctx).Inspect([]string{req.GetVolumeId()}, &api.VolumeInspectOptions{
+			VolumeConsumers: true,
+		})
 		if err == kvdb.ErrNotFound || (err == nil && len(vols) == 0) {
 			return nil, status.Errorf(
 				codes.NotFound,
