@@ -23,6 +23,7 @@ import (
 	"math"
 	"reflect"
 	"sort"
+	"strings"
 
 	"github.com/portworx/kvdb"
 	"github.com/sirupsen/logrus"
@@ -67,9 +68,9 @@ const (
 	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
 
 	// driver type
-	DriverTypeLocal = "local"
-	DriverTypeCloud = "cloud"
-
+	DriverTypeLocal         = "local"
+	DriverTypeCloud         = "cloud"
+	CloudSnap               = "cloud-snapshot-"
 	openStorageBackupClient = "openStorageBackupClient"
 )
 
@@ -892,6 +893,8 @@ func (s *OsdCsiServer) CreateSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
+	logrus.WithField("volumeId", req.SourceVolumeId).WithField("snapshotName", req.Name).
+		Infof("Create snapshot request received for volume")
 	// Get secret if any was passed
 	ctx = s.setupContext(ctx, req.GetSecrets())
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
@@ -1020,12 +1023,14 @@ func (s *OsdCsiServer) createCloudBackup(
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
+	csiSnapshotID := CloudSnap + req.GetName()
 	if s.cloudBackupClient != nil {
 		cloudBackupClient = s.cloudBackupClient
 	} else {
 		// Get grpc connection
 		conn, err := s.getRemoteConn(ctx)
 		if err != nil {
+			logrus.WithError(err).WithField("snapshotId", csiSnapshotID).Errorf("Failed to get GRPC connection")
 			return nil, status.Errorf(
 				codes.Unavailable,
 				"Unable to connect to SDK server: %v", err)
@@ -1034,10 +1039,7 @@ func (s *OsdCsiServer) createCloudBackup(
 		// Check ID is valid with the specified volume capabilities
 		cloudBackupClient = api.NewOpenStorageCloudBackupClient(conn)
 	}
-
-	// In the incoming request the snapshot is denoted by `snapshot-<UID of the volumesnapshot>`
-	csiSnapshotID := req.GetName()
-
+	logrus.WithField("snapshotId", csiSnapshotID).Infof("Creating cloud snapshot")
 	// Get any labels passed in by the CO
 	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
@@ -1045,20 +1047,26 @@ func (s *OsdCsiServer) createCloudBackup(
 	}
 
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
-
 	// Check if the snapshot with this name already exists
 	backupStatus, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
 	if err == nil {
-
+		isSnapshotIDPresentInCloud := false
+		if backupStatus != nil {
+			_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
+		}
+		if !isSnapshotIDPresentInCloud {
+			return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+		}
+		snapshotStatus := backupStatus.Statuses[csiSnapshotID]
+		logrus.WithField("snapshotId", csiSnapshotID).Infof("Status of snapshot %v", snapshotStatus.Status)
 		// Verify the parent is the same
 		if req.GetSourceVolumeId() != backupStatus.Statuses[csiSnapshotID].GetSrcVolumeId() {
+			logrus.WithField("snapshotId", csiSnapshotID).Errorf("Requested snapshot already exists for another source volume id")
 			return nil, status.Error(codes.AlreadyExists, "Requested snapshot already exists for another source volume id")
 		}
-
-		isBackupReady := backupStatus.Statuses[csiSnapshotID].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
-
+		isBackupReady := snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 		return &csi.CreateSnapshotResponse{
 			Snapshot: &csi.Snapshot{
 				SnapshotId:     csiSnapshotID,
@@ -1069,7 +1077,8 @@ func (s *OsdCsiServer) createCloudBackup(
 			},
 		}, nil
 	}
-
+	logrus.WithField("snapshotId", csiSnapshotID).WithField("volumeId", req.GetSourceVolumeId()).
+		Infof("Creating cloud snapshot")
 	// Create snapshot
 	_, err = cloudBackupClient.Create(ctx, &api.SdkCloudBackupCreateRequest{
 		VolumeId:     req.GetSourceVolumeId(),
@@ -1089,10 +1098,16 @@ func (s *OsdCsiServer) createCloudBackup(
 		TaskId:   csiSnapshotID,
 	})
 	if err != nil {
+		logrus.WithError(err).WithField("snapshotId", csiSnapshotID).Errorf("Failed to get snapshot status")
 		return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot status: %v", err)
 	}
+	snapshotStatus, ok := backupStatus.Statuses[csiSnapshotID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found", csiSnapshotID)
+	}
+	logrus.WithField("snapshotId", csiSnapshotID).Infof("Cloud snapshot status is %v", snapshotStatus.Status)
 
-	isBackupReady = backupStatus.Statuses[csiSnapshotID].Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+	isBackupReady = snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &csi.Snapshot{
@@ -1110,6 +1125,21 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	ctx context.Context,
 	req *csi.DeleteSnapshotRequest,
 ) (resp *csi.DeleteSnapshotResponse, err error) {
+	snapshotId := req.GetSnapshotId()
+	logrus.WithField("snapshotId", req.SnapshotId).
+		Infof("Delete snapshot request received")
+	if len(snapshotId) == 0 {
+		logrus.Errorf("Snapshot id was not provided")
+		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
+	}
+	if strings.HasPrefix(snapshotId, "cloud-snapshot-") {
+		return s.deleteCloudSnapshot(ctx, req)
+	} else {
+		return s.deleteLocalSnapshot(ctx, req)
+	}
+}
+
+func (s *OsdCsiServer) deleteCloudSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest) (*csi.DeleteSnapshotResponse, error) {
 	// Get grpc connection
 	var cloudBackupClient api.OpenStorageCloudBackupClient
 	if s.cloudBackupClient != nil {
@@ -1118,6 +1148,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		// Get grpc connection
 		conn, err := s.getRemoteConn(ctx)
 		if err != nil {
+			logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Failed to get GRPC connection")
 			return nil, status.Errorf(
 				codes.Unavailable,
 				"Unable to connect to SDK server: %v", err)
@@ -1126,51 +1157,46 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		// Check ID is valid with the specified volume capabilities
 		cloudBackupClient = api.NewOpenStorageCloudBackupClient(conn)
 	}
-
 	csiSnapshotID := req.GetSnapshotId()
-	if len(csiSnapshotID) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
-	}
-
+	logrus.WithField("snapshotId", csiSnapshotID).Info("Deleting snapshot")
 	var backupStatus *api.SdkCloudBackupStatusResponse
 	// Check if snapshot has been created but is in error state
-	backupStatus, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+	backupStatus, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
-
+	if err != nil {
+		if !sdk.IsErrorNotFound(err) {
+			logrus.WithError(err).WithField("snapshotId", csiSnapshotID).Errorf("Failed to get snapshot status")
+			return nil, status.Errorf(codes.Internal, "Failed to get cloud backup status: %v", err)
+		}
+		// snapshot not found
+		logrus.WithField("snapshotId", csiSnapshotID).Info("Snapshot does not exist, may have been deleted")
+		return &csi.DeleteSnapshotResponse{}, nil
+	}
 	isSnapshotIDPresentInCloud := false
 	if backupStatus != nil {
 		_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
 	}
 	if !isSnapshotIDPresentInCloud {
+		logrus.WithField("snapshotId", csiSnapshotID).Info("Deleting local snapshot, as snapshot is not present in cloud")
 		return s.deleteLocalSnapshot(ctx, req)
 	}
-
-	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "Failed to get cloud snapshot status: %v", err)
-	}
-
-	clogger.WithContext(ctx).Errorf("DeleteSnapshots backupStatus: %+v, csiSnapshotID: %s", backupStatus, csiSnapshotID)
-
+	logrus.WithField("snapshotId", csiSnapshotID).Errorf("Snapshot status %v", backupStatus.Statuses[csiSnapshotID].Status)
 	req.Secrets = map[string]string{
 		osdSnapshotCredentialIDKey: backupStatus.Statuses[csiSnapshotID].CredentialId,
 	}
-
 	req.SnapshotId = backupStatus.Statuses[csiSnapshotID].BackupId
-
-	resp, err = s.deleteCloudBackup(ctx, req, cloudBackupClient)
-	return
-
+	return s.deleteCloudBackup(ctx, req, cloudBackupClient)
 }
 
 func (s *OsdCsiServer) deleteLocalSnapshot(
 	ctx context.Context,
 	req *csi.DeleteSnapshotRequest,
 ) (*csi.DeleteSnapshotResponse, error) {
-
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
+		logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Failed to get GRPC connection")
 		return nil, status.Errorf(
 			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
@@ -1181,6 +1207,7 @@ func (s *OsdCsiServer) deleteLocalSnapshot(
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
+	logrus.WithField("snapshotId", req.GetSnapshotId()).Info("Deleting local snapshot")
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
 
@@ -1188,11 +1215,12 @@ func (s *OsdCsiServer) deleteLocalSnapshot(
 		VolumeId: req.GetSnapshotId(),
 	})
 	if err != nil {
+		logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Deleting local snapshot failed")
 		return nil, status.Errorf(codes.Aborted, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),
 			err)
 	}
-
+	logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Deleting local snapshot completed")
 	return &csi.DeleteSnapshotResponse{}, nil
 }
 
@@ -1203,18 +1231,22 @@ func (s *OsdCsiServer) deleteCloudBackup(
 ) (*csi.DeleteSnapshotResponse, error) {
 	credentialID := req.GetSecrets()[osdSnapshotCredentialIDKey]
 
-	backupID := req.GetSnapshotId()
-
+	snapshotId := req.GetSnapshotId()
 	// Delete snapshot
 	_, err := cloudBackupClient.Delete(ctx, &api.SdkCloudBackupDeleteRequest{
-		BackupId:     backupID,
+		BackupId:     snapshotId,
 		CredentialId: credentialID,
 	})
 	// NOTE: Currently, the Delete API call has no implementation that returns
 	//  a not found gRPC error with the status code.
 	if err != nil && !sdk.IsErrorNotFound(err) {
+		logrus.WithError(err).WithField("snapshotId", snapshotId).Errorf("Failed to delete cloud snapshot" +
+			"" +
+			"" +
+			"")
 		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
 	}
+	logrus.WithField("backupId", snapshotId).Info("Cloud snapshot deleted successfully")
 	return &csi.DeleteSnapshotResponse{}, nil
 }
 
