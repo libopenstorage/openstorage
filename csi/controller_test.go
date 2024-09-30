@@ -3918,7 +3918,7 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		},
 		{
 			"fail to get cloud snap status",
-			"status-error",
+			cloudSnap + "status-error",
 			"",
 			nil,
 			true,
@@ -3938,7 +3938,7 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		},
 		{
 			"fail snapshot delete",
-			"delete-error",
+			cloudSnap + "delete-error",
 			"",
 			nil,
 			true,
@@ -3970,7 +3970,7 @@ func TestOsdCsiServer_DeleteCloudSnapshot(t *testing.T) {
 		},
 		{
 			"deletion completes without any error",
-			"ok",
+			cloudSnap + "ok",
 			"",
 			&csi.DeleteSnapshotRequest{},
 			false,
