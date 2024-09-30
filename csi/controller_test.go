@@ -3692,6 +3692,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 		wantErr      bool
 		expect       func()
 		specLabels   []string
+		server       *OsdCsiServer
 	}{
 		{
 			"remote client connection failed",
@@ -3705,6 +3706,11 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+			},
 		},
 		{
 			"failed to get parameters",
@@ -3718,6 +3724,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 		{
 			"fail snapshot create",
@@ -3740,6 +3752,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 		{
 			"volume id not found while creating",
@@ -3762,6 +3780,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 		{
 			"fail to get snapshot status",
@@ -3779,6 +3803,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 		{
 			"creation scheduled",
@@ -3826,6 +3856,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 		{
 			"creation completes without any error",
@@ -3861,6 +3897,12 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
 		},
 	}
 
@@ -3873,15 +3915,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					api.SpecLabels: strings.Join(tt.specLabels, ","),
 				},
 			}
-
-			s := &OsdCsiServer{
-				specHandler:        spec.NewSpecHandler(),
-				mu:                 sync.Mutex{},
-				roundRobinBalancer: mockRoundRobinBalancer,
-				cloudBackupClient:  mockCloudBackupClient,
-			}
-
-			got, err := s.CreateSnapshot(ctx, req)
+			got, err := tt.server.CreateSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OsdCsiServer.CreateSnapshot() error = %v, wantErr %v", err, tt.wantErr)
 				return
