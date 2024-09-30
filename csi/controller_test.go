@@ -3350,11 +3350,6 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 	id := "id"
 
 	gomock.InOrder(
-		s.mockCloudBackupClient.
-			EXPECT().
-			Status(gomock.Any(), gomock.Any()).
-			Return(nil, nil).
-			Times(1),
 		s.MockDriver().
 			EXPECT().
 			Enumerate(&api.VolumeLocator{
