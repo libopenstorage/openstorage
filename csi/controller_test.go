@@ -3713,21 +3713,6 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 			},
 		},
 		{
-			"failed to get parameters",
-			"param-error",
-			nil,
-			true,
-			func() {
-			},
-			[]string{osdSnapshotLabelsTypeKey + "=cloud"},
-			&OsdCsiServer{
-				specHandler:        spec.NewSpecHandler(),
-				mu:                 sync.Mutex{},
-				roundRobinBalancer: mockRoundRobinBalancer,
-				cloudBackupClient:  mockCloudBackupClient,
-			},
-		},
-		{
 			"fail snapshot create",
 			"create-error",
 			nil,
@@ -3777,7 +3762,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 		},
 		{
 			"fail to get snapshot status",
-			"status-error",
+			cloudSnap + "status-error",
 			nil,
 			true,
 			func() {

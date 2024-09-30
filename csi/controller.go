@@ -1077,6 +1077,10 @@ func (s *OsdCsiServer) createCloudBackup(
 			},
 		}, nil
 	}
+	if !sdk.IsErrorNotFound(err) {
+		logrus.WithError(err).WithField("snapshotId", csiSnapshotID).Errorf("Failed to get snapshot status")
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+	}
 	logrus.WithField("snapshotId", csiSnapshotID).WithField("volumeId", req.GetSourceVolumeId()).
 		Infof("Creating cloud snapshot")
 	// Create snapshot
