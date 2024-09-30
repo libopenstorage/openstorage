@@ -3915,6 +3915,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					api.SpecLabels: strings.Join(tt.specLabels, ","),
 				},
 			}
+			tt.expect()
 			got, err := tt.server.CreateSnapshot(ctx, req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("OsdCsiServer.CreateSnapshot() error = %v, wantErr %v", err, tt.wantErr)
