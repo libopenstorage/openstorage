@@ -155,14 +155,14 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 		// First time called it will say it is not there
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return(nil, fmt.Errorf("Id not found")),
 
 		// Second time called it will not return an error,
 		// but return an empty list
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{}, nil),
 
 		// Third time it is called, it will return
@@ -170,7 +170,7 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 		// not match (even if this probably never could happen)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: "bad volume id",
@@ -182,7 +182,7 @@ func TestControllerValidateVolumeInvalidId(t *testing.T) {
 		// asked for one volume.
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: "bad volume id 1",
@@ -251,7 +251,7 @@ func TestControllerValidateVolumeInvalidCapabilities(t *testing.T) {
 	id := "testvolumeid"
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id: id,
@@ -296,7 +296,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -310,7 +310,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -324,7 +324,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -338,7 +338,7 @@ func TestControllerValidateVolumeAccessModeSNWR(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -404,7 +404,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -418,7 +418,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -432,7 +432,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -446,7 +446,7 @@ func TestControllerValidateVolumeAccessModeSNRO(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -512,7 +512,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -526,7 +526,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -540,7 +540,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -554,7 +554,7 @@ func TestControllerValidateVolumeAccessModeMNRO(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -620,7 +620,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// not-RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -634,7 +634,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// RO and not-SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -648,7 +648,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// not-RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -662,7 +662,7 @@ func TestControllerValidateVolumeAccessModeMNWR(t *testing.T) {
 		// RO and SH
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id:       id,
@@ -720,7 +720,7 @@ func TestControllerValidateVolumeAccessModeUnknown(t *testing.T) {
 	id := "testvolumeid"
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, nil).
 		Return([]*api.Volume{
 			&api.Volume{
 				Id:       id,
@@ -1021,7 +1021,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 		gomock.InOrder(
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{test.name}).
+				Inspect([]string{test.name}, nil).
 				Return(nil, fmt.Errorf("not found")).
 				Times(1),
 
@@ -1058,7 +1058,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1085,7 +1085,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1133,7 +1133,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1221,7 +1221,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1234,7 +1234,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 		// Getting parent information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Inspect([]string{parent}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1281,7 +1281,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// Getting volume information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1294,7 +1294,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// Getting parent information
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Inspect([]string{parent}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1364,7 +1364,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 		gomock.InOrder(
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{name}).
+				Inspect([]string{name}, nil).
 				Return(nil, fmt.Errorf("not found")).
 				Times(1),
 
@@ -1382,7 +1382,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{id}).
+				Inspect([]string{id}, nil).
 				Return([]*api.Volume{
 					&api.Volume{
 						Id: id,
@@ -1432,7 +1432,7 @@ func TestControllerCreateVolumeFails(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1481,7 +1481,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1499,7 +1499,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1542,7 +1542,7 @@ func TestControllerCreateVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1560,7 +1560,7 @@ func TestControllerCreateVolume(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1617,7 +1617,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1629,7 +1629,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{mockParentID}).
+			Inspect([]string{mockParentID}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: mockParentID,
@@ -1648,7 +1648,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1705,7 +1705,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1717,7 +1717,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{mockParentID}).
+			Inspect([]string{mockParentID}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: mockParentID,
@@ -1736,7 +1736,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: id,
@@ -1797,7 +1797,7 @@ func TestControllerDeleteVolumeError(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{myid}).
+			Inspect([]string{myid}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: myid,
@@ -1836,7 +1836,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 	// According to CSI spec, if the ID is not found, it must return OK
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{myid}).
+		Inspect([]string{myid}, nil).
 		Return(nil, kvdb.ErrNotFound).
 		Times(1)
 
@@ -1847,7 +1847,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 	// Now return no error, but empty list
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{myid}).
+		Inspect([]string{myid}, nil).
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
@@ -1858,7 +1858,7 @@ func TestControllerDeleteVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{myid}).
+			Inspect([]string{myid}, nil).
 			Return([]*api.Volume{
 				&api.Volume{
 					Id: myid,
@@ -1926,7 +1926,7 @@ func TestControllerCreateSnapshotIdempotent(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1977,7 +1977,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1999,7 +1999,7 @@ func TestControllerCreateSnapshot(t *testing.T) {
 			Times(1),
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{snapInfo}, nil).
 			Times(1),
 	)
@@ -2036,7 +2036,7 @@ func TestControllerDeleteSnapshotIdempotent(t *testing.T) {
 	// Snapshot already exists
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}).
+		Inspect([]string{id}, nil).
 		Return(nil, kvdb.ErrNotFound).
 		Times(1)
 
@@ -2057,7 +2057,7 @@ func TestControllerDeleteSnapshot(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				&api.Volume{},
 			}, nil).

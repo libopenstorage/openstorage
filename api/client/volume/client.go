@@ -169,7 +169,7 @@ func (v *volumeClient) Status() [][2]string {
 
 // Inspect specified volumes.
 // Errors ErrEnoEnt may be returned.
-func (v *volumeClient) Inspect(ids []string) ([]*api.Volume, error) {
+func (v *volumeClient) Inspect(ids []string, opts *api.VolumeInspectOptions) ([]*api.Volume, error) {
 	if len(ids) == 0 {
 		return nil, nil
 	}

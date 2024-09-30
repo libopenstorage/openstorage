@@ -243,7 +243,7 @@ func (a *authMiddleware) setWithAuth(w http.ResponseWriter, r *http.Request, nex
 		if err != nil {
 			processErrorForVolSetResponse(req.Action, err, &resp)
 		} else {
-			v, err := d.Inspect([]string{volumeID})
+			v, err := d.Inspect([]string{volumeID},nil)
 			if err != nil {
 				processErrorForVolSetResponse(req.Action, err, &resp)
 			} else if v == nil || len(v) != 1 {
@@ -279,7 +279,7 @@ func (a *authMiddleware) deleteWithAuth(w http.ResponseWriter, r *http.Request, 
 		return
 	}
 
-	vols, err := d.Inspect([]string{volumeID})
+	vols, err := d.Inspect([]string{volumeID},nil)
 	if err != nil || len(vols) == 0 || vols[0] == nil {
 		json.NewEncoder(w).Encode(volumeResponse)
 		return
@@ -338,7 +338,7 @@ func (a *authMiddleware) inspectWithAuth(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	dk, err := d.Inspect([]string{volumeID})
+	dk, err := d.Inspect([]string{volumeID},nil)
 	if err != nil {
 		a.log(volumeID, fn).WithError(err).Error("Failed to inspect volume")
 		http.Error(w, err.Error(), http.StatusNotFound)
@@ -368,7 +368,7 @@ func (a *authMiddleware) enumerateWithAuth(w http.ResponseWriter, r *http.Reques
 	}
 	volumeID := volIDs[0]
 
-	vols, err := d.Inspect([]string{volumeID})
+	vols, err := d.Inspect([]string{volumeID},nil)
 	if err != nil || len(vols) == 0 || vols[0] == nil {
 		a.log(volumeID, fn).WithError(err).Error("Failed to get volume object")
 		json.NewEncoder(w).Encode(emptyVols)
