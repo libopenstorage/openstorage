@@ -3718,10 +3718,6 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 			nil,
 			true,
 			func() {
-				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
-					func(ctx context.Context) (*grpc.ClientConn, bool, error) {
-						return nil, true, nil
-					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud"},
 			&OsdCsiServer{
