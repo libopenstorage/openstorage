@@ -115,7 +115,7 @@ func TestAuthorizationServerInterceptorCreateVolume(t *testing.T) {
 		gomock.InOrder(
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{name}, nil).
+				Inspect([]string{name}).
 				Return(nil, fmt.Errorf("not found")).
 				AnyTimes(),
 			s.MockDriver().

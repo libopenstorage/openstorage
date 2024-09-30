@@ -133,7 +133,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		attributes)
 
 	// Check ID is valid with the specified volume capabilities
-	volumes, err := s.driver.Inspect([]string{id},nil)
+	volumes, err := s.driver.Inspect([]string{id})
 	if err != nil || len(volumes) == 0 {
 		return nil, status.Error(codes.NotFound, "ID not found")
 	}
@@ -440,7 +440,7 @@ func (s *OsdCsiServer) DeleteVolume(
 	}
 
 	// If the volume is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()},nil)
+	volumes, err := s.driver.Inspect([]string{req.GetVolumeId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == kvdb.ErrNotFound) {
 		return &csi.DeleteVolumeResponse{}, nil
@@ -571,7 +571,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	}
 
 	// If the snapshot is not found, then we can return OK
-	volumes, err := s.driver.Inspect([]string{req.GetSnapshotId()},nil)
+	volumes, err := s.driver.Inspect([]string{req.GetSnapshotId()})
 	if (err == nil && len(volumes) == 0) ||
 		(err != nil && err == kvdb.ErrNotFound) {
 		return &csi.DeleteSnapshotResponse{}, nil

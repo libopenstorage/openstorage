@@ -449,7 +449,7 @@ var _ = Describe("Volume [Backup Restore Tests]", func() {
 
 				By("Inspecting the restored volume")
 
-				volumes, err := volumedriver.Inspect([]string{bkpRestoreResp.RestoreVolumeID}, nil)
+				volumes, err := volumedriver.Inspect([]string{bkpRestoreResp.RestoreVolumeID})
 				Expect(err).NotTo(HaveOccurred())
 				Expect(len(volumes)).To(BeEquivalentTo(1))
 				Expect(volumes[0].Locator.Name).To(BeEquivalentTo(restoredVolume))
