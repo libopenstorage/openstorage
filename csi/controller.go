@@ -70,7 +70,7 @@ const (
 	// driver type
 	DriverTypeLocal         = "local"
 	DriverTypeCloud         = "cloud"
-	CloudSnap               = "cloud-snapshot-"
+	cloudSnap               = "cloud-snapshot-"
 	openStorageBackupClient = "openStorageBackupClient"
 )
 
@@ -1023,7 +1023,7 @@ func (s *OsdCsiServer) createCloudBackup(
 	req *csi.CreateSnapshotRequest,
 ) (*csi.CreateSnapshotResponse, error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
-	csiSnapshotID := CloudSnap + req.GetName()
+	csiSnapshotID := cloudSnap + req.GetName()
 	if s.cloudBackupClient != nil {
 		cloudBackupClient = s.cloudBackupClient
 	} else {
@@ -1132,7 +1132,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		logrus.Errorf("Snapshot id was not provided")
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
-	if strings.HasPrefix(snapshotId, "cloud-snapshot-") {
+	if strings.HasPrefix(snapshotId, cloudSnap) {
 		return s.deleteCloudSnapshot(ctx, req)
 	} else {
 		return s.deleteLocalSnapshot(ctx, req)
