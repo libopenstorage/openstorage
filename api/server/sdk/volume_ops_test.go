@@ -457,7 +457,9 @@ func TestSdkVolumeInspect(t *testing.T) {
 	req.Options = &api.VolumeInspectOptions{Deep: true}
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}, nil).
+		Inspect([]string{id}, &api.VolumeInspectOptions{
+			VolumeConsumers: true,
+		}).
 		Return([]*api.Volume{
 			{
 				Id: id,
@@ -506,7 +508,9 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	// Returns key not found
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}, nil).
+		Inspect([]string{id}, &api.VolumeInspectOptions{
+			VolumeConsumers: true,
+		}).
 		Return([]*api.Volume{}, kvdb.ErrNotFound).
 		Times(1)
 
@@ -523,7 +527,9 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	// Key not found, err is nil but empty list returned
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}, nil).
+		Inspect([]string{id}, &api.VolumeInspectOptions{
+			VolumeConsumers: true,
+		}).
 		Return([]*api.Volume{}, nil).
 		Times(1)
 
@@ -540,7 +546,9 @@ func TestSdkVolumeInspectKeyNotFound(t *testing.T) {
 	expectedErr := fmt.Errorf("WEIRD ERROR")
 	s.MockDriver().
 		EXPECT().
-		Inspect([]string{id}, nil).
+		Inspect([]string{id}, &api.VolumeInspectOptions{
+			VolumeConsumers: true,
+		}).
 		Return([]*api.Volume{}, expectedErr).
 		Times(1)
 
