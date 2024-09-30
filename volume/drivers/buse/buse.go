@@ -328,7 +328,7 @@ func (d *driver) Unmount(ctx context.Context, volumeID string, mountpath string,
 func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLocator, noRetry bool) (string, error) {
 	volIDs := make([]string, 1)
 	volIDs[0] = volumeID
-	vols, err := d.Inspect(volIDs, nil)
+	vols, err := d.Inspect(volIDs)
 	if err != nil {
 		return "", nil
 	}
@@ -350,7 +350,7 @@ func (d *driver) Snapshot(volumeID string, readonly bool, locator *api.VolumeLoc
 }
 
 func (d *driver) Restore(volumeID string, snapID string) error {
-	if _, err := d.Inspect([]string{volumeID, snapID}, nil); err != nil {
+	if _, err := d.Inspect([]string{volumeID, snapID}); err != nil {
 		return err
 	}
 
