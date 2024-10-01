@@ -607,8 +607,14 @@ func (s *OsdCsiServer) CreateVolume(
 		if snapshot != nil && strings.HasPrefix(snapshot.SnapshotId, cloudSnap) {
 			// operation is restore from a cloud snapshot
 			logger = logger.WithField("snapshotId", snapshot.GetSnapshotId())
-			logger.Infof("Restoring snapshot to Volume: %s", req.GetName())
-			return s.restoreSnapshot(ctx, req, conn, logger)
+			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, logger)
+			if err != nil {
+				return nil, err
+			}
+			if newVolumeId == "" {
+				// volume has not been restored, returning empty response so that this request will be retried
+				return &csi.CreateVolumeResponse{}, nil
+			}
 		} else {
 			labels := locator.GetVolumeLabels()
 			if spec.GetFADAPodName() != "" {
@@ -632,6 +638,8 @@ func (s *OsdCsiServer) CreateVolume(
 		VolumeId: newVolumeId,
 	})
 	if err != nil {
+		logger.WithError(err).WithField("volumeName", req.GetName()).WithField("volumeId", newVolumeId).
+			Warnf("Error occurred while inspecting volume")
 		return nil, err
 	}
 
@@ -1411,14 +1419,15 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 }
 
 func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
-	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, logger *logrus.Entry,
-) (resp *csi.CreateVolumeResponse, err error) {
+	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, volumes api.OpenStorageVolumeClient, logger *logrus.Entry,
+) (volumeId string, err error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
 	if s.cloudBackupClient != nil {
 		cloudBackupClient = s.cloudBackupClient
 	} else {
 		cloudBackupClient = api.NewOpenStorageCloudBackupClient(connection)
 	}
+	logger.Infof("Restoring volume from cloud snapshot")
 	snapshot := req.VolumeContentSource.GetSnapshot()
 	csiSnapshotID := snapshot.GetSnapshotId()
 	// Get parameters
@@ -1426,21 +1435,22 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	if err != nil {
 		logger.WithError(err).Error("Unable to get spec from opts")
 		e := fmt.Sprintf("Unable to get parameters: %s", err.Error())
-		return nil, status.Error(codes.InvalidArgument, e)
+		return "", status.Error(codes.InvalidArgument, e)
 	}
 
+	// no active restore in progress
 	response, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
 	if err != nil {
 		logger.WithError(err).Errorf("Could not get snapshot status")
-		return nil, err
+		return "", err
 	}
 
 	backupStatus, ok := response.Statuses[csiSnapshotID]
 	if !ok {
 		logger.WithError(err).Errorf("Snapshot not found in status")
-		return nil, fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
+		return "", fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
 	}
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
@@ -1451,17 +1461,36 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		CredentialId:      credentialID,
 	})
 	if err != nil {
-		logger.Infof("Unable to restore from cloud snapshot")
-		return nil, err
+		errStatus, ok := status.FromError(err)
+		if ok && errStatus.Code() == codes.AlreadyExists {
+			// we currently do not seem to have a good mechanism to find the volume id for the corresponding restore action
+			// the Restore API returns an error when the restore action is progress, Hence we have to follow the long
+			// winded approach below to get the volume id for the restored volume
+			logger.WithError(err).Infof("Restore is already in progress")
+			listResponse, inspectErr := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
+				Name: req.GetName(),
+			})
+			if inspectErr != nil {
+				logger.WithError(err).Errorf("Error while checking volume by name during restore")
+				return "", err
+			}
+			volumeList := listResponse.Volumes
+			if len(volumeList) > 1 {
+				logger.WithError(err).Errorf("Multiple volumes found with same name")
+				return "", fmt.Errorf("multiple volumes found with same name for snapshot %s", csiSnapshotID)
+			} else if len(volumeList) == 0 {
+				logger.WithError(err).Errorf("Could not find volumes with the name, the restore process is in progress")
+				return "", fmt.Errorf("could not find volumes with the namee for snapshot %s", csiSnapshotID)
+			} else {
+				logger.WithField("volumeId", volumeList[0].Volume.Id).Infof("Restore volume has created the volume id")
+				return volumeList[0].Volume.Id, nil
+			}
+		}
+		logger.WithError(err).Errorf("Unable to restore from cloud snapshot")
+		return "", err
 	}
-	logger.Infof("Successfully restored cloud snapshot")
-	resp = &csi.CreateVolumeResponse{
-		Volume: &csi.Volume{
-			VolumeId:      snapResp.GetRestoreVolumeId(),
-			ContentSource: req.VolumeContentSource,
-		},
-	}
-	return
+	logger.WithField("restoreVolumeId", snapResp.GetRestoreVolumeId()).Infof("Successfully restored cloud snapshot")
+	return "", nil
 }
 
 func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {
