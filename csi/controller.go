@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
+	"google.golang.org/grpc"
 	"math"
 	"reflect"
 	"sort"
@@ -520,9 +521,11 @@ func (s *OsdCsiServer) CreateVolume(
 	// Get parent ID from request: snapshot or volume
 	if req.GetVolumeContentSource() != nil {
 		if sourceSnap := req.GetVolumeContentSource().GetSnapshot(); sourceSnap != nil {
+			if len(sourceSnap.GetSnapshotId()) == 0 {
+				return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
+			}
 			source.Parent = sourceSnap.SnapshotId
 		}
-
 		if sourceVol := req.GetVolumeContentSource().GetVolume(); sourceVol != nil {
 			source.Parent = sourceVol.VolumeId
 		}
@@ -605,7 +608,7 @@ func (s *OsdCsiServer) CreateVolume(
 			// operation is restore from a cloud snapshot
 			logger = logger.WithField("snapshotId", snapshot.GetSnapshotId())
 			logger.Infof("Restoring snapshot to Volume: %s", req.GetName())
-			return s.restoreSnapshot(ctx, req, logger)
+			return s.restoreSnapshot(ctx, req, conn, logger)
 		} else {
 			labels := locator.GetVolumeLabels()
 			if spec.GetFADAPodName() != "" {
@@ -1394,17 +1397,16 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 }
 
 func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
-	req *csi.CreateVolumeRequest, logger *logrus.Entry,
+	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, logger *logrus.Entry,
 ) (resp *csi.CreateVolumeResponse, err error) {
-	cloudBackupClient, err := s.getCloudBackupClient(ctx, logger)
-	if err != nil {
-		return nil, err
+	var cloudBackupClient api.OpenStorageCloudBackupClient
+	if s.cloudBackupClient != nil {
+		cloudBackupClient = s.cloudBackupClient
+	} else {
+		cloudBackupClient = api.NewOpenStorageCloudBackupClient(connection)
 	}
 	snapshot := req.VolumeContentSource.GetSnapshot()
 	csiSnapshotID := snapshot.GetSnapshotId()
-	if len(csiSnapshotID) == 0 {
-		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
-	}
 	// Get parameters
 	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
