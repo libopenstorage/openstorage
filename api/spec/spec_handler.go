@@ -106,6 +106,7 @@ var (
 	haRegex                       = regexp.MustCompile(api.SpecHaLevel + "=([0-9]+),?")
 	cosRegex                      = regexp.MustCompile(api.SpecPriority + "=([A-Za-z]+),?")
 	sharedRegex                   = regexp.MustCompile(api.SpecShared + "=([A-Za-z]+),?")
+	sharedBlockRegex              = regexp.MustCompile(api.SpecSharedBlock + "=([A-Za-z]+),?")
 	journalRegex                  = regexp.MustCompile(api.SpecJournal + "=([A-Za-z]+),?")
 	sharedv4Regex                 = regexp.MustCompile(api.SpecSharedv4 + "=([A-Za-z]+),?")
 	cascadedRegex                 = regexp.MustCompile(api.SpecCascaded + "=([A-Za-z]+),?")
@@ -652,7 +653,12 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 			} else {
 				spec.IoThrottle.WriteBwMbytes = uint32(throttleBW)
 			}
-
+		case api.SpecSharedBlock:
+			if sharedblock, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, nil, err
+			} else {
+				spec.SharedBlock = sharedblock
+			}
 		default:
 			locator.VolumeLabels[k] = v
 		}
@@ -675,6 +681,13 @@ func (d *specHandler) UpdateSpecFromOpts(opts map[string]string, spec *api.Volum
 				spec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
 			}
 			spec.ProxySpec.PureFileSpec.FullVolName = *pureBackendVolName
+		}
+	}
+
+	if spec.SharedBlock {
+		if spec.Format != api.FSType_FS_TYPE_NONE {
+			// shared block volumes are exported as is without any implicit format
+			spec.Format = api.FSType_FS_TYPE_NONE
 		}
 	}
 
@@ -893,6 +906,9 @@ func (d *specHandler) SpecOptsFromString(
 	}
 	if ok, fsFormatOptions := d.getVal(SpecFsFormatOptionsRegex, str); ok {
 		opts[api.SpecFsFormatOptions] = fsFormatOptions
+	}
+	if ok, shared := d.getVal(sharedBlockRegex, str); ok {
+		opts[api.SpecSharedBlock] = shared
 	}
 	return true, opts, name
 }

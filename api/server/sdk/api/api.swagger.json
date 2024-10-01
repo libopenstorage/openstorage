@@ -1418,6 +1418,36 @@
         },
         "type": "object"
       },
+      "apiMigration": {
+        "description": "Migration object applied on volume spec tracks vol migration\nof shared raw block volumes in kubevirt VM migration usecase.",
+        "properties": {
+          "active": {
+            "format": "boolean",
+            "type": "boolean"
+          },
+          "dest_address": {
+            "type": "string"
+          },
+          "dest_machine": {
+            "type": "string"
+          },
+          "dest_node": {
+            "format": "int64",
+            "type": "integer"
+          },
+          "source_address": {
+            "type": "string"
+          },
+          "source_machine": {
+            "type": "string"
+          },
+          "source_node": {
+            "format": "int64",
+            "type": "integer"
+          }
+        },
+        "type": "object"
+      },
       "apiMountOptions": {
         "description": "MountOptions defines the mount options with which a volume is mounted.",
         "properties": {
@@ -5570,6 +5600,13 @@
             "description": "Error is the Last recorded error.",
             "type": "string"
           },
+          "exported_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExportedOn tracks attached volumes on multiple nodes for RWX and ROX volumes",
+            "type": "array"
+          },
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
@@ -5608,6 +5645,9 @@
           },
           "locator": {
             "$ref": "#/components/schemas/apiVolumeLocator"
+          },
+          "migration": {
+            "$ref": "#/components/schemas/apiMigration"
           },
           "mount_options": {
             "$ref": "#/components/schemas/apiMountOptions"
@@ -5975,13 +6015,18 @@
             "$ref": "#/components/schemas/apiScanPolicy"
           },
           "shared": {
-            "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
             "format": "boolean",
+            "title": "Shared is true if this volume can be concurrently accessed by multiple users over nfs",
+            "type": "boolean"
+          },
+          "shared_block": {
+            "format": "boolean",
+            "title": "shared_block is true if this volume can be concurrently accessed by multiple nodes",
             "type": "boolean"
           },
           "sharedv4": {
-            "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
             "format": "boolean",
+            "title": "Sharedv4 is true if this volume can be accessed via sharedv4 over nfs",
             "type": "boolean"
           },
           "sharedv4_mount_options": {
@@ -6403,7 +6448,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.54"
+    "version": "0.101.55"
   },
   "openapi": "3.0.0",
   "paths": {

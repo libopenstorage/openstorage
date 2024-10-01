@@ -124,7 +124,7 @@ func (s *OsdCsiServer) NodePublishVolume(
 	driverType := s.driver.Type()
 	if driverType != api.DriverType_DRIVER_TYPE_BLOCK &&
 		req.GetVolumeCapability().GetBlock() != nil {
-		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach as block a non block device")
+		return nil, status.Errorf(codes.InvalidArgument, "Trying to attach a block device through unsupported driver")
 	}
 
 	// Gather volume attributes

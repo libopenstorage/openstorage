@@ -2,6 +2,9 @@
 
 ## Releases
 
+### v0.101.55 - (02/10/2024)
+
+* Added shared block support
 ### v0.101.54 - (09/23/2024)
 
 * Revert verify-checksum changes
