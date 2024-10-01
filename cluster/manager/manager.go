@@ -1830,7 +1830,8 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			// If node is not down, do not remove it
 			if nodeCacheStatus != api.Status_STATUS_OFFLINE &&
 				nodeCacheStatus != api.Status_STATUS_MAINTENANCE &&
-				nodeCacheStatus != api.Status_STATUS_DECOMMISSION {
+				nodeCacheStatus != api.Status_STATUS_DECOMMISSION &&
+				!forceRemove {
 
 				msg := fmt.Sprintf(decommissionErrMsg, nodes[i].Id)
 				logrus.Errorf(msg+", node status: %s", nodeCacheStatus)
@@ -1857,7 +1858,7 @@ func (c *ClusterManager) Remove(nodes []api.Node, forceRemove bool) error {
 			logrus.Infof("Remove node: ask cluster listener: "+
 				"can we remove node ID %s, %s",
 				nodes[i].Id, e.Value.(cluster.ClusterListener).String())
-			additionalMsg, err := e.Value.(cluster.ClusterListener).CanNodeRemove(&nodes[i])
+			additionalMsg, err := e.Value.(cluster.ClusterListener).CanNodeRemove(&nodes[i], forceRemove)
 			if err != nil && !(err == cluster.ErrRemoveCausesDataLoss && forceRemove) {
 				msg := fmt.Sprintf("Cannot remove node ID %s: %s.", nodes[i].Id, err)
 				if additionalMsg != "" {

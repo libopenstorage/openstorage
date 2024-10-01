@@ -23,6 +23,7 @@ import (
 	"github.com/libopenstorage/openstorage/api"
 	mountattachoptions "github.com/libopenstorage/openstorage/pkg/options"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -76,6 +77,7 @@ func (s *VolumeServer) Attach(
 	}
 
 	s.auditLog(ctx, "mountattach.attach", "Volume %s attached", req.GetVolumeId())
+	logrus.Infof("Volume %s attached on node", req.GetVolumeId())
 	return &api.SdkVolumeAttachResponse{DevicePath: devPath}, nil
 }
 
@@ -119,6 +121,7 @@ func (s *VolumeServer) Detach(
 	}
 
 	s.auditLog(ctx, "mountattach.detach", "Volume %s detached", req.GetVolumeId())
+	logrus.Infof("Volume %s detached on node", req.GetVolumeId())
 	return &api.SdkVolumeDetachResponse{}, nil
 }
 
@@ -154,6 +157,7 @@ func (s *VolumeServer) Mount(
 			err.Error())
 	}
 	s.auditLog(ctx, "mountattach.mount", "Volume %s mounted", req.GetVolumeId())
+	logrus.Infof("Volume %s mounted on node", req.GetVolumeId())
 	return &api.SdkVolumeMountResponse{}, err
 }
 
@@ -202,5 +206,6 @@ func (s *VolumeServer) Unmount(
 	}
 
 	s.auditLog(ctx, "mountattach.unmount", "Volume %s mounted", req.GetVolumeId())
+	logrus.Infof("Volume %s unmounted on node", req.GetVolumeId())
 	return &api.SdkVolumeUnmountResponse{}, nil
 }

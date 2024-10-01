@@ -437,12 +437,14 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 				Options:       attachOptions,
 				DriverOptions: req.GetOptions(),
 			})
+			vd.logRequest(method, volumeID).Infof("Attachment completed for volume")
 		} else if req.Action.IsDetach() {
 			_, err = mountAttachClient.Detach(ctx, &api.SdkVolumeDetachRequest{
 				VolumeId:      volumeID,
 				Options:       detachOptions,
 				DriverOptions: req.GetOptions(),
 			})
+			vd.logRequest(method, volumeID).Infof("Detachment completed for volume")
 		}
 
 		if err == nil {
@@ -455,6 +457,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 						MountPath:     req.Action.MountPath,
 						DriverOptions: req.GetOptions(),
 					})
+					vd.logRequest(method, volumeID).Infof("Mount completed for volume on path %s", req.Action.MountPath)
 				}
 			} else if req.Action.IsUnMount() {
 				_, err = mountAttachClient.Unmount(ctx, &api.SdkVolumeUnmountRequest{
@@ -463,6 +466,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 					Options:       unmountOptions,
 					DriverOptions: req.GetOptions(),
 				})
+				vd.logRequest(method, volumeID).Infof("Unmount completed for volume on path %s", req.Action.MountPath)
 			}
 		}
 	}
@@ -483,6 +487,7 @@ func (vd *volAPI) volumeSet(w http.ResponseWriter, r *http.Request) {
 	} else {
 		resp.Volume = resVol.GetVolume()
 	}
+	vd.logRequest(method, volumeID).Infof("Inspect completed for volume")
 	// Do not clear inspect err for attach
 	if err != nil {
 		resp.VolumeResponse = &api.VolumeResponse{
@@ -1036,7 +1041,7 @@ func (vd *volAPI) snap(w http.ResponseWriter, r *http.Request) {
 			snapRes.VolumeCreateResponse.Id = res.GetSnapshotId()
 		}
 	} else {
-		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name})
+		res, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{ParentId: snapReq.Id, Name: snapReq.Locator.Name, AdditionalLabels: snapReq.Locator.VolumeLabels})
 		if err != nil {
 			snapRes.VolumeCreateResponse.VolumeResponse = &api.VolumeResponse{
 				Error: err.Error(),

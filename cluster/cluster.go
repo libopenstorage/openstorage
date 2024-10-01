@@ -1,4 +1,5 @@
 //go:generate mockgen -package=mock -destination=mock/cluster.mock.go github.com/libopenstorage/openstorage/cluster Cluster
+//go:generate mockgen -destination=cluster/mock/cluster_listener.mock.go -package=mock github.com/libopenstorage/openstorage/cluster ClusterListener
 package cluster
 
 import (
@@ -218,7 +219,7 @@ type ClusterListenerNodeOps interface {
 	CanNodeJoin(node *api.Node, clusterInfo *ClusterInfo, nodeInitialized bool) error
 
 	// CanNodeRemove test to see if we can remove this node
-	CanNodeRemove(node *api.Node) (string, error)
+	CanNodeRemove(node *api.Node, forceRemove bool) (string, error)
 
 	// MarkNodeForRemoval instructs the listeners that the ClusterManager
 	// is going ahead with the node removal. The API does not expect any
@@ -480,7 +481,7 @@ func (nc *NullClusterListener) Remove(node *api.Node, forceRemove bool) error {
 	return nil
 }
 
-func (nc *NullClusterListener) CanNodeRemove(node *api.Node) (string, error) {
+func (nc *NullClusterListener) CanNodeRemove(node *api.Node, forceRemove bool) (string, error) {
 	return "", nil
 }
 

@@ -254,10 +254,10 @@ func (d *driver) attachTokenMount(ctx context.Context, request *mountRequest) (c
 
 // parseTokenInput reads token input from the given name and opts.
 // The following is the order of precedence for token in types:
-//  1. token=<token> in name
-//  2. token in opts
-//  3. token_secret=<secret> in name
-//  4. token_secret in opts
+//   1. token=<token> in name
+//   2. token in opts
+//   3. token_secret=<secret> in name
+//   4. token_secret in opts
 func (d *driver) parseTokenInput(name string, opts map[string]string) (string, error) {
 	// get token from name
 	tokenFromName, tokenInName := d.GetTokenFromString(name)
@@ -375,8 +375,8 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	if source != nil && len(source.Parent) != 0 {
 		// clone
 		_, err = volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
-			Name:             name,
-			ParentId:         source.Parent,
+			Name:     name,
+			ParentId: source.Parent,
 			AdditionalLabels: locator.GetVolumeLabels(),
 		})
 	} else {
