@@ -1042,35 +1042,32 @@ func (s *OsdCsiServer) createCloudBackup(
 	}
 	logger.Infof("Creating cloud snapshot")
 	// Check if the snapshot with this name already exists
-	backupStatus, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+	backupStatusResponse, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
 	if err == nil {
 		// snapshot with the task id is present in the status
-		isSnapshotIDPresentInCloud := false
-		if backupStatus != nil {
-			_, isSnapshotIDPresentInCloud = backupStatus.Statuses[csiSnapshotID]
-		}
-		if !isSnapshotIDPresentInCloud {
+		_, ok := backupStatusResponse.Statuses[csiSnapshotID]
+		if !ok {
 			return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
 		}
-		snapshotStatus := backupStatus.Statuses[csiSnapshotID]
+		snapshotStatus := backupStatusResponse.Statuses[csiSnapshotID]
 		logger.Infof("Status of snapshot %v", snapshotStatus.Status)
 		isBackupReady := snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 		return &csi.CreateSnapshotResponse{
 			Snapshot: &csi.Snapshot{
 				SnapshotId:     csiSnapshotID,
 				SourceVolumeId: req.GetSourceVolumeId(),
-				CreationTime:   backupStatus.Statuses[csiSnapshotID].StartTime,
+				CreationTime:   snapshotStatus.StartTime,
 				ReadyToUse:     isBackupReady,
-				SizeBytes:      int64(backupStatus.Statuses[csiSnapshotID].BytesDone),
+				SizeBytes:      int64(snapshotStatus.BytesDone),
 			},
 		}, nil
 	}
 	// if the status check failed with anything other than not found, return the error
 	if !sdk.IsErrorNotFound(err) {
-		logger.Errorf("Failed to get snapshot status")
-		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+		logger.Errorf("Failed to get snapshot status during snapshot create")
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot, could not get snapshot status: %v", err)
 	}
 	logger.Infof("Creating cloud snapshot")
 
@@ -1090,11 +1087,28 @@ func (s *OsdCsiServer) createCloudBackup(
 	if err != nil {
 		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
 	}
+
+	// we need to get status again, as parameters such as CreationTime is not returned in the Create response
+	// above, and CreationTime is a required parameter
+	backupStatusResponse, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	if err != nil {
+		logger.Errorf("Failed to get snapshot status after snapshot create")
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot, could not get snapshot status after create: %v", err)
+	}
+	_, ok := backupStatusResponse.Statuses[csiSnapshotID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+	}
+	snapshotStatus := backupStatusResponse.Statuses[csiSnapshotID]
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &csi.Snapshot{
 			SnapshotId:     csiSnapshotID,
+			CreationTime:   snapshotStatus.StartTime,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			ReadyToUse:     false,
+			SizeBytes:      int64(snapshotStatus.BytesDone),
 		},
 	}, nil
 }
@@ -1414,9 +1428,23 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		e := fmt.Sprintf("Unable to get parameters: %s", err.Error())
 		return nil, status.Error(codes.InvalidArgument, e)
 	}
+
+	response, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	if err != nil {
+		logger.WithError(err).Errorf("Could not get snapshot status")
+		return nil, err
+	}
+
+	backupStatus, ok := response.Statuses[csiSnapshotID]
+	if !ok {
+		logger.WithError(err).Errorf("Snapshot not found in status")
+		return nil, fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
+	}
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
-		BackupId:          csiSnapshotID,
+		BackupId:          backupStatus.GetBackupId(),
 		RestoreVolumeName: req.GetName(),
 		TaskId:            req.GetName(),
 		Locator:           locator,

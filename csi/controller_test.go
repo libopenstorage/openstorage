@@ -3787,6 +3787,7 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 					SizeBytes:      0,
 					SnapshotId:     cloudSnap + "new-ok",
 					SourceVolumeId: mockSourceVolumeID,
+					CreationTime:   timeNow,
 					ReadyToUse:     false,
 				},
 			},
@@ -3803,6 +3804,21 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 						}, nil
 
 					})
+				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+						return &api.SdkCloudBackupStatusResponse{
+							Statuses: map[string]*api.SdkCloudBackupStatus{
+								req.TaskId: {
+									BackupId:    req.TaskId,
+									Status:      api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued,
+									StartTime:   timeNow,
+									SrcVolumeId: mockSourceVolumeID,
+									BytesDone:   0,
+								},
+							},
+						}, nil
+					})
+
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
 			&OsdCsiServer{
@@ -4062,12 +4078,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 			"",
 			nil,
 			true,
-			func() {
-				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
-					func(ctx context.Context) (*grpc.ClientConn, bool, error) {
-						return nil, true, nil
-					})
-			},
+			func() {},
 			&OsdCsiServer{
 				specHandler:        spec.NewSpecHandler(),
 				mu:                 sync.Mutex{},
@@ -4130,10 +4141,10 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 		},
 		{
 			"Snapshot restored without error",
-			"ok",
+			cloudSnap + "ok",
 			&csi.CreateVolumeResponse{
 				Volume: &csi.Volume{
-					VolumeId: "ok",
+					VolumeId: cloudSnap + "ok",
 					ContentSource: &csi.VolumeContentSource{
 						Type: &csi.VolumeContentSource_Snapshot{
 							Snapshot: &csi.VolumeContentSource_SnapshotSource{
