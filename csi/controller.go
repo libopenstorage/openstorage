@@ -563,9 +563,13 @@ func (s *OsdCsiServer) CreateVolume(
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
+	var volumes api.OpenStorageVolumeClient
+	if s.volumeClient != nil {
+		volumes = s.volumeClient
+	} else {
+		volumes = api.NewOpenStorageVolumeClient(conn)
+	}
 	// Check ID is valid with the specified volume capabilities
-	volumes := api.NewOpenStorageVolumeClient(conn)
-
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
@@ -1480,7 +1484,7 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 				return "", fmt.Errorf("multiple volumes found with same name for snapshot %s", csiSnapshotID)
 			} else if len(volumeList) == 0 {
 				logger.WithError(err).Errorf("Could not find volumes with the name, the restore process is in progress")
-				return "", fmt.Errorf("could not find volumes with the namee for snapshot %s", csiSnapshotID)
+				return "", nil
 			} else {
 				logger.WithField("volumeId", volumeList[0].Volume.Id).Infof("Restore volume has created the volume id")
 				return volumeList[0].Volume.Id, nil

@@ -95,6 +95,7 @@ type OsdCsiServer struct {
 	allowInlineVolumes bool
 	roundRobinBalancer loadbalancer.Balancer
 	cloudBackupClient  api.OpenStorageCloudBackupClient
+	volumeClient       api.OpenStorageVolumeClient
 	config             *OsdCsiServerConfig
 	autoRecoverStopCh  chan struct{}
 	stopCleanupCh      chan bool
