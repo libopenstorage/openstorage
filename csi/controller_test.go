@@ -4180,10 +4180,10 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 						}, nil
 					})
 
-				mockCloudBackupClient.EXPECT().Restore(gomock.Any(), api.SdkCloudBackupRestoreRequest{
-					BackupId:          cloudSnap + "-ok",
-					RestoreVolumeName: mockRestoreVolumeId,
-					TaskId:            mockRestoreVolumeId,
+				mockCloudBackupClient.EXPECT().Restore(gomock.Any(), &api.SdkCloudBackupRestoreRequest{
+					BackupId:          cloudSnap + "ok",
+					RestoreVolumeName: mockVolumeName,
+					TaskId:            mockVolumeName,
 					Spec: &api.RestoreVolumeSpec{
 						HaLevel:          2,
 						IoProfile:        api.IoProfile_IO_PROFILE_AUTO,
@@ -4199,7 +4199,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 						IoProfileBkupSrc: true,
 						AutoFstrim:       api.RestoreParamBoolType_PARAM_FALSE,
 					},
-					Locator: &api.VolumeLocator{VolumeLabels: map[string]string{"ephemeral": "true", "namespace": "", "pvc": ""}},
+					Locator: &api.VolumeLocator{VolumeLabels: map[string]string{"ephemeral": "true", "namespace": "", "pvc": "", "repl": "2"}},
 				}, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupRestoreRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupRestoreResponse, error) {
 						return &api.SdkCloudBackupRestoreResponse{
