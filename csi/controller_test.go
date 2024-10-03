@@ -4179,7 +4179,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 							},
 						}, nil
 					})
-				mockCloudBackupClient.EXPECT().Restore(gomock.Any(), gomock.Any(), gomock.Any()).
+				mockCloudBackupClient.EXPECT().Restore(gomock.Any(), &api.SdkCloudBackupRestoreRequest{}, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupRestoreRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupRestoreResponse, error) {
 						return &api.SdkCloudBackupRestoreResponse{
 							RestoreVolumeId: req.BackupId,
@@ -4391,6 +4391,9 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 					Type: &csi.VolumeContentSource_Snapshot{
 						Snapshot: tt.source,
 					},
+				},
+				Parameters: map[string]string{
+					"ephemeral": "true",
 				},
 			}
 			tt.expect()

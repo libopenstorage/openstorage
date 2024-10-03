@@ -611,7 +611,7 @@ func (s *OsdCsiServer) CreateVolume(
 		if snapshot != nil && strings.HasPrefix(snapshot.SnapshotId, cloudSnap) {
 			// operation is restore from a cloud snapshot
 			logger = logger.WithField("snapshotId", snapshot.GetSnapshotId())
-			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, logger)
+			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, locator, spec, logger)
 			if err != nil {
 				return nil, err
 			}
@@ -1423,7 +1423,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 }
 
 func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
-	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, volumes api.OpenStorageVolumeClient, logger *logrus.Entry,
+	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, volumes api.OpenStorageVolumeClient, locator *api.VolumeLocator, spec *api.VolumeSpec, logger *logrus.Entry,
 ) (volumeId string, err error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
 	if s.cloudBackupClient != nil {
@@ -1434,13 +1434,6 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	logger.Infof("Restoring volume from cloud snapshot")
 	snapshot := req.VolumeContentSource.GetSnapshot()
 	csiSnapshotID := snapshot.GetSnapshotId()
-	// Get parameters
-	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
-	if err != nil {
-		logger.WithError(err).Error("Unable to get spec from opts")
-		e := fmt.Sprintf("Unable to get parameters: %s", err.Error())
-		return "", status.Error(codes.InvalidArgument, e)
-	}
 
 	// no active restore in progress
 	response, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
@@ -1456,6 +1449,8 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		logger.WithError(err).Errorf("Snapshot not found in status")
 		return "", fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
 	}
+
+	restoreSpec := getRestoreSpecFromVolumeSpec(spec)
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
 		BackupId:          backupStatus.GetBackupId(),
@@ -1463,6 +1458,7 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		TaskId:            req.GetName(),
 		Locator:           locator,
 		CredentialId:      credentialID,
+		Spec:              &restoreSpec,
 	})
 	if err != nil {
 		errStatus, ok := status.FromError(err)
@@ -1567,20 +1563,51 @@ func roundUpSizeInt64(size resource.Quantity, allocationUnitBytes int64) (int64,
 	return roundedUp, nil
 }
 
-func (s *OsdCsiServer) getCloudBackupClient(ctx context.Context, logger *logrus.Entry) (api.OpenStorageCloudBackupClient, error) {
-	if s.cloudBackupClient != nil {
-		return s.cloudBackupClient, nil
-	} else {
-		// Get grpc connection
-		conn, err := s.getRemoteConn(ctx)
-		if err != nil {
-			logger.Errorf("Failed to get GRPC connection")
-			return nil, status.Errorf(
-				codes.Unavailable,
-				"Unable to connect to SDK server: %v", err)
-		}
+// converts the provided Volume Spec to a Restore Spec
+func getRestoreSpecFromVolumeSpec(volumeSpec *api.VolumeSpec) api.RestoreVolumeSpec {
+	restoreSpec := api.RestoreVolumeSpec{
+		HaLevel:          volumeSpec.HaLevel,
+		Cos:              volumeSpec.Cos,
+		IoProfile:        volumeSpec.IoProfile,
+		SnapshotInterval: volumeSpec.SnapshotInterval,
+		Shared:           getBoolValue(volumeSpec.Shared),
+		ReplicaSet:       volumeSpec.ReplicaSet,
+		AggregationLevel: volumeSpec.AggregationLevel,
+		SnapshotSchedule: &api.RestoreVolSnashotSchedule{
+			Schedule: volumeSpec.SnapshotSchedule,
+		},
+		Sticky:            getBoolValue(volumeSpec.Sticky),
+		Group:             volumeSpec.Group,
+		GroupEnforced:     volumeSpec.GroupEnforced,
+		Journal:           getBoolValue(volumeSpec.Journal),
+		Sharedv4:          getBoolValue(volumeSpec.Sharedv4),
+		QueueDepth:        volumeSpec.QueueDepth,
+		Nodiscard:         getBoolValue(volumeSpec.Nodiscard),
+		IoStrategy:        volumeSpec.IoStrategy,
+		PlacementStrategy: volumeSpec.PlacementStrategy,
+		StoragePolicy: &api.RestoreVolStoragePolicy{
+			Policy: volumeSpec.StoragePolicy,
+		},
+		Ownership:            volumeSpec.Ownership,
+		ExportSpec:           volumeSpec.ExportSpec,
+		FpPreference:         getBoolValue(volumeSpec.FpPreference),
+		MountOptions:         volumeSpec.MountOptions,
+		Sharedv4MountOptions: volumeSpec.Sharedv4MountOptions,
+		ProxyWrite:           getBoolValue(volumeSpec.ProxyWrite),
+		IoProfileBkupSrc:     true, // TODO is this correct
+		ProxySpec:            volumeSpec.ProxySpec,
+		Sharedv4ServiceSpec:  volumeSpec.Sharedv4ServiceSpec,
+		Sharedv4Spec:         volumeSpec.Sharedv4Spec,
+		AutoFstrim:           getBoolValue(volumeSpec.AutoFstrim),
+		IoThrottle:           volumeSpec.IoThrottle,
+	}
+	return restoreSpec
+}
 
-		// Check ID is valid with the specified volume capabilities
-		return api.NewOpenStorageCloudBackupClient(conn), nil
+func getBoolValue(value bool) api.RestoreParamBoolType {
+	if value {
+		return api.RestoreParamBoolType_PARAM_TRUE
+	} else {
+		return api.RestoreParamBoolType_PARAM_FALSE
 	}
 }

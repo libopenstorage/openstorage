@@ -355,3 +355,21 @@ func adjustFinalErrors(err error) error {
 
 	return err
 }
+
+func (s *OsdCsiServer) getCloudBackupClient(ctx context.Context, logger *logrus.Entry) (api.OpenStorageCloudBackupClient, error) {
+	if s.cloudBackupClient != nil {
+		return s.cloudBackupClient, nil
+	} else {
+		// Get grpc connection
+		conn, err := s.getRemoteConn(ctx)
+		if err != nil {
+			logger.Errorf("Failed to get GRPC connection")
+			return nil, status.Errorf(
+				codes.Unavailable,
+				"Unable to connect to SDK server: %v", err)
+		}
+
+		// Check ID is valid with the specified volume capabilities
+		return api.NewOpenStorageCloudBackupClient(conn), nil
+	}
+}
