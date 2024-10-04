@@ -4207,6 +4207,18 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 							TaskId:          req.BackupId,
 						}, nil
 					})
+				mockVolumesClient.EXPECT().InspectWithFilters(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkVolumeInspectWithFiltersRequest, opts ...grpc.CallOption) (*api.SdkVolumeInspectWithFiltersResponse, error) {
+						return &api.SdkVolumeInspectWithFiltersResponse{
+							Volumes: []*api.SdkVolumeInspectResponse{
+								{
+									Volume: &api.Volume{
+										Id: mockRestoreVolumeId,
+									},
+								},
+							},
+						}, nil
+					})
 			},
 			&OsdCsiServer{
 				specHandler:        spec.NewSpecHandler(),
