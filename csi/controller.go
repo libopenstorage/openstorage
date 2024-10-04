@@ -20,25 +20,25 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/libopenstorage/openstorage/api/server/sdk"
+	"github.com/portworx/sched-ops/task"
 	"google.golang.org/grpc"
 	"math"
 	"reflect"
 	"sort"
 	"strings"
+	"time"
 
-	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/resource"
-
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
-
-	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/portworx/kvdb"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -614,10 +614,6 @@ func (s *OsdCsiServer) CreateVolume(
 			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, locator, spec, logger)
 			if err != nil {
 				return nil, err
-			}
-			if newVolumeId == "" {
-				// volume has not been restored, returning empty response so that this request will be retried
-				return &csi.CreateVolumeResponse{}, nil
 			}
 		} else {
 			labels := locator.GetVolumeLabels()
@@ -1435,7 +1431,6 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	snapshot := req.VolumeContentSource.GetSnapshot()
 	csiSnapshotID := snapshot.GetSnapshotId()
 
-	// no active restore in progress
 	response, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
 		TaskId: csiSnapshotID,
 	})
@@ -1463,34 +1458,57 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 	if err != nil {
 		errStatus, ok := status.FromError(err)
 		if ok && errStatus.Code() == codes.AlreadyExists {
-			// we currently do not seem to have a good mechanism to find the volume id for the corresponding restore action
-			// the Restore API returns an error when the restore action is progress, Hence we have to follow the long
-			// winded approach below to get the volume id for the restored volume
 			logger.WithError(err).Infof("Restore is already in progress")
-			listResponse, inspectErr := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
-				Name: req.GetName(),
-			})
-			if inspectErr != nil {
-				logger.WithError(err).Errorf("Error while checking volume by name during restore")
-				return "", err
-			}
-			volumeList := listResponse.Volumes
-			if len(volumeList) > 1 {
-				logger.WithError(err).Errorf("Multiple volumes found with same name")
-				return "", fmt.Errorf("multiple volumes found with same name for snapshot %s", csiSnapshotID)
-			} else if len(volumeList) == 0 {
-				logger.WithError(err).Errorf("Could not find volumes with the name, the restore process is in progress")
-				return "", nil
-			} else {
-				logger.WithField("volumeId", volumeList[0].Volume.Id).Infof("Restore volume has created the volume id")
-				return volumeList[0].Volume.Id, nil
-			}
+			return getVolumeId(ctx, req.GetName(), volumes, logger)
 		}
 		logger.WithError(err).Errorf("Unable to restore from cloud snapshot")
 		return "", err
 	}
-	logger.WithField("restoreVolumeId", snapResp.GetRestoreVolumeId()).Infof("Successfully restored cloud snapshot")
-	return "", nil
+	logger.WithField("restoreVolumeId", snapResp.GetRestoreVolumeId()).Infof("Successfully restored cloud snapshot, waiting for volume id to be generated")
+
+	// the Restore API does not return volume id, wait till volume id is generated so that subsequent Inspect call can
+	// be triggered. CSI does not behave properly is Volume context is not set properly in response, and in order
+	// to set volume response, we need the volume id
+	id, err := task.DoRetryWithTimeout(func() (interface{}, bool, error) {
+		id, statusErr := getVolumeId(ctx, req.GetName(), volumes, logger)
+		if statusErr != nil {
+			return "", true, statusErr
+		}
+		if id != "" {
+			return id, true, nil
+		}
+		return "", true, fmt.Errorf("volume id for %s is not generated", req.GetName())
+	}, 120*time.Second, 10*time.Second)
+
+	if err != nil {
+		logger.WithError(err).Errorf("Error occured while checking volume id during restore")
+		return "", err
+	}
+	return id.(string), nil
+}
+
+// we currently do not seem to have a good mechanism to find the volume id for the corresponding restore action
+// the Restore API returns an error when the restore action is progress, Hence we have to follow the long
+// winded approach below to get the volume id for the restored volume
+func getVolumeId(ctx context.Context, name string, volumes api.OpenStorageVolumeClient, logger *logrus.Entry) (string, error) {
+	listResponse, inspectErr := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
+		Name: name,
+	})
+	if inspectErr != nil {
+		logger.WithError(inspectErr).Errorf("Error while checking volume by name during restore")
+		return "", inspectErr
+	}
+	volumeList := listResponse.Volumes
+	if len(volumeList) > 1 {
+		logger.Errorf("Multiple volumes found with same name")
+		return "", fmt.Errorf("multiple volumes found with same name for volume %s", name)
+	} else if len(volumeList) == 0 {
+		logger.Errorf("Could not find volumes with the name, the restore process is in progress")
+		return "", nil
+	} else {
+		logger.WithField("volumeId", volumeList[0].Volume.Id).Infof("Restore volume has created the volume id")
+		return volumeList[0].Volume.Id, nil
+	}
 }
 
 func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {
