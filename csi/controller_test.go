@@ -4158,7 +4158,28 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 		{
 			"Snapshot restored without error",
 			cloudSnap + "ok",
-			&csi.CreateVolumeResponse{},
+			&csi.CreateVolumeResponse{
+				Volume: &csi.Volume{
+					VolumeId: "restore-volume-id",
+					VolumeContext: map[string]string{
+						"attached": "ATTACH_STATE_EXTERNAL",
+						"error":    "",
+						"parent":   "",
+						"readonly": "false",
+						"secure":   "false",
+						"shared":   "false",
+						"sharedv4": "false",
+						"state":    "VOLUME_STATE_NONE",
+					},
+					ContentSource: &csi.VolumeContentSource{
+						Type: &csi.VolumeContentSource_Snapshot{
+							Snapshot: &csi.VolumeContentSource_SnapshotSource{
+								SnapshotId: "cloud-snapshot-ok",
+							},
+						},
+					},
+				},
+			},
 			false,
 			func() {
 				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -4219,12 +4240,21 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 							},
 						}, nil
 					})
+				mockVolumesClient.EXPECT().Inspect(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkVolumeInspectRequest, opts ...grpc.CallOption) (*api.SdkVolumeInspectResponse, error) {
+						return &api.SdkVolumeInspectResponse{
+							Volume: &api.Volume{
+								Id: mockRestoreVolumeId,
+							},
+						}, nil
+					})
 			},
 			&OsdCsiServer{
 				specHandler:        spec.NewSpecHandler(),
 				mu:                 sync.Mutex{},
 				roundRobinBalancer: mockRoundRobinBalancer,
 				cloudBackupClient:  mockCloudBackupClient,
+				volumeClient:       mockVolumesClient,
 			},
 			&csi.VolumeContentSource_SnapshotSource{
 				SnapshotId: cloudSnap + "ok",
@@ -4312,9 +4342,30 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 			},
 		},
 		{
-			"Snapshot restored, no volume still present ",
+			"Snapshot restored, no volume still present is first call",
 			cloudSnap + "ok",
-			&csi.CreateVolumeResponse{},
+			&csi.CreateVolumeResponse{
+				Volume: &csi.Volume{
+					VolumeId: "restore-volume-id",
+					VolumeContext: map[string]string{
+						"attached": "ATTACH_STATE_EXTERNAL",
+						"error":    "",
+						"parent":   "",
+						"readonly": "false",
+						"secure":   "false",
+						"shared":   "false",
+						"sharedv4": "false",
+						"state":    "VOLUME_STATE_NONE",
+					},
+					ContentSource: &csi.VolumeContentSource{
+						Type: &csi.VolumeContentSource_Snapshot{
+							Snapshot: &csi.VolumeContentSource_SnapshotSource{
+								SnapshotId: "cloud-snapshot-ok",
+							},
+						},
+					},
+				},
+			},
 			false,
 			func() {
 				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -4343,6 +4394,26 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 					DoAndReturn(func(ctx context.Context, req *api.SdkVolumeInspectWithFiltersRequest, opts ...grpc.CallOption) (*api.SdkVolumeInspectWithFiltersResponse, error) {
 						return &api.SdkVolumeInspectWithFiltersResponse{
 							Volumes: []*api.SdkVolumeInspectResponse{},
+						}, nil
+					})
+				mockVolumesClient.EXPECT().InspectWithFilters(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkVolumeInspectWithFiltersRequest, opts ...grpc.CallOption) (*api.SdkVolumeInspectWithFiltersResponse, error) {
+						return &api.SdkVolumeInspectWithFiltersResponse{
+							Volumes: []*api.SdkVolumeInspectResponse{
+								{
+									Volume: &api.Volume{
+										Id: mockRestoreVolumeId,
+									},
+								},
+							},
+						}, nil
+					})
+				mockVolumesClient.EXPECT().Inspect(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkVolumeInspectRequest, opts ...grpc.CallOption) (*api.SdkVolumeInspectResponse, error) {
+						return &api.SdkVolumeInspectResponse{
+							Volume: &api.Volume{
+								Id: mockRestoreVolumeId,
+							},
 						}, nil
 					})
 			},
