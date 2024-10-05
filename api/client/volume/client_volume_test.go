@@ -25,7 +25,7 @@ func TestClientTLS(t *testing.T) {
 
 	clnt.SetTLS(&tls.Config{InsecureSkipVerify: true})
 
-	_, err = VolumeDriver(clnt).Inspect([]string{"12345"})
+	_, err = VolumeDriver(clnt).Inspect([]string{"12345"}, nil)
 
 	require.NoError(t, err)
 }

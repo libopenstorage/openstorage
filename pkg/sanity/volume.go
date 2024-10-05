@@ -246,7 +246,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			// REST endpoint doesn't throw any error where cli throws an error
 			By("Inspecting a volume that doesn't exist")
 			volumesToCreate = 0
-			volumes, err := volumedriver.Inspect([]string{"volume-id-doesnt-exist"})
+			volumes, err := volumedriver.Inspect([]string{"volume-id-doesnt-exist"}, nil)
 
 			Expect(err).To(BeNil())
 			Expect(volumes).To(BeEmpty())
@@ -446,7 +446,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Inspecting the volume and checking attached_on field is not empty ")
 
-			volumes, err := volumedriver.Inspect([]string{volumeID})
+			volumes, err := volumedriver.Inspect([]string{volumeID}, nil)
 
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes[0].GetAttachedOn()).ToNot(BeEquivalentTo(""))
@@ -622,7 +622,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 
 			By("Inspecting the volume for new updates")
 
-			volumes, err := volumedriver.Inspect([]string{volumeID})
+			volumes, err := volumedriver.Inspect([]string{volumeID}, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes[0].GetSpec().GetSize()).To(BeEquivalentTo(set.GetSpec().GetSize()))
 
@@ -685,7 +685,7 @@ var _ = Describe("Volume [Volume Tests]", func() {
 			By("Inspecting the volume for new updates")
 			time.Sleep(time.Second * 10)
 
-			volumes, err := volumedriver.Inspect([]string{volumeID})
+			volumes, err := volumedriver.Inspect([]string{volumeID}, nil)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(volumes[0].Spec.HaLevel).To(BeEquivalentTo(newHALevel))
 		})

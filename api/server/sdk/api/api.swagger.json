@@ -5733,6 +5733,11 @@
             "description": "Deep inspection is used to collect more information about\nthe volume. Setting this value may delay the request.",
             "format": "boolean",
             "type": "boolean"
+          },
+          "volume_consumers": {
+            "format": "boolean",
+            "title": "VolumeConsumers if true will go and attempt to inspect who is using the \nvolume being inspected. This can be an expensive call and should be skipped if\nyou don't need volume consumers",
+            "type": "boolean"
           }
         },
         "title": "Options used for volume inspection",
@@ -9832,6 +9837,16 @@
             "description": "Deep inspection is used to collect more information about\nthe volume. Setting this value may delay the request.",
             "in": "query",
             "name": "options.deep",
+            "required": false,
+            "schema": {
+              "format": "boolean",
+              "type": "boolean"
+            }
+          },
+          {
+            "description": "VolumeConsumers if true will go and attempt to inspect who is using the \nvolume being inspected. This can be an expensive call and should be skipped if\nyou don't need volume consumers.",
+            "in": "query",
+            "name": "options.volume_consumers",
             "required": false,
             "schema": {
               "format": "boolean",

@@ -105,7 +105,7 @@ func TestControllerGetVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{id}).
+			Inspect([]string{id}, nil).
 			Return([]*api.Volume{
 				vol,
 			}, nil).
@@ -940,7 +940,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 			mockCalls: []*gomock.Call{
 				s.MockDriver().
 					EXPECT().
-					Inspect([]string{"size"}).
+					Inspect([]string{"size"}, nil).
 					Return(nil, fmt.Errorf("not found")).
 					Times(1),
 
@@ -963,7 +963,7 @@ func TestControllerCreateVolumeFoundByVolumeFromNameConflict(t *testing.T) {
 
 				s.MockDriver().
 					EXPECT().
-					Inspect([]string{"size"}).
+					Inspect([]string{"size"}, nil).
 					Return(nil, fmt.Errorf("not found")).
 					Times(1),
 
@@ -1017,7 +1017,7 @@ func TestControllerCreateVolumeNoCapacity(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1095,7 +1095,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1118,7 +1118,7 @@ func TestControllerCreateVolumeFoundByVolumeFromName(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1235,7 +1235,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1248,7 +1248,7 @@ func TestControllerCreateVolumeBadParentId(t *testing.T) {
 		// VolFromName (parent)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Inspect([]string{parent}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 		s.MockDriver().
@@ -1304,7 +1304,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1317,7 +1317,7 @@ func TestControllerCreateVolumeBadSnapshot(t *testing.T) {
 		// VolFromName (parent)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{parent}).
+			Inspect([]string{parent}, nil).
 			Return([]*api.Volume{{Id: parent}}, nil).
 			Times(1),
 
@@ -1372,7 +1372,7 @@ func TestControllerCreateVolumeWithSharedv4Volume(t *testing.T) {
 		gomock.InOrder(
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{name}).
+				Inspect([]string{name}, nil).
 				Return([]*api.Volume{}, nil).
 				Times(1),
 
@@ -1456,7 +1456,7 @@ func TestControllerCreateVolumeWithSharedVolume(t *testing.T) {
 		gomock.InOrder(
 			s.MockDriver().
 				EXPECT().
-				Inspect([]string{name}).
+				Inspect([]string{name}, nil).
 				Return([]*api.Volume{}, nil).
 				Times(1),
 
@@ -1527,7 +1527,7 @@ func TestControllerCreateVolumeFails(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1577,7 +1577,7 @@ func TestControllerCreateVolumeNoNewVolumeInfo(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1651,7 +1651,7 @@ func TestControllerCreateVolumeFailedRemoteConn(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1729,7 +1729,7 @@ func TestControllerCreateVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1806,7 +1806,7 @@ func TestControllerCreateVolumeRoundUp(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1906,7 +1906,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -1919,7 +1919,7 @@ func TestControllerCreateVolumeFromSnapshot(t *testing.T) {
 		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any()).
+			Inspect(gomock.Any(), nil).
 			Return(
 				[]*api.Volume{{
 					Id: mockParentID,
@@ -2022,7 +2022,7 @@ func TestControllerCreateVolumeFromSnapshotFADAPod(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2035,7 +2035,7 @@ func TestControllerCreateVolumeFromSnapshotFADAPod(t *testing.T) {
 		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any()).
+			Inspect(gomock.Any(), nil).
 			Return(
 				[]*api.Volume{{
 					Id: mockParentID,
@@ -2128,7 +2128,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		//VolFromName name
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2141,7 +2141,7 @@ func TestControllerCreateVolumeSnapshotThroughParameters(t *testing.T) {
 		// VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{mockParentID}).
+			Inspect([]string{mockParentID}, nil).
 			Return([]*api.Volume{
 				{
 					Id: mockParentID,
@@ -2284,7 +2284,7 @@ func TestControllerCreateVolumeFromSource(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2297,7 +2297,7 @@ func TestControllerCreateVolumeFromSource(t *testing.T) {
 		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any()).
+			Inspect(gomock.Any(), nil).
 			Return(
 				[]*api.Volume{{
 					Id: mockParentID,
@@ -2401,7 +2401,7 @@ func TestControllerCreateVolumeFromSourceFADAPod(t *testing.T) {
 		// VolFromName (name)
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2414,7 +2414,7 @@ func TestControllerCreateVolumeFromSourceFADAPod(t *testing.T) {
 		//VolFromName parent
 		s.MockDriver().
 			EXPECT().
-			Inspect(gomock.Any()).
+			Inspect(gomock.Any(), nil).
 			Return(
 				[]*api.Volume{{
 					Id: mockParentID,
@@ -2503,7 +2503,7 @@ func TestControllerCreateVolumeBlock(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2621,7 +2621,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2686,7 +2686,7 @@ func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2777,7 +2777,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2848,7 +2848,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -2871,7 +2871,7 @@ func TestControllerCreateVolumeWithTopology(t *testing.T) {
 
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{name}).
+			Inspect([]string{name}, nil).
 			Return(nil, fmt.Errorf("not found")).
 			Times(1),
 
@@ -3079,7 +3079,7 @@ func TestControllerExpandVolume(t *testing.T) {
 	gomock.InOrder(
 		s.MockDriver().
 			EXPECT().
-			Inspect([]string{myid}).
+			Inspect([]string{myid}, nil).
 			Return([]*api.Volume{
 				vol,
 			}, nil).

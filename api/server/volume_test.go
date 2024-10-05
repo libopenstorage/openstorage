@@ -127,7 +127,7 @@ func TestVolumeNoAuth(t *testing.T) {
 	assert.Nil(t, resp)
 
 	// INSPECT
-	res, err := driverclient.Inspect([]string{id})
+	res, err := driverclient.Inspect([]string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -382,46 +382,46 @@ func TestVolumeCreateFailedToAuthenticate(t *testing.T) {
 /*
 func TestVolumeCreateGetNodeIdFromIpFailed(t *testing.T) {
 
-	var err error
+		var err error
 
-	ts, testVolDriver := testRestServer(t)
+		ts, testVolDriver := testRestServer(t)
 
-	defer ts.Close()
-	defer testVolDriver.Stop()
+		defer ts.Close()
+		defer testVolDriver.Stop()
 
-	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-	assert.Nil(t, err)
-	assert.NotNil(t, client)
+		client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+		assert.Nil(t, err)
+		assert.NotNil(t, client)
 
-	nodeIp := "192.168.1.1"
+		nodeIp := "192.168.1.1"
 
-	// Create a new global test cluster
-	tc := newTestCluster(t)
-	defer tc.Finish()
+		// Create a new global test cluster
+		tc := newTestCluster(t)
+		defer tc.Finish()
 
-	// Mock cluster
-	tc.MockCluster().
-		EXPECT().
-		GetNodeIdFromIp(nodeIp).
-		Return(nodeIp, fmt.Errorf("Failed to locate IP in this cluster."))
+		// Mock cluster
+		tc.MockCluster().
+			EXPECT().
+			GetNodeIdFromIp(nodeIp).
+			Return(nodeIp, fmt.Errorf("Failed to locate IP in this cluster."))
 
-	// create a volume client with Replica IPs
-	name := "myvol"
-	size := uint64(1234)
-	req := &api.VolumeCreateRequest{
-		Locator: &api.VolumeLocator{Name: name},
-		Source:  &api.Source{},
-		Spec:    &api.VolumeSpec{Size: size, ReplicaSet: &api.ReplicaSet{Nodes: []string{nodeIp}}},
+		// create a volume client with Replica IPs
+		name := "myvol"
+		size := uint64(1234)
+		req := &api.VolumeCreateRequest{
+			Locator: &api.VolumeLocator{Name: name},
+			Source:  &api.Source{},
+			Spec:    &api.VolumeSpec{Size: size, ReplicaSet: &api.ReplicaSet{Nodes: []string{nodeIp}}},
+		}
+
+		// create a volume client
+		driverclient := volumeclient.VolumeDriver(client)
+
+		res, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
+		assert.NotNil(t, err)
+		assert.EqualValues(t, "", res)
+		assert.Contains(t, err.Error(), "Failed to locate IP")
 	}
-
-	// create a volume client
-	driverclient := volumeclient.VolumeDriver(client)
-
-	res, err := driverclient.Create(context.TODO(), req.GetLocator(), req.GetSource(), req.GetSpec())
-	assert.NotNil(t, err)
-	assert.EqualValues(t, "", res)
-	assert.Contains(t, err.Error(), "Failed to locate IP")
-}
 */
 func TestVolumeSnapshotCreateSuccess(t *testing.T) {
 
@@ -575,7 +575,7 @@ func TestVolumeInspectSuccess(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect([]string{id})
+	res, err := driverclient.Inspect([]string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, res)
 	assert.NotEmpty(t, res)
@@ -632,7 +632,7 @@ func TestVolumeInspectFailed(t *testing.T) {
 	assert.Nil(t, err)
 	assert.NotEmpty(t, id)
 
-	res, err := driverclient.Inspect([]string{"myid"})
+	res, err := driverclient.Inspect([]string{"myid"}, nil)
 	assert.Nil(t, err)
 	assert.Equal(t, len(res), 0)
 
@@ -1503,111 +1503,113 @@ func TestVolumeUnmountFailed(t *testing.T) {
 /*
 func TestVolumeQuiesceSuccess(t *testing.T) {
 
-	var err error
-	ts, testVolDriver := testRestServer(t)
+		var err error
+		ts, testVolDriver := testRestServer(t)
 
-	defer ts.Close()
-	defer testVolDriver.Stop()
+		defer ts.Close()
+		defer testVolDriver.Stop()
 
-	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-	assert.Nil(t, err)
+		client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+		assert.Nil(t, err)
 
-	id := "myid"
-	quiesceid := "qid"
-	timeout := uint64(5)
+		id := "myid"
+		quiesceid := "qid"
+		timeout := uint64(5)
 
-	testVolDriver.MockDriver().
-		EXPECT().
-		Quiesce(id, timeout, quiesceid).
-		Return(nil)
+		testVolDriver.MockDriver().
+			EXPECT().
+			Quiesce(id, timeout, quiesceid).
+			Return(nil)
 
-	// create client
-	driverclient := volumeclient.VolumeDriver(client)
-	res := driverclient.Quiesce(id, timeout, quiesceid)
+		// create client
+		driverclient := volumeclient.VolumeDriver(client)
+		res := driverclient.Quiesce(id, timeout, quiesceid)
 
-	assert.Nil(t, res)
-}
+		assert.Nil(t, res)
+	}
+
 func TestVolumeQuiesceFailed(t *testing.T) {
 
-	var err error
-	ts, testVolDriver := testRestServer(t)
+		var err error
+		ts, testVolDriver := testRestServer(t)
 
-	defer ts.Close()
-	defer testVolDriver.Stop()
+		defer ts.Close()
+		defer testVolDriver.Stop()
 
-	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-	assert.Nil(t, err)
+		client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+		assert.Nil(t, err)
 
-	// volume instance
-	id := "myid"
-	quiesceid := "qid"
-	timeout := uint64(5)
+		// volume instance
+		id := "myid"
+		quiesceid := "qid"
+		timeout := uint64(5)
 
-	testVolDriver.MockDriver().
-		EXPECT().
-		Quiesce(id, timeout, quiesceid).
-		Return(fmt.Errorf("error in quiesce"))
+		testVolDriver.MockDriver().
+			EXPECT().
+			Quiesce(id, timeout, quiesceid).
+			Return(fmt.Errorf("error in quiesce"))
 
-	// create client
-	driverclient := volumeclient.VolumeDriver(client)
-	res := driverclient.Quiesce(id, timeout, quiesceid)
+		// create client
+		driverclient := volumeclient.VolumeDriver(client)
+		res := driverclient.Quiesce(id, timeout, quiesceid)
 
-	assert.NotNil(t, res)
-	assert.Contains(t, res.Error(), "error in quiesce")
-}
+		assert.NotNil(t, res)
+		assert.Contains(t, res.Error(), "error in quiesce")
+	}
 
 * TODO(ram-infrac) : Test case is failing, recheck
 func TestVolumeUnquiesceSuccess(t *testing.T) {
 
-        ts, testVolDriver := testRestServer(t)
+	        ts, testVolDriver := testRestServer(t)
 
-	ts.Close()
-	testVolDriver.Stop()
-        var err error
+		ts.Close()
+		testVolDriver.Stop()
+	        var err error
 
-        client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-        assert.Nil(t, err)
+	        client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+	        assert.Nil(t, err)
 
-        id := "myid"
+	        id := "myid"
 
-        testVolDriver.MockDriver().
-                EXPECT().
-                Unquiesce(id).
-                Return(nil)
+	        testVolDriver.MockDriver().
+	                EXPECT().
+	                Unquiesce(id).
+	                Return(nil)
 
-        // create client
-        driverclient := volumeclient.VolumeDriver(client)
-        res := driverclient.Unquiesce(id)
+	        // create client
+	        driverclient := volumeclient.VolumeDriver(client)
+	        res := driverclient.Unquiesce(id)
 
-        assert.Nil(t, res)
-}
+	        assert.Nil(t, res)
+	}
+
 *
 
 func TestVolumeUnquiesceFailed(t *testing.T) {
 
-	var err error
-	ts, testVolDriver := testRestServer(t)
+		var err error
+		ts, testVolDriver := testRestServer(t)
 
-	defer ts.Close()
-	defer testVolDriver.Stop()
+		defer ts.Close()
+		defer testVolDriver.Stop()
 
-	client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
-	assert.Nil(t, err)
+		client, err := volumeclient.NewDriverClient(ts.URL, mockDriverName, version, mockDriverName)
+		assert.Nil(t, err)
 
-	id := "myid"
+		id := "myid"
 
-	testVolDriver.MockDriver().
-		EXPECT().
-		Unquiesce(id).
-		Return(fmt.Errorf("error in unquiesce"))
+		testVolDriver.MockDriver().
+			EXPECT().
+			Unquiesce(id).
+			Return(fmt.Errorf("error in unquiesce"))
 
-	// create client
-	driverclient := volumeclient.VolumeDriver(client)
-	res := driverclient.Unquiesce(id)
+		// create client
+		driverclient := volumeclient.VolumeDriver(client)
+		res := driverclient.Unquiesce(id)
 
-	assert.NotNil(t, res)
-	assert.Contains(t, res.Error(), "error in unquiesce")
-}
+		assert.NotNil(t, res)
+		assert.Contains(t, res.Error(), "error in unquiesce")
+	}
 */
 func TestVolumeRestoreSuccess(t *testing.T) {
 
@@ -2572,7 +2574,7 @@ func TestMiddlewareVolumeInspectFailureVolumeNotFound(t *testing.T) {
 
 	// Confirm that the inspect on secret error returns to the client the correct object,
 	// which should be an empty list
-	ret, err := driverclient.Inspect([]string{id})
+	ret, err := driverclient.Inspect([]string{id}, nil)
 	assert.Nil(t, err)
 	assert.NotNil(t, ret)
 	assert.Empty(t, ret)
@@ -2796,7 +2798,7 @@ func TestStorkVolumeInspect(t *testing.T) {
 	err = driverclient.Delete(context.TODO(), id)
 	assert.Nil(t, err)
 
-	vols, err := driverclient.Inspect([]string{id})
+	vols, err := driverclient.Inspect([]string{id}, nil)
 	assert.Equal(t, len(vols), 0)
 	assert.Nil(t, err)
 	/*

@@ -937,7 +937,8 @@ func (vd *volAPI) enumerate(w http.ResponseWriter, r *http.Request) {
 			resp, err := volumes.Inspect(ctx, &api.SdkVolumeInspectRequest{
 				VolumeId: string(s),
 				Options: &api.VolumeInspectOptions{
-					Deep: true,
+					Deep:            true,
+					VolumeConsumers: true,
 				},
 			})
 			if err == nil {
