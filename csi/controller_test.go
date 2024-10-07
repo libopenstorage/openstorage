@@ -4046,6 +4046,28 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 	mockRoundRobinBalancer := mockLoadBalancer.NewMockBalancer(ctrl)
 	timeNow := ptypes.TimestampNow()
 
+	wantResponse := &csi.CreateVolumeResponse{
+		Volume: &csi.Volume{
+			VolumeId: "restore-volume-id",
+			VolumeContext: map[string]string{
+				"attached": "ATTACH_STATE_EXTERNAL",
+				"error":    "",
+				"parent":   "",
+				"readonly": "false",
+				"secure":   "false",
+				"shared":   "false",
+				"sharedv4": "false",
+				"state":    "VOLUME_STATE_NONE",
+			},
+			ContentSource: &csi.VolumeContentSource{
+				Type: &csi.VolumeContentSource_Snapshot{
+					Snapshot: &csi.VolumeContentSource_SnapshotSource{
+						SnapshotId: "cloud-snapshot-ok",
+					},
+				},
+			},
+		},
+	}
 	tests := []struct {
 		name         string
 		SnapshotName string
@@ -4158,28 +4180,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 		{
 			"Snapshot restored without error",
 			cloudSnap + "ok",
-			&csi.CreateVolumeResponse{
-				Volume: &csi.Volume{
-					VolumeId: "restore-volume-id",
-					VolumeContext: map[string]string{
-						"attached": "ATTACH_STATE_EXTERNAL",
-						"error":    "",
-						"parent":   "",
-						"readonly": "false",
-						"secure":   "false",
-						"shared":   "false",
-						"sharedv4": "false",
-						"state":    "VOLUME_STATE_NONE",
-					},
-					ContentSource: &csi.VolumeContentSource{
-						Type: &csi.VolumeContentSource_Snapshot{
-							Snapshot: &csi.VolumeContentSource_SnapshotSource{
-								SnapshotId: "cloud-snapshot-ok",
-							},
-						},
-					},
-				},
-			},
+			wantResponse,
 			false,
 			func() {
 				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -4263,28 +4264,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 		{
 			"Snapshot restored. volume id generated",
 			cloudSnap + "ok",
-			&csi.CreateVolumeResponse{
-				Volume: &csi.Volume{
-					VolumeId: "restore-volume-id",
-					VolumeContext: map[string]string{
-						"attached": "ATTACH_STATE_EXTERNAL",
-						"error":    "",
-						"parent":   "",
-						"readonly": "false",
-						"secure":   "false",
-						"shared":   "false",
-						"sharedv4": "false",
-						"state":    "VOLUME_STATE_NONE",
-					},
-					ContentSource: &csi.VolumeContentSource{
-						Type: &csi.VolumeContentSource_Snapshot{
-							Snapshot: &csi.VolumeContentSource_SnapshotSource{
-								SnapshotId: "cloud-snapshot-ok",
-							},
-						},
-					},
-				},
-			},
+			wantResponse,
 			false,
 			func() {
 				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -4344,28 +4324,7 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 		{
 			"Snapshot restored, no volume still present is first call",
 			cloudSnap + "ok",
-			&csi.CreateVolumeResponse{
-				Volume: &csi.Volume{
-					VolumeId: "restore-volume-id",
-					VolumeContext: map[string]string{
-						"attached": "ATTACH_STATE_EXTERNAL",
-						"error":    "",
-						"parent":   "",
-						"readonly": "false",
-						"secure":   "false",
-						"shared":   "false",
-						"sharedv4": "false",
-						"state":    "VOLUME_STATE_NONE",
-					},
-					ContentSource: &csi.VolumeContentSource{
-						Type: &csi.VolumeContentSource_Snapshot{
-							Snapshot: &csi.VolumeContentSource_SnapshotSource{
-								SnapshotId: "cloud-snapshot-ok",
-							},
-						},
-					},
-				},
-			},
+			wantResponse,
 			false,
 			func() {
 				mockRoundRobinBalancer.EXPECT().GetRemoteNodeConnection(gomock.Any()).DoAndReturn(
@@ -4511,24 +4470,8 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("OsdCsiServer.CreateSnapshot() = %v, want %v", got, tt.want)
+				t.Errorf("OsdCsiServer.CreateSnapshot() = %v, wantResponse %v", got, tt.want)
 			}
 		})
 	}
-}
-
-type RestoreFieldMatchFields struct {
-	ephemeral bool
-}
-
-type RestoreFieldMatcher struct {
-	matchingFields RestoreFieldMatchFields
-}
-
-func (m RestoreFieldMatcher) Matches(x interface{}) bool {
-	return false
-}
-
-func (m RestoreFieldMatcher) String() string {
-	return "matches fields of restore request"
 }
