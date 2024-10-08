@@ -1596,7 +1596,7 @@ func getRestoreSpecFromVolumeSpec(volumeSpec *api.VolumeSpec) api.RestoreVolumeS
 		Cos:              volumeSpec.Cos,
 		IoProfile:        volumeSpec.IoProfile,
 		SnapshotInterval: volumeSpec.SnapshotInterval,
-		Shared:           getBoolValue(volumeSpec.Shared),
+		Shared:           getBoolValue(volumeSpec.Shared), // TODO is this correct
 		ReplicaSet:       volumeSpec.ReplicaSet,
 		AggregationLevel: volumeSpec.AggregationLevel,
 		SnapshotSchedule: &api.RestoreVolSnashotSchedule{
