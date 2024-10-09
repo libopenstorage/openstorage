@@ -192,7 +192,7 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 		HaLevel:    1,
 		IoProfile:  api.IoProfile_IO_PROFILE_AUTO,
 		Xattr:      api.Xattr_COW_ON_DEMAND,
-		SharedMode: api.SharedMode_NONE,
+		SharedMode: api.SharedMode_NIL,
 	}
 }
 
