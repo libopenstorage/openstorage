@@ -48,6 +48,7 @@ func TestCmdMarshalProto(t *testing.T) {
  "fa_create_options": "",
  "near_sync": false,
  "near_sync_replication_strategy": "NEAR_SYNC_STRATEGY_NONE"
+ "shared_block": false
 }`,
 		data,
 	)

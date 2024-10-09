@@ -577,6 +577,13 @@ func TestMountOptions(t *testing.T) {
 	require.False(t, ok)
 }
 
+func TestSharedBlockOptions(t *testing.T) {
+	testSpecOptString(t, api.SpecSharedBlock, "1")
+	testSpecOptString(t, api.SpecSharedBlock, "true")
+	testSpecOptString(t, api.SpecSharedBlock, "0")
+	testSpecOptString(t, api.SpecSharedBlock, "false")
+}
+
 func TestSharedv4MountOptions(t *testing.T) {
 	testSpecOptString(t, api.SpecSharedv4MountOptions, "k")
 

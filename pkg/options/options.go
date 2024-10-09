@@ -73,6 +73,10 @@ const (
 	// It is used to issue an mount system call to the requested path to resolve
 	// the path if there is a mismatch in the mount table and the source path.
 	OptionsResolveDNSOnMount = "RESOLVE_DNS_ON_MOUNT"
+	// OptionsMigrateVolume control volume migration of shared raw block devices in kubevirt env for VMs
+	// - Attach
+	// This option indicates the next active coordinator node - machineID is expected
+	OptionsMigrateVolume = "VOLUME_MIGRATE_TO_MACHINE"
 )
 
 // IsBoolOptionSet checks if a boolean option key is set

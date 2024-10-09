@@ -241,7 +241,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		mode := capability.GetAccessMode()
 		switch {
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
-			if v.Spec.Sharedv4 || v.Spec.Shared {
+			if v.Spec.Sharedv4 || v.Spec.Shared || v.Spec.SharedBlock {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -252,7 +252,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
-			if v.Spec.Sharedv4 || v.Spec.Shared {
+			if v.Spec.Sharedv4 || v.Spec.Shared || v.Spec.SharedBlock {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -263,7 +263,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
-			if !v.Spec.Sharedv4 && !v.Spec.Shared {
+			if !v.Spec.Sharedv4 && !v.Spec.Shared || v.Spec.SharedBlock {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
@@ -275,7 +275,8 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
 			mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER:
-			if !v.Spec.Sharedv4 && !v.Spec.Shared {
+			if capability.GetMount() != nil && !v.Spec.Sharedv4 && !v.Spec.Shared ||
+				capability.GetBlock() != nil && !v.Spec.SharedBlock {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
@@ -306,14 +307,16 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 // to be returned to the CSI API caller
 func osdVolumeContext(v *api.Volume) map[string]string {
 	return map[string]string{
-		api.SpecParent:   v.GetSource().GetParent(),
-		api.SpecSecure:   fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
-		api.SpecShared:   fmt.Sprintf("%v", v.GetSpec().GetShared()),
-		api.SpecSharedv4: fmt.Sprintf("%v", v.GetSpec().GetSharedv4()),
-		"readonly":       fmt.Sprintf("%v", v.GetReadonly()),
-		"attached":       v.AttachedState.String(),
-		"state":          v.State.String(),
-		"error":          v.GetError(),
+		api.SpecParent:      v.GetSource().GetParent(),
+		api.SpecSecure:      fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
+		api.SpecShared:      fmt.Sprintf("%v", v.GetSpec().GetShared()),
+		api.SpecSharedv4:    fmt.Sprintf("%v", v.GetSpec().GetSharedv4()),
+		api.SpecSharedBlock: fmt.Sprintf("%v", v.GetSpec().GetSharedBlock()),
+		api.SpecSharedMode:  v.GetSpec().GetSharedMode().String(),
+		"readonly":          fmt.Sprintf("%v", v.GetReadonly()),
+		"attached":          v.AttachedState.String(),
+		"state":             v.State.String(),
+		"error":             v.GetError(),
 	}
 }
 
@@ -368,12 +371,13 @@ func cleanupVolumeLabels(labels map[string]string) map[string]string {
 	return labels
 }
 
-func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
+func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability, spec *api.VolumeSpec) error {
 	if len(caps) == 0 {
 		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
 	}
 
 	var shared bool
+	var mount bool
 	var block bool
 	for _, cap := range caps {
 		mode := cap.GetAccessMode().GetMode()
@@ -386,12 +390,28 @@ func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
 		if cap.GetBlock() != nil {
 			block = true
 		}
+
+		if cap.GetMount() != nil {
+			mount = true
+		}
 	}
 
-	if block && shared {
-		return status.Errorf(
+	if shared && mount && block {
+		// if request is both Block and Filesystem mode, then fail it.
+		return status.Error(
 			codes.InvalidArgument,
-			"Shared raw block volumes are not supported")
+			"Volume cannot be shared in both block and file mode",
+		)
+	}
+
+	if shared {
+		if block {
+			spec.SharedMode = api.SharedMode_BLOCK
+		} else {
+			spec.SharedMode = api.SharedMode_FS
+		}
+	} else {
+		spec.SharedMode = api.SharedMode_NIL
 	}
 
 	return nil
@@ -473,7 +493,7 @@ func (s *OsdCsiServer) CreateVolume(
 			return nil, err
 		}
 	} else {
-		err = validateCreateVolumeCapabilities(req.GetVolumeCapabilities())
+		err = validateCreateVolumeCapabilities(req.GetVolumeCapabilities(), spec)
 		if err != nil {
 			return nil, err
 		}
@@ -783,7 +803,7 @@ func isFilesystemSpecSet(params map[string]string) bool {
 // 2. If a user prefers shared over sharedv4, they may still use it by explicity declaring "shared": true
 func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api.VolumeSpec, error) {
 	// shared or sharedv4 parameter doesn't apply to pure backends so don't set them
-	if spec.IsPureVolume() {
+	if spec.IsPureVolume() || spec.SharedBlock {
 		return spec, nil
 	}
 
@@ -794,6 +814,9 @@ func resolveSharedSpec(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*api
 
 	var shared bool
 	for _, cap := range req.GetVolumeCapabilities() {
+		if cap.GetBlock() != nil {
+			continue
+		}
 		mode := cap.GetAccessMode().GetMode()
 		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
 			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
