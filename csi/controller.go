@@ -611,7 +611,7 @@ func (s *OsdCsiServer) CreateVolume(
 		if snapshot != nil && strings.HasPrefix(snapshot.SnapshotId, cloudSnap) {
 			// operation is restore from a cloud snapshot
 			logger = logger.WithField("snapshotId", snapshot.GetSnapshotId())
-			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, locator, spec, logger)
+			newVolumeId, err = s.restoreSnapshot(ctx, req, conn, volumes, logger)
 			if err != nil {
 				return nil, err
 			}
@@ -1419,7 +1419,7 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 }
 
 func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
-	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, volumes api.OpenStorageVolumeClient, locator *api.VolumeLocator, spec *api.VolumeSpec, logger *logrus.Entry,
+	req *csi.CreateVolumeRequest, connection *grpc.ClientConn, volumes api.OpenStorageVolumeClient, logger *logrus.Entry,
 ) (volumeId string, err error) {
 	var cloudBackupClient api.OpenStorageCloudBackupClient
 	if s.cloudBackupClient != nil {
@@ -1445,7 +1445,11 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		return "", fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
 	}
 
-	restoreSpec := getRestoreSpecFromVolumeSpec(spec)
+	restoreSpec, locator, err := s.specHandler.GenerateRestoreSpecAndLocator(req.Parameters)
+	if err != nil {
+		logger.WithError(err).Errorf("Error generating restore spec")
+		return "", err
+	}
 	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
 		BackupId:          backupStatus.GetBackupId(),
@@ -1453,7 +1457,7 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		TaskId:            req.GetName(),
 		Locator:           locator,
 		CredentialId:      credentialID,
-		Spec:              &restoreSpec,
+		Spec:              restoreSpec,
 	})
 	if err != nil {
 		errStatus, ok := status.FromError(err)
@@ -1587,53 +1591,4 @@ func roundUpSizeInt64(size resource.Quantity, allocationUnitBytes int64) (int64,
 		roundedUp++
 	}
 	return roundedUp, nil
-}
-
-// converts the provided Volume Spec to a Restore Spec
-func getRestoreSpecFromVolumeSpec(volumeSpec *api.VolumeSpec) api.RestoreVolumeSpec {
-	restoreSpec := api.RestoreVolumeSpec{
-		HaLevel:          volumeSpec.HaLevel,
-		Cos:              volumeSpec.Cos,
-		IoProfile:        volumeSpec.IoProfile,
-		SnapshotInterval: volumeSpec.SnapshotInterval,
-		Shared:           getBoolValue(volumeSpec.Shared), // TODO is this correct
-		ReplicaSet:       volumeSpec.ReplicaSet,
-		AggregationLevel: volumeSpec.AggregationLevel,
-		SnapshotSchedule: &api.RestoreVolSnashotSchedule{
-			Schedule: volumeSpec.SnapshotSchedule,
-		},
-		Sticky:            getBoolValue(volumeSpec.Sticky),
-		Group:             volumeSpec.Group,
-		GroupEnforced:     volumeSpec.GroupEnforced,
-		Journal:           getBoolValue(volumeSpec.Journal),
-		Sharedv4:          getBoolValue(volumeSpec.Sharedv4),
-		QueueDepth:        volumeSpec.QueueDepth,
-		Nodiscard:         getBoolValue(volumeSpec.Nodiscard),
-		IoStrategy:        volumeSpec.IoStrategy,
-		PlacementStrategy: volumeSpec.PlacementStrategy,
-		StoragePolicy: &api.RestoreVolStoragePolicy{
-			Policy: volumeSpec.StoragePolicy,
-		},
-		Ownership:            volumeSpec.Ownership,
-		ExportSpec:           volumeSpec.ExportSpec,
-		FpPreference:         getBoolValue(volumeSpec.FpPreference),
-		MountOptions:         volumeSpec.MountOptions,
-		Sharedv4MountOptions: volumeSpec.Sharedv4MountOptions,
-		ProxyWrite:           getBoolValue(volumeSpec.ProxyWrite),
-		IoProfileBkupSrc:     true, // TODO is this correct
-		ProxySpec:            volumeSpec.ProxySpec,
-		Sharedv4ServiceSpec:  volumeSpec.Sharedv4ServiceSpec,
-		Sharedv4Spec:         volumeSpec.Sharedv4Spec,
-		AutoFstrim:           getBoolValue(volumeSpec.AutoFstrim),
-		IoThrottle:           volumeSpec.IoThrottle,
-	}
-	return restoreSpec
-}
-
-func getBoolValue(value bool) api.RestoreParamBoolType {
-	if value {
-		return api.RestoreParamBoolType_PARAM_TRUE
-	} else {
-		return api.RestoreParamBoolType_PARAM_FALSE
-	}
 }

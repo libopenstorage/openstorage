@@ -86,6 +86,9 @@ type SpecHandler interface {
 		error,
 	)
 
+	// GenerateRestoreSpecAndLocator generates a Restore Volume Spec and VolumeLocator from the provided params
+	GenerateRestoreSpecAndLocator(opts map[string]string) (*api.RestoreVolumeSpec, *api.VolumeLocator, error)
+
 	// Returns a default VolumeSpec if no docker options or string encoding
 	// was provided.
 	DefaultSpec() *api.VolumeSpec
@@ -191,6 +194,342 @@ func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 		HaLevel:   1,
 		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
 		Xattr:     api.Xattr_COW_ON_DEMAND,
+	}
+}
+
+func (d *specHandler) GenerateRestoreSpecAndLocator(opts map[string]string) (*api.RestoreVolumeSpec, *api.VolumeLocator, error) {
+	locator := &api.VolumeLocator{
+		VolumeLabels: make(map[string]string),
+	}
+	restoreSpec := &api.RestoreVolumeSpec{
+		IoProfileBkupSrc: true,
+	}
+	nodeList := make([]string, 0)
+	for k, v := range opts {
+		switch k {
+		case api.SpecNodes:
+			inputNodes := strings.Split(strings.Replace(v, ";", ",", -1), ",")
+			for _, node := range inputNodes {
+				if len(node) != 0 {
+					nodeList = append(nodeList, node)
+				}
+			}
+			restoreSpec.ReplicaSet = &api.ReplicaSet{Nodes: nodeList}
+		case api.SpecQueueDepth:
+			if queueDepth, err := strconv.ParseInt(v, 10, 64); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.QueueDepth = uint32(queueDepth)
+			}
+		case api.SpecIoProfileDisableFromSource:
+			if disableIoProfileFromSource, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoProfileBkupSrc = disableIoProfileFromSource
+			}
+		case api.SpecHaLevel:
+			haLevel, _ := strconv.ParseInt(v, 10, 64)
+			restoreSpec.HaLevel = haLevel
+		case api.SpecPriority:
+			cos, err := d.cosLevel(v)
+			if err != nil {
+				return nil, nil, err
+			}
+			restoreSpec.Cos = cos
+		case api.SpecPriorityAlias:
+			cos, err := d.cosLevel(v)
+			if err != nil {
+				return nil, nil, err
+			}
+			restoreSpec.Cos = cos
+		case api.SpecSnapshotInterval:
+			snapshotInterval, _ := strconv.ParseUint(v, 10, 32)
+			restoreSpec.SnapshotInterval = uint32(snapshotInterval)
+		case api.SpecSnapshotSchedule:
+			restoreSpec.SnapshotSchedule = &api.RestoreVolSnashotSchedule{
+				Schedule: v,
+			}
+		case api.SpecAggregationLevel:
+			if v == api.SpecAutoAggregationValue {
+				restoreSpec.AggregationLevel = api.AutoAggregation
+			} else {
+				aggregationLevel, _ := strconv.ParseUint(v, 10, 32)
+				restoreSpec.AggregationLevel = uint32(aggregationLevel)
+			}
+		case api.SpecShared:
+			if shared, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.Shared = getBoolValue(shared)
+			}
+		case api.SpecJournal:
+			if journal, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.Journal = getBoolValue(journal)
+			}
+		case api.SpecSharedv4:
+			if sharedv4, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.Sharedv4 = getBoolValue(sharedv4)
+			}
+		case api.SpecGroup:
+			restoreSpec.Group = &api.Group{Id: v}
+		case api.SpecGroupEnforce:
+			if groupEnforced, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.GroupEnforced = groupEnforced
+			}
+		case api.SpecZones, api.SpecRacks:
+			locator.VolumeLabels[k] = v
+		case api.SpecRack:
+			locator.VolumeLabels[api.SpecRacks] = v
+		case api.SpecBestEffortLocationProvisioning:
+			locator.VolumeLabels[k] = "true"
+		case api.SpecLabels:
+			if labels, err := parser.LabelsFromString(v); err != nil {
+				return nil, nil, err
+			} else {
+				for k, v := range labels {
+					locator.VolumeLabels[k] = v
+				}
+			}
+		case api.SpecIoProfile:
+			if ioProfile, err := api.IoProfileSimpleValueOf(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoProfile = ioProfile
+			}
+		case api.SpecEarlyAck:
+			if earlyAck, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				if restoreSpec.IoStrategy == nil {
+					restoreSpec.IoStrategy = &api.IoStrategy{}
+				}
+				restoreSpec.IoStrategy.EarlyAck = earlyAck
+			}
+		case api.SpecAsyncIo:
+			if asyncIo, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				if restoreSpec.IoStrategy == nil {
+					restoreSpec.IoStrategy = &api.IoStrategy{}
+				}
+				restoreSpec.IoStrategy.AsyncIo = asyncIo
+			}
+		case api.SpecNodiscard:
+			if nodiscard, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.Nodiscard = getBoolValue(nodiscard)
+				// autofstrim to follow nodiscard when not explicitly specified
+				if _, exists := opts[api.SpecAutoFstrim]; !exists {
+					restoreSpec.AutoFstrim = getBoolValue(nodiscard)
+				}
+			}
+		case api.Token:
+			// skip, if not it would be added to the labels
+		case api.StoragePolicy:
+			restoreSpec.StoragePolicy = &api.RestoreVolStoragePolicy{
+				Policy: v,
+			}
+		case api.SpecExportProtocol:
+			if restoreSpec.ExportSpec == nil {
+				restoreSpec.ExportSpec = &api.ExportSpec{}
+			}
+			if v == api.SpecExportProtocolPXD {
+				restoreSpec.ExportSpec.ExportProtocol = api.ExportProtocol_PXD
+			} else if v == api.SpecExportProtocolNFS {
+				restoreSpec.ExportSpec.ExportProtocol = api.ExportProtocol_NFS
+			} else if v == api.SpecExportProtocolISCSI {
+				restoreSpec.ExportSpec.ExportProtocol = api.ExportProtocol_ISCSI
+			} else if v == api.SpecExportProtocolCustom {
+				restoreSpec.ExportSpec.ExportProtocol = api.ExportProtocol_CUSTOM
+			} else {
+				return nil, nil, fmt.Errorf("unsupported Export Protocol %v", v)
+			}
+		case api.SpecExportOptions:
+			if restoreSpec.ExportSpec == nil {
+				restoreSpec.ExportSpec = &api.ExportSpec{}
+			}
+			restoreSpec.ExportSpec.ExportOptions = v
+		case api.SpecProxyEndpoint:
+			if restoreSpec.ProxySpec == nil {
+				restoreSpec.ProxySpec = &api.ProxySpec{}
+			}
+			proxyProtocol, endpoint := api.ParseProxyEndpoint(v)
+			if proxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_INVALID {
+				return nil, nil, fmt.Errorf("invalid proxy endpoint: %v", v)
+			}
+			restoreSpec.ProxySpec.Endpoint = endpoint
+			restoreSpec.ProxySpec.ProxyProtocol = proxyProtocol
+
+		case api.SpecProxyNFSSubPath:
+			if restoreSpec.ProxySpec == nil {
+				restoreSpec.ProxySpec = &api.ProxySpec{}
+			}
+			if restoreSpec.ProxySpec.NfsSpec == nil {
+				restoreSpec.ProxySpec.NfsSpec = &api.NFSProxySpec{
+					SubPath: v,
+				}
+			} else {
+				restoreSpec.ProxySpec.NfsSpec.SubPath = v
+			}
+
+		case api.SpecProxyNFSExportPath:
+			if restoreSpec.ProxySpec == nil {
+				restoreSpec.ProxySpec = &api.ProxySpec{}
+			}
+			if restoreSpec.ProxySpec.NfsSpec == nil {
+				restoreSpec.ProxySpec.NfsSpec = &api.NFSProxySpec{
+					ExportPath: v,
+				}
+			} else {
+				restoreSpec.ProxySpec.NfsSpec.ExportPath = v
+			}
+		case api.SpecSharedv4ServiceType:
+			if restoreSpec.Sharedv4ServiceSpec == nil {
+				restoreSpec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
+			}
+			if v == "" {
+				// force sharedv4 non-service
+				restoreSpec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_NONE
+			} else if v == "NodePort" || v == "nodePort" {
+				restoreSpec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_NODEPORT
+			} else if v == "ClusterIP" || v == "clusterIP" {
+				restoreSpec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_CLUSTERIP
+			} else if v == "LoadBalancer" || v == "loadBalancer" {
+				restoreSpec.Sharedv4ServiceSpec.Type = api.Sharedv4ServiceSpec_LOADBALANCER
+			} else {
+				return nil, nil, fmt.Errorf("invalid sharedv4 service type: %v", v)
+			}
+		case api.SpecSharedv4ServiceName:
+			if restoreSpec.Sharedv4ServiceSpec == nil {
+				restoreSpec.Sharedv4ServiceSpec = &api.Sharedv4ServiceSpec{}
+			}
+			restoreSpec.Sharedv4ServiceSpec.Name = v
+		case api.SpecSharedv4FailoverStrategy:
+			if restoreSpec.Sharedv4Spec == nil {
+				restoreSpec.Sharedv4Spec = &api.Sharedv4Spec{}
+			}
+			if v == api.SpecSharedv4FailoverStrategyAggressive {
+				restoreSpec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_AGGRESSIVE
+			} else if v == api.SpecSharedv4FailoverStrategyNormal {
+				restoreSpec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_NORMAL
+			} else if v == api.SpecSharedv4FailoverStrategyUnspecified {
+				restoreSpec.Sharedv4Spec.FailoverStrategy = api.Sharedv4FailoverStrategy_UNSPECIFIED
+			} else {
+				return nil, nil, fmt.Errorf("invalid sharedv4 failover strategy: %v", v)
+			}
+		case api.SpecMountOptions:
+			if restoreSpec.MountOptions == nil {
+				restoreSpec.MountOptions = &api.MountOptions{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, fmt.Errorf("invalid mount options format %v", v)
+			}
+			restoreSpec.MountOptions.Options = options
+		case api.SpecSharedv4MountOptions:
+			if restoreSpec.Sharedv4MountOptions == nil {
+				restoreSpec.Sharedv4MountOptions = &api.MountOptions{
+					Options: make(map[string]string),
+				}
+			}
+			options, err := parser.LabelsFromString(v)
+			if err != nil {
+				return nil, nil, fmt.Errorf("invalid sharedv4 client mount options format %v", v)
+			}
+			restoreSpec.Sharedv4MountOptions.Options = options
+		case api.SpecDirectIo:
+			if directIo, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				if restoreSpec.IoStrategy == nil {
+					restoreSpec.IoStrategy = &api.IoStrategy{}
+				}
+				restoreSpec.IoStrategy.DirectIo = directIo
+			}
+
+		case api.SpecProxyWrite:
+			if proxyWrite, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.ProxyWrite = getBoolValue(proxyWrite)
+			}
+		case api.SpecFastpath:
+			if fastpath, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.FpPreference = getBoolValue(fastpath)
+			}
+		case api.SpecAutoFstrim:
+			if autoFstrim, err := strconv.ParseBool(v); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.AutoFstrim = getBoolValue(autoFstrim)
+			}
+		case api.SpecPureNFSEnpoint:
+			if restoreSpec.ProxySpec == nil {
+				restoreSpec.ProxySpec = &api.ProxySpec{}
+			}
+			if restoreSpec.ProxySpec.PureFileSpec == nil {
+				restoreSpec.ProxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			restoreSpec.ProxySpec.PureFileSpec.NfsEndpoint = v
+		case api.SpecIoThrottleRdIOPS:
+			if restoreSpec.IoThrottle == nil {
+				restoreSpec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleIOPS, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoThrottle.ReadIops = uint32(throttleIOPS)
+			}
+		case api.SpecIoThrottleWrIOPS:
+			if restoreSpec.IoThrottle == nil {
+				restoreSpec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleIOPS, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoThrottle.WriteIops = uint32(throttleIOPS)
+			}
+		case api.SpecIoThrottleRdBW:
+			if restoreSpec.IoThrottle == nil {
+				restoreSpec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleBW, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoThrottle.ReadBwMbytes = uint32(throttleBW)
+			}
+		case api.SpecIoThrottleWrBW:
+			if restoreSpec.IoThrottle == nil {
+				restoreSpec.IoThrottle = &api.IoThrottle{}
+			}
+			if throttleBW, err := strconv.ParseUint(v, 10, 64); err != nil {
+				return nil, nil, err
+			} else {
+				restoreSpec.IoThrottle.WriteBwMbytes = uint32(throttleBW)
+			}
+		default:
+			locator.VolumeLabels[k] = v
+		}
+	}
+	return restoreSpec, locator, nil
+}
+
+func getBoolValue(value bool) api.RestoreParamBoolType {
+	if value {
+		return api.RestoreParamBoolType_PARAM_TRUE
+	} else {
+		return api.RestoreParamBoolType_PARAM_FALSE
 	}
 }
 

@@ -4458,6 +4458,9 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 				Parameters: map[string]string{
 					"ephemeral": "true",
 					"repl":      "2",
+					"journal":   "true",
+					"early_ack": "true",
+					"export":    "pxd",
 				},
 			}
 			tt.expect()
