@@ -614,9 +614,9 @@ enum NearSyncReplicationStrategy {
 
 // SharedMode maps to RWO or RWX volume and access type
 enum SharedMode {
-  SHAREDMODE_NONE = 0;
-  SHAREDMODE_FS = 1;
-  SHAREDMODE_BLOCK = 2;
+  NIL = 0;
+  FS = 1;
+  BLOCK = 2;
 }
 
 enum AccessMode {

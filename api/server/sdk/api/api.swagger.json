@@ -4965,11 +4965,11 @@
         "type": "string"
       },
       "apiSharedMode": {
-        "default": "SHAREDMODE_NONE",
+        "default": "NIL",
         "enum": [
-          "SHAREDMODE_NONE",
-          "SHAREDMODE_FS",
-          "SHAREDMODE_BLOCK"
+          "NIL",
+          "FS",
+          "BLOCK"
         ],
         "title": "SharedMode maps to RWO or RWX volume and access type",
         "type": "string"

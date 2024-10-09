@@ -406,12 +406,12 @@ func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability, spec *api.Vo
 
 	if shared {
 		if block {
-			spec.shared_mode = SHAREDMODE_BLOCK
+			spec.shared_mode = api.SharedMode_BLOCK
 		} else {
-			spec.shared_mode = SHAREDMODE_FS
+			spec.shared_mode = api.SharedMode_FS
 		}
 	} else {
-		spec.shared_mode = SHAREDMODE_NONE
+		spec.shared_mode = api.SharedMode_NIL
 	}
 
 	return nil
