@@ -4207,21 +4207,15 @@ func TestOsdCsiServer_RestoreCloudSnapshot(t *testing.T) {
 					RestoreVolumeName: mockVolumeName,
 					TaskId:            mockVolumeName,
 					Spec: &api.RestoreVolumeSpec{
-						HaLevel:          2,
-						IoProfile:        api.IoProfile_IO_PROFILE_AUTO,
-						Shared:           api.RestoreParamBoolType_PARAM_FALSE,
-						SnapshotSchedule: &api.RestoreVolSnashotSchedule{},
-						Sticky:           api.RestoreParamBoolType_PARAM_FALSE,
-						Journal:          api.RestoreParamBoolType_PARAM_FALSE,
-						Sharedv4:         api.RestoreParamBoolType_PARAM_FALSE,
-						Nodiscard:        api.RestoreParamBoolType_PARAM_FALSE,
-						StoragePolicy:    &api.RestoreVolStoragePolicy{},
-						FpPreference:     api.RestoreParamBoolType_PARAM_FALSE,
-						ProxyWrite:       api.RestoreParamBoolType_PARAM_FALSE,
+						HaLevel:   2,
+						IoProfile: api.IoProfile_IO_PROFILE_AUTO,
+						ExportSpec: &api.ExportSpec{
+							ExportProtocol: api.ExportProtocol_PXD,
+						},
 						IoProfileBkupSrc: true,
-						AutoFstrim:       api.RestoreParamBoolType_PARAM_FALSE,
+						IoStrategy:       &api.IoStrategy{EarlyAck: true},
 					},
-					Locator: &api.VolumeLocator{VolumeLabels: map[string]string{"ephemeral": "true", "namespace": "", "pvc": "", "repl": "2"}},
+					Locator: &api.VolumeLocator{VolumeLabels: map[string]string{"ephemeral": "true"}},
 				}, gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupRestoreRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupRestoreResponse, error) {
 						return &api.SdkCloudBackupRestoreResponse{
