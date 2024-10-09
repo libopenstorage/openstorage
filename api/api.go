@@ -114,6 +114,7 @@ const (
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
 	SpecSharedBlock                         = "shared_block"
+	SpecSharedMode                          = "shared_mode"
 )
 
 // OptionKey specifies a set of recognized query params.

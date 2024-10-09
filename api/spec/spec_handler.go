@@ -188,10 +188,11 @@ func (d *specHandler) getVal(r *regexp.Regexp, str string) (bool, string) {
 
 func (d *specHandler) DefaultSpec() *api.VolumeSpec {
 	return &api.VolumeSpec{
-		Format:    api.FSType_FS_TYPE_EXT4,
-		HaLevel:   1,
-		IoProfile: api.IoProfile_IO_PROFILE_AUTO,
-		Xattr:     api.Xattr_COW_ON_DEMAND,
+		Format:     api.FSType_FS_TYPE_EXT4,
+		HaLevel:    1,
+		IoProfile:  api.IoProfile_IO_PROFILE_AUTO,
+		Xattr:      api.Xattr_COW_ON_DEMAND,
+		SharedMode: api.SHAREDMODE_NONE,
 	}
 }
 

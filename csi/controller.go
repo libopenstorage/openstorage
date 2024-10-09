@@ -307,15 +307,16 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 // to be returned to the CSI API caller
 func osdVolumeContext(v *api.Volume) map[string]string {
 	return map[string]string{
-		api.SpecParent:   v.GetSource().GetParent(),
-		api.SpecSecure:   fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
-		api.SpecShared:   fmt.Sprintf("%v", v.GetSpec().GetShared()),
-		api.SpecSharedv4: fmt.Sprintf("%v", v.GetSpec().GetSharedv4()),
+		api.SpecParent:      v.GetSource().GetParent(),
+		api.SpecSecure:      fmt.Sprintf("%v", v.GetSpec().GetEncrypted()),
+		api.SpecShared:      fmt.Sprintf("%v", v.GetSpec().GetShared()),
+		api.SpecSharedv4:    fmt.Sprintf("%v", v.GetSpec().GetSharedv4()),
 		api.SpecSharedBlock: fmt.Sprintf("%v", v.GetSpec().GetSharedBlock()),
-		"readonly":       fmt.Sprintf("%v", v.GetReadonly()),
-		"attached":       v.AttachedState.String(),
-		"state":          v.State.String(),
-		"error":          v.GetError(),
+		api.SpecSharedMode:  v.GetSpec().GetSharedMode().String(),
+		"readonly":          fmt.Sprintf("%v", v.GetReadonly()),
+		"attached":          v.AttachedState.String(),
+		"state":             v.State.String(),
+		"error":             v.GetError(),
 	}
 }
 
@@ -370,9 +371,47 @@ func cleanupVolumeLabels(labels map[string]string) map[string]string {
 	return labels
 }
 
-func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability) error {
+func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability, spec *api.VolumeSpec) error {
 	if len(caps) == 0 {
 		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	}
+
+	var shared bool
+	var mount bool
+	var block bool
+	for _, cap := range caps {
+		mode := cap.GetAccessMode().GetMode()
+		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_SINGLE_WRITER ||
+			mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
+			shared = true
+		}
+
+		if cap.GetBlock() != nil {
+			block = true
+		}
+
+		if cap.GetMount() != nil {
+			mount = true
+		}
+	}
+
+	if shared && mount && block {
+		// if request is both Block and Filesystem mode, then fail it.
+		return status.Error(
+			codes.InvalidArgument,
+			"Volume cannot be shared in both block and file mode",
+		)
+	}
+
+	if shared {
+		if block {
+			spec.shared_mode = SHAREDMODE_BLOCK
+		} else {
+			spec.shared_mode = SHAREDMODE_FS
+		}
+	} else {
+		spec.shared_mode = SHAREDMODE_NONE
 	}
 
 	return nil
@@ -454,7 +493,7 @@ func (s *OsdCsiServer) CreateVolume(
 			return nil, err
 		}
 	} else {
-		err = validateCreateVolumeCapabilities(req.GetVolumeCapabilities())
+		err = validateCreateVolumeCapabilities(req.GetVolumeCapabilities(), spec)
 		if err != nil {
 			return nil, err
 		}

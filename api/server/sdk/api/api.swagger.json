@@ -4964,6 +4964,16 @@
         ],
         "type": "string"
       },
+      "apiSharedMode": {
+        "default": "SHAREDMODE_NONE",
+        "enum": [
+          "SHAREDMODE_NONE",
+          "SHAREDMODE_FS",
+          "SHAREDMODE_BLOCK"
+        ],
+        "title": "SharedMode maps to RWO or RWX volume and access type",
+        "type": "string"
+      },
       "apiSharedv4FailoverStrategyValue": {
         "default": "UNSPECIFIED",
         "description": " - UNSPECIFIED: Unspecified\n - AGGRESSIVE: Fail over to the new NFS server quickly. This is appropriate for\nthe apps with sharedv4 service volumes. It can also be used\nfor the apps with sharedv4 volumes when such apps are able\nto restart quickly.\n - NORMAL: Give the old NFS server more time to come back up before\ntriggering the failover. This is appropriate for the apps\nwith sharedv4 volumes (non-service).",
@@ -6023,6 +6033,9 @@
             "format": "boolean",
             "title": "shared_block is true if this volume can be concurrently accessed by multiple nodes",
             "type": "boolean"
+          },
+          "shared_mode": {
+            "$ref": "#/components/schemas/apiSharedMode"
           },
           "sharedv4": {
             "format": "boolean",
