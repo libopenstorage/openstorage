@@ -1479,9 +1479,6 @@ func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
 		logger.WithError(err).Errorf("Error generating restore spec")
 		return "", err
 	}
-	for k, v := range req.Parameters {
-		locator.VolumeLabels[k] = v
-	}
 	credentialId := backupStatus.CredentialId
 	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
 		BackupId:          backupStatus.GetBackupId(),
