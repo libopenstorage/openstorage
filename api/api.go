@@ -113,6 +113,7 @@ const (
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
+	SpecIoProfileDisableFromSource          = "io_profile_disable_from_source"
 )
 
 // OptionKey specifies a set of recognized query params.

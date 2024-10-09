@@ -22,20 +22,22 @@ import (
 	"math"
 	"reflect"
 	"sort"
+	"strings"
+	"time"
 
-	"github.com/portworx/kvdb"
-	"github.com/sirupsen/logrus"
-	"k8s.io/apimachinery/pkg/api/resource"
-
+	csi "github.com/container-storage-interface/spec/lib/go/csi"
 	"github.com/libopenstorage/openstorage/api"
+	"github.com/libopenstorage/openstorage/api/server/sdk"
 	"github.com/libopenstorage/openstorage/pkg/grpcutil"
 	"github.com/libopenstorage/openstorage/pkg/units"
 	"github.com/libopenstorage/openstorage/pkg/util"
-
-	csi "github.com/container-storage-interface/spec/lib/go/csi"
+	"github.com/portworx/kvdb"
+	"github.com/portworx/sched-ops/task"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"k8s.io/apimachinery/pkg/api/resource"
 )
 
 const (
@@ -45,6 +47,10 @@ const (
 	osdPvcNamespaceKey   = osdParameterPrefix + "pvc-namespace"
 	osdPvcAnnotationsKey = osdParameterPrefix + "pvc-annotations"
 	osdPvcLabelsKey      = osdParameterPrefix + "pvc-labels"
+
+	// These keys are for accessing Snapshot Metadata added from the external-provisioner
+	osdSnapshotLabelsTypeKey   = osdParameterPrefix + "snapshot-type"
+	osdSnapshotCredentialIDKey = osdParameterPrefix + "credential-id"
 
 	// in-tree keys for name and namespace
 	intreePvcNameKey      = "pvc"
@@ -60,6 +66,11 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
+
+	// driver type
+	DriverTypeLocal = "local"
+	DriverTypeCloud = "cloud"
+	cloudSnap       = "cloud-snapshot-"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -459,6 +470,8 @@ func (s *OsdCsiServer) CreateVolume(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
+	logger := logrus.WithField("volumeName", req.Name)
+
 	// Get parameters
 	spec, locator, source, err := s.specHandler.SpecFromOpts(req.GetParameters())
 	if err != nil {
@@ -506,9 +519,11 @@ func (s *OsdCsiServer) CreateVolume(
 	// Get parent ID from request: snapshot or volume
 	if req.GetVolumeContentSource() != nil {
 		if sourceSnap := req.GetVolumeContentSource().GetSnapshot(); sourceSnap != nil {
+			if len(sourceSnap.GetSnapshotId()) == 0 {
+				return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
+			}
 			source.Parent = sourceSnap.SnapshotId
 		}
-
 		if sourceVol := req.GetVolumeContentSource().GetVolume(); sourceVol != nil {
 			source.Parent = sourceVol.VolumeId
 		}
@@ -546,9 +561,13 @@ func (s *OsdCsiServer) CreateVolume(
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
+	var volumes api.OpenStorageVolumeClient
+	if s.volumeClient != nil {
+		volumes = s.volumeClient
+	} else {
+		volumes = api.NewOpenStorageVolumeClient(conn)
+	}
 	// Check ID is valid with the specified volume capabilities
-	volumes := api.NewOpenStorageVolumeClient(conn)
-
 	// Create volume
 	var newVolumeId string
 	if source.Parent == "" {
@@ -586,20 +605,30 @@ func (s *OsdCsiServer) CreateVolume(
 		}
 		newVolumeId = createResp.VolumeId
 	} else {
-		labels := locator.GetVolumeLabels()
-		if spec.GetFADAPodName() != "" {
-			labels[api.SpecPurePodName] = spec.GetFADAPodName()
-		}
-		cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
-			Name:             req.GetName(),
-			ParentId:         source.Parent,
-			AdditionalLabels: labels,
-		})
-		if err != nil {
-			return nil, err
-		}
+		snapshot := req.VolumeContentSource.GetSnapshot()
+		if snapshot != nil && strings.HasPrefix(snapshot.SnapshotId, cloudSnap) {
+			// operation is restore from a cloud snapshot
+			logger = logger.WithField("snapshotId", snapshot.GetSnapshotId())
+			newVolumeId, err = s.restoreSnapshot(ctx, req, volumes, logger)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			labels := locator.GetVolumeLabels()
+			if spec.GetFADAPodName() != "" {
+				labels[api.SpecPurePodName] = spec.GetFADAPodName()
+			}
+			cloneResp, err := volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
+				Name:             req.GetName(),
+				ParentId:         source.Parent,
+				AdditionalLabels: labels,
+			})
+			if err != nil {
+				return nil, err
+			}
 
-		newVolumeId = cloneResp.VolumeId
+			newVolumeId = cloneResp.VolumeId
+		}
 	}
 
 	// Get volume information
@@ -607,6 +636,8 @@ func (s *OsdCsiServer) CreateVolume(
 		VolumeId: newVolumeId,
 	})
 	if err != nil {
+		logger.WithError(err).WithField("volumeName", req.GetName()).WithField("volumeId", newVolumeId).
+			Warnf("Error occurred while inspecting volume")
 		return nil, err
 	}
 
@@ -881,6 +912,37 @@ func (s *OsdCsiServer) CreateSnapshot(
 		return nil, status.Error(codes.InvalidArgument, "Name must be provided")
 	}
 
+	logger := logrus.WithField("volumeId", req.SourceVolumeId).WithField("snapshotId", req.Name)
+	logger.Infof("Create snapshot request received for volume")
+	// Get secret if any was passed
+	ctx = s.setupContext(ctx, req.GetSecrets())
+	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
+	defer cancel()
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+	// Check ID is valid with the specified volume capabilities
+	snapshotType, ok := locator.VolumeLabels[osdSnapshotLabelsTypeKey]
+	if !ok {
+		snapshotType = DriverTypeLocal
+	}
+	switch snapshotType {
+	case DriverTypeCloud:
+		return s.createCloudBackup(ctx, req, logger)
+	case DriverTypeLocal:
+		fallthrough
+	default:
+		return s.createLocalSnapshot(ctx, req)
+	}
+}
+
+func (s *OsdCsiServer) createLocalSnapshot(
+	ctx context.Context,
+	req *csi.CreateSnapshotRequest,
+) (*csi.CreateSnapshotResponse, error) {
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
@@ -975,19 +1037,164 @@ func (s *OsdCsiServer) CreateSnapshot(
 	}, nil
 }
 
+func (s *OsdCsiServer) createCloudBackup(
+	ctx context.Context,
+	req *csi.CreateSnapshotRequest, logger *logrus.Entry,
+) (*csi.CreateSnapshotResponse, error) {
+	csiSnapshotID := cloudSnap + req.GetName()
+	cloudBackupClient, err := s.getCloudBackupClient(ctx, logger)
+	if err != nil {
+		logger.WithError(err).Errorf("Failed to create cloud backup client")
+		return nil, err
+	}
+	logger.Infof("Creating cloud snapshot")
+	// Check if the snapshot with this name already exists
+	backupStatusResponse, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	// if the status check failed with anything other than not found, return the error
+	if err != nil {
+		if sdk.IsErrorNotFound(err) {
+			// not actually an error, we will just log this and continue with snapshot creation
+			logger.Infof("Cloud snapshot is not present in status")
+		} else {
+			logger.Errorf("Failed to get snapshot status during snapshot create")
+			return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot, could not get snapshot status: %v", err)
+		}
+
+	} else {
+		// snapshot with the task id is present in the status
+		snapshotStatus, ok := backupStatusResponse.Statuses[csiSnapshotID]
+		if !ok {
+			return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+		}
+		logger.Infof("Status of snapshot %v", snapshotStatus.Status)
+		isBackupReady := snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+		return &csi.CreateSnapshotResponse{
+			Snapshot: &csi.Snapshot{
+				SnapshotId:     csiSnapshotID,
+				SourceVolumeId: req.GetSourceVolumeId(),
+				CreationTime:   snapshotStatus.StartTime,
+				ReadyToUse:     isBackupReady,
+				SizeBytes:      int64(snapshotStatus.BytesDone),
+			},
+		}, nil
+	}
+	logger.Infof("Creating cloud snapshot")
+
+	// Get any labels passed in by the CO
+	_, locator, _, err := s.specHandler.SpecFromOpts(req.GetParameters())
+	if err != nil {
+		return nil, status.Errorf(codes.InvalidArgument, "Unable to get parameters: %v", err)
+	}
+	credentialID := locator.VolumeLabels[osdSnapshotCredentialIDKey]
+	// Create snapshot
+	_, err = cloudBackupClient.Create(ctx, &api.SdkCloudBackupCreateRequest{
+		VolumeId:     req.GetSourceVolumeId(),
+		TaskId:       csiSnapshotID,
+		CredentialId: credentialID,
+		Labels:       locator.GetVolumeLabels(),
+	})
+	if err != nil {
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+	}
+
+	// we need to get status again, as parameters such as CreationTime is not returned in the Create response
+	// above, and CreationTime is a required parameter
+	backupStatusResponse, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	if err != nil {
+		logger.Errorf("Failed to get snapshot status after snapshot create")
+		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot, could not get snapshot status after create: %v", err)
+	}
+	snapshotStatus, ok := backupStatusResponse.Statuses[csiSnapshotID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+	}
+	return &csi.CreateSnapshotResponse{
+		Snapshot: &csi.Snapshot{
+			SnapshotId:     csiSnapshotID,
+			CreationTime:   snapshotStatus.StartTime,
+			SourceVolumeId: req.GetSourceVolumeId(),
+			ReadyToUse:     false,
+			SizeBytes:      int64(snapshotStatus.BytesDone),
+		},
+	}, nil
+}
+
 // DeleteSnapshot is a CSI implementation to delete a snapshot
 func (s *OsdCsiServer) DeleteSnapshot(
 	ctx context.Context,
 	req *csi.DeleteSnapshotRequest,
-) (*csi.DeleteSnapshotResponse, error) {
-
-	if len(req.GetSnapshotId()) == 0 {
+) (resp *csi.DeleteSnapshotResponse, err error) {
+	snapshotId := req.GetSnapshotId()
+	logger := logrus.WithField("snapshotId", req.SnapshotId)
+	logger.Infof("Delete snapshot request received")
+	if len(snapshotId) == 0 {
+		logrus.Errorf("Snapshot id was not provided")
 		return nil, status.Error(codes.InvalidArgument, "Snapshot id must be provided")
 	}
+	if strings.HasPrefix(snapshotId, cloudSnap) {
+		return s.deleteCloudSnapshot(ctx, req, logger)
+	} else {
+		return s.deleteLocalSnapshot(ctx, req)
+	}
+}
 
+func (s *OsdCsiServer) deleteCloudSnapshot(ctx context.Context, req *csi.DeleteSnapshotRequest, logger *logrus.Entry) (*csi.DeleteSnapshotResponse, error) {
+	cloudBackupClient, err := s.getCloudBackupClient(ctx, logger)
+	if err != nil {
+		logger.WithError(err).Errorf("Failed to create cloud backup client")
+		return nil, err
+	}
+	csiSnapshotID := req.GetSnapshotId()
+	logger.Info("Deleting snapshot")
+	var backupStatus *api.SdkCloudBackupStatusResponse
+	// Check if snapshot has been created but is in error state
+	backupStatus, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	if err != nil {
+		if !sdk.IsErrorNotFound(err) {
+			logger.Errorf("Failed to get snapshot status")
+			return nil, status.Errorf(codes.Internal, "Failed to get cloud backup status: %v", err)
+		}
+		// snapshot not found
+		logger.Info("Snapshot does not exist or has been deleted")
+		return &csi.DeleteSnapshotResponse{}, nil
+	}
+	snapshotStatus, ok := backupStatus.Statuses[csiSnapshotID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+	}
+	logger.Errorf("Snapshot status %v", snapshotStatus.Status)
+	backupId := snapshotStatus.BackupId
+	credentialId := snapshotStatus.CredentialId
+
+	// Delete snapshot
+	_, err = cloudBackupClient.Delete(ctx, &api.SdkCloudBackupDeleteRequest{
+		BackupId:     backupId,
+		CredentialId: credentialId,
+	})
+	// NOTE: Currently, the Delete API call has no implementation that returns
+	//  a not found gRPC error with the status code.
+	if err != nil && !sdk.IsErrorNotFound(err) {
+		logger.WithError(err).WithField("backupId", backupId).Errorf("Failed to delete cloud snapshot")
+		return nil, status.Errorf(codes.Aborted, "failed to delete cloud snapshot: %v", err)
+	}
+	logger.Info("Cloud snapshot deleted successfully")
+	return &csi.DeleteSnapshotResponse{}, nil
+}
+
+func (s *OsdCsiServer) deleteLocalSnapshot(
+	ctx context.Context,
+	req *csi.DeleteSnapshotRequest,
+) (*csi.DeleteSnapshotResponse, error) {
 	// Get grpc connection
 	conn, err := s.getConn()
 	if err != nil {
+		logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Failed to get GRPC connection")
 		return nil, status.Errorf(
 			codes.Unavailable,
 			"Unable to connect to SDK server: %v", err)
@@ -998,6 +1205,7 @@ func (s *OsdCsiServer) DeleteSnapshot(
 	ctx, cancel := grpcutil.WithDefaultTimeout(ctx)
 	defer cancel()
 
+	logrus.WithField("snapshotId", req.GetSnapshotId()).Info("Deleting local snapshot")
 	// Check ID is valid with the specified volume capabilities
 	volumes := api.NewOpenStorageVolumeClient(conn)
 
@@ -1005,11 +1213,12 @@ func (s *OsdCsiServer) DeleteSnapshot(
 		VolumeId: req.GetSnapshotId(),
 	})
 	if err != nil {
+		logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Deleting local snapshot failed")
 		return nil, status.Errorf(codes.Aborted, "Unable to delete snapshot %s: %v",
 			req.GetSnapshotId(),
 			err)
 	}
-
+	logrus.WithError(err).WithField("snapshotId", req.GetSnapshotId()).Errorf("Deleting local snapshot completed")
 	return &csi.DeleteSnapshotResponse{}, nil
 }
 
@@ -1022,13 +1231,56 @@ func (s *OsdCsiServer) ListSnapshots(
 	req *csi.ListSnapshotsRequest,
 ) (*csi.ListSnapshotsResponse, error) {
 
+	snapshotId := req.GetSnapshotId()
 	if len(req.GetSnapshotId()) > 0 {
-		return s.listSingleSnapshot(ctx, req)
+		if strings.HasPrefix(snapshotId, cloudSnap) {
+			return s.listSingleCloudSnapshot(ctx, req)
+		} else {
+			return s.listSingleSnapshot(ctx, req)
+		}
 	}
 
 	return s.listMultipleSnapshots(ctx, req)
 }
 
+func (s *OsdCsiServer) listSingleCloudSnapshot(
+	ctx context.Context,
+	req *csi.ListSnapshotsRequest,
+) (*csi.ListSnapshotsResponse, error) {
+	logger := logrus.WithField("snapshotId", req.GetSnapshotId())
+	csiSnapshotID := req.GetSnapshotId()
+	cloudBackupClient, err := s.getCloudBackupClient(ctx, logger)
+	if err != nil {
+		logger.WithError(err).Errorf("Failed to create cloud backup client")
+		return nil, err
+	}
+	backupStatusResponse, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: req.SnapshotId,
+	})
+	if err != nil {
+		logger.WithError(err).Errorf("Failed to get cloud backup status")
+		return nil, err
+	}
+	snapshotStatus, ok := backupStatusResponse.Statuses[csiSnapshotID]
+	if !ok {
+		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+	}
+	logger.Infof("Status of snapshot %v", snapshotStatus.Status)
+	isBackupReady := snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
+	return &csi.ListSnapshotsResponse{
+		Entries: []*csi.ListSnapshotsResponse_Entry{
+			{
+				Snapshot: &csi.Snapshot{
+					SnapshotId:     csiSnapshotID,
+					SourceVolumeId: req.GetSourceVolumeId(),
+					CreationTime:   snapshotStatus.StartTime,
+					ReadyToUse:     isBackupReady,
+					SizeBytes:      int64(snapshotStatus.BytesDone),
+				},
+			},
+		},
+	}, nil
+}
 func (s *OsdCsiServer) listSingleSnapshot(
 	ctx context.Context,
 	req *csi.ListSnapshotsRequest,
@@ -1191,6 +1443,114 @@ func (s *OsdCsiServer) listMultipleSnapshots(
 	}
 
 	return listSnapshotsResp, nil
+}
+
+func (s *OsdCsiServer) restoreSnapshot(ctx context.Context,
+	req *csi.CreateVolumeRequest, volumes api.OpenStorageVolumeClient, logger *logrus.Entry,
+) (volumeId string, err error) {
+	cloudBackupClient, err := s.getCloudBackupClient(ctx, logger)
+	if err != nil {
+		logger.WithError(err).Errorf("Failed to create cloud backup client")
+		return "", err
+	}
+	logger.Infof("Restoring volume from cloud snapshot")
+	snapshot := req.VolumeContentSource.GetSnapshot()
+	csiSnapshotID := snapshot.GetSnapshotId()
+
+	// getting status from the backup to get the PX specific backup id for the CSI snapshot id and credential id
+	response, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+		TaskId: csiSnapshotID,
+	})
+	if err != nil {
+		logger.WithError(err).Errorf("Could not get snapshot status")
+		return "", err
+	}
+
+	// check if the specific backup exists
+	backupStatus, ok := response.Statuses[csiSnapshotID]
+	if !ok {
+		logger.WithError(err).Errorf("Snapshot not found in status")
+		return "", fmt.Errorf("snapshot %s not found in status", csiSnapshotID)
+	}
+
+	restoreSpec, locator, err := s.specHandler.GenerateRestoreSpecAndLocator(req.Parameters)
+	if err != nil {
+		logger.WithError(err).Errorf("Error generating restore spec")
+		return "", err
+	}
+	credentialId := backupStatus.CredentialId
+	snapResp, err := cloudBackupClient.Restore(ctx, &api.SdkCloudBackupRestoreRequest{
+		BackupId:          backupStatus.GetBackupId(),
+		RestoreVolumeName: req.GetName(),
+		TaskId:            req.GetName(),
+		Locator:           locator,
+		CredentialId:      credentialId,
+		Spec:              restoreSpec,
+	})
+	if err != nil {
+		errStatus, contains := status.FromError(err)
+		// if the error code is AlreadyExists, a restore is already in progress
+		if contains && errStatus.Code() == codes.AlreadyExists {
+			logger.WithError(err).Infof("Restore is already in progress")
+			return getVolumeId(ctx, req, volumes, logger)
+		}
+		logger.WithError(err).Errorf("Unable to restore from cloud snapshot")
+		return "", err
+	}
+	logger.WithField("restoreVolumeId", snapResp.GetRestoreVolumeId()).Infof("Successfully " +
+		"restored cloud snapshot, waiting for volume id to be generated")
+
+	id, err := waitForVolumeId(ctx, req, volumes, logger)
+
+	if err != nil {
+		logger.WithError(err).Errorf("Error occured while checking volume id during restore")
+		return "", err
+	}
+	return id, nil
+}
+
+func waitForVolumeId(ctx context.Context, req *csi.CreateVolumeRequest, volumes api.OpenStorageVolumeClient, logger *logrus.Entry) (string, error) {
+	// the Restore API does not return volume id, wait till volume id is generated so that subsequent Inspect call can
+	// be triggered. CSI does not behave properly is Volume context is not set properly in response, and in order
+	// to set volume response, we need the volume id
+	id, err := task.DoRetryWithTimeout(func() (interface{}, bool, error) {
+		id, statusErr := getVolumeId(ctx, req, volumes, logger)
+		if statusErr != nil {
+			return "", true, statusErr
+		}
+		if id != "" {
+			return id, true, nil
+		}
+		return "", true, fmt.Errorf("volume id for %s is not generated", req.GetName())
+	}, 120*time.Second, 10*time.Second)
+	if err != nil {
+		return "", err
+	}
+
+	return id.(string), err
+}
+
+// we currently do not seem to have a good mechanism to find the volume id for the corresponding restore action
+// the Restore API returns an error when the restore action is progress, Hence we have to follow the long
+// winded approach below to get the volume id for the restored volume
+func getVolumeId(ctx context.Context, req *csi.CreateVolumeRequest, volumes api.OpenStorageVolumeClient, logger *logrus.Entry) (string, error) {
+	listResponse, inspectErr := volumes.InspectWithFilters(ctx, &api.SdkVolumeInspectWithFiltersRequest{
+		Name: req.GetName(),
+	})
+	if inspectErr != nil {
+		logger.WithError(inspectErr).Errorf("Error while checking volume by name during restore")
+		return "", inspectErr
+	}
+	volumeList := listResponse.Volumes
+	if len(volumeList) > 1 {
+		logger.Errorf("Multiple volumes found with same name")
+		return "", fmt.Errorf("multiple volumes found with same name for volume %s", req.GetName())
+	} else if len(volumeList) == 0 {
+		return waitForVolumeId(ctx, req, volumes, logger)
+	} else {
+		logger.WithField("volumeId", volumeList[0].Volume.Id).Infof("Restore volume has created the volume id")
+		return volumeList[0].Volume.Id, nil
+	}
 }
 
 func getAllTopologies(req *csi.TopologyRequirement) []*csi.Topology {

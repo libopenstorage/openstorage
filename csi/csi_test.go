@@ -19,6 +19,7 @@ package csi
 import (
 	"bytes"
 	"fmt"
+	"github.com/libopenstorage/openstorage/api/mock"
 	"io/ioutil"
 	"math/rand"
 	"os"
@@ -70,15 +71,16 @@ func init() {
 // testServer is a simple struct used abstract
 // the creation and setup of the gRPC CSI service
 type testServer struct {
-	conn   *grpc.ClientConn
-	server grpcserver.Server
-	m      *mockdriver.MockVolumeDriver
-	c      *mockcluster.MockCluster
-	mc     *gomock.Controller
-	sdk    *sdk.Server
-	port   string
-	gwport string
-	uds    string
+	conn                  *grpc.ClientConn
+	server                grpcserver.Server
+	m                     *mockdriver.MockVolumeDriver
+	c                     *mockcluster.MockCluster
+	mc                    *gomock.Controller
+	sdk                   *sdk.Server
+	port                  string
+	gwport                string
+	uds                   string
+	mockCloudBackupClient *mock.MockOpenStorageCloudBackupClient
 }
 
 func setupFakeDriver() {
@@ -159,6 +161,7 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	tester.mc = gomock.NewController(&utils.SafeGoroutineTester{})
 	tester.m = mockdriver.NewMockVolumeDriver(tester.mc)
 	tester.c = mockcluster.NewMockCluster(tester.mc)
+	tester.mockCloudBackupClient = mock.NewMockOpenStorageCloudBackupClient(tester.mc)
 
 	if config.Cluster == nil {
 		config.Cluster = tester.c
@@ -224,6 +227,8 @@ func newTestServerWithConfig(t *testing.T, config *OsdCsiServerConfig) *testServ
 	}
 	config.SdkUds = tester.uds
 	config.SdkPort = tester.port
+	config.CloudBackupClient = tester.mockCloudBackupClient
+
 	tester.server, err = NewOsdCsiServer(config)
 	assert.Nil(t, err)
 	err = tester.server.Start()
