@@ -434,6 +434,7 @@ mockgen:
 	mockgen -destination=api/mock/mock_volume.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageVolumeServer,OpenStorageVolumeClient
 	mockgen -destination=api/mock/mock_watch.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageWatchServer,OpenStorageWatchClient,OpenStorageWatch_WatchClient,OpenStorageWatch_WatchServer
 	mockgen -destination=api/mock/mock_bucket.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageBucketServer,OpenStorageBucketClient
+	mockgen -destination=api/mock/mock_cloud_backup.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageCloudBackupServer,OpenStorageCloudBackupClient
 	mockgen -destination=cluster/mock/cluster.mock.go -package=mock github.com/libopenstorage/openstorage/cluster Cluster
 	mockgen -destination=cluster/mock/cluster_listener.mock.go -package=mock github.com/libopenstorage/openstorage/cluster ClusterListener
 	mockgen -destination=api/mock/mock_fstrim.go -package=mock github.com/libopenstorage/openstorage/api OpenStorageFilesystemTrimServer,OpenStorageFilesystemTrimClient
@@ -442,6 +443,8 @@ mockgen:
 	mockgen -destination=api/server/mock/mock_schedops_k8s.go -package=mock github.com/portworx/sched-ops/k8s/core Ops
 	mockgen -destination=volume/drivers/mock/driver.mock.go -package=mock github.com/libopenstorage/openstorage/volume VolumeDriver
 	mockgen -destination=bucket/drivers/mock/bucket_driver.mock.go -package=mock github.com/libopenstorage/openstorage/bucket BucketDriver
+	mockgen -destination=pkg/loadbalancer/mock/balancer.go -package=mock github.com/libopenstorage/openstorage/pkg/loadbalancer Balancer
+
 
 osd-tests: install
 	./hack/csi-sanity-test.sh

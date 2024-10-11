@@ -19,10 +19,10 @@ package sdk
 import (
 	"context"
 	"fmt"
-
 	"github.com/libopenstorage/openstorage/api"
 	api_err "github.com/libopenstorage/openstorage/api/errors"
 	"github.com/libopenstorage/openstorage/volume"
+	"github.com/portworx/kvdb"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -410,6 +410,8 @@ func (s *CloudBackupServer) Status(
 	if err != nil {
 		if err == volume.ErrInvalidName {
 			return nil, status.Errorf(codes.Unavailable, "No Backup status found")
+		} else if err == kvdb.ErrNotFound {
+			return nil, status.Errorf(codes.NotFound, "Backup not found")
 		}
 		return nil, status.Errorf(codes.Internal, "Failed to get status of backup: %v", err)
 	}
