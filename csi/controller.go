@@ -60,6 +60,7 @@ const (
 	volumeCapabilityMessageReadOnlyVolume     = "Volume is read only"
 	volumeCapabilityMessageNotReadOnlyVolume  = "Volume is not read only"
 	defaultCSIVolumeSize                      = uint64(units.GiB * 1)
+	defaultROXExportRule                      = "*(ro)"
 )
 
 // ControllerGetCapabilities is a CSI API functions which returns to the caller
@@ -862,6 +863,14 @@ func resolveSpecFromCSI(spec *api.VolumeSpec, req *csi.CreateVolumeRequest) (*ap
 		return nil, err
 	}
 
+	// set correct export rules and other defaults for Pure based volumes
+	if spec.IsPureVolume() {
+		err = setPureDefaults(req.GetVolumeCapabilities(), spec.GetProxySpec())
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return spec, nil
 }
 
@@ -1261,4 +1270,24 @@ func roundUpSizeInt64(size resource.Quantity, allocationUnitBytes int64) (int64,
 		roundedUp++
 	}
 	return roundedUp, nil
+}
+
+func setPureDefaults(caps []*csi.VolumeCapability, proxySpec *api.ProxySpec) error {
+	if len(caps) == 0 {
+		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
+	}
+
+	for _, capability := range caps {
+		mode := capability.GetAccessMode().GetMode()
+		if mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY {
+			isFBDA := proxySpec.ProxyProtocol == api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE
+			if proxySpec.PureFileSpec == nil {
+				proxySpec.PureFileSpec = &api.PureFileSpec{}
+			}
+			if isFBDA && proxySpec.PureFileSpec.ExportRules == "" {
+				proxySpec.PureFileSpec.ExportRules = defaultROXExportRule
+			}
+		}
+	}
+	return nil
 }
