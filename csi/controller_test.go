@@ -3655,6 +3655,57 @@ func TestResolveSpecFromCSI(t *testing.T) {
 				},
 			},
 		},
+		{
+			name: "Should set export rules for Pure based volumes and ROX is used",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Shared: false,
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+					PureFileSpec: &api.PureFileSpec{
+						ExportRules: "*(ro)",
+					},
+				},
+			},
+		},
+		{
+			name: "Pure volume RWX, no change in spec",
+			req: &csi.CreateVolumeRequest{
+				VolumeCapabilities: []*csi.VolumeCapability{
+					{
+						AccessMode: &csi.VolumeCapability_AccessMode{
+							Mode: csi.VolumeCapability_AccessMode_MULTI_NODE_MULTI_WRITER,
+						},
+					},
+				},
+			},
+			existingSpec: &api.VolumeSpec{
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
+
+			expectedSpec: &api.VolumeSpec{
+				Shared: false,
+				ProxySpec: &api.ProxySpec{
+					ProxyProtocol: api.ProxyProtocol_PROXY_PROTOCOL_PURE_FILE,
+				},
+			},
+		},
 	}
 
 	for _, tc := range tt {
