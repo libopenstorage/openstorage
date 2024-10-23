@@ -4934,6 +4934,16 @@
         ],
         "type": "string"
       },
+      "apiSharedMode": {
+        "default": "NIL",
+        "enum": [
+          "NIL",
+          "FS",
+          "BLOCK"
+        ],
+        "title": "SharedMode maps to RWO or RWX volume and access type",
+        "type": "string"
+      },
       "apiSharedv4FailoverStrategyValue": {
         "default": "UNSPECIFIED",
         "description": " - UNSPECIFIED: Unspecified\n - AGGRESSIVE: Fail over to the new NFS server quickly. This is appropriate for\nthe apps with sharedv4 service volumes. It can also be used\nfor the apps with sharedv4 volumes when such apps are able\nto restart quickly.\n - NORMAL: Give the old NFS server more time to come back up before\ntriggering the failover. This is appropriate for the apps\nwith sharedv4 volumes (non-service).",
@@ -5570,6 +5580,13 @@
             "description": "Error is the Last recorded error.",
             "type": "string"
           },
+          "exported_on": {
+            "items": {
+              "type": "string"
+            },
+            "title": "ExportedOn tracks attached volumes on multiple nodes for RWX and ROX volumes",
+            "type": "array"
+          },
           "format": {
             "$ref": "#/components/schemas/apiFSType"
           },
@@ -5975,12 +5992,15 @@
             "$ref": "#/components/schemas/apiScanPolicy"
           },
           "shared": {
-            "description": "Shared is true if this volume can be concurrently accessed by multiple users.",
+            "description": "Shared is true if this volume can be concurrently accessed by multiple users over nfs.",
             "format": "boolean",
             "type": "boolean"
           },
+          "shared_mode": {
+            "$ref": "#/components/schemas/apiSharedMode"
+          },
           "sharedv4": {
-            "description": "Sharedv4 is true if this volume can be accessed via sharedv4.",
+            "description": "Sharedv4 is true if this volume can be accessed via sharedv4 over nfs.",
             "format": "boolean",
             "type": "boolean"
           },
@@ -6403,7 +6423,7 @@
   },
   "info": {
     "title": "OpenStorage SDK",
-    "version": "0.101.54"
+    "version": "0.101.55"
   },
   "openapi": "3.0.0",
   "paths": {

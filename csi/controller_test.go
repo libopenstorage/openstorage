@@ -2547,7 +2547,7 @@ func TestControllerCreateVolumeBlock(t *testing.T) {
 	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 }
 
-func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
+func TestControllerCreateVolumeBlockSharedValid(t *testing.T) {
 	// Create server and client connection
 	s := newTestServer(t)
 	defer s.Stop()
@@ -2582,10 +2582,53 @@ func TestControllerCreateVolumeBlockSharedInvalid(t *testing.T) {
 	}
 
 	// Setup mock functions
-	_, err := c.CreateVolume(context.Background(), req)
-	assert.Error(t, err)
-	assert.Contains(t, err.Error(), "Shared raw block volumes are not supported")
+	id := "myid"
+	gomock.InOrder(
+		s.MockDriver().
+			EXPECT().
+			Inspect([]string{name}).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
 
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{Name: name}, nil).
+			Return(nil, fmt.Errorf("not found")).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Create(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+			Return(id, nil).
+			Times(1),
+
+		s.MockDriver().
+			EXPECT().
+			Enumerate(&api.VolumeLocator{VolumeIds: []string{id}}, nil).
+			Return([]*api.Volume{
+				{
+					Id: id,
+					Locator: &api.VolumeLocator{
+						Name:         name,
+						VolumeLabels: secretsMap,
+					},
+					Spec: &api.VolumeSpec{
+						Size:        uint64(size),
+						SharedBlock: true,
+					},
+				},
+			}, nil).
+			Times(1),
+	)
+
+	_, err := c.CreateVolume(context.Background(), req)
+	assert.Nil(t, err)
+	assert.NotNil(t, r)
+	volumeInfo := r.GetVolume()
+
+	assert.Equal(t, id, volumeInfo.GetVolumeId())
+	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
+	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 }
 
 func TestControllerCreateVolumeWithoutTopology(t *testing.T) {
