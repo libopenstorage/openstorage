@@ -612,6 +612,25 @@ enum NearSyncReplicationStrategy {
     NEAR_SYNC_STRATEGY_OPTIMIZED = 2;
 }
 
+// SharedMode maps to RWO or RWX volume and access type
+enum SharedMode {
+  NIL = 0;
+  FS = 1;
+  BLOCK = 2;
+}
+
+enum AccessMode {
+  // maps to AccessMode of CSI Specification
+  UNKNOWN = 0;
+  SINGLE_NODE_WRITER = 1; // read write vol, attached from a single node
+  SINGLE_NODE_READER_ONLY = 2; // read only vol, attached from single node
+  MULTI_NODE_READER_ONLY = 3; // rox - read only many from many nodes
+  MULTI_NODE_SINGLE_WRITER = 4; // read many write one volume support
+  MULTI_NODE_MULTI_WRITER = 5; // unrestricted rwx
+  SINGLE_NODE_SINGLE_WRITER = 6; // read write vol, from a single node
+  SINGLE_NODE_MULTI_WRITER = 7; // default volume support
+}
+
 // VolumeSpec has the properties needed to create a volume.
 message VolumeSpec {
   // Ephemeral storage
@@ -634,7 +653,7 @@ message VolumeSpec {
   uint32 snapshot_interval = 9;
   // (deprecated, do not use) VolumeLabels configuration labels
   map<string, string> volume_labels = 10;
-  // Shared is true if this volume can be concurrently accessed by multiple users.
+  // Shared is true if this volume can be concurrently accessed by multiple users over nfs.
   bool shared = 11;
   // ReplicaSet is the desired set of nodes for the volume data.
   ReplicaSet replica_set = 12;
@@ -660,7 +679,7 @@ message VolumeSpec {
   bool cascaded = 24;
   // Journal is true if data for the volume goes into the journal.
   bool journal = 25;
-  // Sharedv4 is true if this volume can be accessed via sharedv4.
+  // Sharedv4 is true if this volume can be accessed via sharedv4 over nfs.
   bool sharedv4 = 26;
   // QueueDepth defines the desired block device queue depth
   uint32 queue_depth = 27;
@@ -711,6 +730,8 @@ message VolumeSpec {
   bool near_sync = 51;
   // NearSyncReplicationStrategy is replication strategy for near sync volumes
   NearSyncReplicationStrategy near_sync_replication_strategy = 52;
+  // shared_mode determines the volume mode setup during creation
+  SharedMode shared_mode = 54;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume
@@ -1018,6 +1039,8 @@ message Volume {
   IoProfile derived_io_profile = 31;
   // InTrashcan if the volume is in trashcan
   bool in_trashcan = 32;
+  // ExportedOn tracks attached volumes on multiple nodes for RWX and ROX volumes
+  repeated string exported_on = 33;
 }
 
 // Stats is a structure that represents last collected stats for a volume
@@ -5684,7 +5707,7 @@ message SdkVersion {
     // SDK version minor value of this specification
     Minor = 101;
     // SDK version patch value of this specification
-    Patch = 54;
+    Patch = 55;
   }
 
   // The following cannot be set to use the enum Version because the REST
