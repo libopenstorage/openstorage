@@ -421,7 +421,7 @@ push-docker-images: docker-images
 #
 # If you think you need to adjust this, you are doing something wrong.
 sdk-check-version:
-	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=101
+	go run tools/sdkver/sdkver.go --check-major=0 --check-minor=102
 
 mockgen:
 	go get github.com/golang/mock/gomock
