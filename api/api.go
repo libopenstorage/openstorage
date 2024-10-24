@@ -618,6 +618,8 @@ type CloudBackupStatus struct {
 	// GroupCloudBackupID is valid for backups that were started as part of group
 	// cloudbackup request
 	GroupCloudBackupID string
+	// LocalSnapshotTime indicates when the local snapshot was taken
+	LocalSnapshotTime time.Time
 }
 
 type CloudBackupStatusResponse struct {
@@ -1244,6 +1246,7 @@ func (s CloudBackupStatus) ToSdkCloudBackupStatus() *SdkCloudBackupStatus {
 
 	status.StartTime, _ = ptypes.TimestampProto(s.StartTime)
 	status.CompletedTime, _ = ptypes.TimestampProto(s.CompletedTime)
+	status.LocalSnapshotTime, _ = ptypes.TimestampProto(s.LocalSnapshotTime)
 
 	return status
 }
@@ -1508,3 +1511,11 @@ const (
 	// SharedVolExportPrefix is the export path where shared volumes are mounted
 	SharedVolExportPrefix = "/var/lib/osd/pxns"
 )
+
+func (s *SdkCloudBackupStatus) IsLocalSnapshotTaken() bool {
+	localSnapTime := s.LocalSnapshotTime
+	if localSnapTime != nil && (localSnapTime.Seconds != 0 && localSnapTime.Nanos != 0) {
+		return true
+	}
+	return false
+}

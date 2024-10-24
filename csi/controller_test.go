@@ -3809,16 +3809,31 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 						return &api.SdkCloudBackupStatusResponse{
 							Statuses: map[string]*api.SdkCloudBackupStatus{
 								req.TaskId: {
-									BackupId:    req.TaskId,
-									Status:      api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued,
-									StartTime:   timeNow,
-									SrcVolumeId: mockSourceVolumeID,
-									BytesDone:   0,
+									BackupId:          req.TaskId,
+									Status:            api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued,
+									StartTime:         timeNow,
+									SrcVolumeId:       mockSourceVolumeID,
+									LocalSnapshotTime: nil,
+									BytesDone:         0,
 								},
 							},
 						}, nil
 					})
-
+				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+						return &api.SdkCloudBackupStatusResponse{
+							Statuses: map[string]*api.SdkCloudBackupStatus{
+								req.TaskId: {
+									BackupId:          req.TaskId,
+									Status:            api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeQueued,
+									StartTime:         timeNow,
+									SrcVolumeId:       mockSourceVolumeID,
+									LocalSnapshotTime: ptypes.TimestampNow(),
+									BytesDone:         0,
+								},
+							},
+						}, nil
+					})
 			},
 			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
 			&OsdCsiServer{
@@ -3841,6 +3856,36 @@ func TestOsdCsiServer_CreateCloudSnapshot(t *testing.T) {
 				},
 			},
 			false,
+			func() {
+				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
+					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
+						return &api.SdkCloudBackupStatusResponse{
+							Statuses: map[string]*api.SdkCloudBackupStatus{
+								req.TaskId: {
+									BackupId:          req.TaskId,
+									Status:            api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone,
+									StartTime:         timeNow,
+									SrcVolumeId:       mockSourceVolumeID,
+									BytesDone:         defaultCSIVolumeSize,
+									LocalSnapshotTime: timeNow,
+								},
+							},
+						}, nil
+					})
+			},
+			[]string{osdSnapshotLabelsTypeKey + "=cloud", osdSnapshotCredentialIDKey + "=mockcredid"},
+			&OsdCsiServer{
+				specHandler:        spec.NewSpecHandler(),
+				mu:                 sync.Mutex{},
+				roundRobinBalancer: mockRoundRobinBalancer,
+				cloudBackupClient:  mockCloudBackupClient,
+			},
+		},
+		{
+			"get status failure with zero local snap time",
+			"not-ok",
+			nil,
+			true,
 			func() {
 				mockCloudBackupClient.EXPECT().Status(gomock.Any(), gomock.Any(), gomock.Any()).
 					DoAndReturn(func(ctx context.Context, req *api.SdkCloudBackupStatusRequest, opts ...grpc.CallOption) (*api.SdkCloudBackupStatusResponse, error) {
