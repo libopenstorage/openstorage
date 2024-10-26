@@ -23,7 +23,7 @@ func (f *failureDomainsQuorum) IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap
 	selfNodeInfo := localNodeInfoMap[f.selfId]
 	selfDomain := selfNodeInfo.ClusterDomain
 
-	if !f.isNodeActive(selfDomain) {
+	if !f.isDomainActive(selfDomain) {
 		// This node is a part of deactivated failure domain
 		// Shoot ourselves down as we are not in quorum
 		return false
@@ -41,7 +41,7 @@ func (f *failureDomainsQuorum) IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap
 
 	for _, nodeInfo := range localNodeInfoMap {
 		if nodeInfo.QuorumMember {
-			if !f.isNodeActive(nodeInfo.ClusterDomain) {
+			if !f.isDomainActive(nodeInfo.ClusterDomain) {
 				// node is not a part of active domain
 				// do not consider in quorum calculations
 				continue
@@ -60,12 +60,18 @@ func (f *failureDomainsQuorum) IsNodeInQuorum(localNodeInfoMap types.NodeInfoMap
 	return upNodesInActiveDomains >= quorumCount
 }
 
-func (f *failureDomainsQuorum) isNodeActive(ipDomain string) bool {
+// isDomainActive returns true if the input failure domains is a part of
+// of an active domain list
+func (f *failureDomainsQuorum) isDomainActive(ipDomain string) bool {
 	isActive, _ := f.activeMap[ipDomain]
 	if isActive == types.CLUSTER_DOMAIN_STATE_ACTIVE {
 		return true
 	}
 	return false
+}
+
+func (f *failureDomainsQuorum) IsDomainActive(inputDomain string) bool {
+	return f.isDomainActive(inputDomain)
 }
 
 func (f *failureDomainsQuorum) UpdateNumOfQuorumMembers(quorumMembersMap types.ClusterDomainsQuorumMembersMap) {

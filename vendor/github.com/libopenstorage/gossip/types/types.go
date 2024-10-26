@@ -8,7 +8,7 @@ import (
 // NodeId identifies the node participating in the gossip cluster
 type NodeId string
 
-// StoreKey is the key fo the StoreMap
+// StoreKey is the key to the StoreMap
 type StoreKey string
 
 // NodeStatus indicates the status of the node
@@ -79,6 +79,7 @@ const (
 const (
 	QUORUM_PROVIDER_DEFAULT QuorumProvider = iota
 	QUORUM_PROVIDER_FAILURE_DOMAINS
+	QUORUM_PROVIDER_NOOP
 )
 
 const (
