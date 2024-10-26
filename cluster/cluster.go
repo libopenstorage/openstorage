@@ -368,7 +368,13 @@ type Cluster interface {
 	// nodeInitialized indicates if the caller of this method expects the node
 	// to have been in an already-initialized state.
 	// All managers will default returning NotSupported.
-	Start(nodeInitialized bool, gossipPort string, selfClusterDomain string) error
+	Start(
+		nodeInitialized bool,
+		gossipPort string,
+		selfClusterDomain string,
+		// disableQuorum if true will disable the cluster quorum requirement in gossip
+		disableQuorum bool,
+	) error
 
 	// Like Start, but have the ability to pass in managers to the cluster object
 	StartWithConfiguration(
@@ -378,6 +384,8 @@ type Cluster interface {
 		selfClusterDomain string,
 		config *ClusterServerConfiguration,
 		gobRegisterName string,
+		// disableQuorum if true will disable the cluster quorum requirement in gossip
+		disableQuorum bool,
 	) error
 
 	// Get a unique identifier for this cluster. Depending on the implementation, this could

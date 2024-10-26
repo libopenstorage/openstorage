@@ -607,6 +607,7 @@ func start(c *cli.Context) error {
 				ConfigSystemTokenManager: auth.SystemTokenManagerInst(),
 			},
 			"",
+			false,
 		); err != nil {
 			return fmt.Errorf("Unable to start cluster manager: %v", err)
 		}

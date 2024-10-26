@@ -291,7 +291,7 @@ func (c *clusterClient) Shutdown() error {
 	return nil
 }
 
-func (c *clusterClient) Start(bool, string, string) error {
+func (c *clusterClient) Start(bool, string, string, bool) error {
 	return nil
 }
 
@@ -299,7 +299,9 @@ func (c *clusterClient) Uuid() string {
 	return ""
 }
 
-func (c *clusterClient) StartWithConfiguration(bool, string, []string, string, *cluster.ClusterServerConfiguration, string) error {
+func (c *clusterClient) StartWithConfiguration(
+	bool, string, []string, string, *cluster.ClusterServerConfiguration, string, bool,
+) error {
 	return nil
 }
 
