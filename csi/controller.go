@@ -1069,6 +1069,13 @@ func (s *OsdCsiServer) createCloudBackup(
 			return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
 		}
 		logger.Infof("Status of snapshot %v", snapshotStatus.Status)
+
+		// if local snapshot is not taken, return an error so that the request will be retried
+		if !snapshotStatus.IsLocalSnapshotTaken() {
+			logger.Infof("Local snapshot for the cloud snapshot is not ready")
+			return nil, fmt.Errorf("local snapshot for the cloud snapshot is not ready")
+		}
+
 		isBackupReady := snapshotStatus.Status == api.SdkCloudBackupStatusType_SdkCloudBackupStatusTypeDone
 		return &csi.CreateSnapshotResponse{
 			Snapshot: &csi.Snapshot{
@@ -1096,29 +1103,23 @@ func (s *OsdCsiServer) createCloudBackup(
 		Labels:       locator.GetVolumeLabels(),
 	})
 	if err != nil {
-		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot: %v", err)
+		logger.WithError(err).Errorf("Failed to create cloud snapshot")
+		return nil, err
 	}
 
-	// we need to get status again, as parameters such as CreationTime is not returned in the Create response
-	// above, and CreationTime is a required parameter
-	backupStatusResponse, err = cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
-		TaskId: csiSnapshotID,
-	})
+	snapStatus, err := waitForLocalSnapshot(ctx, csiSnapshotID, cloudBackupClient, logger)
 	if err != nil {
-		logger.Errorf("Failed to get snapshot status after snapshot create")
-		return nil, status.Errorf(codes.Aborted, "Failed to create cloud snapshot, could not get snapshot status after create: %v", err)
+		logger.WithError(err).Errorf("Failed waiting for local snapshot duting cloud snapshot create")
+		return nil, err
 	}
-	snapshotStatus, ok := backupStatusResponse.Statuses[csiSnapshotID]
-	if !ok {
-		return nil, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
-	}
+
 	return &csi.CreateSnapshotResponse{
 		Snapshot: &csi.Snapshot{
 			SnapshotId:     csiSnapshotID,
-			CreationTime:   snapshotStatus.StartTime,
+			CreationTime:   snapStatus.StartTime,
 			SourceVolumeId: req.GetSourceVolumeId(),
 			ReadyToUse:     false,
-			SizeBytes:      int64(snapshotStatus.BytesDone),
+			SizeBytes:      int64(snapStatus.BytesDone),
 		},
 	}, nil
 }
@@ -1523,11 +1524,40 @@ func waitForVolumeId(ctx context.Context, req *csi.CreateVolumeRequest, volumes 
 		}
 		return "", true, fmt.Errorf("volume id for %s is not generated", req.GetName())
 	}, 120*time.Second, 10*time.Second)
+
 	if err != nil {
 		return "", err
 	}
 
 	return id.(string), err
+}
+
+func waitForLocalSnapshot(ctx context.Context, csiSnapshotID string, cloudBackupClient api.OpenStorageCloudBackupClient, logger *logrus.Entry) (*api.SdkCloudBackupStatus, error) {
+	// the create snapshot operation does not take local snapshot immediately. As per CSI spec, the CreationTime of the snapshot
+	// is when the local snapshot was taken, hence wait till local snap is available
+	snapStatus, err := task.DoRetryWithTimeout(func() (interface{}, bool, error) {
+		backupStatusResponse, err := cloudBackupClient.Status(ctx, &api.SdkCloudBackupStatusRequest{
+			TaskId: csiSnapshotID,
+		})
+		if err != nil {
+			logger.Errorf("Failed to get snapshot status after snapshot create")
+			return nil, true, err
+		}
+		snapshotStatus, ok := backupStatusResponse.Statuses[csiSnapshotID]
+		if !ok {
+			return nil, true, status.Errorf(codes.NotFound, "Snapshot %s not found in status map", csiSnapshotID)
+		}
+		if snapshotStatus.IsLocalSnapshotTaken() {
+			return snapshotStatus, false, nil
+		}
+		return nil, true, fmt.Errorf("local snapshot is not taken for task %s", csiSnapshotID)
+	}, 120*time.Second, 10*time.Second)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return snapStatus.(*api.SdkCloudBackupStatus), err
 }
 
 // we currently do not seem to have a good mechanism to find the volume id for the corresponding restore action
