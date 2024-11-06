@@ -746,8 +746,6 @@ message VolumeSpec {
   NearSyncReplicationStrategy near_sync_replication_strategy = 52;
   // shared_mode determines the volume mode setup during creation
   SharedMode shared_mode = 54;
-  // shared_block is true if this volume can be concurrently accessed by multiple nodes
-  bool shared_block = 55;
 }
 
 // VolumeSpecUpdate provides a method to set any of the VolumeSpec of an existing volume

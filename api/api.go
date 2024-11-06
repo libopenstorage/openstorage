@@ -113,7 +113,6 @@ const (
 	SpecIoThrottleWrIOPS                    = "io_throttle_wr_iops"
 	SpecIoThrottleRdBW                      = "io_throttle_rd_bw"
 	SpecIoThrottleWrBW                      = "io_throttle_wr_bw"
-	SpecSharedBlock                         = "shared_block"
 	SpecSharedMode                          = "shared_mode"
 )
 
@@ -845,6 +844,12 @@ func IoProfileSimpleValueOf(s string) (IoProfile, error) {
 func NearSyncReplicationStrategySimpleValueOf(s string) (NearSyncReplicationStrategy, error) {
 	obj, err := simpleValueOf("near_sync_strategy", NearSyncReplicationStrategy_value, s)
 	return NearSyncReplicationStrategy(obj), err
+}
+
+// SharedModeSimpleValueOf returns the string format of SharedMode
+func SharedModeSimpleValueOf(s string) (SharedMode, error) {
+	obj, err := simpleValueOf("shared_mode", SharedMode_value, s)
+	return SharedMode(obj), err
 }
 
 // SimpleString returns the string format of IoProfile

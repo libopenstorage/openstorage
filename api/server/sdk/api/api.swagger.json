@@ -6029,11 +6029,6 @@
             "title": "Shared is true if this volume can be concurrently accessed by multiple users over nfs",
             "type": "boolean"
           },
-          "shared_block": {
-            "format": "boolean",
-            "title": "shared_block is true if this volume can be concurrently accessed by multiple nodes",
-            "type": "boolean"
-          },
           "shared_mode": {
             "$ref": "#/components/schemas/apiSharedMode"
           },

@@ -2577,9 +2577,6 @@ func TestControllerCreateVolumeBlockSharedValid(t *testing.T) {
 			RequiredBytes: size,
 		},
 		Secrets: secretsMap,
-		Parameters: map[string]string{
-			api.SpecSharedBlock: "true",
-		},
 	}
 
 	// Setup mock functions
@@ -2615,7 +2612,7 @@ func TestControllerCreateVolumeBlockSharedValid(t *testing.T) {
 					},
 					Spec: &api.VolumeSpec{
 						Size: uint64(size),
-						SharedBlock: true,
+						SharedMode: SharedMode_BLOCK,
 					},
 				},
 			}, nil).
@@ -2629,7 +2626,7 @@ func TestControllerCreateVolumeBlockSharedValid(t *testing.T) {
 
 	assert.Equal(t, id, volumeInfo.GetVolumeId())
 	assert.Equal(t, size, volumeInfo.GetCapacityBytes())
-	assert.Equal(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedBlock])
+	assert.Equal(t, "BLOCK", volumeInfo.GetVolumeContext()[api.SpecSharedMode])
 	assert.NotEqual(t, "true", volumeInfo.GetVolumeContext()[api.SpecSharedv4])
 }
 
