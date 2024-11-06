@@ -415,7 +415,7 @@ func validateCreateVolumeCapabilities(caps []*csi.VolumeCapability, spec *api.Vo
 	return nil
 }
 
-func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, proxySpec *api.ProxySpec) error {
+func validateCreateVolumeCapabilitiesPure(caps []*csi.VolumeCapability, spec *api.VolumeSpec) error {
 	if len(caps) == 0 {
 		return status.Error(codes.InvalidArgument, "Volume capabilities must be provided")
 	}
@@ -501,7 +501,7 @@ func (s *OsdCsiServer) CreateVolume(
 	}
 
 	if spec.IsPureVolume() {
-		err = validateCreateVolumeCapabilitiesPure(req.GetVolumeCapabilities(), spec.GetProxySpec())
+		err = validateCreateVolumeCapabilitiesPure(req.GetVolumeCapabilities(), spec)
 		if err != nil {
 			return nil, err
 		}
