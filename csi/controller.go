@@ -241,7 +241,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 		mode := capability.GetAccessMode()
 		switch {
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_WRITER:
-			if v.SharedMode != api.SharedMode_NIL {
+			if v.Spec.SharedMode != api.SharedMode_NIL {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -252,7 +252,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_SINGLE_NODE_READER_ONLY:
-			if v.SharedMode != api.SharedMode_NIL {
+			if v.Spec.SharedMode != api.SharedMode_NIL {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageMultinodeVolume
 				break
@@ -263,7 +263,7 @@ func (s *OsdCsiServer) ValidateVolumeCapabilities(
 				break
 			}
 		case mode.Mode == csi.VolumeCapability_AccessMode_MULTI_NODE_READER_ONLY:
-			if v.SharedMode == api.SharedMode_NIL {
+			if v.Spec.SharedMode == api.SharedMode_NIL {
 				result.Confirmed = nil
 				result.Message = volumeCapabilityMessageNotMultinodeVolume
 				break
