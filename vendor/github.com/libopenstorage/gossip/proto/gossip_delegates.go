@@ -434,15 +434,10 @@ func (gd *GossipDelegate) isClusterDomainSuspectDown(nodeId types.NodeId) bool {
 		// We will mark it as Offline immediately
 		return false
 	}
-	if !gd.quorumProvider.IsDomainActive(nodeInfo.ClusterDomain) {
-		// The node is already a part of inactive domain
-		// No need of putting it as a suspect
-		return false
-	}
 	nodeList := gd.getNodesFromClusterDomain(nodeInfo.ClusterDomain)
 	for fdNodeId, _ := range nodeList {
-		if fdNodeId == nodeId || types.NodeId(gd.nodeId) == nodeId {
-			// No need of pinging ourselves or the suspected node.
+		if fdNodeId == nodeId {
+			// No need of pinging the suspected node
 			continue
 		}
 		// TODO: Check the current status of the node and do a ping

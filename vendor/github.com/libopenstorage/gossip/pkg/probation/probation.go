@@ -2,7 +2,6 @@ package probation
 
 import (
 	"fmt"
-	"strings"
 	"sync"
 	"time"
 
@@ -66,8 +65,7 @@ func (p *probation) Add(clientID string, clientData interface{}, updateIfExists 
 	existingTaskID, exists := p.probationTasks[clientID]
 	if exists {
 		if updateIfExists {
-			if err := p.schedInst.Cancel(existingTaskID); err != nil &&
-				!strings.Contains(err.Error(), "Invalid task ID:") {
+			if err := p.schedInst.Cancel(existingTaskID); err != nil {
 				return fmt.Errorf("probation manager failed to delete previous task for %s due to: %v", clientID, err)
 			}
 
@@ -78,12 +76,7 @@ func (p *probation) Add(clientID string, clientData interface{}, updateIfExists 
 	}
 
 	taskID, err := p.schedInst.Schedule(
-		func(sched.Interval) {
-			// Probation has expired for this client
-			// remove it from our map
-			p.Remove(clientID)
-			p.pcf(clientID, clientData)
-		},
+		func(sched.Interval) { p.pcf(clientID, clientData) },
 		sched.Periodic(time.Second),
 		time.Now().Add(p.probationTimeout), /* run probationTimeout after current time */
 		true) /* run only once */

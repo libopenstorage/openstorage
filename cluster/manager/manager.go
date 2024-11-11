@@ -100,8 +100,6 @@ type ClusterManager struct {
 	selfClusterDomain    string
 	// kvdbWatchIndex stores the kvdb index to start the watch
 	kvdbWatchIndex uint64
-	// disableQuorum if true will disable the cluster quorum requirement in gossip
-	disableQuorum bool
 }
 
 // Init instantiates a new cluster manager.
@@ -848,13 +846,11 @@ func (c *ClusterManager) startHeartBeat(
 		logrus.Infof("Starting Gossip...")
 	}
 
-	quorumProvider := types.QUORUM_PROVIDER_DEFAULT
-	if c.disableQuorum {
-		quorumProvider = types.QUORUM_PROVIDER_NOOP
-	} else if len(activeMap) > 0 {
-		quorumProvider = types.QUORUM_PROVIDER_FAILURE_DOMAINS
+	if len(activeMap) > 0 {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_FAILURE_DOMAINS
+	} else {
+		gossipConfig.QuorumProviderType = types.QUORUM_PROVIDER_DEFAULT
 	}
-	gossipConfig.QuorumProviderType = quorumProvider
 
 	c.gossip.Start(gossipConfig)
 	c.gossip.UpdateCluster(c.getNonDecommisionedPeers(*clusterInfo))
@@ -1211,9 +1207,6 @@ func (c *ClusterManager) initializeCluster(db kvdb.Kvdb) (
 }
 
 func (c *ClusterManager) quorumMember() bool {
-	if c.disableQuorum {
-		return false
-	}
 	if c.listeners.Len() == 0 {
 		// If there are no listeners registered by the driver, assume
 		// this node is a quorum member, so this becomes the default behavior
@@ -1449,7 +1442,6 @@ func (c *ClusterManager) Start(
 	nodeInitialized bool,
 	gossipPort string,
 	selfClusterDomain string,
-	disableQuorum bool,
 ) error {
 	return c.StartWithConfiguration(
 		nodeInitialized,
@@ -1457,8 +1449,7 @@ func (c *ClusterManager) Start(
 		[]string{ClusterDBKey},
 		selfClusterDomain,
 		&cluster.ClusterServerConfiguration{},
-		"",
-		disableQuorum)
+		"")
 }
 
 func (c *ClusterManager) StartWithConfiguration(
@@ -1468,7 +1459,6 @@ func (c *ClusterManager) StartWithConfiguration(
 	selfClusterDomain string,
 	config *cluster.ClusterServerConfiguration,
 	gobRegisterName string,
-	disableQuorum bool,
 ) error {
 	var err error
 
@@ -1551,7 +1541,6 @@ func (c *ClusterManager) StartWithConfiguration(
 	)
 	c.gossipVersion = types.GOSSIP_VERSION_2
 
-	c.disableQuorum = disableQuorum
 	var exist bool
 	lastIndex, clusterInfo, err := c.initializeAndStartHeartbeat(
 		kv,

@@ -93,7 +93,7 @@ func TestUpdateSchedulerNodeName(t *testing.T) {
 
 	err = inst.StartWithConfiguration(false, "1001", []string{}, "", &cluster.ClusterServerConfiguration{
 		ConfigSystemTokenManager: manager,
-	}, "gobRegisterName/path", false)
+	}, "gobRegisterName/path")
 	assert.NoError(t, err)
 
 	node, err := inst.Inspect(nodeID)
