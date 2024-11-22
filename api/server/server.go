@@ -49,6 +49,17 @@ func (r *Route) GetFn() func(http.ResponseWriter, *http.Request) {
 	return r.fn
 }
 
+// StartGraphAPI starts a REST server to receive GraphDriver commands from
+// the Linux container engine.
+func StartGraphAPI(name string, restBase string) error {
+	graphPlugin := newGraphPlugin(name)
+	if _, _, err := startServer(name, restBase, 0, graphPlugin); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // StartVolumeMgmtAPI starts a REST server to receive volume management API commands
 func StartVolumeMgmtAPI(
 	name, sdkUds string,
