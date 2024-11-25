@@ -16,34 +16,38 @@ const (
 	lsattrCmd = "lsattr"
 )
 
-func AddImmutable(path string) error {
+func isInappropriateIoctl(err string) bool {
+	lowerErr := strings.ToLower(err)
+	// "inappropriate ioctl for device" returned inside PX container
+	// "invalid argument while setting flags" returned on host
+	return strings.Contains(lowerErr, "inappropriate ioctl for device") || strings.Contains(lowerErr, "invalid argument while setting flags")
+}
+
+func runChattr(path string, arg string) error {
 	chattrBin := which(chattrCmd)
 	if _, err := os.Stat(path); err == nil {
-		cmd := exec.Command(chattrBin, "+i", path)
+		cmd := exec.Command(chattrBin, arg, path)
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
 		if err = cmd.Run(); err != nil {
-			return fmt.Errorf("%s +i failed: %s. Err: %v", chattrBin, stderr.String(), err)
+			stderrStr := stderr.String()
+			if isInappropriateIoctl(stderrStr) { // Returned in case of filesystem that does not support chattr
+				return nil
+			}
+			return fmt.Errorf("%s %s failed: %s. Err: %v", chattrBin, arg, stderrStr, err)
 		}
 	}
 
 	return nil
 }
 
+func AddImmutable(path string) error {
+	return runChattr(path, "+i")
+}
+
 func RemoveImmutable(path string) error {
-	chattrBin := which(chattrCmd)
-	if _, err := os.Stat(path); err == nil {
-		cmd := exec.Command(chattrBin, "-i", path)
-		var stderr bytes.Buffer
-		cmd.Stderr = &stderr
-
-		if err = cmd.Run(); err != nil {
-			return fmt.Errorf("%s -i failed: %s. Err: %v", chattrBin, stderr.String(), err)
-		}
-	}
-
-	return nil
+	return runChattr(path, "-i")
 }
 
 func IsImmutable(path string) bool {
@@ -54,6 +58,9 @@ func IsImmutable(path string) bool {
 	}
 	op, err := exec.Command(lsattrBin, "-d", path).CombinedOutput()
 	if err != nil {
+		if isInappropriateIoctl(string(op)) { // Returned in case of filesystem that does not support chattr
+			return true
+		}
 		// Cannot get path status, return true so that immutable bit is not reverted
 		logrus.Errorf("Error listing attrs for %v err:%v", path, string(op))
 		return true
