@@ -64,7 +64,7 @@ func GetToken(tokenSecretContext *api.TokenSecretContext) (string, error) {
 	}
 
 	// Get secret value with standardized interface
-	secretValue, err := secretsInst.GetSecret(inputSecretKey, requestToContext(tokenSecretContext))
+	secretValue, _, err := secretsInst.GetSecret(inputSecretKey, requestToContext(tokenSecretContext))
 	if err != nil {
 		return "", err
 	}
