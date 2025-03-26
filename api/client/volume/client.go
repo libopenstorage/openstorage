@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
-	"strings"
 
 	"github.com/libopenstorage/openstorage/api"
 	"github.com/libopenstorage/openstorage/api/client"
@@ -347,8 +346,9 @@ func (v *volumeClient) Enumerate(locator *api.VolumeLocator,
 		req.QueryOptionLabel(api.OptLabel, locator.VolumeLabels)
 	}
 	if len(locator.VolumeIds) != 0 {
-		ids := strings.Join(locator.VolumeIds, ",")
-		req.QueryOption(api.OptVolumeID, ids)
+		for _, volID := range locator.VolumeIds {
+			req.QueryOption(api.OptVolumeID, volID)
+		}
 	}
 	if len(labels) != 0 {
 		req.QueryOptionLabel(api.OptConfigLabel, labels)
