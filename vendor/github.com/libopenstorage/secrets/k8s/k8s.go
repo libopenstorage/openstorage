@@ -27,39 +27,39 @@ func (s *k8sSecrets) String() string {
 func (s *k8sSecrets) GetSecret(
 	secretName string,
 	keyContext map[string]string,
-) (map[string]interface{}, error) {
+) (map[string]interface{}, secrets.Version, error) {
 	namespace, exists := keyContext[SecretNamespace]
 	if !exists {
-		return nil, fmt.Errorf("Namespace cannot be empty.")
+		return nil, secrets.NoVersion, fmt.Errorf("Namespace cannot be empty.")
 	}
 
 	secret, err := core.Instance().GetSecret(secretName, namespace)
 	if err != nil {
-		return nil, fmt.Errorf("Failed to get secret [%s]. Err: %v",
+		return nil, secrets.NoVersion, fmt.Errorf("Failed to get secret [%s]. Err: %v",
 			secretName, err)
 	}
 	if secret == nil {
-		return nil, secrets.ErrInvalidSecretId
+		return nil, secrets.NoVersion, secrets.ErrInvalidSecretId
 	}
 
 	data := make(map[string]interface{})
 	for key, val := range secret.Data {
 		data[key] = fmt.Sprintf("%s", val)
 	}
-	return data, nil
+	return data, secrets.Version(secret.ResourceVersion), nil
 }
 
 func (s *k8sSecrets) PutSecret(
 	secretName string,
 	secretData map[string]interface{},
 	keyContext map[string]string,
-) error {
+) (secrets.Version, error) {
 	namespace, exists := keyContext[SecretNamespace]
 	if !exists {
-		return fmt.Errorf("Namespace cannot be empty.")
+		return secrets.NoVersion, fmt.Errorf("Namespace cannot be empty.")
 	}
 	if len(secretData) == 0 {
-		return nil
+		return secrets.NoVersion, nil
 	}
 
 	data := make(map[string][]byte)
@@ -69,12 +69,15 @@ func (s *k8sSecrets) PutSecret(
 		} else if v, ok := val.([]byte); ok {
 			data[key] = v
 		} else {
-			return fmt.Errorf("Unsupported data type for data: %s", key)
+			return secrets.NoVersion, fmt.Errorf("Unsupported data type for data: %s", key)
 		}
 	}
 
-	_, err := core.Instance().UpdateSecretData(secretName, namespace, data)
-	return err
+	updatedSecret, err := core.Instance().UpdateSecretData(secretName, namespace, data)
+	if err != nil {
+		return secrets.NoVersion, err
+	}
+	return secrets.Version(updatedSecret.ResourceVersion), nil
 }
 
 func (s *k8sSecrets) DeleteSecret(
