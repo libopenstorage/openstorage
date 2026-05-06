@@ -375,8 +375,8 @@ func (d *driver) create(w http.ResponseWriter, r *http.Request) {
 	if source != nil && len(source.Parent) != 0 {
 		// clone
 		_, err = volumes.Clone(ctx, &api.SdkVolumeCloneRequest{
-			Name:     name,
-			ParentId: source.Parent,
+			Name:             name,
+			ParentId:         source.Parent,
 			AdditionalLabels: locator.GetVolumeLabels(),
 		})
 	} else {
@@ -775,7 +775,7 @@ func (d *driver) list(w http.ResponseWriter, r *http.Request) {
 	volInfo := make([]volumeInfo, len(vols))
 	for i, v := range vols {
 		volInfo[i].Name = v.Locator.Name
-		if len(v.AttachPath) > 0 || len(v.AttachPath) > 0 {
+		if len(v.AttachPath) > 0 {
 			volInfo[i].Mountpoint = path.Join(v.AttachPath[0], config.DataDir)
 		}
 	}
@@ -800,7 +800,7 @@ func (d *driver) path(w http.ResponseWriter, r *http.Request) {
 	}
 
 	d.logRequest(method, name).Debugf("")
-	if len(vol.AttachPath) == 0 || len(vol.AttachPath) == 0 {
+	if len(vol.AttachPath) == 0 {
 		e := d.volNotMounted(method, name)
 		d.errorResponse(method, w, e)
 		return
@@ -833,7 +833,7 @@ func (d *driver) get(w http.ResponseWriter, r *http.Request) {
 	}
 
 	volInfo := volumeInfo{Name: returnName}
-	if len(vol.AttachPath) > 0 || len(vol.AttachPath) > 0 {
+	if len(vol.AttachPath) > 0 {
 		volInfo.Mountpoint = path.Join(vol.AttachPath[0], config.DataDir)
 	}
 
